@@ -4112,18 +4112,7 @@ namespace EMS
                 //状态  
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                {
-                    //short a,b,c;
-                    //a = (short)Convert.ToUInt16(strData);
-                    //b = (short)(1800 & Error[0]);
-                    //c = (short)(a | b);
-                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
-
-
-                }
-
-
-
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4200,7 +4189,23 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.runState = 1;//设置运行状态为故障
                 }
             }
+            if (inputA > 0.5)
+                State = 3;
+            else if (inputA < -0.5)
+                State = 2;
+            else
+                State = 0;
 
+            time = DateTime.Now;
+            //设置运行指示灯
+            if (State > 0)
+            {
+                frmSet.RunStateGPIO(0);
+            }
+            else
+            {
+                frmSet.RunStateGPIO(1);
+            }
 
             //处理故障
             ushort sData = 0;
@@ -4360,9 +4365,7 @@ namespace EMS
                 //状态
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    //Error[0] = Convert.ToUInt16(strData);
-                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
-
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -5364,7 +5367,6 @@ namespace EMS
                 if (Get3strData(5, ref strTemp, ref strData))
                    // Error[0] = Convert.ToUInt16(strData);
                     Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
-
                 if (Get3strData(6, ref strTemp, ref strData))//40968 soc过低 1010 0000 0000 1000
                     Error[1] = Convert.ToUInt16(strData);   //32776  soc过低单体电压过低1000 0000 0000 1000 
                 if (Get3strData(7, ref strTemp, ref strData))//8200  单体压差过大 0010 0000 0000 1000
@@ -6054,7 +6056,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1A200EMS240525Master3";
+        public string EMSVersion { get; set; } = "1A200EMS240525Master3.1.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -8208,6 +8210,9 @@ namespace EMS
         {
             try
             {
+                if (TempControl != null)
+                    TempControl.GetDataFromEqipment();
+
                 if (Elemeter2 != null)
                 {
                     Elemeter2.GetDataFromEqipment();
@@ -8599,9 +8604,9 @@ namespace EMS
                     }
                     break;
                 case 2:
-                    if (frmSet.GetGPIOState(0) == 3)
+                    if (frmSet.GetGPIOState(0) == 2)
                     {
-                        if (frmSet.GetGPIOState(0) == 3)
+                        if (frmSet.GetGPIOState(0) == 2)
                         {
                             if (Fire.FireState == 0)
                             {
@@ -8673,7 +8678,7 @@ namespace EMS
                 }
                 break;
             case 2:
-                if (frmSet.GetGPIOState(1) == 3)
+                if (frmSet.GetGPIOState(1) == 2)
                 {
                     ExcPCSPowerOff();
                     lock (ErrorState)
