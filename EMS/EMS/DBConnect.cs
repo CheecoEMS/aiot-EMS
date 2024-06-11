@@ -5,6 +5,7 @@ using System.Data;
 using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Diagnostics;
 
 
 namespace EMS
@@ -22,13 +23,63 @@ namespace EMS
         {
 
         }
+        
+        //检查mysql服务是否开启
+        static public void ChecMysql80()
+        {
+            if (!IsMySqlServiceRunning())
+            {
+                StartMysql80();
+            }
+        }
 
+        //启动mysql服务
+        static public void StartMysql80()
+        {
+            string serviceName = "MySQL80";
+            StartService(serviceName);
+        }
+
+        static public void StartService(string serviceName)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = "net.exe";
+            psi.Arguments = $"start {serviceName}";
+            psi.UseShellExecute = true;
+            psi.Verb = "runas"; // 以管理员权限运行  
+            try
+            {
+                Process.Start(psi).WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting service: {ex.Message}");
+            }
+        }
+
+        static public bool IsMySqlServiceRunning()
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo("cmd.exe", "/c sc query MySQL80 | findstr RUNNING");
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+
+            using (Process process = new Process())
+            {
+                process.StartInfo = startInfo;
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return output.Contains("RUNNING");
+            }
+        }
         //建立一个链接
         static private void CreateConnection()
         {
             try
             {
                 // connectionStr = ConfigurationManager.ConnectionStrings["connStr"].ConnectionString;
+                ChecMysql80();
                 if (connection == null)
                 {
                     connection = new MySqlConnection(connectionStr);
@@ -55,6 +106,7 @@ namespace EMS
         {
             try
             {
+                ChecMysql80();
                 if ((connection == null) || (!IsConnected))
                     CreateConnection();
 
@@ -65,6 +117,12 @@ namespace EMS
                 sda.Fill(ds);
                 IsConnected = true;
                 return ds;
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+                return null;
             }
             catch (Exception ex)
             {
@@ -84,6 +142,7 @@ namespace EMS
             //MySqlConnection tempConnection = new MySqlConnection(connectionStr);
             try
             {
+                ChecMysql80();
                 //if ((connection == null) || (!IsConnected)) 
                 //    CreateConnection(); 
                 MySqlConnection tempConnection = new MySqlConnection(connectionStr);
@@ -93,6 +152,11 @@ namespace EMS
                 //使用 ExecuteReader 方法创建 SqlDataReader 对象 
                 MySqlDataReader sdr = sqlCmd.ExecuteReader();
                 return sdr;
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                return null;
             }
             catch (Exception ex)
             {
@@ -113,6 +177,8 @@ namespace EMS
         //运行SQL，用于增加，删除，编辑
         static public bool ExecSQL(string astrSQL)
         {
+            ChecMysql80();
+
             bool bResult;
             if ((connection == null) || (!IsConnected))
                 CreateConnection();
@@ -129,6 +195,12 @@ namespace EMS
                     else
                         bResult = false;
 
+                }
+                catch (MySqlException ex)
+                {
+                    frmMain.ShowDebugMSG(ex.ToString());
+                    IsConnected = false;
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -152,6 +224,7 @@ namespace EMS
         //获取最后一个记录的ID
         static public int GetLastID(string astrSQL)
         {
+            ChecMysql80();
             int iResult = -1;
             MySqlConnection ctTemp = null;
             MySqlDataReader rd = GetData(astrSQL, ref ctTemp);
@@ -159,6 +232,14 @@ namespace EMS
             {
                 if (rd.Read())
                     iResult = rd.GetInt32(0);
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
             }
             finally
             {
@@ -180,6 +261,7 @@ namespace EMS
         //检查是否存在SQL约定的数据 （含有为True，不存在为False）
         static public bool CheckRec(string astrSQL )
         {
+            ChecMysql80();
             //aiData = -1;
             bool bResult = false;
             MySqlConnection tempConnection = new MySqlConnection(connectionStr);
@@ -191,6 +273,14 @@ namespace EMS
                // if (rd.Read())
                //     aiData = rd.GetInt32(0);
                 bResult = rd.HasRows;
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
             }
             finally
             {
@@ -224,6 +314,7 @@ namespace EMS
         /// <returns></returns>
         static public bool ChecUserc(string astrSQL,ref int aPower)
         {
+            ChecMysql80();
             aPower = -1;
             bool bResult = false;
             MySqlConnection tempConnection = new MySqlConnection(connectionStr);
@@ -235,6 +326,14 @@ namespace EMS
                  if (rd.Read())
                     aPower = rd.GetInt32(0);
                 bResult = rd.HasRows;
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
             }
             finally
             {
@@ -280,7 +379,7 @@ namespace EMS
         //将查询结果显示在DBGrid
         static public void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
         {
-
+            ChecMysql80();
             //adDtaGrid.Rows.Clear(); 
             //if (adDtaGrid.DataSource != null)
             //    adDtaGrid.DataSource = null;
@@ -300,7 +399,14 @@ namespace EMS
                 adDtaGrid.DataSource = dataset.Tables[0];
                 adDtaGrid.Update();
             }
-            catch { }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
             finally
             {
                 //adDtaGrid.DataBind(); 
@@ -319,6 +425,7 @@ namespace EMS
         //显示查询数据
         static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat)
         {
+            ChecMysql80();
             //清理旧的数据
             for (int i = 0; i < aDataCount; i++)
             {
@@ -345,6 +452,10 @@ namespace EMS
                     }
                 }
             }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
@@ -368,6 +479,7 @@ namespace EMS
         //只清理和增加一个series的数据
         static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat, int aSeriesIndex)
         {
+            ChecMysql80();
             //清理旧的数据 
             aChart.Series[aSeriesIndex].Points.Clear();
 
@@ -382,6 +494,10 @@ namespace EMS
                        sdr.GetDateTime(0).ToString(aTimeFormat),//
                        sdr.GetFloat(1).ToString());
                 }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
             }
             catch (Exception ex)
             {
@@ -406,6 +522,7 @@ namespace EMS
         //应对功率部分的正负代表充放电
         static public void ShowData2ChartPower(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat)
         {
+            ChecMysql80();
             //清理旧的数据
             for (int i = 1; i <= aDataCount; i++)
                 aChart.Series[i].Points.Clear();
@@ -441,6 +558,10 @@ namespace EMS
                         sdr.GetDateTime(0).ToString(aTimeFormat), "0");
                 }
             }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
@@ -464,6 +585,7 @@ namespace EMS
         //将dbgrid的数据保存到文件
         static public void SaveGrid2File(DataGridView aDataGrid)
         {
+            ChecMysql80();
             if (aDataGrid.RowCount <= 0)
                 return;
             string fileName = DateTime.Now.ToString("yyMMdd");//可以在这里设置默认文件名 
@@ -500,6 +622,14 @@ namespace EMS
                     strDataLine = "";
                 }
             }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
             finally
             {
                 //清空缓冲区  
@@ -513,11 +643,11 @@ namespace EMS
         //记录LOg事件
         static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)
         {
-            DBConnection.ExecSQL("insert into log (eTime,eClass,Event,Memo)values ('"
+/*            DBConnection.ExecSQL("insert into log (eTime,eClass,Event,Memo)values ('"
                 + DateTime.Now.ToString("yyyy-M-d H:m:s") + "','"
                 + aEClasse + "','"
                 + aEvemt + "','"
-                 + aMemo + "')");
+                 + aMemo + "')");*/
         }
 
 

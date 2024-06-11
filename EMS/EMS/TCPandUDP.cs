@@ -433,9 +433,10 @@ namespace Modbus
                 while (true)
                 {
 
-                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象
+                    //Socket acceptSocket = ServerSocket.Accept();//注释
                     try
                     {
+                        Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象
                         CloseClientSocket();
                         //acceptSocket.RemoteEndPoint()l
                         //socket.ReceiveTimeout = timeout;                    
@@ -449,7 +450,10 @@ namespace Modbus
                         SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
                         ClientRecThread.Start();
                     }
-                    catch { }
+                    catch(SocketException ex) 
+                    {
+                        
+                    }
 
                 }
 
