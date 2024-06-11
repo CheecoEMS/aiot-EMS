@@ -1,0 +1,262 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|c:\\users\\lenovo\\desktop\\version\\ems\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\ems\\ems\\todolist.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\todolist.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|c:\\users\\lenovo\\desktop\\version\\ems\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\ems\\ems\\inputclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\inputclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\errorclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\errorclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\warningclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\warningclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\cloundclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\cloundclass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmmain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmcontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmcontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmcontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmcontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmabout.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmabout.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Lenovo\\Desktop\\\u73B0\u573A\u8FD0\u884C\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\ems\\frmlogin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B148E9F0-37EE-43D0-8093-450A625C91AD}|EMS\\EMS.csproj|solutionrelative:ems\\frmlogin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 289,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TodoList.txt",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\TodoList.txt",
+              "RelativeDocumentMoniker": "EMS\\TodoList.txt",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\TodoList.txt",
+              "RelativeToolTip": "EMS\\TodoList.txt",
+              "ViewState": "AQIAACoAAAAAAAAAAAAAAFEAAAADAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2024-06-11T01:23:43.194Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "InputClass.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\InputClass.cs",
+              "RelativeDocumentMoniker": "EMS\\InputClass.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\InputClass.cs",
+              "RelativeToolTip": "EMS\\InputClass.cs",
+              "ViewState": "AQIAAN0UAAAAAAAAAAAAAN4UAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-04T03:28:10.766Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "warningClass.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\warningClass.cs",
+              "RelativeDocumentMoniker": "EMS\\warningClass.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\warningClass.cs",
+              "RelativeToolTip": "EMS\\warningClass.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-07T01:54:30.433Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "frmMain.cs [\u8BBE\u8BA1]",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmMain.cs",
+              "RelativeDocumentMoniker": "EMS\\frmMain.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmMain.cs [\u8BBE\u8BA1]",
+              "RelativeToolTip": "EMS\\frmMain.cs [\u8BBE\u8BA1]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-06T03:32:25.212Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "frmControl.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmControl.cs",
+              "RelativeDocumentMoniker": "EMS\\frmControl.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmControl.cs",
+              "RelativeToolTip": "EMS\\frmControl.cs",
+              "ViewState": "AQIAAAABAAAAAAAAAADwvxMBAAAaAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-06T03:25:57.342Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "frmSet.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmSet.cs",
+              "RelativeDocumentMoniker": "EMS\\frmSet.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmSet.cs",
+              "RelativeToolTip": "EMS\\frmSet.cs",
+              "ViewState": "AQIAAKYBAAAAAAAAAAAAwLQBAAAlAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-04T08:54:06.798Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "frmControl.cs [\u8BBE\u8BA1]",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmControl.cs",
+              "RelativeDocumentMoniker": "EMS\\frmControl.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmControl.cs [\u8BBE\u8BA1]",
+              "RelativeToolTip": "EMS\\frmControl.cs [\u8BBE\u8BA1]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-06T03:25:40.424Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "frmMain.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmMain.cs",
+              "RelativeDocumentMoniker": "EMS\\frmMain.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmMain.cs",
+              "RelativeToolTip": "EMS\\frmMain.cs",
+              "ViewState": "AQIAALABAAAAAAAAAADgv+sBAABhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-05T02:03:16.715Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "frmlogin.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "RelativeDocumentMoniker": "EMS\\frmlogin.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "RelativeToolTip": "EMS\\frmlogin.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAwAAAAuAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-04T07:03:03.845Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CloundClass.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\CloundClass.cs",
+              "RelativeDocumentMoniker": "EMS\\CloundClass.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\CloundClass.cs",
+              "RelativeToolTip": "EMS\\CloundClass.cs",
+              "ViewState": "AQIAAAYCAAAAAAAAAAAjwBoCAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-08T10:13:25.832Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ErrorClass.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\ErrorClass.cs",
+              "RelativeDocumentMoniker": "EMS\\ErrorClass.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\ErrorClass.cs",
+              "RelativeToolTip": "EMS\\ErrorClass.cs",
+              "ViewState": "AQIAAD0BAAAAAAAAAAAUwFIBAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-08T06:01:21.126Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "frmAbout.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmAbout.cs",
+              "RelativeDocumentMoniker": "EMS\\frmAbout.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmAbout.cs",
+              "RelativeToolTip": "EMS\\frmAbout.cs",
+              "ViewState": "AQIAACoAAAAAAAAAAAAUwDYAAAAuAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-09T06:57:19.628Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\Program.cs",
+              "RelativeDocumentMoniker": "EMS\\Program.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\Program.cs",
+              "RelativeToolTip": "EMS\\Program.cs",
+              "ViewState": "AQIAAEUAAAAAAAAAAAAYwF8AAAAtAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-04T03:27:27.31Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "frmlogin.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\\u73B0\u573A\u8FD0\u884C\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\\u73B0\u573A\u8FD0\u884C\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\\u73B0\u573A\u8FD0\u884C\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\..\\\u73B0\u573A\u8FD0\u884C\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmlogin.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-05T02:04:52.556Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "frmLine.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmLine.cs",
+              "RelativeDocumentMoniker": "EMS\\frmLine.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\Desktop\\VERSION\\EMS\\\u6DB2master3\\485\\aiot-ems-windows-ems-windows\\EMS\\EMS\\frmLine.cs",
+              "RelativeToolTip": "EMS\\frmLine.cs",
+              "ViewState": "AQIAAEwAAAAAAAAAAAAtwFoAAAA7AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-08T07:34:58.534Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

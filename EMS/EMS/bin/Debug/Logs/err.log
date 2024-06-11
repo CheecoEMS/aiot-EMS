@@ -1,0 +1,13 @@
+﻿2024-01-26 20:13:15,299 [13] ERROR AllEquipmentClass - 记录变动
+2024-01-26 20:13:15,416 [13] ERROR AllEquipmentClass - 记录变动
+2024-03-19 09:32:13,988 [14] ERROR BaseEquipmentClass - 3级告警:时间: 2024-03-19 09:32:13单体最高电压: 0单体最低电压: 0单体最高温度: 0单体最低温度:0电流: 0SOC：0
+2024-03-19 09:33:29,496 [14] ERROR BaseEquipmentClass - 3级告警:时间: 2024-03-19 09:33:29单体最高电压: 0单体最低电压: 0单体最高温度: 0单体最低温度:0电流: 0SOC：0
+2024-05-13 15:03:28,841 [1] ERROR CloudClass - EMQX_CLIENT_ID: j000000000000000
+2024-05-13 15:06:39,843 [1] ERROR CloudClass - EMQX_CLIENT_ID: j000000000000000
+2024-05-13 15:06:45,478 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:06:52,731 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:06:59,445 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:07:03,514 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:08:02,022 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:13:39,635 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False
+2024-05-13 15:13:42,641 [21] ERROR TacticsClass - Tactics 线程执行: TacticsList: 0 PCSList: 0 frmSet.IsMaster: True TacticsOn: False

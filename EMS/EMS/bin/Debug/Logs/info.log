@@ -1,0 +1,2 @@
+﻿2024-01-26 20:13:15,416 [13] INFO  BaseEquipmentClass - 3级告警:INSERT INTO warning(rTime,wClass,eID,WaringID,wLevels,Warning) VALUES('2024-01-26 20:13:15','EMS','ems0000000','4','3','PCS通讯异常')
+2024-01-26 20:13:16,599 [21] INFO  CloudClass - 接受到消息同步策略
