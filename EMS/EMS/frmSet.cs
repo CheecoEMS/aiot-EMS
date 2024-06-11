@@ -1422,7 +1422,7 @@ namespace EMS
             "delete from elemeter4 where rTime<'"+astrData+"'",
             "delete from errorstate where rTime<'"+astrData+"'",
             "delete from fire where rTime<'"+astrData+"'",
-            "delete from log where rTime<'"+astrData+"'",
+            //"delete from log where rTime<'"+astrData+"'", 暂时注释
             "delete from pcs where rTime<'"+astrData+"'",
             "delete from pncontrolerwhere rTime<'"+astrData+"'",
             "delete from profit where rTime<'"+astrData+"'",
@@ -2255,6 +2255,12 @@ namespace EMS
         private void btnDHRead_Click(object sender, EventArgs e)
         {
             frmMain.Selffrm.AllEquipment.Dehumidifier.GetDataFromEqipment();
+        }
+
+        //读取数据库，刷新策略时段
+        private void btnFlash3_Click(object sender, EventArgs e)
+        {
+            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
     }
 }

@@ -5352,7 +5352,6 @@ namespace EMS
             if (GetSysData(1, ref strTemp))
             { 
                 bPrepared = true;
-                //log.Error("读取BMS数据");
                 if (Get3strData(2, ref strTemp, ref strData))
                     runState = Convert.ToInt16(strData);
                 if (Get3strData(3, ref strTemp, ref strData))
@@ -5362,9 +5361,7 @@ namespace EMS
 
 
                 if (Get3strData(5, ref strTemp, ref strData))
-                   // Error[0] = Convert.ToUInt16(strData);
                     Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
-
                 if (Get3strData(6, ref strTemp, ref strData))//40968 soc过低 1010 0000 0000 1000
                     Error[1] = Convert.ToUInt16(strData);   //32776  soc过低单体电压过低1000 0000 0000 1000 
                 if (Get3strData(7, ref strTemp, ref strData))//8200  单体压差过大 0010 0000 0000 1000
@@ -5385,7 +5382,6 @@ namespace EMS
                     a = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(14, ref strTemp, ref strData))
                     chargState = Convert.ToInt16(strData);
-
                 if (Get3strData(15, ref strTemp, ref strData))
                     soc = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(16, ref strTemp, ref strData))
@@ -5396,11 +5392,11 @@ namespace EMS
                     positiveR = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(19, ref strTemp, ref strData))
                     negativeR = Math.Round(float.Parse(strData), 1);
-                //20,21
                 if (Get3strData(20, ref strTemp, ref strData))
                     MaxChargeA = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(21, ref strTemp, ref strData))
                     MaxDischargeA = Math.Round(float.Parse(strData), 1);
+                
                 if (Get3strData(22, ref strTemp, ref strData))
                     cellIDMaxV = Convert.ToInt16(strData);
                 if (Get3strData(23, ref strTemp, ref strData))
@@ -5417,6 +5413,7 @@ namespace EMS
                     cellIDMintemp = Convert.ToInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
                     cellMinTemp = Math.Round(float.Parse(strData), 1);
+                
                 if (Get3strData(30, ref strTemp, ref strData))
                     averageV = Math.Round(float.Parse(strData), 3);
                 if (Get3strData(31, ref strTemp, ref strData))
@@ -6112,6 +6109,14 @@ namespace EMS
             }
         }
 
+        public void clearAllUkvaWindow()
+        {
+            while (AllUkvaWindow.Count > 0)
+            {
+                AllUkvaWindow.Dequeue();
+            }
+        }
+
         public double GetAverage()
         {
             return AllUkvaSum / AllUkvaWindow.Count;
@@ -6704,10 +6709,8 @@ namespace EMS
             try
             {
                 AutoReadDataCom1(); //传感器，UPS
-                //AutoReadDataCom1A();
                 AutoReadDataCom2();//表2、3、4，空调,液冷机
                 AutoReadDataCom3();//BMS
-                //AutoReadDataCom3A();//BMS基础数据
                 AutoReadDataCom4(); //PCS 
                 AutoRead();
                 AutoSystime_Tick();
@@ -7121,9 +7124,19 @@ namespace EMS
                         tempPUMdemand_max += Elemeter1.PUMdemand_Max;
                         tempPUMdemand_now += Elemeter1.PUMdemand_now;
                     }
-                    GridKVA = tempGridKVA;
-                    AddValue(GridKVA);
-                    GridKVA_window = GetAverage();
+
+                    if (Elemeter1List[0].Prepared)
+                    {
+                        GridKVA = tempGridKVA;
+                        AddValue(GridKVA);
+                        GridKVA_window = GetAverage();
+                    }
+                    else
+                    {
+                        GridKVA = 0;
+                        clearAllUkvaWindow();
+                        GridKVA_window = 0;
+                    }
                 }
 
                 //2.21
@@ -7135,22 +7148,6 @@ namespace EMS
                 {
                     E2_PUMdemand_Max = Elemeter1Z.PUMdemand_Max;
                     E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
-                }
-
-                //bms
-                try
-                {
-                    if (BMS == null)
-                    {
-                        Thread.Sleep(1000);
-                        continue;
-                    }
-                    Thread.Sleep(2000);
-                    frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();
-                }
-                catch (Exception ex)
-                {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                 }
 
             }
@@ -7225,75 +7222,6 @@ namespace EMS
                 oneEMSE.GetDataFromEqipment2(oneEMSE.ID);
             }
           
-        }
-
-        public void ReadElemeter1()
-        {
-            double tempGridKVA;
-            double tempPUMdemand_max;
-            double tempPUMdemand_now;
-            while (true)
-            {
-                tempGridKVA = 0;
-                tempPUMdemand_max = 0;
-                tempPUMdemand_now = 0;
-
-                //2.21 获取整体功率
-                if (Elemeter1Z != null)
-                {
-                    Elemeter1Z.GetDataFromEqipment();
-                }
-
-
-                if (ChechPower)
-                {
-                    //电表1---关口电表，用于防逆流
-                    foreach (Elemeter1Class Elemeter1 in Elemeter1List)
-                    {
-                        Elemeter1.GetDataFromEqipment();
-                        tempGridKVA += Elemeter1.AllUkva;
-
-                        //2.21
-                        tempPUMdemand_max += Elemeter1.PUMdemand_Max;
-                        tempPUMdemand_now += Elemeter1.PUMdemand_now;
-                    }
-                    GridKVA = tempGridKVA;
-                    AddValue(GridKVA);
-                    GridKVA_window = GetAverage();//计算电网平均功率
-                }
-                E1_PUMdemand_Max = tempPUMdemand_max;
-                E1_PUMdemand_now = tempPUMdemand_now;
-
-                if (Elemeter1Z!=null)
-                {
-                    E2_PUMdemand_Max = Elemeter1Z.PUMdemand_Max;
-                    E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
-                }
-            }
-
-        }
-
-
-
-        public void AutoReadDataCom1A()
-        {
-            try
-            {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadElemeter1);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal;
-                // ClientRecThread.Join();
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
         }
 
         //Com1 readThread1
@@ -7544,7 +7472,7 @@ namespace EMS
                     if (wTypeActive == "充电")
                     {
                         dValue = PowerCap - (GridKVA_window - Math.Abs(PCSKVA));
-                        if (dValue > Math.Abs(PCSScheduleKVA))
+                        if (dValue >= Math.Abs(PCSScheduleKVA))
                         {
                             dRate = 1;
                         }
@@ -7560,7 +7488,7 @@ namespace EMS
                     else if (wTypeActive == "放电")
                     {
                         dValue = (GridKVA_window + Math.Abs(PCSKVA)) - frmSet.MinGridKW;
-                        if (dValue > Math.Abs(PCSScheduleKVA))
+                        if (dValue >= Math.Abs(PCSScheduleKVA))
                         {
                             dRate = 1;
                         }
@@ -7907,7 +7835,7 @@ namespace EMS
                     dValue = dGridKW - PowerCap;
                     //限流qiao 
                     //直接全部关闭
-                    if (dValue >  Math.Abs(AllwaValue))
+                    if (dValue >=  Math.Abs(AllwaValue))
                     {
                         dRate = 0;
                     }
@@ -7957,7 +7885,7 @@ namespace EMS
                     else if (wTypeActive == "放电")
                     {
                         dValue = (GridKVA_window + Math.Abs(AllwaValue)) - frmSet.MinGridKW;
-                        if ((dValue > Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
+                        if ((dValue >= Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
                         {
                             dRate = 1;
 
@@ -8345,49 +8273,6 @@ namespace EMS
             }
         }
 
-        public void AutoReadDataCom3A()
-        {
-            try
-            {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadBMSBaseInfo);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Lowest;
-                // ClientRecThread.Join();
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-
-
-            }
-        }
-
-        private void ReadBMSBaseInfo()
-        {
-            while (true)
-            {
-                //log.Error("com3 线程执行");
-                try
-                {
-                    if (BMS == null)
-                    {
-                        Thread.Sleep(1000);
-                        continue;
-                    }
-                    frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();
-                }
-                catch (Exception ex)
-                {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
-                }
-            }
-        }
 
 
         private void ReadEquipmentDataBMS()
@@ -8492,6 +8377,23 @@ namespace EMS
                         //OutKVAH += PCSList[i].ACOutkwh;
                     }
                     PCSKVA = Math.Round(PCSPower, 2);
+
+
+                    //bms
+                    try
+                    {
+                        if (BMS == null)
+                        {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+                        Thread.Sleep(2000);
+                        frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                    }
 
                     //PCS的DSP2 11.27
                     /*                    if (DSP2 != null)
@@ -8702,22 +8604,15 @@ namespace EMS
         /// <param name="Errors"></param>
         public void CheckBMSWrror(ushort[] aErrors)
         {
-            //BMS发生二级告警，如果ErrorState没有2级告警，修改ErrorState的2级标志
+            //BMS发生二级告警，如果ErrorState没有2级告警，修改ErrorState的2级标志。设置告警指示灯
             if ((aErrors[2]>0) && (!ErrorState[1]))
             {
-
-
-                //if (frmSet.GPIO_Select_Mode == 0) frmSet.SetGPIOState(10, 0);
-                //else frmSet.SetGPIOState(10, 1);
                 frmSet.BMS2warningGPIO(1);
-
                 ErrorState[1] = true;
             }
             else if ((aErrors[2]==0) && (ErrorState[1]))
             {
-
                 frmSet.BMS2warningGPIO(0);
-
                 ErrorState[1] = false;
             }
 
@@ -8731,6 +8626,8 @@ namespace EMS
                         lock (frmMain.Selffrm.AllEquipment)
                             frmMain.Selffrm.AllEquipment.UBmsPcsState = 0;
 
+                        //记录单体电压 温度 电流
+                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
 
@@ -8796,6 +8693,9 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
                         lock (frmMain.Selffrm.AllEquipment)
                             frmMain.Selffrm.AllEquipment.OBmsPcsState = 0;
+
+                        //记录单体电压 温度 电流
+                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
                     }
                 }
             }
@@ -8811,14 +8711,18 @@ namespace EMS
                 {
                     if (frmMain.Selffrm.AllEquipment.UBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        frmMain.Selffrm.AllEquipment.UBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmMain.Selffrm.AllEquipment)
+                            frmMain.Selffrm.AllEquipment.UBmsPcsState = frmSet.BMSwaValue/100;
+                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
                 {
                     if (frmMain.Selffrm.AllEquipment.OBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        frmMain.Selffrm.AllEquipment.OBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmMain.Selffrm.AllEquipment)
+                            frmMain.Selffrm.AllEquipment.OBmsPcsState = frmSet.BMSwaValue/100;
+                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
             }
