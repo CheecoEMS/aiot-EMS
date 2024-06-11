@@ -1,0 +1,8 @@
+{
+	"timestamp": 1700391208834,
+	"iotCode": "ems0000000",
+	"faultCode": "E00021",
+	"faultLevel": 3,
+	"faultName": "EMSPCS通讯异常(4)",
+	"faultBack": "false"
+}

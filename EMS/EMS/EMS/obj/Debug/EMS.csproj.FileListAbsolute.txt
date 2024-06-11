@@ -1,0 +1,12 @@
+D:\EMSTools\EMS\EMS\EMS\bin\Debug\EMS.exe.config
+D:\EMSTools\EMS\EMS\EMS\bin\Debug\EMS.exe
+D:\EMSTools\EMS\EMS\EMS\bin\Debug\EMS.pdb
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.Properties.Resources.resources
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.csproj.GenerateResource.cache
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.exe
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.pdb
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.Form1.resources
+D:\EMSTools\EMS\EMS\EMS\bin\Debug\MySql.Data.dll
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.csproj.AssemblyReference.cache
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.csproj.CoreCompileInputs.cache
+D:\EMSTools\EMS\EMS\EMS\obj\Debug\EMS.csproj.CopyComplete
