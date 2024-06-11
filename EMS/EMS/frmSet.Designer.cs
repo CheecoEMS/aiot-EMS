@@ -333,6 +333,7 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
+            this.btnFlash3 = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -1686,6 +1687,7 @@ namespace EMS
             // 
             this.panel12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel12.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel12.Controls.Add(this.btnFlash3);
             this.panel12.Controls.Add(this.tcbUseBalaTactics);
             this.panel12.Controls.Add(this.tcbUseYunTactics);
             this.panel12.Controls.Add(this.btnUpT);
@@ -1707,7 +1709,7 @@ namespace EMS
             this.tcbUseBalaTactics.Checked = false;
             this.tcbUseBalaTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tcbUseBalaTactics.ForeColor = System.Drawing.Color.White;
-            this.tcbUseBalaTactics.Location = new System.Drawing.Point(459, 3);
+            this.tcbUseBalaTactics.Location = new System.Drawing.Point(534, 3);
             this.tcbUseBalaTactics.Name = "tcbUseBalaTactics";
             this.tcbUseBalaTactics.Size = new System.Drawing.Size(153, 32);
             this.tcbUseBalaTactics.TabIndex = 20;
@@ -1719,7 +1721,7 @@ namespace EMS
             this.tcbUseYunTactics.Checked = false;
             this.tcbUseYunTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tcbUseYunTactics.ForeColor = System.Drawing.Color.White;
-            this.tcbUseYunTactics.Location = new System.Drawing.Point(308, 3);
+            this.tcbUseYunTactics.Location = new System.Drawing.Point(383, 3);
             this.tcbUseYunTactics.Name = "tcbUseYunTactics";
             this.tcbUseYunTactics.Size = new System.Drawing.Size(134, 32);
             this.tcbUseYunTactics.TabIndex = 19;
@@ -1766,7 +1768,7 @@ namespace EMS
             this.btnAdd3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnAdd3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAdd3.ForeColor = System.Drawing.Color.White;
-            this.btnAdd3.Location = new System.Drawing.Point(19, 1);
+            this.btnAdd3.Location = new System.Drawing.Point(6, 1);
             this.btnAdd3.Margin = new System.Windows.Forms.Padding(1);
             this.btnAdd3.Name = "btnAdd3";
             this.btnAdd3.Size = new System.Drawing.Size(88, 44);
@@ -1783,7 +1785,7 @@ namespace EMS
             this.btnDel3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnDel3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDel3.ForeColor = System.Drawing.Color.White;
-            this.btnDel3.Location = new System.Drawing.Point(199, 1);
+            this.btnDel3.Location = new System.Drawing.Point(186, 1);
             this.btnDel3.Margin = new System.Windows.Forms.Padding(1);
             this.btnDel3.Name = "btnDel3";
             this.btnDel3.Size = new System.Drawing.Size(88, 44);
@@ -1800,7 +1802,7 @@ namespace EMS
             this.btnEdit3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnEdit3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEdit3.ForeColor = System.Drawing.Color.White;
-            this.btnEdit3.Location = new System.Drawing.Point(109, 1);
+            this.btnEdit3.Location = new System.Drawing.Point(96, 1);
             this.btnEdit3.Margin = new System.Windows.Forms.Padding(1);
             this.btnEdit3.Name = "btnEdit3";
             this.btnEdit3.Size = new System.Drawing.Size(88, 44);
@@ -4550,6 +4552,23 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
+            // btnFlash3
+            // 
+            this.btnFlash3.BackColor = System.Drawing.Color.Transparent;
+            this.btnFlash3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnFlash3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnFlash3.ForeColor = System.Drawing.Color.White;
+            this.btnFlash3.Location = new System.Drawing.Point(276, 1);
+            this.btnFlash3.Margin = new System.Windows.Forms.Padding(1);
+            this.btnFlash3.Name = "btnFlash3";
+            this.btnFlash3.Size = new System.Drawing.Size(88, 44);
+            this.btnFlash3.TabIndex = 21;
+            this.btnFlash3.Text = "刷新";
+            this.btnFlash3.UseVisualStyleBackColor = false;
+            this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
+            // 
             // frmSet
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -4924,5 +4943,6 @@ namespace EMS
         private System.Windows.Forms.Label label91;
         private System.Windows.Forms.Button btnLCRead;
         private System.Windows.Forms.Button btnDHRead;
+        private System.Windows.Forms.Button btnFlash3;
     }
 }

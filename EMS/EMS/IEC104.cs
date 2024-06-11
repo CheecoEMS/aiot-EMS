@@ -307,37 +307,40 @@ namespace IEC104
                     break;
                 //单命令遥控
                 case 0x2D:
-                    //接收遥控预置
-                    int YKnum = Get_YKD_Num(msg, true);
-                    //log.Debug("YKnum:" + YKnum);
-                    if ( msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
+                    if (frmSet.Listen104 == 1)
                     {
-                        //遥控返校
-                        //log.Debug("接收遥控预置");
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKACK(msg, RX_bytes, TX_bytes);
-                    }
-                    //接收遥控执行
-                    else if (msg[8] == 6 && msg[9] == 0 )
-                    {
-                        //执行确认
-                        //log.Debug("接收遥控执行确认");
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
-                        //激活结束
-                        Build_SR_num(RX_bytes);
-                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
-                    }
-                    //遥控撤销
-                    else if (msg[8] == 8 && msg[9] == 0)
-                    {
-                        //撤销确认
-                        //log.Debug("接收遥控撤销确认");
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
-                        //激活结束
-                        Build_SR_num(RX_bytes);
-                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                        //接收遥控预置
+                        int YKnum = Get_YKD_Num(msg, true);
+                        //log.Debug("YKnum:" + YKnum);
+                        if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
+                        {
+                            //遥控返校
+                            //log.Debug("接收遥控预置");
+                            Build_SR_num(TX_bytes);
+                            NAIec104YKACK(msg, RX_bytes, TX_bytes);
+                        }
+                        //接收遥控执行
+                        else if (msg[8] == 6 && msg[9] == 0)
+                        {
+                            //执行确认
+                            //log.Debug("接收遥控执行确认");
+                            Build_SR_num(TX_bytes);
+                            NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
+                            //激活结束
+                            Build_SR_num(RX_bytes);
+                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                        }
+                        //遥控撤销
+                        else if (msg[8] == 8 && msg[9] == 0)
+                        {
+                            //撤销确认
+                            //log.Debug("接收遥控撤销确认");
+                            Build_SR_num(TX_bytes);
+                            NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
+                            //激活结束
+                            Build_SR_num(RX_bytes);
+                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                        }
                     }
                     break;
                 //遥调(设定浮点数值命令)
