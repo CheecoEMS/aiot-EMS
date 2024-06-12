@@ -4112,7 +4112,7 @@ namespace EMS
                 //状态  
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData);
+                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4365,7 +4365,8 @@ namespace EMS
                 //状态
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData);
+                    //Error[0] = Convert.ToUInt16(strData);
+                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
