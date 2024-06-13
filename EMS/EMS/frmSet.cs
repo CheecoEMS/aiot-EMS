@@ -277,12 +277,20 @@ namespace EMS
 
         public static void SetToGlobalSet()
         {
-            DBConnection.ExecSQL("insert into GlobalSet (MaxGridKW, MinGridKW, MaxSOC, MinSOC) "
-                + "values ('"
-                + MaxGridKW.ToString() + "','"
-                + MinGridKW.ToString() + "','"
-                + MaxSOC.ToString() + "','"
-                + MinSOC.ToString() + "') ");
+            //DBConnection.ExecSQL("insert into GlobalSet (MaxGridKW, MinGridKW, MaxSOC, MinSOC) "
+            //    + "values ('"
+            //    + MaxGridKW.ToString() + "','"
+            //    + MinGridKW.ToString() + "','"
+            //    + MaxSOC.ToString() + "','"
+            //    + MinSOC.ToString() + "') ");
+
+            DBConnection.ExecSQL("update  globalset  SET "
+                + " MaxGridKW ='" + MaxGridKW.ToString()
+                + "', MinGridKW ='" + MinGridKW.ToString()
+                + "',MaxSOC ='" + MaxSOC.ToString()
+                + "',MinSOC ='" + MinSOC.ToString()
+                + "'");
+
         }
 
 
