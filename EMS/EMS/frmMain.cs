@@ -385,7 +385,7 @@ namespace EMS
 
         static public frmMain LoadForm()
         {
-            int[] a = { 0, 1 };
+            //int[] a = { 0, 1 };
             //frmMain.Selffrm = new frmMain();
             try
             { 

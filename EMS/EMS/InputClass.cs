@@ -5670,14 +5670,6 @@ namespace EMS
                     if ((itempData > 0) && (ErrorClass.TCErrorPower[j] > 0))//恢复故障、数据库中找到同类故障记录恢复时间
                     {
                         RecodError("空调", iot_code, j, ErrorClass.TCErrorPower[j], ErrorClass.TCErrors[j], (error & sKey) > 0);
-                        if (ErrorClass.TCErrorPower[j] == 2)
-                        {
-                            ErrorClass.ErrorTwo[2] = 1;
-                        }
-                        else
-                        {
-                            ErrorClass.ErrorTwo[2] = 0;
-                        }
                     }
                 }
                 errorOld = error;
@@ -6437,7 +6429,6 @@ namespace EMS
                 {
                     string adata = sdr.GetString(1).Trim();
                     eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
-                    log.Debug($"Version{eType}");
                     switch (eType)
                     {
                         case 0:
