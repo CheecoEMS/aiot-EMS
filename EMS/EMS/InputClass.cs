@@ -1517,7 +1517,8 @@ namespace EMS
         /*************************  新版灯语  ***********************************/
         //public void Led_Control_Loop()
         //{
-        //    {   int errorclass =0;
+        //    {
+        //        int errorclass = 0;
         //        //LED获取当前告警级别
         //        if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_Error[2] = true; //三级告警
         //        else frmMain.Selffrm.AllEquipment.Led_Error[2] = false;
@@ -1525,23 +1526,40 @@ namespace EMS
         //        if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
         //        else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
 
-        //        errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.LedErrorState);
+        //        errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.Led_Error);      
         //        if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
         //        else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
 
-        //            //LED获取当前状态
+        //        //LED获取当前状态
         //        if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
         //        else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
 
         //        //LED获取当前电量等级
-        //        frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) :  0  ;
+        //        frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
 
-        //        log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel} {} ");
+        //        log.Debug($"Errorclass标志位:{errorclass} " +
+        //                  $"Led_ShowPowerLevel 灯板个数:{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}" +
+        //                  $"Led_Show_status  待机or运行:{frmMain.Selffrm.AllEquipment.Led_Show_status} ");
 
         //        //frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
 
-        //        if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
+        //        if (frmMain.Selffrm.AllEquipment.Led_Show_status != frmMain.Selffrm.AllEquipment.Prev_Led_Show_status)//运行状态改变
         //        {
+        //            switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
+        //            {
+
+        //                case 0:
+        //                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
+        //                    break;
+        //                case 1:
+        //                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
+        //                    break;
+
+
+
+        //            }
+
+
         //            if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
         //            {
         //                switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
@@ -1624,7 +1642,7 @@ namespace EMS
         //                }
 
         //            }
-        //            if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel != frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel)  
+        //            if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel != frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel)
         //            {
         //                switch (frmMain.Selffrm.AllEquipment.Led_Show_status)
         //                {
@@ -1644,6 +1662,8 @@ namespace EMS
         //        frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
         //    }
         //}
+
+
     }
     //pcs新增DSP2  11.27
     public class DSP2Class : BaseEquipmentClass
@@ -4189,23 +4209,7 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.runState = 1;//设置运行状态为故障
                 }
             }
-            if (inputA > 0.5)
-                State = 3;
-            else if (inputA < -0.5)
-                State = 2;
-            else
-                State = 0;
 
-            time = DateTime.Now;
-            //设置运行指示灯
-            if (State > 0)
-            {
-                frmSet.RunStateGPIO(0);
-            }
-            else
-            {
-                frmSet.RunStateGPIO(1);
-            }
 
             //处理故障
             ushort sData = 0;
@@ -5937,8 +5941,7 @@ namespace EMS
         public string iot_code { get; set; } = "ems208800001";
         public int runState { get; set; } = 0;  //运行状态 0正常，1故障，2停机
         public bool[] ErrorState = { false, false, false };//1.2.3级别
-        // 6-4
-        public bool[] LedErrorState = { false, false, false };//1.2.3级别
+
 
         public ushort[] OldEMSError = {0,0,0,0,0 };
         public ushort[] EMSError = { 0, 0, 0, 0, 0 }; //问题？为什么有5个 和errorclass不同 
@@ -5949,14 +5952,17 @@ namespace EMS
 
         public bool[] Led_Error = { false, false, false };//1.2.3级别
         public bool[] Prev_Led_Error = { false, false, false };//1.2.3级别
+
         //public int Led_ShowWarn = 0; // 0 正常 ，1 警告 ，2 故障
         //public int Prev_Led_ShowWarn = 0;
         /*0 待机 1 运行*/
         public int Led_Show_status = 0;      //0 待机 1 运行 
-        //0 待机 1 运行
         public int Prev_Led_Show_status = 0; //0 待机 1 运行 
         public int Led_ShowPowerLevel = 0;
         public int Prev_Led_ShowPowerLevel = 0;
+        // 6-4
+        public bool[] LedErrorState = { false, false, false };//错误标志位 1.2.3级别
+
 
 
         //整体设备类的字段
