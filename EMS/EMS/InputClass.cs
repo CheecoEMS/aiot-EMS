@@ -4032,12 +4032,12 @@ namespace EMS
             //设置运行指示灯
             if (State > 0)
             {
-                frmSet.RunStateGPIO(0);
+                frmSet.RunStateGPIO(1);
 
             }
             else
             {
-                frmSet.RunStateGPIO(1);
+                frmSet.RunStateGPIO(0);
             }
 
             //处理故障
@@ -4132,7 +4132,7 @@ namespace EMS
                 //状态  
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
+                    Error[0] = Convert.ToUInt16(strData);                
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4179,11 +4179,11 @@ namespace EMS
             //设置运行指示灯
             if (State > 0)
             {
-                frmSet.RunStateGPIO(0);
+                frmSet.RunStateGPIO(1);
             }
             else
             {
-                frmSet.RunStateGPIO(1);
+                frmSet.RunStateGPIO(0);
             }
 
             //同步云，储能柜的运行状态
@@ -4369,8 +4369,7 @@ namespace EMS
                 //状态
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    //Error[0] = Convert.ToUInt16(strData);
-                    Error[0] = (ushort)(Convert.ToUInt16(strData) | (6144 & Error[0]));
+                    Error[0] = Convert.ToUInt16(strData); 
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4410,7 +4409,7 @@ namespace EMS
                 }
 
                 //如果连续通讯故障次数超过8次，则认为空调通讯故障
-                if (PreparedCount > 8)
+                if (PreparedCount > 6)
                 {
                     lock (Parent.EMSError)
                     {
@@ -4438,11 +4437,11 @@ namespace EMS
             //设置运行指示灯
             if (State > 0)
             {
-                frmSet.RunStateGPIO(0);
+                frmSet.RunStateGPIO(1);
             }  
             else
             {
-                frmSet.RunStateGPIO(1);
+                frmSet.RunStateGPIO(0);
             }
 
             //同步云，储能柜的运行状态

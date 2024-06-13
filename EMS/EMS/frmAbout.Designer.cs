@@ -113,18 +113,18 @@ namespace EMS
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(28, 12);
+            this.label2.Location = new System.Drawing.Point(23, 12);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(236, 21);
+            this.label2.Size = new System.Drawing.Size(221, 21);
             this.label2.TabIndex = 1;
-            this.label2.Text = "硬件版本：   CGP200FB + RTC";
+            this.label2.Text = "硬件版本：CGP200FB + RTC";
             // 
             // panel6
             // 
             this.panel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel6.Controls.Add(this.label5);
             this.panel6.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.panel6.Location = new System.Drawing.Point(241, 441);
+            this.panel6.Location = new System.Drawing.Point(244, 441);
             this.panel6.Name = "panel6";
             this.panel6.Size = new System.Drawing.Size(340, 43);
             this.panel6.TabIndex = 3;
@@ -134,7 +134,7 @@ namespace EMS
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.label5.ForeColor = System.Drawing.Color.White;
-            this.label5.Location = new System.Drawing.Point(28, 12);
+            this.label5.Location = new System.Drawing.Point(24, 12);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(266, 21);
             this.label5.TabIndex = 1;
@@ -145,7 +145,7 @@ namespace EMS
             this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel5.Controls.Add(this.labSN);
             this.panel5.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.panel5.Location = new System.Drawing.Point(241, 380);
+            this.panel5.Location = new System.Drawing.Point(244, 380);
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(340, 44);
             this.panel5.TabIndex = 2;
@@ -155,11 +155,11 @@ namespace EMS
             this.labSN.AutoSize = true;
             this.labSN.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labSN.ForeColor = System.Drawing.Color.White;
-            this.labSN.Location = new System.Drawing.Point(28, 12);
+            this.labSN.Location = new System.Drawing.Point(23, 12);
             this.labSN.Name = "labSN";
-            this.labSN.Size = new System.Drawing.Size(161, 21);
+            this.labSN.Size = new System.Drawing.Size(171, 21);
             this.labSN.TabIndex = 1;
-            this.labSN.Text = "设备SN：22 — 1002";
+            this.labSN.Text = "设备  SN：22 — 1002";
             // 
             // panel4
             // 
@@ -176,11 +176,11 @@ namespace EMS
             this.labSoftVerb.AutoSize = true;
             this.labSoftVerb.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labSoftVerb.ForeColor = System.Drawing.Color.White;
-            this.labSoftVerb.Location = new System.Drawing.Point(28, 12);
+            this.labSoftVerb.Location = new System.Drawing.Point(23, 12);
             this.labSoftVerb.Name = "labSoftVerb";
-            this.labSoftVerb.Size = new System.Drawing.Size(300, 21);
+            this.labSoftVerb.Size = new System.Drawing.Size(313, 21);
             this.labSoftVerb.TabIndex = 1;
-            this.labSoftVerb.Text = "软件版本：1A200EMS240525Master3.1";
+            this.labSoftVerb.Text = "软件版本：1A200EMS240525Master3.1.1";
             // 
             // panel3
             // 
@@ -197,11 +197,11 @@ namespace EMS
             this.labVerb.AutoSize = true;
             this.labVerb.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labVerb.ForeColor = System.Drawing.Color.White;
-            this.labVerb.Location = new System.Drawing.Point(27, 12);
+            this.labVerb.Location = new System.Drawing.Point(23, 12);
             this.labVerb.Name = "labVerb";
-            this.labVerb.Size = new System.Drawing.Size(250, 21);
+            this.labVerb.Size = new System.Drawing.Size(106, 21);
             this.labVerb.TabIndex = 0;
-            this.labVerb.Text = "系统版本号：CGP200-A- 240610\r\n";
+            this.labVerb.Text = "系统版本号：\r\n";
             // 
             // pictureBox2
             // 
