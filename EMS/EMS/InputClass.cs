@@ -23,6 +23,8 @@ using System.Transactions;
 using System.Windows.Forms;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 using static System.Collections.Specialized.BitVector32;
+using System.Net.Sockets;
+using Org.BouncyCastle.Crypto;
 
 namespace EMS
 {
@@ -6727,7 +6729,6 @@ namespace EMS
                     {
                         if (frmSet.SysCount > 1)
                         {
-                            //log.Error("创建贤臣");
                             frmMain.Selffrm.AllEquipment.AutoControlEMS();
                         }
                     }
@@ -6735,20 +6736,19 @@ namespace EMS
                     {
                         if (frmSet.SysCount > 1)
                         {
-                            //log.Error("创建贤臣");
                             frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
                         }
                     }
 
                 }
-                else
+/*                else
                 {
                     if (frmSet.ConnectStatus == "tcp")
                     {
                         frmMain.Selffrm.ModbusTcpClient.AutoConnect();
                     }
                     
-                }
+                }*/
 
 
 
@@ -7013,7 +7013,8 @@ namespace EMS
         {
             while (true)
             {
-                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                ReadAllEmsTCP();
+/*                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                 {
                     if (!ChechPower)
                     {
@@ -7023,7 +7024,7 @@ namespace EMS
                     {
                         SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
                     }
-                }
+                }*/
                 //log.Error("运行线程");
             }
         }
@@ -7520,6 +7521,47 @@ namespace EMS
 
 
         //502
+        public void ReadAllEmsTCP()
+        {
+            for (int i = 0; i < 10; ++i)
+            {
+                int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
+                if (ID == -1)
+                {
+                    continue;
+                }
+                log.Debug("问询第"+ ID +"台机");
+                ushort tempUShort = 0;
+                if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                {
+                    try
+                    {
+                        byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+
+                        if (client != null && client.Connected)
+                        {
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, client, ref buffer, 3, 0x6002, 1, ref tempUShort))
+                            {
+                                continue;
+                            }
+                            log.Debug("获取值： " + tempUShort);
+                        }
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        log.Error("捕获入参ex: " + ex.Message);
+                        log.Error("报错日志： " + ex.StackTrace);
+                    }
+
+                    //读取多个寄存器值
+                    //string result = "";
+                    //frmMain.Selffrm.ModbusTcpServer.GetString(ID, client, ref buffer, 3, 0x5001, 18, ref result, true);
+
+                }
+            }
+
+        }
         public void SetAllPCSCommandTCP(string awType, string aPCSType, double aPCSValueRate)
         {
             bool bPrepared = false;
@@ -7530,27 +7572,63 @@ namespace EMS
             {
                 if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
                     return;
-                if (frmMain.Selffrm.ModbusTcpServer.clientManager.IDs.Count != 0)
+
+                for (int i = 0; i < 10; ++i)
                 {
-                    foreach (int ID in frmMain.Selffrm.ModbusTcpServer.clientManager.IDs)
+                    int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
+                    if (ID == -1)
                     {
-                        log.Debug("发送第"+ ID +"台机");
+                        continue;
+                    }
+                    log.Debug("发送第"+ ID +"台机");
+                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                    {
+                        byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
                         itemp = Array.IndexOf(wTpyes, awType);
-                        frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap), 6, 0x6003, (ushort)itemp);
+                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer, 6, 0x6003, (ushort)itemp) == -1)
+                        {
+                            continue;
+                        }
                         itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                        frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap), 6, 0x6004, (ushort)itemp);
+                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer, 6, 0x6004, (ushort)itemp) == -1)
+                        {
+                            continue;
+                        }
                         double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
                         log.Debug("计划功率："+ PCSScheduleKVA+"发送功率：" + dtemp);
-                        frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap), 6, 0x6002, (ushort)dtemp);
+                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer, 6, 0x6002, (ushort)dtemp) == -1)
+                        {
+                            continue;
+                        }
                     }
                 }
             }
             else
             {
                 //待补充关机命令下发
+
+
+                /*                for (int i = 0; i < 10; ++i)
+                                {
+                                    int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
+                                    if (ID == -1)
+                                    {
+                                        continue;
+                                    }
+                                    log.Debug("发送第"+ ID +"台机关机");
+                                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                                    {
+                                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap), 6, 0x6000, 0) == -1)
+                                        {
+                                            continue;
+                                        }
+                                    }
+                                }*/
             }
         }
+
 
 
 
@@ -7971,6 +8049,7 @@ namespace EMS
                                         }
                                     }
                                     NetControl = false;
+                                    frmMain.Selffrm.ModbusTcpClient.start_listen = false;
                                     DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
                                 }
                                 else 
@@ -7980,16 +8059,15 @@ namespace EMS
                             }
                             else //结束网控
                             {
-                                ////应该是手工切换到了非主控模式
-                                //if (frmMain.Selffrm.AllEquipment.waValueActive != 0)
-                                //{
-                                //    //frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                                //    //关闭PCS
-                                //    frmSet.PCSMOff();
-                                //    //关闭空调
-                                //    frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                //}
-                                //Thread.Sleep(500);
+                                if (frmSet.ConnectStatus == "tcp")
+                                {
+                                    //frmMain.Selffrm.ModbusTcpClient.start_listen = false;
+
+                                    if (!frmMain.Selffrm.AllEquipment.NetControl)
+                                    {
+                                        frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
+                                    }
+                                }
                                 continue;
                             }
                     }

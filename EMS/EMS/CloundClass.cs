@@ -937,7 +937,99 @@ namespace EMS
             return strID; 
         }
 
-  
+        static public byte[] Back3Data(int aAddr, short iLen)
+        {
+            byte[] returnMsg = null;
+            ushort aMsg;
+            int index = 3;
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.i485Addr, 3, (ushort)iLen);
+            for (int i = aAddr; i <= aAddr+iLen; ++i)
+            {
+                aMsg = 0;
+                switch (i)
+                {
+                    case 0x5000://设备序列号
+                        //aMsg = frmSet.SysID;
+                        break;
+                    case 0x5001://功率，正数为放电，负数为充电
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.PCSKVA;
+                        break;
+                    case 0x5002://日充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                        break;
+                    case 0x5003://日放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                        break;
+                    case 0x5004://月充电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5005://月放电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5006://总充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                        break;
+                    case 0x5007://总放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                        break;
+                    case 0x5008://总容量（%）
+                        aMsg = 200;
+                        break;
+                    case 0x5009://soc上限
+                        aMsg = 100;
+                        break;
+                    case 0x5010://soc下限
+                        aMsg = 5;
+                        break;
+                    case 0x5011://最大功率充电时长（分钟）
+                        aMsg = 90;
+                        break;
+                    case 0x5012://最大功率放电时长（分钟)
+                        aMsg = 90;
+                        break;
+                    case 0x5013://健康度（%）
+                        aMsg = 100;
+                        break;
+                    case 0x5014://状态1：在线，0：离线
+                        aMsg = 0;
+                        break;
+                    case 0x5015://充放电状态0：待机，1：充电，2：放电
+                        if (frmMain.Selffrm.AllEquipment.PCSKVA == 0)
+                        {
+                            aMsg = 0;
+                        }
+                        else
+                        {
+                            if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")
+                            {
+                                aMsg = 1;
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电")
+                            {
+                                aMsg = 2;
+                            }
+                        }
+                        break;
+                    case 0x5016://BMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5017://PCS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5018://EMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5019:
+                        break;
+                }
+                //组装报文
+                ModbusBase.AddMSG3(aMsg, ref returnMsg, ref index);
+            }
+            ModbusBase.AddCRC(ref returnMsg);
+            return returnMsg;
+
+        }
+
         //连控数据中读取数据-----3读取
         static public byte[] Back3Data(int aAddr ) 
         { 
@@ -946,7 +1038,8 @@ namespace EMS
                 case 0x6001://计划功率
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
-                    double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    //double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    double value = 10;
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
                     if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")            

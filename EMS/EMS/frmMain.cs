@@ -123,29 +123,23 @@ namespace EMS
             switch (CMDID)
             {
                 case 0x03://读取 
-                    /*                    if (CloudClass.Back3Data(iAddr, SysID) != null)
-                                        {
-                                            frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr, SysID));
-                                        }*/
+                    if (iLen == 1)
+                    {
+                        frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(CloudClass.Back3Data(iAddr));
+                        log.Debug("返回03消息");
+                    }
+                    else
+                    {
+                        frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(CloudClass.Back3Data(iAddr, iLen));
+                    }
                     break;
                 case 0x06://设置                     
                     log.Debug("接收功能码6的设置指令");
-                    /*                    data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
-                                        message = ModbusBase.BuildCloundMSG((byte)frmSet.i485Addr, 0x20, 1, data);
-                                        string result1 = BitConverter.ToString(message);
-                                        log.Debug("result1:" + result1);
-                                        frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(message);*/
-
-                    //只读不回
-                    /*                    lock (frmMain.Selffrm.ModbusTcpClient.ClientBuffer)
-                                        {
-                                            frmMain.Selffrm.ModbusTcpClient.ClientBuffer.AddToQueue(aByteData);
-                                        }*/
-
+                    log.Debug("接收功能码6的设置指令");
                     //读回
-                    frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
-                    CloudClass.Active6Data(iAddr, (int)iData);
                     //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
+                    CloudClass.Active6Data(iAddr, (int)iData);
+                    frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
                     log.Debug("返回消息");
                     break;
                 case 0x20://读取设备ID  
@@ -558,7 +552,7 @@ namespace EMS
                 if (frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
                 {
                     frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                    frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, Socket>();
+                    frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (Socket, byte[])>();
                     frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                     frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                 }
