@@ -126,6 +126,7 @@ namespace EMS
             this.label65 = new System.Windows.Forms.Label();
             this.tbShedule = new System.Windows.Forms.TabPage();
             this.panel12 = new System.Windows.Forms.Panel();
+            this.btnFlash3 = new System.Windows.Forms.Button();
             this.tcbUseBalaTactics = new EMS.TCheckBox(this.components);
             this.tcbUseYunTactics = new EMS.TCheckBox(this.components);
             this.btnUpT = new System.Windows.Forms.Button();
@@ -333,7 +334,8 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
-            this.btnFlash3 = new System.Windows.Forms.Button();
+            this.tcbCoolingType = new EMS.TouchCombox(this.components);
+            this.label64 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -571,6 +573,8 @@ namespace EMS
             // plSetMain
             // 
             this.plSetMain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.plSetMain.Controls.Add(this.label64);
+            this.plSetMain.Controls.Add(this.tcbCoolingType);
             this.plSetMain.Controls.Add(this.tcbPCSForceRun);
             this.plSetMain.Controls.Add(this.btnClose);
             this.plSetMain.Controls.Add(this.tcbBMSVer);
@@ -1701,6 +1705,23 @@ namespace EMS
             this.panel12.Name = "panel12";
             this.panel12.Size = new System.Drawing.Size(832, 52);
             this.panel12.TabIndex = 16;
+            // 
+            // btnFlash3
+            // 
+            this.btnFlash3.BackColor = System.Drawing.Color.Transparent;
+            this.btnFlash3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnFlash3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnFlash3.ForeColor = System.Drawing.Color.White;
+            this.btnFlash3.Location = new System.Drawing.Point(276, 1);
+            this.btnFlash3.Margin = new System.Windows.Forms.Padding(1);
+            this.btnFlash3.Name = "btnFlash3";
+            this.btnFlash3.Size = new System.Drawing.Size(88, 44);
+            this.btnFlash3.TabIndex = 21;
+            this.btnFlash3.Text = "刷新";
+            this.btnFlash3.UseVisualStyleBackColor = false;
+            this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
             // 
             // tcbUseBalaTactics
             // 
@@ -4552,22 +4573,34 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
-            // btnFlash3
+            // tcbCoolingType
             // 
-            this.btnFlash3.BackColor = System.Drawing.Color.Transparent;
-            this.btnFlash3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnFlash3.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnFlash3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnFlash3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnFlash3.ForeColor = System.Drawing.Color.White;
-            this.btnFlash3.Location = new System.Drawing.Point(276, 1);
-            this.btnFlash3.Margin = new System.Windows.Forms.Padding(1);
-            this.btnFlash3.Name = "btnFlash3";
-            this.btnFlash3.Size = new System.Drawing.Size(88, 44);
-            this.btnFlash3.TabIndex = 21;
-            this.btnFlash3.Text = "刷新";
-            this.btnFlash3.UseVisualStyleBackColor = false;
-            this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
+            this.tcbCoolingType.AccessibleRole = System.Windows.Forms.AccessibleRole.Grip;
+            this.tcbCoolingType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbCoolingType.CenterShow = true;
+            this.tcbCoolingType.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbCoolingType.ForeColor = System.Drawing.Color.White;
+            this.tcbCoolingType.Items = new string[] {
+        "",
+        "风冷",
+        "液冷"};
+            this.tcbCoolingType.Location = new System.Drawing.Point(626, 605);
+            this.tcbCoolingType.Name = "tcbCoolingType";
+            this.tcbCoolingType.SelectItemIndex = 0;
+            this.tcbCoolingType.Size = new System.Drawing.Size(182, 33);
+            this.tcbCoolingType.strText = "";
+            this.tcbCoolingType.TabIndex = 64;
+            this.tcbCoolingType.Value = 0;
+            // 
+            // label64
+            // 
+            this.label64.AutoSize = true;
+            this.label64.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label64.Location = new System.Drawing.Point(575, 610);
+            this.label64.Name = "label64";
+            this.label64.Size = new System.Drawing.Size(42, 21);
+            this.label64.TabIndex = 65;
+            this.label64.Text = "版本";
             // 
             // frmSet
             // 
@@ -4944,5 +4977,7 @@ namespace EMS
         private System.Windows.Forms.Button btnLCRead;
         private System.Windows.Forms.Button btnDHRead;
         private System.Windows.Forms.Button btnFlash3;
+        private TouchCombox tcbCoolingType;
+        private System.Windows.Forms.Label label64;
     }
 }

@@ -124,7 +124,10 @@ namespace EMS
 
 
         //05.10 Gpio 判断
-        public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
+
+        public static int GPIO_type = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
+        public static int Cooling_type = 2;    //默认未0  1：风冷 2：液冷
+
         // 05.13 添加 UBmsPcsState  0BmsPcsState 
         public static int UBmsPcsState;
         public static int OBmsPcsState;
@@ -444,7 +447,7 @@ namespace EMS
         //GPIO初始化
         public static void InitGPIO()
         {
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.GPIO_type)
             {
                 case 0:
                     frmSet.Init0_GPIO();
@@ -712,7 +715,7 @@ namespace EMS
         public static void BMS2warningGPIO(int option) 
         {
             if(option == 0)
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.GPIO_type)
             {
                 case 0:
                     frmSet.SetGPIOState(10, 0);
@@ -725,7 +728,7 @@ namespace EMS
                     break;
             }
             else 
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.GPIO_type)
             {
                 case 0:
                     frmSet.SetGPIOState(10, 1);
@@ -741,7 +744,7 @@ namespace EMS
         public static void ErrorGPIO(int option)
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(11, 0);
@@ -754,7 +757,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(11, 1);
@@ -770,7 +773,7 @@ namespace EMS
         public static void RunStateGPIO(int option)
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(9, 0);
@@ -783,7 +786,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(9, 1);
@@ -797,10 +800,10 @@ namespace EMS
                 }
         }
 
-        public static void PowerGPIO(int option)
+        public static void PowerGPIO(int option)    
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(15, 0);
@@ -813,7 +816,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (frmSet.GPIO_type)
                 {
                     case 0:
                         frmSet.SetGPIOState(15, 1);
@@ -937,7 +940,10 @@ namespace EMS
                 //1.29
                 RestartCounts = Convert.ToInt32(ConfigINI.INIRead("System Set", "RestartCounts", "0", INIPath));
 
-                GPIO_Select_Mode = Convert.ToInt32(ConfigINI.INIRead("System Set", "GPIOSelect", "0", INIPath));
+                GPIO_type = Convert.ToInt32(ConfigINI.INIRead("System Set", "GPIOSelect", "0", INIPath));
+                Cooling_type = Convert.ToInt32(ConfigINI.INIRead("System Set", "Cooling_type", "0", INIPath));
+
+
             }
             catch (Exception ex)
             {
@@ -1161,6 +1167,8 @@ namespace EMS
                 tcbUseYunTactics.SetValue(UseYunTactics);
                 tcbUseBalaTactics.SetValue(UseBalaTactics);
                 tcbiPCSfactory.SetSelectItemIndex(iPCSfactory);
+                tcbCoolingType.SetSelectItemIndex(Cooling_type);
+
                 tcbPCSGridModel_OnValueChange(null);
                 tcbBMSVer.SetSelectItemIndex(BMSVerb);
                 tcbPCSForceRun.SetValue(PCSForceRun);
@@ -2270,5 +2278,6 @@ namespace EMS
         {
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
+
     }
 }

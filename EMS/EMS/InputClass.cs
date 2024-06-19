@@ -1031,13 +1031,15 @@ namespace EMS
     //5.05 新增除湿机
     public class DehumidifierClass : BaseEquipmentClass
     {
-        public double TempData;                  //温度-40---80，浮点型
-        public double HumidityData;              //湿度0-100RH，浮点型
-        public double WorkStatus;                //工作状态           
-        public double TempData_Boot;             //温度启动值 LCSetHotTemp
-        public double TempData_Stop;             //温度停止值	
-        public double HumidityData_Boot;         //湿度启动值
-        public double HumidityData_Stop;         //湿度停止值 
+
+        public double TempData { get; set; }                 //温度-40---80，浮点型
+        public double HumidityData { get; set; }             //湿度0-100RH，浮点型
+        public double WorkStatus { get; set; }               //工作状态           
+        public double TempData_Boot { get; set; }             //温度启动值 LCSetHotTemp
+        public double TempData_Stop { get; set; }             //温度停止值	
+        public double HumidityData_Boot { get; set; }         //湿度启动值
+        public double HumidityData_Stop { get; set; }         //湿度停止值 
+
         public DehumidifierClass()
         {
             strCommandFile = "Dehumidifier.txt";
@@ -1086,11 +1088,11 @@ namespace EMS
                 bPrepared = true;
                 if (Get3strData(0, ref strData, ref strTemp))
                 {
-                    TempData = Convert.ToInt32(strTemp);            //温度
+                    TempData = Convert.ToInt32(strTemp)*0.1;            //温度
                 }
                 if (Get3strData(1, ref strData, ref strTemp))
                 {
-                    HumidityData = Convert.ToInt32(strTemp);            //湿度
+                    HumidityData = Convert.ToInt32(strTemp)*0.1;            //湿度
                 }
                 if (Get3strData(2, ref strData, ref strTemp))
                 {
@@ -1353,6 +1355,12 @@ namespace EMS
             SetLEDWarn(Led_off);
             SetLEDError(Led_off);
         }
+        public void Set_Led_Discharge_N()
+        {
+            SetLEDRun(Led_on);
+            SetLEDWarn(Led_off);
+            SetLEDError(Led_off);
+        }
         public void Set_Led_Charge_W()
         {
             SetLEDRun(Led_off);
@@ -1390,176 +1398,22 @@ namespace EMS
 
 
 
-        public void Led_Control_Loop()
-        {
-            {
-                //LED获取当前告警级别
-                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
-                else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
-
-                //LED获取当前状态
-                if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
-                else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
-
-                //LED获取当前电量等级
-                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
-
-                if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
-                {
-                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
-                    {
-                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-                        {
-                            case 0:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
-                                break;
-                            case 1:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-                                break;
-                            case 2:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
-                                break;
-                        }
-                    }
-                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)   //获取运行状态 
-                    {
-                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-                        {
-                            case 0:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
-                                break;
-                            case 1:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
-                                break;
-                            case 2:
-                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
-                                break;
-                        }
-                    }
-                    switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
-                    {
-                        case 0:
-                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                            break;
-                        case 1:
-                            frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                            break;
-                    }
-                }
-                else//运行状态不变
-                {
-                    if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowError != frmMain.Selffrm.AllEquipment.Led_ShowError)
-                    {
-                        if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)
-                        {
-                            switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-                            {
-                                case 0:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
-                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                    break;
-                                case 1:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                    break;
-                                case 2:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
-                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                    break;
-                            }
-                        }
-                        if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)
-                        {
-                            switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-                            {
-                                case 0:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
-                                    frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                    break;
-                                case 1:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
-                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
-                                    break;
-                                case 2:
-                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
-                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
-                                    break;
-                            }
-                        }
-
-                    }
-                    if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel != frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel)
-                    {
-                        switch (frmMain.Selffrm.AllEquipment.Led_Show_status)
-                        {
-                            case 0:
-                                frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                break;
-                            case 1:
-                                frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                                break;
-                        }
-                    }
-                }
-
-                //状态同步
-                frmMain.Selffrm.AllEquipment.Prev_Led_ShowError = frmMain.Selffrm.AllEquipment.Led_ShowError;
-                frmMain.Selffrm.AllEquipment.Prev_Led_Show_status = frmMain.Selffrm.AllEquipment.Led_Show_status;
-                frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
-            }
-        }
-
-
-
-
-
-
-        /*************************  新版灯语  ***********************************/
         //public void Led_Control_Loop()
         //{
         //    {
-        //        int errorclass = 0;
         //        //LED获取当前告警级别
-        //        if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_Error[2] = true; //三级告警
-        //        else frmMain.Selffrm.AllEquipment.Led_Error[2] = false;
-
-        //        if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
-        //        else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
-
-        //        errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.Led_Error);      
-        //        if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
-        //        else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
+        //        if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
+        //        else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
 
         //        //LED获取当前状态
         //        if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
         //        else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
 
         //        //LED获取当前电量等级
-        //        frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
+        //        frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
 
-        //        log.Debug($"Errorclass标志位:{errorclass} " +
-        //                  $"Led_ShowPowerLevel 灯板个数:{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}" +
-        //                  $"Led_Show_status  待机or运行:{frmMain.Selffrm.AllEquipment.Led_Show_status} ");
-
-        //        //frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
-
-        //        if (frmMain.Selffrm.AllEquipment.Led_Show_status != frmMain.Selffrm.AllEquipment.Prev_Led_Show_status)//运行状态改变
+        //        if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
         //        {
-        //            switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
-        //            {
-
-        //                case 0:
-        //                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
-        //                    break;
-        //                case 1:
-        //                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-        //                    break;
-
-
-
-        //            }
-
-
         //            if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
         //            {
         //                switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
@@ -1662,6 +1516,140 @@ namespace EMS
         //        frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
         //    }
         //}
+
+
+
+        /*************************  新版灯语  ***********************************/
+        public void Led_Control_Loop()
+        {
+            {
+                int errorclass = 0;
+                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_Error[2] = true; //三级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[2] = false;
+                if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
+                errorclass = (Convert.ToInt32(frmMain.Selffrm.AllEquipment.LedErrorState[2]) * 4 + Convert.ToInt32(frmMain.Selffrm.AllEquipment.LedErrorState[1]) * 2 + Convert.ToInt32(frmMain.Selffrm.AllEquipment.LedErrorState[1]));
+                if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
+                if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
+                else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
+                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
+                log.Debug($"Errorclass标志位:{errorclass} " +
+                          $"Led_ShowPowerLevel 灯板个数:{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}" +
+                          $"Led_Show_status  待机or运行:{frmMain.Selffrm.AllEquipment.Led_Show_status} ");
+                if (frmMain.Selffrm.AllEquipment.Led_Show_status != frmMain.Selffrm.AllEquipment.Prev_Led_Show_status)//运行状态改变
+                {
+                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
+                    {
+                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                        {
+                            case 0:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
+                                break;
+                            case 1:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
+                                break;
+                            case 2:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
+                                break;
+                        }
+                    }
+                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)   //获取运行状态 
+                    {
+                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                        {
+                            case 0:
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].allUkva < 0) frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
+                                    else frmMain.Selffrm.AllEquipment.Led.Set_Led_Discharge_N();
+                                }
+                                break;
+                            case 1:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
+                                break;
+                            case 2:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
+                                break;
+                        }
+                    }
+                    switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
+                    {
+                        case 0:
+                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                            break;
+                        case 1:
+                            {
+                                if (frmMain.Selffrm.AllEquipment.Led_ShowError != 0) frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = 0;
+                                frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                            }
+                            break;
+                    }
+                }
+                else//运行状态不变
+                {
+                    if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowError != frmMain.Selffrm.AllEquipment.Led_ShowError)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)
+                        {
+                            switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                            {
+                                case 0:
+                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
+                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                    break;
+                                case 1:
+                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
+                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                    break;
+                                case 2:
+                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
+                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                    break;
+                            }
+                        }
+                        if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)
+                        {
+                            switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                            {
+                                case 0:
+                                    {
+                                        if (frmMain.Selffrm.AllEquipment.PCSList[0].allUkva < 0) frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
+                                        else frmMain.Selffrm.AllEquipment.Led.Set_Led_Discharge_N();
+                                        frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                    }
+                                    break;
+                                case 1:
+                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
+                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
+                                    break;
+                                case 2:
+                                    frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
+                                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
+                                    break;
+                            }
+                        }
+                    }
+                    if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel != frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel)
+                    {
+                        switch (frmMain.Selffrm.AllEquipment.Led_Show_status)
+                        {
+                            case 0:
+                                frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                break;
+                            case 1:
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.Led_ShowError != 0) frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = 0;
+                                    frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
+                                }
+                                break;
+                        }
+                    }
+                }
+                frmMain.Selffrm.AllEquipment.Prev_Led_ShowError = frmMain.Selffrm.AllEquipment.Led_ShowError;
+                frmMain.Selffrm.AllEquipment.Prev_Led_Show_status = frmMain.Selffrm.AllEquipment.Led_Show_status;
+                frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
+            }
+        }
 
 
     }
@@ -2064,7 +2052,6 @@ namespace EMS
         public double InwaterPressure { get; set; } //进水压力
         public double OutwaterPressure { get; set; } //出水压力
 
-        public string ProtocolVersion { get; set; } //设备协议版本
 
         //设置数据
         public int LCModel { get; set; } //运行模式
@@ -2134,6 +2121,25 @@ namespace EMS
             {
             }
         }
+
+        public void LC_loop()
+        {
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) < 0.5)
+                {
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                    }
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 15 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 0)
+                    {
+                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
+                    }
+                }
+            }
+        }
+
 
 
         /// <summary>
@@ -2236,9 +2242,9 @@ namespace EMS
                 if (Get3strData(11, ref strData, ref strTemp))
                     environmentTemp = Math.Round(float.Parse(strTemp), 1);//环境温度
                 if (Get3strData(12, ref strData, ref strTemp))
-                    InwaterPressure = Math.Round(float.Parse(strTemp), 1);  //进水压力
+                    InwaterPressure  = Math.Round(float.Parse(strTemp)*0.01, 1);  //进水压力
                 if (Get3strData(13, ref strData, ref strTemp))
-                    OutwaterPressure = Convert.ToInt32(strTemp);        //出水压力
+                    OutwaterPressure = Math.Round(Convert.ToInt32(strTemp)*0.01,1);        //出水压力
             }
             //读取故障
             if (GetSysData(26, ref strTemp))
@@ -3775,7 +3781,7 @@ namespace EMS
             switch (PCS)
             {
                 case 0:
-                    //GetDataFromEqipment1();
+                    GetDataFromEqipment1();
                     break;
                 case 1:
                     if (frmMain.Selffrm.AllEquipment.ReduceReadPCS)
@@ -6628,7 +6634,10 @@ namespace EMS
                     switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
                     {
                         case 0:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
+                            {
+                                if (frmMain.Selffrm.AllEquipment.PCSList[0].allUkva < 0) frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
+                                else frmMain.Selffrm.AllEquipment.Led.Set_Led_Discharge_N();
+                            }
                             break;
                         case 1:
                             frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
@@ -8443,7 +8452,7 @@ namespace EMS
         //级联
         public  void FireFBGPIO()
         {
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.GPIO_type)
             {
                 case 0:
                     if (frmSet.GetGPIOState(0) == 3)
@@ -8537,7 +8546,7 @@ namespace EMS
 
         public void EmergencyStopFBGPIO() {
 
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.GPIO_type)
             { 
             case 0:                    
                 if (frmSet.GetGPIOState(1) == 3)

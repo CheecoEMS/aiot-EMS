@@ -417,6 +417,8 @@ namespace EMS
                 //11.30 BMS区分风冷和液冷字段配置
                 if (frmMain.Selffrm.AllEquipment.TempControl != null)
                 {
+                    //tcb.SelectItemIndex = 0;
+                    
                     frmMain.Selffrm.AllEquipment.BMS.BMStype = 1;
                 }
                 else if (frmMain.Selffrm.AllEquipment.LiquidCool != null)

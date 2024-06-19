@@ -70,8 +70,8 @@ namespace EMS
         private bool CheckFormData()
         {
             int iPower = -1;
-            if ((oneForm.UserTxtBox.Text=="cheeco") &&(oneForm.PasswordTxtBox.Text=="88889999"))
-            //if ((oneForm.UserTxtBox.Text == "") && (oneForm.PasswordTxtBox.Text == ""))
+            //if ((oneForm.UserTxtBox.Text=="cheeco") &&(oneForm.PasswordTxtBox.Text=="88889999"))
+            if ((oneForm.UserTxtBox.Text == "") && (oneForm.PasswordTxtBox.Text == ""))
             {
                 frmMain.UserID = "master";
                 frmMain.UserPower = 10;

@@ -562,9 +562,15 @@ namespace EMS
             if (Parent.LiquidCool != null)
             {
                 Parent.LiquidCool.time = tempTime;
-                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" +  "0air" + strTime + ".json");
-                //log.
+                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" +  "0liq" + strTime + ".json");
+            }//除湿机
+            if (Parent.Dehumidifier != null)
+            {
+                Parent.Dehumidifier.time = tempTime;
+                ConvertToJson(Parent.Dehumidifier, strUpPath, "\\" + "0hum" + strTime + ".json");
             }
+
+
             //消防
             if (Parent.Fire != null)
             { 
