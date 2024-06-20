@@ -235,8 +235,6 @@ namespace EMS
         //每分钟检查一次
         private void CheckBalaTactics()
         {
-
-            //log.Debug("Tactics 线程执行");
             DateTime now;
             BalaTacticsClass oneBalaTactics = null;
             int sleepCount = 1000;

@@ -308,10 +308,7 @@ namespace EMS
                     MaxSOC = rd.GetInt32(2);
                     MinSOC = rd.GetInt32(3);
                     frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                    log.Debug("读取UBmsPcsState :" + rd.GetInt32(4));
                     frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
-                    log.Debug("读取0BmsPcsState : " + rd.GetInt32(5));
-                    //log.Error("数据库读取"+"MaxGridKW: " + MaxGridKW + "MinGridKW: " + MinGridKW);
                 }
             }
             catch (Exception ex)
@@ -951,10 +948,8 @@ namespace EMS
         //保存数据到INI文件
         public static void SaveSet2File()
         {
-            //log.Debug("保存数据到INI文件:" + "MaxGridKW: " +frmSet.MaxGridKW + "MinGridKW: " + frmSet.MinGridKW);
             INIFile ConfigINI = new INIFile();
             //ConfigINI.INIWrite("", "key", "value", INIPath);
-            //log.Error("INIPath: " + INIPath);
             ConfigINI.INIWrite("System Set", "SysName", SysName, INIPath);
             ConfigINI.INIWrite("System Set", "SysID", SysID, INIPath);
             ConfigINI.INIWrite("System Set", "SysPower", SysPower.ToString(), INIPath);
