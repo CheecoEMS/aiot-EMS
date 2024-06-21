@@ -413,7 +413,10 @@ namespace EMS
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
                 //5.15
-                frmMain.Selffrm.AllEquipment.init_LED();
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.init_LED();
+                }
                 //11.30 BMS区分风冷和液冷字段配置
                 if (frmMain.Selffrm.AllEquipment.TempControl != null)
                 {

@@ -83,7 +83,6 @@ namespace EMS
     //所有部件的共性
     public class BaseEquipmentClass
     {
-        public string version;
         public string strCap = "";
         public string strCommandFile = "";
         public string iot_code { get; set; } = "";
@@ -857,53 +856,53 @@ namespace EMS
         }
         public void RecodChargeinform(int level)
         {
-            DateTime dtTemp = DateTime.Now;
-            string msg = "";
-            string sql = "";
-            switch (level)
-            {
-                case 1:
-                    msg = "充电1级告警";
-                    break;
-                case 2:
-                    msg = "充电2级告警";
-                    break;
-                case 3:
-                    msg = "充电3级告警";
-                    break;
-                case 4:
-                    msg = "放电1级告警";
-                    break;
-                case 5:
-                    msg = "放电2级告警";
-                    break;
-                case 6:
-                    msg = "放电3级告警";
-                    break;
-            }
-            if (msg != "")
-            {
-                if (level < 4)
-                {
-                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, BMSa, Time, Warning) "
-                                    + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
-                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
-                                    + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
-                }
-                else
-                {
-                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMinV, cellMinV, BMSa, Time, Warning) "
-                                   + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
-                                   + frmMain.Selffrm.AllEquipment.BMS.cellIDMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
-                                   + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
-                }
+            //DateTime dtTemp = DateTime.Now;
+            //string msg = "";
+            //string sql = "";
+            //switch (level)
+            //{
+            //    case 1:
+            //        msg = "充电1级告警";
+            //        break;
+            //    case 2:
+            //        msg = "充电2级告警";
+            //        break;
+            //    case 3:
+            //        msg = "充电3级告警";
+            //        break;
+            //    case 4:
+            //        msg = "放电1级告警";
+            //        break;
+            //    case 5:
+            //        msg = "放电2级告警";
+            //        break;
+            //    case 6:
+            //        msg = "放电3级告警";
+            //        break;
+            //}
+            //if (msg != "")
+            //{
+            //    if (level < 4)
+            //    {
+            //        sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, BMSa, Time, Warning) "
+            //                        + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
+            //                        + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
+            //                        + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
+            //    }
+            //    else
+            //    {
+            //        sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMinV, cellMinV, BMSa, Time, Warning) "
+            //                       + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
+            //                       + frmMain.Selffrm.AllEquipment.BMS.cellIDMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
+            //                       + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
+            //    }
 
-                if (sql != "")
-                {
-                    DBConnection.ExecSQL(sql);
-                }
+            //    if (sql != "")
+            //    {
+            //        DBConnection.ExecSQL(sql);
+            //    }
 
-            }
+            //}
         }
         //处理一个故障
         public void RecodError(string awClass, string aeID, int aWaringID, int awLevels, string aWarning, bool aError)
@@ -1034,7 +1033,7 @@ namespace EMS
 
         public double TempData { get; set; }                 //温度-40---80，浮点型
         public double HumidityData { get; set; }             //湿度0-100RH，浮点型
-        public double WorkStatus { get; set; }               //工作状态           
+        public int WorkStatus { get; set; }               //工作状态           
         public double TempData_Boot { get; set; }             //温度启动值 LCSetHotTemp
         public double TempData_Stop { get; set; }             //温度停止值	
         public double HumidityData_Boot { get; set; }         //湿度启动值
@@ -1398,125 +1397,7 @@ namespace EMS
 
 
 
-        //public void Led_Control_Loop()
-        //{
-        //    {
-        //        //LED获取当前告警级别
-        //        if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
-        //        else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
-
-        //        //LED获取当前状态
-        //        if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
-        //        else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
-
-        //        //LED获取当前电量等级
-        //        frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
-
-        //        if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
-        //        {
-        //            if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
-        //            {
-        //                switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-        //                {
-        //                    case 0:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
-        //                        break;
-        //                    case 1:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-        //                        break;
-        //                    case 2:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
-        //                        break;
-        //                }
-        //            }
-        //            if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)   //获取运行状态 
-        //            {
-        //                switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-        //                {
-        //                    case 0:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
-        //                        break;
-        //                    case 1:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
-        //                        break;
-        //                    case 2:
-        //                        frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
-        //                        break;
-        //                }
-        //            }
-        //            switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
-        //            {
-        //                case 0:
-        //                    frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                    break;
-        //                case 1:
-        //                    frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                    break;
-        //            }
-        //        }
-        //        else//运行状态不变
-        //        {
-        //            if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowError != frmMain.Selffrm.AllEquipment.Led_ShowError)
-        //            {
-        //                if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)
-        //                {
-        //                    switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-        //                    {
-        //                        case 0:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                            break;
-        //                        case 1:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                            break;
-        //                        case 2:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                            break;
-        //                    }
-        //                }
-        //                if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)
-        //                {
-        //                    switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-        //                    {
-        //                        case 0:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                            break;
-        //                        case 1:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
-        //                            break;
-        //                        case 2:
-        //                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
-        //                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
-        //                            break;
-        //                    }
-        //                }
-
-        //            }
-        //            if (frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel != frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel)
-        //            {
-        //                switch (frmMain.Selffrm.AllEquipment.Led_Show_status)
-        //                {
-        //                    case 0:
-        //                        frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                        break;
-        //                    case 1:
-        //                        frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-        //                        break;
-        //                }
-        //            }
-        //        }
-
-        //        //状态同步
-        //        frmMain.Selffrm.AllEquipment.Prev_Led_ShowError = frmMain.Selffrm.AllEquipment.Led_ShowError;
-        //        frmMain.Selffrm.AllEquipment.Prev_Led_Show_status = frmMain.Selffrm.AllEquipment.Led_Show_status;
-        //        frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
-        //    }
-        //}
-
+ 
 
 
         /*************************  新版灯语  ***********************************/
@@ -2122,25 +2003,6 @@ namespace EMS
             }
         }
 
-        public void LC_loop()
-        {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) < 0.5)
-                {
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
-                    {
-                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
-                    }
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 15 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 0)
-                    {
-                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
-                    }
-                }
-            }
-        }
-
-
 
         /// <summary>
         /// 复位故障码
@@ -2242,9 +2104,9 @@ namespace EMS
                 if (Get3strData(11, ref strData, ref strTemp))
                     environmentTemp = Math.Round(float.Parse(strTemp), 1);//环境温度
                 if (Get3strData(12, ref strData, ref strTemp))
-                    InwaterPressure  = Math.Round(float.Parse(strTemp)*0.01, 1);  //进水压力
+                    InwaterPressure  = Math.Round(float.Parse(strTemp)*0.01, 2);  //进水压力
                 if (Get3strData(13, ref strData, ref strTemp))
-                    OutwaterPressure = Math.Round(Convert.ToInt32(strTemp)*0.01,1);        //出水压力
+                    OutwaterPressure = Math.Round(Convert.ToInt32(strTemp)*0.01,2);        //出水压力
             }
             //读取故障
             if (GetSysData(26, ref strTemp))
@@ -3459,7 +3321,6 @@ namespace EMS
         public double InTemp { get; set; }           //入口温度
         public double OutTemp { get; set; }             //出口温度
         public ushort[] Error { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        public int[] Error_2  = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public ushort[] OldError = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -4485,7 +4346,6 @@ namespace EMS
             {
                 sData = Error[i];
                 sOldData = OldError[i];
-                log.Error("PCSJS  :" + i + " sData" + sOldData + "sOldData:" + sOldData);
 
                 if (sData != sOldData)
                 {
@@ -6240,13 +6100,13 @@ namespace EMS
                         log.Info("充电模式下调整功率比例："+ UBmsPcsState+" "+"aData:" + aData);
                         if ((BMSSOC > frmSet.MaxSOC) && (aData != 0))
                         {
-                            DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
+                            //DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
                             aData = 0;
                             log.Info("SOC过高，功率置0");
                         }
                         else if ((BMS.MaxChargeA == 0) && (aData != 0))
                         {
-                            DBConnection.RecordLOG("系统","充电失败", "BMS禁止充电");
+                            //DBConnection.RecordLOG("系统","充电失败", "BMS禁止充电");
                             aData = 0;
                             log.Info("BMS禁止充电，功率置0");
                         }
@@ -6256,12 +6116,12 @@ namespace EMS
                         log.Info("放电模式下调整功率比例："+ OBmsPcsState+" "+"aData:" + aData);
                         if ((BMSSOC < frmSet.MinSOC) && (aData != 0))
                         {
-                            DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
+                            //DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
                             aData = 0;
                         }
                         else if ((BMS.MaxDischargeA == 0) && (aData != 0))
                         {
-                            DBConnection.RecordLOG("系统", "放电失败", "BMS禁止放电");
+                            //DBConnection.RecordLOG("系统", "放电失败", "BMS禁止放电");
                             aData = 0;
                         }
                         break;
@@ -7109,6 +6969,7 @@ namespace EMS
             double tempPUMdemand_now;
             while (true)
             {
+                Thread.Sleep(1500); 
                 //1 关口表
                 tempGridKVA = 0;
                 tempPUMdemand_max = 0;

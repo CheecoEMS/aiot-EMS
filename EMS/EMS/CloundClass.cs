@@ -324,6 +324,7 @@ namespace EMS
             }
 /*            else if (topic == BalaTacticTopic)
             {
+                //log.Info("接收到均衡策略");
                 strID = GetServerBalaTactics(message);
                 mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
@@ -567,7 +568,7 @@ namespace EMS
             if (Parent.Dehumidifier != null)
             {
                 Parent.Dehumidifier.time = tempTime;
-                ConvertToJson(Parent.Dehumidifier, strUpPath, "\\" + "0hum" + strTime + ".json");
+                ConvertToJson(Parent.Dehumidifier, strUpPath, "\\" + "0csj" + strTime + ".json");
             }
 
 

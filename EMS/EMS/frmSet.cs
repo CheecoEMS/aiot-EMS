@@ -341,50 +341,7 @@ namespace EMS
                 + "',MinSOC ='" + MinSOC.ToString()
                 + "',UBmsPcsState ='" + frmMain.Selffrm.AllEquipment.UBmsPcsState.ToString()
                 + "', OBmsPcsState ='" + frmMain.Selffrm.AllEquipment.OBmsPcsState.ToString()
-                + "'");
-
-
-            //        DBConnection.ExecSQL("update  tactics  SET "
-            // + " tType='" + oneForm.tcbtType.strText
-            // + "',PCSType='" + oneForm.tcbPCSType.strText
-            // + "', waValue='" + oneForm.tnedwaValue.Value.ToString()
-            // + "', startTime= '"
-            //       + oneForm.tneStartH.Value.ToString("D2") + ":"
-            //       + oneForm.tneStartm.Value.ToString("D2") + ":"
-            //       + oneForm.tneStartS.Value.ToString("D2")
-            //   //oneForm.dtpStartTime.Value.ToString("H:m:s")
-            //   + "', endTime= '"
-            //  + oneForm.tneEndH.Value.ToString("D2") + ":"
-            //+ oneForm.tneEndm.Value.ToString("D2") + ":"
-            //+ oneForm.tneEndS.Value.ToString("D2")
-            // + "' where id='" + DataID + "'");
-
-            //DBConnection.ExecSQL("insert into GlobalSet (MaxGridKW, MinGridKW, MaxSOC, MinSOC) "
-            //+ "values ('"
-            //+ MaxGridKW.ToString() + "','"
-            //+ MinGridKW.ToString() + "','"
-            //+ MaxSOC.ToString() + "','"
-            //+ MinSOC.ToString() + "') ");
-
-
-
-            //DBConnection.ExecSQL("insert into globalset (MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState) "
-            //+ "values ('"
-            //+ MaxGridKW.ToString() + "','"
-            //+ MinGridKW.ToString() + "','"
-            //+ MaxSOC.ToString() + "','"
-            //+ MinSOC.ToString() + "','"
-            //+ frmMain.Selffrm.AllEquipment.UBmsPcsState.ToString() + "','"
-            //+ "6668"  + "')");
-
-
-
-
-            //      DBConnection.ExecSQL("insert into globalset (UName,UPassword,UPower,AddTime) "
-            //+ oneForm.tbPassword.Text + "','"
-            //+ oneForm.tcbPower.SelectItemIndex.ToString() + "','"
-            //+  
-
+                + "'");      
         }
 
         public List<ModbusCommand> VersionList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等

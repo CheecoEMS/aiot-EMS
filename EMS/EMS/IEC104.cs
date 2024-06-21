@@ -291,7 +291,7 @@ namespace IEC104
                     }
                     break;
                 //短浮点数遥测
-                case 13:
+                case 0x0d:
                     /*传输原因*/
                     if (msg[8] == 5 && msg[9] == 0) //(遥信被请求，遥测被请求)
                     {

@@ -359,7 +359,7 @@ namespace EMS
         {
             frmMain.Selffrm.AllEquipment.ErrorState[2] = false;
             frmSet.SaveSet2File();
-            frmSet.ErrorGPIO(1);
+            frmSet.ErrorGPIO(0);
             //frmMain.Selffrm.AllEquipment.runState = 0;
         }
 
