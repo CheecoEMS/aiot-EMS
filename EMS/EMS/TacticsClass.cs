@@ -272,12 +272,6 @@ namespace EMS
                 if (TacticsList.Count == 0) {
                     LoadFromMySQL();
                 }
-
-
-                if ((TacticsList.Count == 0) || (Parent.PCSList.Count == 0)||(!frmSet.IsMaster))
-                {
-                    continue;
-                }
                    
                 now = DateTime.Now;
 

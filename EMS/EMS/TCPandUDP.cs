@@ -31,11 +31,7 @@ namespace Modbus
         public int[] IDss = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
         private static ILog log = LogManager.GetLogger("ClientManager");
-        /*        public ClientManager()
-                { 
-                    //clientMap = new Dictionary<int, Socket>();
-                    //IDmap = new IdManager();
-                }*/
+
         public bool FindClient(int ID, Socket clientSocket, ref Dictionary<int, (Socket, byte[])> clientMap)
         {
             for (int i = 0; i < 10; ++i)
@@ -69,22 +65,9 @@ namespace Modbus
             {
                 log.Error("设备：" + IDss[i]);
             }
-
-            //IDs.Add(ID);
-            //IDmap.AddId(client.ID, 0);    // client.ID ：虚拟ID，此ID在连接Socket时获得  0：连接后后续主机发送闻讯SN报文获得返回修改
         }
         public void RemoveClient(int ID, ref Dictionary<int, (Socket, byte[])> clientMap)
         {
-
-            /*            foreach (var item in clientMap.ToList())
-                        {
-                            if (item.Key.Equals(ID))
-                            {
-                                clientMap.Remove(item.Key);
-                                log.Error("clientMap移除" + ID);
-                            }
-                        }*/
-
             if (clientMap.ContainsKey(ID))
             {
                 byte[] byteArray = clientMap[ID].Item2;
@@ -92,7 +75,6 @@ namespace Modbus
 
                 clientMap.Remove(ID);
             }
-
 
             for (int i = 0; i < 10; ++i)
             {
@@ -102,9 +84,8 @@ namespace Modbus
                     break;
                 }
             }
-
-
         }
+
         public Socket GetClient(int ID, ref Dictionary<int, (Socket, byte[])> clientMap)
         {
             if (clientMap != null)
@@ -133,8 +114,6 @@ namespace Modbus
                 }
                 else
                 {
-                    /*                byte[] byteArray1 = new byte[1024];
-                                    return byteArray1;*/
                     return null;
                 }
             }
@@ -354,6 +333,10 @@ namespace Modbus
             {
                 log.Error("server释放socket资源失败：" + ex.Message);
             }
+            catch (Exception ex)
+            {
+                log.Error("server释放socket资源失败：" + ex.Message);
+            }
         }
 
         public static ulong SetCpuID(int lpIdx)
@@ -367,35 +350,12 @@ namespace Modbus
             return cpuLogicalProcessorId;
         }
 
-
-        //  servierIpAddress  服务器iP地址或者域名，sevierPort 服务器监听端口， locadPort 本地监听端口   
-        public bool TCPServerIni2(string aServierIpAddress, int aLocadPort)
-        {
-            try
-            {
-                //实例化TcpSetver对象  
-                ServerIPE = new IPEndPoint(IPAddress.Parse(aServierIpAddress), aLocadPort); //server绑定一个IP和Port
-                ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);//监听套接字
-                //绑定一个IP和Port
-                ServerSocket.Bind(ServerIPE);
-                ServerSocket.Listen(10);//限制10个
-                //ServerSocket.BeginAccept(new AsyncCallback(Accept), server);
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show("绑定端口失败" + ex.Message.ToString());
-                return false;
-            }
-        }
-
         public bool TCPServerIni(int aLocadPort)
         {
             try
             {
                 //实例化TcpSetver对象  
                 ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
-                //ServerIPE = new IPEndPoint(IPAddress.Parse("192.168.110.130"), aLocadPort);
                 ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 //绑定IP
                 ServerSocket.Bind(ServerIPE);
@@ -403,9 +363,14 @@ namespace Modbus
                 //ServerSocket.BeginAccept(new AsyncCallback(Accept), server);
                 return true;
             }
-            catch (System.Exception ex)
+            catch (SocketException ex)
             {
-                MessageBox.Show("绑定端口失败" + ex.Message.ToString());
+                log.Error("Init Server false: " + ex.Message);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                log.Error("Init Server false: " + ex.Message);
                 return false;
             }
         }
@@ -455,7 +420,6 @@ namespace Modbus
         {
             try
             {
-
                 if (ClientSocket != null)
                 {
                     ClientRecThread.Abort();
@@ -469,8 +433,14 @@ namespace Modbus
                     ClientSocket = null;
                 }
             }
-            catch
-            { }
+            catch (SocketException ex)
+            {
+                log.Error("CloseClientSocket is false: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                log.Error("CloseClientSocket is false: " + ex.Message);
+            }
 
         }
 
@@ -479,90 +449,74 @@ namespace Modbus
         //502
         private void WaitConnectRequest502()
         {
-            try
+            while (true)
             {
-                while (true)
+                try
                 {
+                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
 
-                    //Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象
-                    try
+                    if (OnConectedEvent != null)
+                        OnConectedEvent(acceptSocket);
+
+
+                    //设置从机回复消息的等待时长
+                    acceptSocket.ReceiveTimeout = 2000; //20ms
+                    byte[] buffer = new byte[1024];
+                    //发送问询报文
+                    int virtualID = AskEmsID(acceptSocket, ref buffer);
+                    if (virtualID != -1)
                     {
-                        Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
-
-                        if (OnConectedEvent != null)
-                            OnConectedEvent(acceptSocket);
-
-
-                        //设置从机回复消息的等待时长
-                        acceptSocket.ReceiveTimeout = 2000; //20ms
-
-                        byte[] buffer = new byte[1024];
-                        //发送问询报文
-                        int virtualID = AskEmsID(acceptSocket, ref buffer);
-                        if (virtualID != -1)
+                        log.Error("加入新的virtualID:" + virtualID);
+                        if (frmMain.Selffrm.ModbusTcpServer.clientManager != null && frmMain.Selffrm.ModbusTcpServer.clientMap != null)
                         {
-                            log.Error("加入新的virtualID:" + virtualID);
-                            //Socket包装成client加入clientManagaer
-                            //Client client = new Client(virtualID , ClientSocket);
-
-                            if (frmMain.Selffrm.ModbusTcpServer.clientManager != null && frmMain.Selffrm.ModbusTcpServer.clientMap != null)
+                            if (!frmMain.Selffrm.ModbusTcpServer.clientManager.FindClient(virtualID, acceptSocket, ref frmMain.Selffrm.ModbusTcpServer.clientMap))
                             {
-                                if (!frmMain.Selffrm.ModbusTcpServer.clientManager.FindClient(virtualID, acceptSocket, ref frmMain.Selffrm.ModbusTcpServer.clientMap))
-                                {
-                                    frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, acceptSocket, ref buffer, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                                    log.Error("新加入完成");
-                                }
-                                //frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, acceptSocket, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                            }
-
+                                frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, acceptSocket, ref buffer, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                                log.Error("新加入完成");
+                            }                              
                         }
                     }
-                    catch { }
-
                 }
-
-            }
-            catch
-            {
-                // MonitorThread.Abort();
-                CloseClientSocket();
+                catch (SocketException ex)
+                {
+                    log.Error("WaitConnectRequest502 is false: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("WaitConnectRequest502 is false: " + ex.Message);
+                }
             }
         }
 
         //104
         private void WaitConnectRequest104()
         {
-            try
-            {
-                while (true)
+            while (true)
+            {    
+                try
                 {
-
                     Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象
-                    try
-                    {
-                        CloseClientSocket();
-                        //acceptSocket.RemoteEndPoint()l
-                        //socket.ReceiveTimeout = timeout;                    
-                        if (OnConectedEvent != null)
-                            OnConectedEvent(acceptSocket);
-                        ClientSocket = acceptSocket;
-                        //开启接收线程  
-                        ClientRecThread = new Thread(ReceiveData);
-                        ClientRecThread.IsBackground = true;
-                        ulong LpId = SetCpuID(3);
-                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                        ClientRecThread.Start();
-                    }
-                    catch { }
-
+                    CloseClientSocket();                
+                    if (OnConectedEvent != null)
+                        OnConectedEvent(acceptSocket);
+                    ClientSocket = acceptSocket;
+                    //开启接收线程  
+                    ClientRecThread = new Thread(ReceiveData);
+                    ClientRecThread.IsBackground = true;
+                    ulong LpId = SetCpuID(3);
+                    SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                    ClientRecThread.Start();
                 }
+                catch (SocketException ex)
+                {
+                    log.Error("WaitConnectRequest104 is false: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("WaitConnectRequest104 is false: " + ex.Message);
+                }
+            }
 
-            }
-            catch
-            {
-                // MonitorThread.Abort();
-                CloseClientSocket();
-            }
         }
 
 
@@ -592,8 +546,16 @@ namespace Modbus
                 ClientSocket.Send(msg);
                 return true;
             }
-            catch
+            catch (SocketException ex)
             {
+                DestroySocket(aCllientSoket);
+                log.Error ("SendMsg_byte: " + ex.Message);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                DestroySocket(aCllientSoket);
+                log.Error("SendMsg_byte: " + ex.Message);
                 return false;
             }
         }
@@ -651,17 +613,15 @@ namespace Modbus
                     int receiveNumber = ClientSocket.Receive(RecData);
                     if (receiveNumber > 0)
                     {
-                        //strRecData = Encoding.ASCII.GetString(RecData, 0, receiveNumber);
                         byte[] recdata = RecData.Take(receiveNumber).ToArray();
-                        //strRecData = BitConverter.ToString(recdata).Replace("-", "");
 
                         if (OnReceiveDataEvent2 != null)
-                            //OnReceiveDataEvent(ClientSocket, strRecData, ClientSocket.ToString(), LocalPort);
                             OnReceiveDataEvent2(ClientSocket, recdata, ClientSocket.ToString(), LocalPort);
                     }
                 }
-                catch
+                catch(SocketException ex)
                 {
+                    log.Error("Server ReceiveData is false: " + ex.Message);
                     if (OnDisconectEvent != null)
                         OnDisconectEvent(ClientSocket);
                     try
@@ -924,18 +884,6 @@ namespace Modbus
 
                     if (receiveNumber > 0)
                     {
-                        //if (response.Length >= receiveNumber)
-                        //{
-                        //    Array.Copy(buffer, 0, response, 0, receiveNumber);
-                        //    bResult = true;
-                        //}
-                        //else
-                        //{
-                        //    Array.Copy(buffer, receiveNumber-response.Length -1, response, 0, response.Length);
-                        //    string msg = BitConverter.ToString(response);
-                        //   log.Error("裁切TCP消息：" + msg);
-                        //}
-
                         Array.Copy(buffer, 0, response, 0, response.Length);
                         bResult = true;
                     }
@@ -1057,7 +1005,7 @@ namespace Modbus
         public int ReconnectTime = 1000;//ms
         private static ILog log = LogManager.GetLogger("TCPClientClass");
         public SocketBufferQueue ClientBuffer = new SocketBufferQueue();
-        //private AutoResetEvent ConnectEvent;
+        private AutoResetEvent ConnectEvent = new AutoResetEvent(false);
 
 
         ~TCPClientClass()
@@ -1084,7 +1032,7 @@ namespace Modbus
             //IsMonitoring = false;
             if (clientSocket != null)
             {
-                CloseCenect();
+                CloseConnect();
             }
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try
@@ -1099,48 +1047,48 @@ namespace Modbus
                     if (OnConectedEvent != null)
                         OnConectedEvent.Invoke();
                     Connected = true;
-                    //ConnectEvent.Set();
+                    ConnectEvent.Set();
                     return true;
                 }
                 else
                 {
                     log.Error("connect false");
-                    //ConnectEvent = null;
+                    ConnectEvent.Reset();
+                    Connected = false;
                     return false;
                 }
             }
             catch (SocketException ex)
             {
                 log.Error("server is not alive");
-                //ConnectEvent = null;
+                ConnectEvent.Reset();
+                Connected = false;
                 return false;
             }
             catch (Exception ex)
             {
                 //DBConnection.RecordLOG("云数据", "云端口连接失败", ex.Message.ToString());//记录连接失败
-                Connected = false; ;
+                ConnectEvent.Reset();
+                Connected = false; 
                 return false;
             }
         }
 
         //关闭链接
-        public void CloseCenect()
+        public void CloseConnect()
         {
-            /*            IsMonitoring = false;
-                        Connected = false;
-                        if ((clientSocket != null) && (clientSocket.Connected))
-                        {
-                            clientSocket.Shutdown(SocketShutdown.Both);
-                            clientSocket.Close();
-                            //Thread.Sleep(100);
-                            //clientSocket.Close();
-                            //clientSocket.Dispose();                
-                        }
-                        clientSocket = null;
-                        GC.Collect();
-                        //GC.SuppressFinalize(this);*/
-            
-            cleanClientSocket();
+            Connected = false;//socket连接标志位置false
+            ConnectEvent.Reset();//停止监听
+            if (clientSocket != null)
+            {
+                if (clientSocket.Connected)
+                {
+                    clientSocket.Shutdown(SocketShutdown.Both);//关闭了套接字连接
+                    clientSocket.Close();//释放相关的资源
+                }
+                clientSocket = null;// //将 clientSocket 变量设置为 null:避免在后续代码中误用已经关闭的套接字,若错误使用clientSocket，会引发NullReferenceException
+            }
+            GC.Collect();
         }
 
 
@@ -1195,7 +1143,14 @@ namespace Modbus
                         }
                     }
                 }
-                catch { }
+                catch (SocketException ex)
+                {
+                    log.Error("client ReceiveData is false: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("client ReceiveData is false: " + ex.Message);
+                }
             }
         }//func
 
@@ -1210,36 +1165,14 @@ namespace Modbus
             }
             catch (SocketException ex)
             {
-                cleanClientSocket();              
+                CloseConnect();             
                 return false;
             }
             catch (Exception ex)
             {
-/*                if (clientSocket.Connected)
-                {
-                    clientSocket.Shutdown(SocketShutdown.Both);
-                    clientSocket.Close();
-                }
-                if (OnDisconectEvent != null)
-                    OnDisconectEvent.Invoke();
-                DBConnection.RecordLOG("云数据", "数据发送失败", ex.Message.ToString());
-                Connected = false;
-                clientSocket = null;*/
+                CloseConnect();
                 return false;
             }
-        }
-
-       
-        private void cleanClientSocket()
-        {
-            Connected = false;//socket连接标志位置false
-            if (clientSocket != null)
-            {
-                clientSocket.Shutdown(SocketShutdown.Both);//关闭了套接字连接
-                clientSocket.Close();//释放相关的资源
-                clientSocket = null;// //将 clientSocket 变量设置为 null:避免在后续代码中误用已经关闭的套接字,若错误使用clientSocket，会引发NullReferenceException
-            }
-            GC.Collect();
         }
 
         public void Tick()

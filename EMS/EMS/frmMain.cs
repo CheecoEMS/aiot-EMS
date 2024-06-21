@@ -594,7 +594,7 @@ namespace EMS
         {
             SysThreathStoped = true;
             //关闭云链接
-            TCPCloud.CloseCenect();
+            TCPCloud.CloseConnect();
             //关闭gpio
             frmSet.GPIOClose();
            // System.Environment.Exit(0);

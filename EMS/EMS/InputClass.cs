@@ -6051,7 +6051,7 @@ namespace EMS
 
             if (HostStart)
             {
-                //log.Info("本机PCS准备执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
+                log.Info("本机PCS准备执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
 
                 if (ErrorState[2])
                 {
@@ -6161,7 +6161,7 @@ namespace EMS
                         }
                     }
                 }
-                //log.Info("本机PCS实际执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
+                log.Info("本机PCS实际执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
             }
             else
             {
@@ -7970,10 +7970,13 @@ namespace EMS
                                     {
                                         //关闭PCS
                                         frmSet.PCSMOff();
-                                        if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
+                                        if (PCSList.Count > 0)
                                         {
-                                            log.Error("主从脱钩,关闭pcs");
-                                            PCSList[0].ExcSetPCSPower(false);
+                                            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
+                                            {
+                                                log.Error("主从脱钩,关闭pcs");
+                                                PCSList[0].ExcSetPCSPower(false);
+                                            }
                                         }
                                         //关闭空调（液冷机）
                                         if (frmMain.Selffrm.AllEquipment.TempControl != null)
@@ -8019,6 +8022,17 @@ namespace EMS
                             {
                                 log.Debug("重连");
                                 frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
+
+                                //若刚开启EMS，pcs已经在工作，则必须立即停止
+                                if (PCSList.Count > 0)
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)//关闭pcs
+                                    {
+                                        log.Error("主从脱钩,关闭pcs");
+                                        PCSList[0].ExcSetPCSPower(false);
+                                        frmSet.PCSMOff();
+                                    }
+                                }
                                 continue;
                             }
                         }
