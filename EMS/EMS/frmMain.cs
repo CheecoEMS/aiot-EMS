@@ -109,6 +109,7 @@ namespace EMS
             iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen);
             
             AllEquipment.NetCtlTime = DateTime.Now;
+            AllEquipment.Clock_Watch.RestartMeasurement();
             frmSet.SysMode = 2;
             byte[] message = new byte[7];
             short[] sData01 = { 00, 00 };
@@ -532,10 +533,10 @@ namespace EMS
                     frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                     frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                 }
-                else if(!frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
+                else if (!frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
                 {
                     frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.MasterIp, 502);
-                    frmMain.Selffrm.ModbusTcpClient.StartMonitor();
+                    //frmMain.Selffrm.ModbusTcpClient.StartMonitor();
                 }
 
                 frmFlash.AddPostion(10);

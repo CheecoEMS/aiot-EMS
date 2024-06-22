@@ -1021,7 +1021,30 @@ namespace EMS
     /// 
     /// </summary>
     /// 
-    
+
+    //新增计时器6.22
+    public class TimeMeasurement
+    {
+        private Stopwatch stopwatch;
+
+        public TimeMeasurement()
+        {
+            stopwatch = new Stopwatch();
+        }
+
+        public void RestartMeasurement()
+        {
+            // 重新启动计时器  
+            stopwatch.Restart();
+        }
+
+        public double MeasureIntervalInSeconds()
+        {
+            // 返回从计时器启动到现在的时间间隔，单位秒  
+            return stopwatch.Elapsed.TotalSeconds;
+        }
+    }
+
     //5.05 新增除湿机
     public class DehumidifierClass : BaseEquipmentClass
     {
@@ -5705,6 +5728,8 @@ namespace EMS
         public short SysState = 1;
         //询问间隔
         public short AskInterval = 60;
+        //计时器
+        public TimeMeasurement Clock_Watch = new TimeMeasurement();
         //消防传感器
         public FireClass Fire;
         public WaterloggingClass WaterLog1;
@@ -7966,7 +7991,8 @@ namespace EMS
                                 if (NetConnect)
                                 {
                                     //超时未收到控制
-                                    if (NetCtlTime.AddSeconds(30)<DateTime.Now)
+                                    //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
+                                    if(Clock_Watch.MeasureIntervalInSeconds() < 30)
                                     {
                                         //关闭PCS
                                         frmSet.PCSMOff();
@@ -8021,7 +8047,7 @@ namespace EMS
                             else//客户端发送报文失败，重连
                             {
                                 log.Debug("重连");
-                                frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
+                                //frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
 
                                 //若刚开启EMS，pcs已经在工作，则必须立即停止
                                 if (PCSList.Count > 0)
@@ -8799,7 +8825,7 @@ namespace EMS
             double BMSPower = 0;
             try
             {
-                string tempDate = DateTime.Now.ToString("yyyy-MM-d H:m:s");
+                //string tempDate = DateTime.Now.ToString("yyyy-MM-d H:m:s");
                 //BMS 
                 BMS.GetDataFromEqipment();
                 BMSSOC = BMS.soc;//显示的实时数据
