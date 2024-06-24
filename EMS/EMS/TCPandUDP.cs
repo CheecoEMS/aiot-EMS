@@ -337,7 +337,7 @@ namespace Modbus
         }
 
         // 销毁Socket对象 
-        private static void DestroySocket(Socket socket)
+        private static void DestroySocket(ref Socket socket)
         {
             try
             {
@@ -428,7 +428,7 @@ namespace Modbus
             MonitorThread.Abort();
             if (ClientSocket != null)
             {
-                DestroySocket(ClientSocket);
+                DestroySocket(ref ClientSocket);
                 ClientRecThread.Abort();
                 ClientRecThread = null;
                 ClientSocket = null;
@@ -443,7 +443,7 @@ namespace Modbus
                 {
                     if (OnDisconectEvent != null)
                         OnDisconectEvent(ClientSocket);
-                    DestroySocket(ClientSocket);
+                    DestroySocket(ref ClientSocket);
                 }
             }
             catch (SocketException ex)
@@ -566,14 +566,14 @@ namespace Modbus
             }
             catch (SocketException ex)
             {
-                DestroySocket(aCllientSoket);
+                DestroySocket(ref aCllientSoket);
                 ClientSocket = null;
                 log.Error ("SendMsg_byte: " + ex.Message);
                 return false;
             }
             catch (Exception ex)
             {
-                DestroySocket(aCllientSoket);
+                DestroySocket(ref aCllientSoket);
                 ClientSocket = null;
                 log.Error("SendMsg_byte: " + ex.Message);
                 return false;
@@ -624,7 +624,7 @@ namespace Modbus
                         OnDisconectEvent(ClientSocket);
 
                     //回收socket
-                    DestroySocket(ClientSocket);
+                    DestroySocket(ref ClientSocket);
                     //终止线程
                     cts.Cancel();  
                 }
@@ -856,7 +856,7 @@ namespace Modbus
                     if (ID != 0)//0是从机首次连接时，主机发送的问询报文
                     {
                         frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                        DestroySocket(clientSocket);
+                        DestroySocket(ref clientSocket);
                         log.Error("剔除"+ID+"号从机");
                     }
                 }
@@ -898,7 +898,7 @@ namespace Modbus
                         if (ID != 0)//0是从机首次连接时，主机发送的问询报文
                         {
                             frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                            DestroySocket(clientSocket);
+                            DestroySocket(ref clientSocket);
                             log.Error("剔除"+ID+"号从机");
                         }
                     }   
@@ -908,7 +908,7 @@ namespace Modbus
                         if (ID != 0)//0是从机首次连接时，主机发送的问询报文
                         {
                             frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                            DestroySocket(clientSocket);
+                            DestroySocket(ref clientSocket);
                             log.Error("剔除"+ID+"号从机");
                         }
                     }            
