@@ -1087,7 +1087,7 @@ namespace Modbus
         }
 
         //关闭链接
-        private void DestorySocket(Socket aSocket)
+        private void DestorySocket(ref Socket aSocket)
         {
             if (aSocket != null)
             {
@@ -1104,8 +1104,11 @@ namespace Modbus
         public void CloseConnect()
         {
             Connected = false;//socket连接标志位置false
-            DestorySocket(clientSocket);
-            cts.Cancel();
+            DestorySocket(ref clientSocket);
+            if (cts != null)
+            {
+                cts.Cancel();
+            }
         }
 
 

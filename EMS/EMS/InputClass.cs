@@ -2754,6 +2754,18 @@ namespace EMS
             }
         }
 
+        //获取电网功率
+        public void GetAllUkva()
+        {
+            bool bPrepared = false;
+            string strTemp = "";
+            if (GetSysData(33, ref strTemp))
+            {
+                AllUkva = Math.Round(float.Parse(strTemp), 3);
+                bPrepared = true;
+            }
+            Prepared = bPrepared;
+        }
 
         //
         override public void GetDataFromEqipment()
@@ -3931,7 +3943,7 @@ namespace EMS
         /// 晶石pcs
         /// </summary>
         /// 
-        public void GetallUkvaFromEquipment()
+        public void GetallUkva()
         {
             string strTemp = "";
             string strData = "";
@@ -6888,8 +6900,8 @@ namespace EMS
             while (true)
             {
                 Thread.Sleep(1000);
-                //问询从机功率
-                ReadAllEmsTCP();
+/*                //问询从机功率
+                ReadAllEmsTCP();*/
                 //发送充放电模式
                 //if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                 //{
@@ -6986,13 +6998,13 @@ namespace EMS
 
         public void ReadData()
         {
-            double tempGridKVA;
+            //double tempGridKVA;
             double tempPUMdemand_max;
             double tempPUMdemand_now;
             while (true)
             {
                 //1 关口表
-                tempGridKVA = 0;
+                //tempGridKVA = 0;
                 tempPUMdemand_max = 0;
                 tempPUMdemand_now = 0;
 
@@ -7009,14 +7021,14 @@ namespace EMS
                     foreach (Elemeter1Class Elemeter1 in Elemeter1List)
                     {
                         Elemeter1.GetDataFromEqipment();
-                        tempGridKVA += Elemeter1.AllUkva;
+                        //tempGridKVA += Elemeter1.AllUkva;
 
                         //2.21
                         tempPUMdemand_max += Elemeter1.PUMdemand_Max;
                         tempPUMdemand_now += Elemeter1.PUMdemand_now;
                     }
 
-                    if (Elemeter1List[0].Prepared)
+/*                    if (Elemeter1List[0].Prepared)
                     {
                         GridKVA = tempGridKVA;
                         AddValue(GridKVA);
@@ -7027,13 +7039,8 @@ namespace EMS
                         GridKVA = 0;
                         clearAllUkvaWindow();
                         GridKVA_window = 0;
-                    }
+                    }*/
                 }
-
-
-                //获取pcs功率
-                if (PCSList.Count > 0)
-                    frmMain.Selffrm.AllEquipment.PCSList[0].GetallUkvaFromEquipment();
 
                 //2.21
                 E1_PUMdemand_Max = tempPUMdemand_max;
@@ -7982,6 +7989,10 @@ namespace EMS
                     //如果是从机
                     if (!frmSet.IsMaster)
                     {
+                        //获取pcs功率
+                        if (PCSList.Count > 0)
+                            frmMain.Selffrm.AllEquipment.PCSList[0].GetallUkva();
+
                         //判断是否超时控制，如果超时就停机等待
                         if (frmSet.ConnectStatus == "tcp")
                         {
@@ -7992,7 +8003,7 @@ namespace EMS
                                 {
                                     //超时未收到控制
                                     //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
-                                    if(Clock_Watch.MeasureIntervalInSeconds() < 30)
+                                    if(Clock_Watch.MeasureIntervalInSeconds() > 30)
                                     {
                                         //关闭PCS
                                         frmSet.PCSMOff();
@@ -8109,12 +8120,41 @@ namespace EMS
                     }
                     else//如果是主机
                     {
+                        //获取pcs功率
+                        if (PCSList.Count > 0)
+                            frmMain.Selffrm.AllEquipment.PCSList[0].GetallUkva();
+
                         //没有关口表
                         if (!ChechPower)
                         {
                             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                             continue;
                         }
+                        else
+                        {
+                            //获取电网功率
+                            double tempGridKVA = 0;
+                            //电表1---关口电表，用于防逆流
+                            foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                            {
+                                Elemeter1.GetAllUkva();
+                                tempGridKVA += Elemeter1.AllUkva;
+                            }
+
+                            if (Elemeter1List[0].Prepared)
+                            {
+                                GridKVA = tempGridKVA;
+                                AddValue(GridKVA);
+                                GridKVA_window = GetAverage();
+                            }
+                            else
+                            {
+                                GridKVA = 0;
+                                clearAllUkvaWindow();
+                                GridKVA_window = 0;
+                            }
+                        }
+
                         //如果主机是单机  
                         if (frmSet.SysCount == 1)
                         {
@@ -8154,15 +8194,25 @@ namespace EMS
                                 SingleReflux();
                                 continue;
                             }
-                            AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
-                            //AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                            //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                            AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
                             //在初始阶段，waValueActive还没被赋值
 
                             //2.23
-/*                                    foreach (EMSEquipment oneEMSE in EMSList)
+                            /*                                    foreach (EMSEquipment oneEMSE in EMSList)
+                                                        {
+                                                                AllwaValue += oneEMSE.waValueActive;//.ActivePCSKVA;
+                                                        }*/
+
+                            if (frmSet.ConnectStatus == "tcp")
                             {
-                                    AllwaValue += oneEMSE.waValueActive;//.ActivePCSKVA;
-                            }*/
+                                //问询从机功率
+                                ReadAllEmsTCP();
+                            }
+                            else if (frmSet.ConnectStatus == "485")
+                            {
+                                AllwaValue = PCSKVA * frmSet.SysCount;
+                            }
                                     
                             if (Elemeter1Z != null)
                             {
