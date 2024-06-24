@@ -177,8 +177,7 @@ namespace IEC104
             message[15] = 0x20;
 
             //验证消息
-            string hexString = BitConverter.ToString(message);
-            //log.Debug("发送总召唤结束：" + hexString);
+            //string hexString = BitConverter.ToString(message);
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
@@ -235,8 +234,8 @@ namespace IEC104
             message[5] = 0x00;
 
             //验证消息
-            string hexString = BitConverter.ToString(message);
-            //log.Debug("U帧："+ hexString);
+            //string hexString = BitConverter.ToString(message);
+
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
 
@@ -302,7 +301,7 @@ namespace IEC104
                     break;
                 //总召唤
                 case 0x64:
-                    //log.Debug("接收总召唤");
+                    //接收总召唤
                     NAIec104InterrogationAll(RX_bytes, TX_bytes);
                     break;
                 //单命令遥控
@@ -311,11 +310,10 @@ namespace IEC104
                     {
                         //接收遥控预置
                         int YKnum = Get_YKD_Num(msg, true);
-                        //log.Debug("YKnum:" + YKnum);
                         if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
                         {
                             //遥控返校
-                            //log.Debug("接收遥控预置");
+                            //接收遥控预置
                             Build_SR_num(TX_bytes);
                             NAIec104YKACK(msg, RX_bytes, TX_bytes);
                         }
@@ -323,7 +321,7 @@ namespace IEC104
                         else if (msg[8] == 6 && msg[9] == 0)
                         {
                             //执行确认
-                            //log.Debug("接收遥控执行确认");
+                            //接收遥控执行确认
                             Build_SR_num(TX_bytes);
                             NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
                             //激活结束
@@ -334,7 +332,7 @@ namespace IEC104
                         else if (msg[8] == 8 && msg[9] == 0)
                         {
                             //撤销确认
-                            //log.Debug("接收遥控撤销确认");
+                            //接收遥控撤销确认
                             Build_SR_num(TX_bytes);
                             NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
                             //激活结束
@@ -346,12 +344,11 @@ namespace IEC104
                 //遥调(设定浮点数值命令)
                 case 50:
                     int YDnum = Get_YKD_Num(msg, false);
-                    //log.Debug("YDnum:" + YDnum);
                     //接收遥调预置
                     if (msg[8] == 6 && msg[9] == 0 && isYDACK[YDnum] == 0)
                     {
                         //遥调返校
-                        //log.Debug("接收遥调预置");
+                        //接收遥调预置
                         Build_SR_num(TX_bytes);
                         NAIec104YDACK(msg, RX_bytes, TX_bytes);
                     }
@@ -359,7 +356,7 @@ namespace IEC104
                     else if (msg[8] == 6 && msg[9] == 0 )
                     {
                         //执行确认
-                        //log.Debug("接收遥调执行确认");
+                        //接收遥调执行确认
                         Build_SR_num(TX_bytes);
                         NAIec104YDEXEACK(msg, RX_bytes, TX_bytes);
                         //激活结束
@@ -370,7 +367,7 @@ namespace IEC104
                     else if (msg[8] == 8 && msg[9] == 0)
                     {
                         //撤销确认
-                        //log.Debug("接收遥调撤销确认");
+                        //接收遥调撤销确认
                         Build_SR_num(TX_bytes);
                         NAIec104YDDeactACK(msg, RX_bytes, TX_bytes);
                         //激活结束
@@ -413,7 +410,6 @@ namespace IEC104
         static  public void ReturnAllYCData(byte[] TX_bytes, byte[] RX_bytes)
         {
             frmMain.Selffrm.AllEquipment.BMS.Get104Info();
-            //log.Debug("遥测数据");
             //byte[] message = new byte[47]; //15个遥测值 总共5*15+15=90字节     
             byte[] message = new byte[92];
 
@@ -423,7 +419,6 @@ namespace IEC104
             byte[] send_message = new byte[90];
 
             //测试数据
-            //log.Debug("frmMain.Selffrm.AllEquipment.Elemeter2.Aa:" + frmMain.Selffrm.AllEquipment.Elemeter2.Aa);
 
             int count = 15;
            
@@ -478,12 +473,8 @@ namespace IEC104
 
             Array.Copy(message,send_message, 90);
             //验证消息
-            string hexString = BitConverter.ToString(send_message);
-            //log.Debug("发送遥测数据：" + hexString);
+            //string hexString = BitConverter.ToString(send_message);
 
-            //log.Debug("A电流:"+frmMain.Selffrm.AllEquipment.PCSList[0].aA);
-            //log.Debug("总无功功率:" + frmMain.Selffrm.AllEquipment.Elemeter2.AllNukva);
-            //log.Debug("a对地电压:" + frmMain.Selffrm.AllEquipment.PCSList[0].aV);
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, frmMain.Selffrm.TCPserver.ClientSocket);
 
@@ -528,13 +519,6 @@ namespace IEC104
                     sb.Insert(0, item.ToString("X2"));
                 }
 
-
-                /*                string dataString = ((int)data).ToString("X");
-                                while (dataString.Length < 8)
-                                {
-                                    dataString = '0' + dataString;
-                                }*/
-                //log.Debug("dataString"+ dataString);
                 string dataString = sb.ToString();
 
                 byte[] byteArray = new byte[dataString.Length / 2];
@@ -544,7 +528,6 @@ namespace IEC104
                 }
 
                 string hexString = BitConverter.ToString(byteArray);
-                //log.Debug("数据1：" + hexString);
 
                 Array.Copy(byteArray, 3, message, count, 1);
                 count +=1;
@@ -637,7 +620,6 @@ namespace IEC104
                 message[19] = 0x01;
             else
                 message[19] = 0x00;
-            //log.Debug("104内部 PcsRun" + frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun);
             //PCS开关状态  0:停机 1：开机
             if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255)
                 message[20] = 0x00;
@@ -646,8 +628,8 @@ namespace IEC104
 
 
             //验证消息
-            string hexString = BitConverter.ToString(message);
-            //log.Debug("发送遥信数据：" + hexString);
+            //string hexString = BitConverter.ToString(message);
+
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message , frmMain.Selffrm.TCPserver.ClientSocket);
 
@@ -678,8 +660,8 @@ namespace IEC104
             int num = Get_YKD_Num(msg, false);
             isYDACK[num] = 1;
 
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("发送遥调返校：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
+
 
             //send msg
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
@@ -697,11 +679,10 @@ namespace IEC104
 
 
             string hexStr = BitConverter.ToString(bytes).Replace("-", ""); ;
-            //log.Debug("遥调：" + hexStr );
 
             if (hexStr.Length != 8)
             {
-                //log.Debug(false); ;
+
             }
             byte[] byteArray = new byte[4];
             for (int i = 0; i < 4; i++)
@@ -709,7 +690,6 @@ namespace IEC104
                 byteArray[i] = Convert.ToByte(hexStr.Substring((3 - i) * 2, 2), 16);
             }
             float floatValue = BitConverter.ToSingle(byteArray, 0);
-            //log.Debug("Input:" + floatValue);
 
             return floatValue;
         }
@@ -752,13 +732,12 @@ namespace IEC104
                                 frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
                             }
                         }
-                        //log.Debug("写入功率值：" + input + "写入PCSScheduleKVA" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA);
                         break;
                 }
                 //send msg
 
-                string hexString = BitConverter.ToString(msg);
-                //log.Debug("发送遥调执行确认：" + hexString);
+                //string hexString = BitConverter.ToString(msg);
+
 
                 frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
                 isYDACK[num] = 0;
@@ -781,8 +760,8 @@ namespace IEC104
             isYDACK[num] = 0;
 
             //send msg
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("发送遥调撤销确认：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
+
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
         }
 
@@ -837,8 +816,8 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("发送遥调激活结束：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
+
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
         }
@@ -867,8 +846,8 @@ namespace IEC104
                 isYKACK[num] = 1;
             }
 
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("发送遥控返校：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
+
 
             //send msg
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg , frmMain.Selffrm.TCPserver.ClientSocket);
@@ -948,12 +927,11 @@ namespace IEC104
                     break;
             }
             //send msg
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("发送遥控执行确认：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
+            //"发送遥控执行确认：" + hexString
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
             isYKACK[num] = 0;
-            //log.Debug("eState:" + frmMain.Selffrm.AllEquipment.eState);
-            //log.Debug("HostStart:"+ frmMain.Selffrm.AllEquipment.HostStart);
+
 
         }
 
@@ -983,7 +961,6 @@ namespace IEC104
             if ((data[2] & 0x03) == 0x03)
             {
                 // u 帧
-                //log.Debug("是U帧");
                 ProcessFormatU(data);
                
             }
@@ -991,11 +968,9 @@ namespace IEC104
             {
                 // s 帧
                 //iEC104.txcheck = ((data[4]>>1)|(data[5]<<7));
-                //log.Debug("是S帧");
             }
             else
             {
-                //log.Debug("是I帧");
                 ProcessFormatI(data);
             }
         }

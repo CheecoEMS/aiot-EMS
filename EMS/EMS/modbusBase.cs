@@ -286,30 +286,50 @@
 
 
         #region Build BackMessage 1\2\3  one Short
-        static public byte[] BuildMSG3Back(byte aAddress, byte aType,  ushort aData)
+        static public byte[] BuildMSG3Back(byte aAddress, byte aType, ushort aData)
         {
             byte[] message = new byte[5+ 2];
             //Array to receive CRC bytes:
-            byte[] CRC = new byte[2];  
+            byte[] CRC = new byte[2];
             message[0] = aAddress;
             message[1] = aType;
             message[2] = 2;//1; 
             message[3] = (byte)(aData >> 8);
-            message[4] = (byte)aData; 
+            message[4] = (byte)aData;
             GetCRC(message, ref CRC);
             message[message.Length - 2] = CRC[0];
             message[message.Length - 1] = CRC[1];
             return message;
         }
 
+        static public byte[] BuildMSG3sTitle(byte aAddress, byte aType, ushort aLen)
+        {
+            byte[] message = new byte[5+ 2*aLen];
+            message[0] = aAddress;
+            message[1] = aType;
+            message[2] = (byte)(aLen*2);
+            return message;
+        }
+        static public void AddMSG3(ushort aData, ref byte[] message, ref int index)
+        {
+            message[index] = (byte)(aData >> 8);
+            message[++index] = (byte)(aData);
+        }
+        static public void AddCRC(ref byte[] message)
+        {
+            byte[] CRC = new byte[2];
+            GetCRC(message, ref CRC);
+            message[message.Length - 2] = CRC[0];
+            message[message.Length - 1] = CRC[1];
+        }
 
         #endregion
 
         #region Build BackMessage 1\2\3 mutiShort
         static public byte[] BuildMSG3Back(byte aAddress, byte aType, byte aDataLen, ushort[] aData)
         {
-            byte[] message = new byte[5 + aDataLen*2]; 
-            byte[] CRC = new byte[2]; 
+            byte[] message = new byte[5 + aDataLen*2];
+            byte[] CRC = new byte[2];
             message[0] = aAddress;
             message[1] = aType;
             message[2] = (byte)(aDataLen*2);
@@ -317,8 +337,8 @@
             {
                 message[4+2*i] = (byte)(aData[i] >> 8);
                 message[5 + 2 * i] = (byte)aData[i];
-            } 
-            GetCRC(message, ref CRC); 
+            }
+            GetCRC(message, ref CRC);
             message[message.Length - 2] = CRC[0];
             message[message.Length - 1] = CRC[1];
             return message;

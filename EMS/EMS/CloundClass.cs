@@ -229,7 +229,6 @@ namespace EMS
         {
             if (connectflag == 1)
             {
-                //log.Debug("重连");
                 //mqttClient.Disconnect();
                 if (mqttClient != null)
                 {
@@ -282,6 +281,7 @@ namespace EMS
 
             if (topic == TacticTopic + "request")
             {
+                log.Error("接收云策略");
                 strID = GetServerTactics(message, ref Result);
                 if (Result && strID!="")
                 {
@@ -918,17 +918,12 @@ namespace EMS
                 }
                 else
                 {
-/*                    string requireLimit = jsonObject["params"]["requireLimit"].ToString();
-                    log.Debug("requireLimit:" + requireLimit);
-                    int limit = (int)double.Parse(requireLimit);
-                    log.Debug("limit:" + limit);*/
                     frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
                     frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
                     frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
                     frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
                     //frmSet.SaveSet2File();
                     frmSet.SetToGlobalSet();
-
                 }
             }
             catch 
@@ -937,7 +932,99 @@ namespace EMS
             return strID; 
         }
 
-  
+        static public byte[] Back3Data(int aAddr, short iLen)
+        {
+            byte[] returnMsg = null;
+            ushort aMsg;
+            int index = 3;
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.i485Addr, 3, (ushort)iLen);
+            for (int i = aAddr; i <= aAddr+iLen; ++i)
+            {
+                aMsg = 0;
+                switch (i)
+                {
+                    case 0x5000://设备序列号
+                        //aMsg = frmSet.SysID;
+                        break;
+                    case 0x5001://功率，正数为放电，负数为充电
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.PCSKVA;
+                        break;
+                    case 0x5002://日充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                        break;
+                    case 0x5003://日放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                        break;
+                    case 0x5004://月充电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5005://月放电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5006://总充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                        break;
+                    case 0x5007://总放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                        break;
+                    case 0x5008://总容量（%）
+                        aMsg = 200;
+                        break;
+                    case 0x5009://soc上限
+                        aMsg = 100;
+                        break;
+                    case 0x5010://soc下限
+                        aMsg = 5;
+                        break;
+                    case 0x5011://最大功率充电时长（分钟）
+                        aMsg = 90;
+                        break;
+                    case 0x5012://最大功率放电时长（分钟)
+                        aMsg = 90;
+                        break;
+                    case 0x5013://健康度（%）
+                        aMsg = 100;
+                        break;
+                    case 0x5014://状态1：在线，0：离线
+                        aMsg = 0;
+                        break;
+                    case 0x5015://充放电状态0：待机，1：充电，2：放电
+                        if (frmMain.Selffrm.AllEquipment.PCSKVA == 0)
+                        {
+                            aMsg = 0;
+                        }
+                        else
+                        {
+                            if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")
+                            {
+                                aMsg = 1;
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电")
+                            {
+                                aMsg = 2;
+                            }
+                        }
+                        break;
+                    case 0x5016://BMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5017://PCS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5018://EMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5019:
+                        break;
+                }
+                //组装报文
+                ModbusBase.AddMSG3(aMsg, ref returnMsg, ref index);
+            }
+            ModbusBase.AddCRC(ref returnMsg);
+            return returnMsg;
+
+        }
+
         //连控数据中读取数据-----3读取
         static public byte[] Back3Data(int aAddr ) 
         { 
@@ -946,7 +1033,7 @@ namespace EMS
                 case 0x6001://计划功率
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
-                    double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva);
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
                     if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")            
@@ -995,12 +1082,13 @@ namespace EMS
                     }
                     break;
                 case 0x6002://实际功率 
-                    log.Debug("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
+                    //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         frmMain.Selffrm.AllEquipment.HostStart = true;
                         frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
-                    }                   
+                        frmMain.Selffrm.AllEquipment.NetControl = true;
+                    }                  
                     break;
                 case 0x6003://充放电
                     lock (frmMain.Selffrm.AllEquipment)
