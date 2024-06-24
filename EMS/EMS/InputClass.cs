@@ -8058,8 +8058,6 @@ namespace EMS
                             else//客户端发送报文失败，重连
                             {
                                 log.Debug("重连");
-                                //frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
-
                                 //若刚开启EMS，pcs已经在工作，则必须立即停止
                                 if (PCSList.Count > 0)
                                 {
@@ -8070,6 +8068,9 @@ namespace EMS
                                         frmSet.PCSMOff();
                                     }
                                 }
+
+                                //从机发起重连
+                                frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
                                 continue;
                             }
                         }

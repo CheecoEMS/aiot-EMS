@@ -483,7 +483,7 @@ namespace EMS
                 }
 
                 //8.7 每台主机初始化对外接口
-/*                BaseEquipmentClass oneEquipment = null;
+                BaseEquipmentClass oneEquipment = null;
                 oneEquipment = new EMSEquipment();
                 oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
                 oneEquipment = (EMSEquipment)oneEquipment;
@@ -517,7 +517,7 @@ namespace EMS
                 //连接硬件：4G通讯模块
                 frmMain.Selffrm.Model4G.m485 = new modbus485();
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
-                frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);*/
+                frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                 //若配置接入104服务
                 if (frmSet.Open104 == 1)
                 {
