@@ -6088,8 +6088,7 @@ namespace EMS
 
             if (HostStart)
             {
-                log.Info("本机PCS准备执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
-
+                //log.Info("本机PCS准备执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
                 if (ErrorState[2])
                 {
                     aData = 0;
@@ -6198,7 +6197,7 @@ namespace EMS
                         }
                     }
                 }
-                log.Info("本机PCS实际执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
+                //log.Info("本机PCS实际执行策略的动作: " + frmMain.Selffrm.AllEquipment.GridKVA + aWorkType + aPCSType + aData);
             }
             else
             {
@@ -7451,13 +7450,11 @@ namespace EMS
                 {
                     try
                     {
-                        //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        byte[] buffer = new byte[1024];
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-
+                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         if (client != null && client.Connected)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, client, ref buffer, 3, 0x6002, 1, ref tempUShort))
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempUShort))
                             {
                                 //CorrectRead = false;                       
                                 continue;
@@ -7524,14 +7521,15 @@ namespace EMS
                         byte[] buffer2 = new byte[1024];
                         itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
                         log.Error("发送第二条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
                         {
                             continue;
                         }
                         log.Error("发送第二条成功返回");*/
-                        byte[] buffer3 = new byte[1024];
+                        
+                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer3, 6, 0x6002, (ushort)dtemp) == -1)
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
                         {
                             continue;
                         }
@@ -7561,12 +7559,11 @@ namespace EMS
                     }
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
-                        //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        byte[] buffer1 = new byte[1024];
+                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
                         itemp = Array.IndexOf(wTpyes, awType);
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
                         {                           
                             continue;
                         }
@@ -7602,10 +7599,10 @@ namespace EMS
                     //log.Error("发送第"+ ID +"台机关机");
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
-                        byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer, 6, 0x6000, 0) == -1)
+                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6000, 0) == -1)
                         {
                             continue;
                         }

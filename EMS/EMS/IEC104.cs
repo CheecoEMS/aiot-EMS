@@ -139,7 +139,7 @@ namespace IEC104
             //验证消息
             //string hexString = BitConverter.ToString(message);
             
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
             //return message;
         }
@@ -180,7 +180,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
             return message;
 
@@ -213,7 +213,7 @@ namespace IEC104
             message[4] = 0x02;
             message[5] = 0x00;
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
             return message;
 
@@ -237,7 +237,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
 
         }
@@ -306,40 +306,37 @@ namespace IEC104
                     break;
                 //单命令遥控
                 case 0x2D:
-                    if (frmSet.Listen104 == 1)
+                    //接收遥控预置
+                    int YKnum = Get_YKD_Num(msg, true);
+                    if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
                     {
+                        //遥控返校
                         //接收遥控预置
-                        int YKnum = Get_YKD_Num(msg, true);
-                        if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
-                        {
-                            //遥控返校
-                            //接收遥控预置
-                            Build_SR_num(TX_bytes);
-                            NAIec104YKACK(msg, RX_bytes, TX_bytes);
-                        }
-                        //接收遥控执行
-                        else if (msg[8] == 6 && msg[9] == 0)
-                        {
-                            //执行确认
-                            //接收遥控执行确认
-                            Build_SR_num(TX_bytes);
-                            NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
-                            //激活结束
-                            Build_SR_num(RX_bytes);
-                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
-                        }
-                        //遥控撤销
-                        else if (msg[8] == 8 && msg[9] == 0)
-                        {
-                            //撤销确认
-                            //接收遥控撤销确认
-                            Build_SR_num(TX_bytes);
-                            NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
-                            //激活结束
-                            Build_SR_num(RX_bytes);
-                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
-                        }
+                        Build_SR_num(TX_bytes);
+                        NAIec104YKACK(msg, RX_bytes, TX_bytes);
                     }
+                    //接收遥控执行
+                    else if (msg[8] == 6 && msg[9] == 0)
+                    {
+                        //执行确认
+                        //接收遥控执行确认
+                        Build_SR_num(TX_bytes);
+                        NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
+                        //激活结束
+                        Build_SR_num(RX_bytes);
+                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                    }
+                    //遥控撤销
+                    else if (msg[8] == 8 && msg[9] == 0)
+                    {
+                        //撤销确认
+                        //接收遥控撤销确认
+                        Build_SR_num(TX_bytes);
+                        NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
+                        //激活结束
+                        Build_SR_num(RX_bytes);
+                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                    }               
                     break;
                 //遥调(设定浮点数值命令)
                 case 50:
@@ -476,7 +473,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(send_message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
             //return message;
         }
@@ -631,7 +628,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message , frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message , ref frmMain.Selffrm.TCPserver.ClientSocket);
 
             return message;
         }
@@ -664,7 +661,7 @@ namespace IEC104
 
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
 
           
         }
@@ -739,7 +736,7 @@ namespace IEC104
                 //string hexString = BitConverter.ToString(msg);
 
 
-                frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+                frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
                 isYDACK[num] = 0;
             
         }
@@ -762,7 +759,7 @@ namespace IEC104
             //send msg
             //string hexString = BitConverter.ToString(msg);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
         }
 
 
@@ -782,7 +779,7 @@ namespace IEC104
             isYKACK[num] = 0;
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
         }
 
         /*********************遥控激活结束******************************/
@@ -799,7 +796,7 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
         }
 
         /*********************遥调激活结束******************************/
@@ -819,7 +816,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(msg);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
         }
         
 
@@ -850,7 +847,7 @@ namespace IEC104
 
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg , frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg , ref frmMain.Selffrm.TCPserver.ClientSocket);
          }
 
 
@@ -929,7 +926,7 @@ namespace IEC104
             //send msg
             //string hexString = BitConverter.ToString(msg);
             //"发送遥控执行确认：" + hexString
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
             isYKACK[num] = 0;
 
 

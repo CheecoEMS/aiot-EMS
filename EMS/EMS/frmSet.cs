@@ -130,7 +130,7 @@ namespace EMS
         public static int OBmsPcsState;
 
         public static int Open104 = 0; //是否开启104， 1：开启 0：关闭
-        public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
+        //public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
 
 
         private const string strDriveDllName = "SpesTechDriverControl.dll";
