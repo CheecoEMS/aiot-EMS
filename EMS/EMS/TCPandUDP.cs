@@ -838,15 +838,18 @@ namespace Modbus
             {
                 try
                 {
-                    int res = clientSocket.Send(aMessage);
-                    if (GetASKResponse(ID, clientSocket, ref buffer, ref aResponse))
+                    lock (clientSocket)
                     {
-                        bResult = true;
+                        int res = clientSocket.Send(aMessage);
+                        if (GetASKResponse(ID, clientSocket, ref buffer, ref aResponse))
+                        {
+                            bResult = true;
 
-                    }
-                    else
-                    {
-                        bResult = false;
+                        }
+                        else
+                        {
+                            bResult = false;
+                        }
                     }
                 }
                 catch (SocketException ex)
@@ -1003,6 +1006,10 @@ namespace Modbus
         //private AutoResetEvent ConnectEvent = new AutoResetEvent(false);
         private CancellationTokenSource cts;//客户端是否开启监听线程的token的source
 
+        //客户端收发锁：只适用于与主机连接的唯一clientSocket
+        private static readonly object sendLock = new object();
+        private static readonly object receiveLock = new object();
+
 
         ~TCPClientClass()
         {
@@ -1148,19 +1155,22 @@ namespace Modbus
                 {
                     if (clientSocket != null)
                     {
-                        int receiveNumber = clientSocket.Receive(RecData);
-                        if (receiveNumber > 0)
+                        lock (receiveLock)
                         {
-                            byte[] data = new byte[receiveNumber];
-                            Array.Copy(RecData, 0, data, 0, receiveNumber);
-                           // string hexString = BitConverter.ToString(data);
-                            if (OnReceiveDataEvent2 != null)
+                            int receiveNumber = clientSocket.Receive(RecData);
+                            if (receiveNumber > 0)
                             {
-                                OnReceiveDataEvent2(clientSocket, data);
-                            }
-                            else
-                            {
-                                log.Error("OnReceiveDataEvent2 is null");
+                                byte[] data = new byte[receiveNumber];
+                                Array.Copy(RecData, 0, data, 0, receiveNumber);
+                                // string hexString = BitConverter.ToString(data);
+                                if (OnReceiveDataEvent2 != null)
+                                {
+                                    OnReceiveDataEvent2(clientSocket, data);
+                                }
+                                else
+                                {
+                                    log.Error("OnReceiveDataEvent2 is null");
+                                }
                             }
                         }
                     }
@@ -1186,7 +1196,13 @@ namespace Modbus
         {
             try
             {
-                clientSocket.Send(aByteData);
+                if (clientSocket != null)
+                {
+                    lock (sendLock)
+                    {
+                        clientSocket.Send(aByteData);
+                    }
+                }
                 return true;
             }
             catch (SocketException ex)
