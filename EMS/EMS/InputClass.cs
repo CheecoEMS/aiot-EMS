@@ -7987,8 +7987,13 @@ namespace EMS
                     if (!frmSet.IsMaster)
                     {
                         //获取pcs功率
-                        if (PCSList.Count > 0)
-                            frmMain.Selffrm.AllEquipment.PCSList[0].GetallUkva();
+                        double PCSPower = 0;
+                        for (int i = 0; i < PCSList.Count; i++)
+                        {
+                            PCSList[i].GetallUkva();
+                            PCSPower += PCSList[i].allUkva;
+                        }
+                        PCSKVA = Math.Round(PCSPower, 2);
 
                         //判断是否超时控制，如果超时就停机等待
                         if (frmSet.ConnectStatus == "tcp")
@@ -8118,9 +8123,13 @@ namespace EMS
                     }
                     else//如果是主机
                     {
-                        //获取pcs功率
-                        if (PCSList.Count > 0)
-                            frmMain.Selffrm.AllEquipment.PCSList[0].GetallUkva();
+                        double PCSPower = 0;
+                        for (int i = 0; i < PCSList.Count; i++)
+                        {
+                            PCSList[i].GetallUkva();
+                            PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
+                        }
+                        PCSKVA = Math.Round(PCSPower, 2);
 
                         //没有关口表
                         if (!ChechPower)
