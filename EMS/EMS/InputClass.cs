@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.WellKnownTypes;
+using IEC104;
 using log4net;
 using log4net.Util;
 using Modbus;
@@ -6,11 +7,13 @@ using MySql.Data.MySqlClient;
 using Mysqlx;
 using Mysqlx.Crud;
 using Mysqlx.Prepare;
+using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Asn1.Crmf;
 using Org.BouncyCastle.Bcpg;
 using System;
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
@@ -18,9 +21,11 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Forms;
+using static IEC104.CIEC104Slave;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 using static System.Collections.Specialized.BitVector32;
 
@@ -3812,8 +3817,11 @@ namespace EMS
             if (GetSysData(0, ref strTemp))
             {
                 bPrepared = true;
-                if (Get3strData(2, ref strTemp, ref strData))
+                if (Get3strData(2, ref strTemp, ref strData)) 
+                {
                     aV = Math.Round(float.Parse(strData), 1);
+
+                }
                 if (Get3strData(3, ref strTemp, ref strData))
                     bV = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(4, ref strTemp, ref strData))
@@ -6037,6 +6045,8 @@ namespace EMS
         public double UBmsPcsState = 1; //充电state
         public double OBmsPcsState = 1; //放电state
 
+
+
         //8.13多级防逆超限
         public double dRate = 0;
         public double dValue = 0;
@@ -6706,6 +6716,7 @@ namespace EMS
         /// </summary>
         public void AutoReadData()
         {
+
             try
             {
                 AutoReadDataCom1(); //传感器，UPS
@@ -8356,6 +8367,10 @@ namespace EMS
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+
+        public CIEC104Slave CIEC104Slave = new CIEC104Slave();
+
         /// <summary>
         /// 读取pcs信息
         /// </summary>
@@ -8363,11 +8378,19 @@ namespace EMS
         {
             int SelectVersion = 0;
             double PCSPower = 0;
+
+            CIEC104Slave.PropertyChanged += CIEC104Slave.IEC104_PropertyChanged;
+            CIEC104Slave.IEC104_Init();
+            //IEC104Class iEC104Class = new IEC104Class();
+            //iEC104Class.PropertyChanged += iEC104Class.IEC104_PropertyChanged;
+
             while (true)
             {
                 //log.Error("com4 线程执行");
                 try
                 {
+
+                    //IEC104_PropertyChanged_test();
                     PCSPower = 0;
                     Thread.Sleep(100);
                     //PCS 
@@ -8376,11 +8399,11 @@ namespace EMS
                         PCSList[i].GetDataFromEqipment();
                         //log.Error("获取PCS状态: " +  PCSList[i].PcsRun);
                         PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
+
                         //InKVAH += PCSList[i].ACInkwh;
                         //OutKVAH += PCSList[i].ACOutkwh;
                     }
                     PCSKVA = Math.Round(PCSPower, 2);
-
 
                     //bms
                     try
@@ -8398,6 +8421,12 @@ namespace EMS
                         frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                     }
 
+
+                    CIEC104Slave.OnPropertyChanged();
+                    //iEC104Class.IEC104_YC_DATA = _IEC104_YC_DATA;
+
+                    //Get_IEC104_YX_DATA();
+                    //iEC104Class.IEC104_YX_DATA = _IEC104_YX_DATA;
                     //PCS的DSP2 11.27
                     /*                    if (DSP2 != null)
                                         {
@@ -9050,6 +9079,120 @@ namespace EMS
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+
+
+        public void Get_IEC104_YX_DATA()
+        {
+
+            int count = 15;
+            byte[] message = new byte[92];
+
+            //信息元素(PCS数据) 
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aA, ref message, ref count);          //A电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref message, ref count);          //B电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cA, ref message, ref count);          //C电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref message, ref count);         //a对地电压
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref message, ref count);         //b对地电压
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref message, ref count);         //c对地电压
+            if (frmSet.SysCount == 1)
+                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
+            else
+                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref message, ref count);    //总无功功率
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref message, ref count);  //总功率因数
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref message, ref count);      //可充电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.DisChargeAmount, ref message, ref count);   //可放电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.E2PKWH[0], ref message, ref count);             //当日充电电量            
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref message, ref count);             //当日放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0], ref message, ref count);    //累计充电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0], ref message, ref count);    //累计放电电量
+
+
+            Array.Copy(message, 15, IEC104_YC_DATA, 0, 40);
+
+
+        }
+
+
+        public void Get_IEC104_YC_DATA() {
+
+            int count = 15;
+            byte[] message = new byte[92];
+
+            //信息元素(PCS数据) 
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aA, ref message, ref count);          //A电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref message, ref count);          //B电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cA, ref message, ref count);          //C电流
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref message, ref count);         //a对地电压
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref message, ref count);         //b对地电压
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref message, ref count);         //c对地电压
+            if (frmSet.SysCount == 1)
+                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
+            else
+                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref message, ref count);    //总无功功率
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref message, ref count);  //总功率因数
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref message, ref count);      //可充电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.DisChargeAmount, ref message, ref count);   //可放电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.E2PKWH[0], ref message, ref count);             //当日充电电量            
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref message, ref count);             //当日放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0], ref message, ref count);    //累计充电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0], ref message, ref count);    //累计放电电量
+
+
+            Array.Copy(message, 15, IEC104_YC_DATA, 0, 40);
+
+            
+        }
+
+        static public bool Get_One_YC_Data(float data, ref byte[] message, ref int count)
+        {
+
+            StringBuilder sb = new StringBuilder();
+            byte[] bytes = BitConverter.GetBytes(data);
+
+            foreach (var item in bytes)
+            {
+                sb.Insert(0, item.ToString("X2"));
+            }
+
+
+            /*                string dataString = ((int)data).ToString("X");
+                            while (dataString.Length < 8)
+                            {
+                                dataString = '0' + dataString;
+                            }*/
+            //log.Debug("dataString"+ dataString);
+            string dataString = sb.ToString();
+
+            byte[] byteArray = new byte[dataString.Length / 2];
+            for (int i = 0; i < dataString.Length; i += 2)
+            {
+                byteArray[i / 2] = Convert.ToByte(dataString.Substring(i, 2), 16);
+            }
+
+            string hexString = BitConverter.ToString(byteArray);
+            //log.Debug("数据1：" + hexString);
+
+            Array.Copy(byteArray, 3, message, count, 1);
+            count += 1;
+            Array.Copy(byteArray, 2, message, count, 1);
+            count += 1;
+            Array.Copy(byteArray, 1, message, count, 1);
+            count += 1;
+            Array.Copy(byteArray, 0, message, count, 1);
+            count += 1;
+
+            List<byte> byteList = new List<byte>(message);
+            // 添加新的字节 ,品质描述符
+            byteList.Add(0x00);
+            // 转换回 byte 数组
+            message = byteList.ToArray();
+            count += 1;
+            return true;
+        }
+
 
     }
 

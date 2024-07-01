@@ -45,30 +45,7 @@ namespace EMS
             if (! CheckAppExists()) 
             { 
                 frmFlash.ShowFlashForm();
-                //初始化IO口
-                //SysIO.GPOIIni();
-                //SysIO.SetGPIOState(0, 3);//急停
-                //SysIO.SetGPIOState(1, 3);//消防
-                //SysIO.SetGPIOState(2, 3);
-                //SysIO.SetGPIOState(3, 3);
-                //SysIO.SetGPIOState(4, 3);
-                //SysIO.SetGPIOState(5, 3);
-                //SysIO.SetGPIOState(6, 3);
-                //SysIO.SetGPIOState(7, 3);
-                ////
-                //SysIO.SetGPIOState(8, 1);   //24V on(powerOn)
-                //SysIO.SetGPIOState(9, 1);   //PCS On
-                //SysIO.SetGPIOState(10, 1);  //2 error
-                //SysIO.SetGPIOState(11, 1); //3 error
-                ////SysIO.SetGPIOState(12, 1);
-                //SysIO.SetGPIOState(15, 1);//EMS LED
-                                          //隐藏工具栏 
-                                          //SysIO.HideKeyBoard();
-                                          //SysIO.HideTaskBar();
-                                          //ScreenBackLight.SetPowerOn();
-
-                //frmSet.LoadForm();
-                //frmSet.LoadParameter();   
+  
 
                 string crashDumpFolder = @"C:\crashdump"; // 设置 crashdump 文件夹路径
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);

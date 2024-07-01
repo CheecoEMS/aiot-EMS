@@ -124,7 +124,7 @@ namespace EMS
 
 
         //05.10 Gpio 判断
-        public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
+        public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA(带RTC)   2:FB(带RTC)
         // 05.13 添加 UBmsPcsState  0BmsPcsState 
         public static int UBmsPcsState;
         public static int OBmsPcsState;
