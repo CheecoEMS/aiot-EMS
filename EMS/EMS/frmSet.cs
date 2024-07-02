@@ -130,7 +130,7 @@ namespace EMS
         public static int OBmsPcsState;
 
         public static int Open104 = 0; //是否开启104， 1：开启 0：关闭
-        public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
+        //public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
 
 
         private const string strDriveDllName = "SpesTechDriverControl.dll";
@@ -308,10 +308,7 @@ namespace EMS
                     MaxSOC = rd.GetInt32(2);
                     MinSOC = rd.GetInt32(3);
                     frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                    log.Debug("读取UBmsPcsState :" + rd.GetInt32(4));
                     frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
-                    log.Debug("读取0BmsPcsState : " + rd.GetInt32(5));
-                    //log.Error("数据库读取"+"MaxGridKW: " + MaxGridKW + "MinGridKW: " + MinGridKW);
                 }
             }
             catch (Exception ex)
@@ -951,10 +948,8 @@ namespace EMS
         //保存数据到INI文件
         public static void SaveSet2File()
         {
-            //log.Debug("保存数据到INI文件:" + "MaxGridKW: " +frmSet.MaxGridKW + "MinGridKW: " + frmSet.MinGridKW);
             INIFile ConfigINI = new INIFile();
             //ConfigINI.INIWrite("", "key", "value", INIPath);
-            //log.Error("INIPath: " + INIPath);
             ConfigINI.INIWrite("System Set", "SysName", SysName, INIPath);
             ConfigINI.INIWrite("System Set", "SysID", SysID, INIPath);
             ConfigINI.INIWrite("System Set", "SysPower", SysPower.ToString(), INIPath);

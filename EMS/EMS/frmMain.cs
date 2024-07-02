@@ -91,13 +91,9 @@ namespace EMS
         //tcp
         private void OnReceiveModbusTcpClientCMD(object sender, byte[] aByteData)
         {
-            //do+委托
-            //byte[] aByteData = Encoding.ASCII.GetBytes(strData);
-            //Slave104.iec104_packet_parser(msg);
-            log.Debug("触发Client");
             //验证消息
-            string hexString = BitConverter.ToString(aByteData);
-            log.Debug("收到TCP消息：" + hexString);
+            //string hexString = BitConverter.ToString(aByteData);
+
             int SysID = 0;
             int CMDID = 0;
             short iAddr = 0;
@@ -111,11 +107,9 @@ namespace EMS
 
             //解析命令
             iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen);
-            /*            if (SysID != frmSet.i485Addr)
-                            return;*/
-
-            AllEquipment.NetControl = true;
+            
             AllEquipment.NetCtlTime = DateTime.Now;
+            AllEquipment.Clock_Watch.RestartMeasurement();
             frmSet.SysMode = 2;
             byte[] message = new byte[7];
             short[] sData01 = { 00, 00 };
@@ -123,49 +117,38 @@ namespace EMS
             switch (CMDID)
             {
                 case 0x03://读取 
-                    /*                    if (CloudClass.Back3Data(iAddr, SysID) != null)
-                                        {
-                                            frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr, SysID));
-                                        }*/
+                    AllEquipment.NetConnect = true;
+                    if (iLen == 1)
+                    {
+                        frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr));
+                    }
+                    else
+                    {
+                        frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr, iLen));
+                        //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(CloudClass.Back3Data(iAddr, iLen));
+                    }
                     break;
-                case 0x06://设置                     
-                    log.Debug("接收功能码6的设置指令");
-                    /*                    data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
-                                        message = ModbusBase.BuildCloundMSG((byte)frmSet.i485Addr, 0x20, 1, data);
-                                        string result1 = BitConverter.ToString(message);
-                                        log.Debug("result1:" + result1);
-                                        frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(message);*/
-
-                    //只读不回
-                    /*                    lock (frmMain.Selffrm.ModbusTcpClient.ClientBuffer)
-                                        {
-                                            frmMain.Selffrm.ModbusTcpClient.ClientBuffer.AddToQueue(aByteData);
-                                        }*/
-
-                    //读回
-                    frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
+                case 0x06://设置
+                    AllEquipment.NetConnect = true;
                     CloudClass.Active6Data(iAddr, (int)iData);
                     //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
-                    log.Debug("返回消息");
+                    frmMain.Selffrm.ModbusTcpClient.SendMSG(aByteData);
                     break;
                 case 0x20://读取设备ID  
-                    log.Debug("接收功能码20的问询指令");
                     data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
                     message = ModbusBase.BuildCloundMSG((byte)frmSet.i485Addr, 0x20, 1, data);
-                    string result = BitConverter.ToString(message);
-                    log.Debug("result:" + result);
-                    frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(message);
+                    //string result = BitConverter.ToString(message);
 
-                    IPEndPoint localEndPoint = (IPEndPoint)frmMain.Selffrm.ModbusTcpClient.clientSocket.LocalEndPoint;
-                    log.Debug("Local IP address: " + localEndPoint.Address);
-                    log.Debug("Local port: " + localEndPoint.Port);
+                    frmMain.Selffrm.ModbusTcpClient.SendMSG(message);
+
+                    //IPEndPoint localEndPoint = (IPEndPoint)frmMain.Selffrm.ModbusTcpClient.clientSocket.LocalEndPoint;
+                    //"Local IP address: " + localEndPoint.Address
+                    //"Local port: " + localEndPoint.Port
 
                     // Get the remote endpoint information
-                    IPEndPoint remoteEndPoint = (IPEndPoint)frmMain.Selffrm.ModbusTcpClient.clientSocket.RemoteEndPoint;
-                    log.Debug("Remote IP address: " + remoteEndPoint.Address);
-                    log.Debug("Remote port: " + remoteEndPoint.Port);
-                    //
-                    //TCPCloud.SendMSG(message);
+                    //IPEndPoint remoteEndPoint = (IPEndPoint)frmMain.Selffrm.ModbusTcpClient.clientSocket.RemoteEndPoint;
+                    //"Remote IP address: " + remoteEndPoint.Address
+                    //"Remote port: " + remoteEndPoint.Port
                     break;
                 case 0x21:
                     /*                    sData01[0] = (short)1;
@@ -197,7 +180,7 @@ namespace EMS
         {
             //do+委托
             string hexString = BitConverter.ToString(msg);
-            //log.Debug("收到TCP消息：" + hexString);
+            //"收到TCP消息：" + hexString
 
             Slave104.iec104_packet_parser(msg);
 
@@ -211,8 +194,7 @@ namespace EMS
             //do+委托
             byte[] msg = Encoding.ASCII.GetBytes(strData);
 
-            string hexString = BitConverter.ToString(msg);
-            //log.Debug("收到TCP消息：" + hexString);
+            //string hexString = BitConverter.ToString(msg);
 
             Slave104.iec104_packet_parser(msg);
 
@@ -284,9 +266,7 @@ namespace EMS
             ////判断是否为传到的命令 
             //检查是否是为命令  //检查crc 
 
-            //8.8
-/*            string RecCommandInfo = new StackTrace().ToString();
-            log.Debug(RecCommandInfo);*/
+            //string RecCommandInfo = new StackTrace().ToString();
 
             if (!ModbusBase.CheckResponse(aByteData)) 
                 return;
@@ -397,11 +377,8 @@ namespace EMS
 
                 //读取配置文件
                 frmSet.LoadSetInf();
-                frmSet.InitGPIO();
-
-
                 //初始化端口
-
+                frmSet.InitGPIO();
                 //连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -453,7 +430,6 @@ namespace EMS
                 TacticsList.LoadFromMySQL();
                 //策略曲线图展示
                 ShowShedule2Char(true);
-               
                 //下载均衡策略
                 if (BalaTacticsList != null)
                 {
@@ -483,7 +459,6 @@ namespace EMS
                 }
                 catch
                 { }
-
                 frmFlash.AddPostion(10);
                 if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
                 {
@@ -494,7 +469,6 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-
                 if (frmSet.IsMaster)
                 {
                     if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
@@ -507,7 +481,6 @@ namespace EMS
                         }
                     }
                 }
-
 
                 //8.7 每台主机初始化对外接口
                 BaseEquipmentClass oneEquipment = null;
@@ -525,7 +498,7 @@ namespace EMS
                     frmMain.Selffrm.spNetControl.Open();
 
                 }
-                else 
+                else
                 {
                     //从机的列表
                     for (int i = 0; i < frmSet.SysCount-1; i++)//主机调控
@@ -541,12 +514,10 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
                     }
                 }
-
                 //连接硬件：4G通讯模块
                 frmMain.Selffrm.Model4G.m485 = new modbus485();
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
                 frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-
                 //若配置接入104服务
                 if (frmSet.Open104 == 1)
                 {
@@ -558,14 +529,14 @@ namespace EMS
                 if (frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
                 {
                     frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                    frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, Socket>();
+                    frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (Socket, object)>();
                     frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                     frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                 }
-                else if(!frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
+                else if (!frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
                 {
                     frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.MasterIp, 502);
-                    frmMain.Selffrm.ModbusTcpClient.StartMonitor();
+                    //frmMain.Selffrm.ModbusTcpClient.StartMonitor();
                 }
 
                 frmFlash.AddPostion(10);
@@ -624,7 +595,7 @@ namespace EMS
         {
             SysThreathStoped = true;
             //关闭云链接
-            TCPCloud.CloseCenect();
+            TCPCloud.CloseConnect();
             //关闭gpio
             frmSet.GPIOClose();
            // System.Environment.Exit(0);
@@ -869,14 +840,12 @@ namespace EMS
         //定时器 1min    12.5
 /*        private void tmYuntime_Tick(object sender, EventArgs e)
         {
-            log.Debug("检测网络");
             //ping mqttfx 检查是否网络正常
             Ping ping = new Ping();
             PingReply reply = ping.Send("www.baidu.com");
 
             if (reply.Status != IPStatus.Success)
             {
-                log.Debug("网络中断");
                 //输入重启指令
                 *//*                if (!Model4G.m485.sp.IsOpen)
                                 {
@@ -903,12 +872,10 @@ namespace EMS
         //定时器：1s
         private void tmSystime_Tick(object sender, EventArgs e)
         {
-            //log.Debug("上传云");
-/*            log.Debug("检测网络");
+/*          
             if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
             {
                 //AllEquipment.Report2Cloud.CreateClient();
-                log.Debug("网络丢失，重启");
                 SysIO.Reboot();
             }*/
             //19s的循环
@@ -1046,7 +1013,6 @@ namespace EMS
                 //7.25
                 try
                 {
-                    //log.Debug("检测网络");
                     if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
                     {
                         //log.Error("网络中断");
@@ -1351,7 +1317,6 @@ namespace EMS
 
         private void TmNetLink_Tick(object sender, EventArgs e)
         {
-            //log.Debug("检测网络");
             //ping mqttfx 检查是否网络正常
             /*            Ping ping = new Ping();
                         PingReply reply;
@@ -1361,7 +1326,6 @@ namespace EMS
                         }
                         catch (Exception)
                         {
-                            log.Debug("网络中断");
                             if (frmMain.Selffrm.AllEquipment.HostStart == false)
                             {
                                 SysIO.Reboot();
@@ -1371,7 +1335,6 @@ namespace EMS
             if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
             {
                 //AllEquipment.Report2Cloud.CreateClient();
-                //log.Debug("网络丢失，重启");
                 SysIO.Reboot();
             }
         }
