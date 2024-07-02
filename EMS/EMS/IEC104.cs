@@ -1076,6 +1076,7 @@ namespace IEC104
             int dif_count = 0;  //记录变化数据个数
             app.asdu.function = function;
             byte[] message = new byte[100];
+            byte[] arr= new byte[10];
 
             //***********************拼装数据************************//
             message[Index++] = 0x68;
@@ -1098,21 +1099,44 @@ namespace IEC104
             message[Index++] = app.asdu.commom_asdu_1;
             message[Index++] = app.asdu.commom_asdu_2;
 
-            //Get_Rawdata(Convert.ToBoolean(4), ref app.YX_rawdata, ref count);                                                //储能事故总信号
-            //Get_Rawdata(Convert.ToBoolean(frmMain.Selffrm.AllEquipment.PCSList[0].bA), ref app.YX_rawdata, ref count);          //运行状态
-            //Get_Rawdata(Convert.ToBoolean(frmMain.Selffrm.AllEquipment.PCSList[0].cA), ref app.YX_rawdata, ref count);          //PCS充放电状态
-            //Get_Rawdata(Convert.ToBoolean(frmMain.Selffrm.AllEquipment.PCSList[0].aV), ref app.YX_rawdata, ref count);         //BMS通信
-            //Get_Rawdata(Convert.ToBoolean(frmMain.Selffrm.AllEquipment.PCSList[0].bV), ref app.YX_rawdata, ref count);         //储能需求侧响应模式投入
-            //Get_Rawdata(Convert.ToBoolean(frmMain.Selffrm.AllEquipment.PCSList[0].cV), ref app.YX_rawdata, ref count);           //PCS启动/停机
-            //Get_Rawdata(Convert.ToBoolean(0), ref app.YX_rawdata, ref count);                                                 //PCS通信
-            //Get_Rawdata(Convert.ToBoolean(-9), ref app.YX_rawdata, ref count);                                                  //告警总
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
-            Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+
+            //信息元素(储能表数据)
+            //储能事故总信号  : ( 1:故障 0：正常 )
+            if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true)                arr[0] = 0x01;
+            else                                                                   arr[0] = 0x00;
+            //运行状态 ： （0正常运行，1故障）
+            if (frmMain.Selffrm.AllEquipment.runState == 1)                        arr[1] = 0x01;
+            else if (frmMain.Selffrm.AllEquipment.runState == 0)                   arr[1] = 0x00;
+            //PCS充电放电状态 （1：充电 0：放电）
+            if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")                arr[2] = 0x01;
+            else                                                                   arr[2] = 0x00;
+            //BMS通信 ： （ 1：通信 0：失联 ）
+            if (frmMain.Selffrm.AllEquipment.BMS.Prepared == true)                arr[3] = 0x01;
+            else                                                                  arr[3] = 0x00;
+            //储能需求侧相应模式投入 ( 1:进入网控 0：未进入)
+            if (frmMain.Selffrm.AllEquipment.eState == 2)                        arr[4] = 0x01;
+            else                                                                 arr[4] = 0x00;
+            //PCS开关状态  0:停机 1：开机
+            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255)                arr[5] = 0x00;
+            else                                                                      arr[5] = 0x01;
+
+
+
+            Get_Rawdata(Convert.ToBoolean(arr[0]), ref app.YX_rawdata, ref count);        //储能事故总信号
+            Get_Rawdata(Convert.ToBoolean(arr[1]), ref app.YX_rawdata, ref count);             //运行状态
+            Get_Rawdata(Convert.ToBoolean(arr[2]), ref app.YX_rawdata, ref count);          //PCS充放电状态
+            Get_Rawdata(Convert.ToBoolean(arr[3]), ref app.YX_rawdata, ref count);         //BMS通信
+            Get_Rawdata(Convert.ToBoolean(arr[4]), ref app.YX_rawdata, ref count);         //储能需求侧响应模式投入
+            Get_Rawdata(Convert.ToBoolean(arr[5]), ref app.YX_rawdata, ref count);           //PCS启动/停机
+            Get_Rawdata(Convert.ToBoolean(arr[6]), ref app.YX_rawdata, ref count);             //PCS通信
+            Get_Rawdata(Convert.ToBoolean(arr[7]), ref app.YX_rawdata, ref count);             //告警总
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
 
 
             for (int i = 0; i < app.YX_rawdata.Length; i++)
@@ -1206,42 +1230,31 @@ namespace IEC104
             message[Index++] = app.asdu.commom_asdu_2;
 
             /********/
- 
-            Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++; Get_Rawdata((float)app.count_test, ref app.YC_rawdata, ref count);          //A电流
-            app.count_test++;
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref app.YC_rawdata, ref count);          //B电流
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cA, ref app.YC_rawdata, ref count);          //C电流
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref app.YC_rawdata, ref count);         //a对地电压
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref app.YC_rawdata, ref count);         //b对地电压
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref app.YC_rawdata, ref count);         //c对地电压
-            //if (frmSet.SysCount == 1)
-            //    Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref app.YC_rawdata, ref count);     //总有用功率
-            //else
-            //    Get_Rawdata((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref app.YC_rawdata, ref count);
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref app.YC_rawdata, ref count);    //总无功功率
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref app.YC_rawdata, ref count);  //总功率因数
+
+            frmMain.Selffrm.AllEquipment.BMS.Get104Info();
+
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref app.YC_rawdata, ref count);          //B电流
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cA, ref app.YC_rawdata, ref count);          //C电流
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref app.YC_rawdata, ref count);         //a对地电压
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref app.YC_rawdata, ref count);         //b对地电压
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref app.YC_rawdata, ref count);         //c对地电压
+            if (frmSet.SysCount == 1)
+                Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref app.YC_rawdata, ref count);     //总有用功率
+            else
+                Get_Rawdata((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref app.YC_rawdata, ref count);
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref app.YC_rawdata, ref count);    //总无功功率
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref app.YC_rawdata, ref count);  //总功率因数
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref app.YC_rawdata, ref count);      //可充电量
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.DisChargeAmount, ref app.YC_rawdata, ref count);   //可放电量
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2PKWH[0], ref app.YC_rawdata, ref count);             //当日充电电量            
-            //Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref app.YC_rawdata, ref count);             //当日放电电量
-            //Get_Rawdata((float)88.1, ref app.YC_rawdata, ref count);    //累计充电电量
-            //Get_Rawdata((float)1.1, ref app.YC_rawdata, ref count);    //累计放电电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.DisChargeAmount, ref app.YC_rawdata, ref count);   //可放电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2PKWH[0], ref app.YC_rawdata, ref count);             //当日充电电量            
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref app.YC_rawdata, ref count);             //当日放电电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0], ref app.YC_rawdata, ref count);    //累计充电电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0], ref app.YC_rawdata, ref count);    //累计放电电量
+            Get_Rawdata((float)0, ref app.YC_rawdata, ref count);    //最大充电功率允许值
+            Get_Rawdata((float)0, ref app.YC_rawdata, ref count);    //最大放电功率允许值
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soc, ref app.YC_rawdata, ref count);    //SOC
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soh, ref app.YC_rawdata, ref count);    //SOH
+            Get_Rawdata((float)0, ref app.YC_rawdata, ref count);    //有功功率设置
 
             for (int i = 0; i < app.YC_rawdata.Length; i++)
             {

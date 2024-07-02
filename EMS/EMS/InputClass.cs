@@ -1356,9 +1356,9 @@ namespace EMS
         }
         public void Set_Led_Standby_W()
         {
-            SetLEDRun(Led_off);
-            SetLEDWarn(Led_on);
-            SetLEDError(Led_off);
+            SetLEDRun(Led_on);
+            SetLEDWarn(Led_off);
+            SetLEDError(Led_on);
         }
         public void Set_Led_Standby_E( )
         {
