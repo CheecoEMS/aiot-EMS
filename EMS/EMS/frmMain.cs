@@ -30,6 +30,9 @@ namespace EMS
         ///设备对象
         public AllEquipmentClass AllEquipment = new AllEquipmentClass();
 
+        ///储能柜对象
+        public EMSEquipment ems = new EMSEquipment();
+
 
         ///主从串口通信参数
         private delegate void OnReceiveCMDDelegate(int DataSourceType, byte[] aByteData);//建立事件委托  
@@ -64,6 +67,13 @@ namespace EMS
 
         //12.5
         public EMSEquipment Model4G = new EMSEquipment();
+
+        //定时器
+        private static System.Threading.Timer Cloud_timer;
+        private static System.Threading.Timer UI_timer;
+        private static System.Threading.Timer Tacitc_Timer;
+        private static System.Threading.Timer Public_Timer;
+        private static System.Threading.Timer CXFN_Timer;//超限防逆log
 
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
@@ -254,7 +264,72 @@ namespace EMS
             }
             return builder.ToString().Trim();
         }
+        /// <summary>
+        /// 十六进制字符串转字节数组
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public byte[] ConvertHexStringToByteArray(string hex)
+        {
+            // 确保输入的十六进制字符串的长度是偶数
+            if (hex.Length % 2 != 0)
+                throw new ArgumentException("Hex string must have an even length");
 
+            byte[] byteArray = new byte[hex.Length / 2];
+
+            for (int i = 0; i < hex.Length; i += 2)
+            {
+                // 解析每一对字符
+                string hexPair = hex.Substring(i, 2);
+                byteArray[i / 2] = Convert.ToByte(hexPair, 16);
+            }
+
+            return byteArray;
+        }
+
+        /******************************串口事件处理函数************************************************/
+        //收到命令函数
+        public void OnReceiveCMD2(int DataSourceType, byte[] aByteData)
+        {
+            int SysID = 0;
+            int CMDID = 0;
+            short iAddr = 0;
+            short iLen = 0;
+            long iData = 0;
+            ////判断是否为传到的命令 
+            //检查是否是为命令  //检查crc 
+
+            if (!ModbusBase.CheckResponse(aByteData))
+                return;
+
+            //解析命令
+            iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen);
+            if (SysID != frmSet.i485Addr)
+                return;
+
+            AllEquipment.NetControl = true;
+            AllEquipment.NetCtlTime = DateTime.Now;
+            frmSet.SysMode = 2;
+            byte[] message = new byte[7];
+            short[] sData01 = { 00, 00 };
+            switch (CMDID)
+            {
+                case 0x03://读取 
+                    if (CloudClass.Back3Data(iAddr) != null)
+                    {
+                        ////modbus返回:使用缓冲区中的数据将指定数量的字节写入串行端口。
+                        frmMain.Selffrm.ems.m485.sp.Write(CloudClass.Back3Data(iAddr), 0, 7);
+                    }
+                    break;
+                case 0x06://设置                     
+                    frmMain.Selffrm.ems.m485.sp.Write(aByteData, 0, aByteData.Length);
+                    CloudClass.Active6Data(iAddr, (int)iData);
+                    break;
+                default:
+                    break;
+            }
+        }
         //收到命令函数
         private void OnReceiveCMD(int DataSourceType, byte[] aByteData)
         {
@@ -493,10 +568,10 @@ namespace EMS
                 //网络控制或者联机控制
                 if (!frmSet.IsMaster)
                 {
-                    frmMain.Selffrm.spNetControl.PortName = frmSet.DebugComName;
-                    frmMain.Selffrm.spNetControl.BaudRate = 38400;//38400
-                    frmMain.Selffrm.spNetControl.Open();
-
+                    frmMain.Selffrm.ems.ID = frmSet.i485Addr;
+                    frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
+                    frmMain.Selffrm.ems.m485 = new modbus485();
+                    frmMain.Selffrm.ems.m485.OpenEMS(frmSet.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                 }
                 else
                 {
@@ -539,6 +614,14 @@ namespace EMS
                     //frmMain.Selffrm.ModbusTcpClient.StartMonitor();
                 }
 
+                //开启定时器
+                InitializeCloud_timer();
+                InitializeUI_timer();
+                InitializeTacitc_Timer();
+                InitializePublic_Timer();
+                InitializeCXFN_Timer();
+
+
                 frmFlash.AddPostion(10);
                 //开启任务多线程
                 frmMain.Selffrm.AllEquipment.AutoReadData();
@@ -551,44 +634,235 @@ namespace EMS
             return Selffrm;
         }
 
-        //8.18
+        /**********************************/
+        /*                                */
+        /*            定时器              */
+        /*                                */
+        /*********************************/
 
-/*        internal class PCSInfo
-        { 
-            public string awType { get; internal set;}
-            public string aPCSType { get; internal set; }
-            public double aPCSValueRate { get; internal set; }
-            public bool bAllParam { get; internal set; }
+        static void InitializeCXFN_Timer()
+        {
+            CXFN_Timer = new System.Threading.Timer(CXFN_TimerCallback, null, 0, 10000);
+        }
+        static void CXFN_TimerCallback(Object state)
+        {
+            if (frmSet.SysCount > 1)
+            {
+                frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+            }
+            else
+            {
+                frmMain.Selffrm.AllEquipment.SingleReflux_Log();
+            }
         }
 
 
-        //8.18
-        internal class ThreadPoolClass
+
+        static void InitializePublic_Timer()
         {
-            public void SetAllPCSCommand(object obj)
+            //每120秒，是否满足隔日数据上传和需量更新和温度控制
+            Public_Timer = new System.Threading.Timer(Public_TimerCallback, null, 0, 120000);
+        }
+        static void Public_TimerCallback(Object state)
+        {
+            /*            if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
+                        {
+                            //更新的月份
+                            frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+                            frmMain.Selffrm.AllEquipment.WriteDoPUini();
+                        }*/
+
+            //如果日期更新：
+            //1.清理数据库的旧数据
+            //2.保存当天收益到数据库
+            //3.上传当天收益到云
+            //4.下载策略
+
+
+            if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
             {
-
-                PCSInfo pcsInfo = (PCSInfo)obj;
-
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
-                    return;
-                foreach (EMSEquipment oneEMSE in frmMain.Selffrm.AllEquipment.EMSList)
+                GC.Collect();// 通知托管堆强制回收垃圾   
+                             //删除180天前的数据
+                frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+                //保存当天收益到数据库FormatException ex)
+                frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                //当日收益发送到云
+                frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
+                                                                                                               //更新日期
+                frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
+                frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                //每晚00：00更新策略
+                if (frmMain.TacticsList != null)
                 {
-                    //oneEMSE.ExcPCSCommand(awType, aPCSType, aPCSValueRate, bAllParam);
-
-                    if (frmSet.SysCount > 1)
+                    try
                     {
-                        oneEMSE.ExcPCSCommand(pcsInfo.awType, pcsInfo.aPCSType, pcsInfo.aPCSValueRate, pcsInfo.bAllParam);
+                        if (frmSet.IsMaster)
+                        {
+                            if (frmMain.TacticsList != null)
+                            {
+                                try
+                                {
+                                    frmMain.TacticsList.LoadFromMySQL();
+                                }
+                                catch
+                                {
+                                    log.Error("定时器刷新数据库失败");
+                                }
+                            }
+                        }
                     }
-                    //oneEMSE.ExcPCSCommand(awType, aPCSType, aPCSValueRate, bAllParam);
+                    catch
+                    {
+                        log.Error("00：00更新策略失败");
+                    }
+                }
+                //更新均衡策略
+                try
+                {
+                    frmMain.BalaTacticsList.LoadFromMySQL();
+                }
+                catch { log.Error("00：00更新均衡策略失败"); }
+            }
+
+            //检查mqttp的连接情况，每分钟检查一次
+            try
+            {
+                frmMain.Selffrm.AllEquipment.Report2Cloud.CheckConnect();
+            }
+            catch { }
+
+            if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
+            {
+                if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
+                {
+                    frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true);//PCS工作前启动空调
+                }                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
+                else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                {
+                    if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);//PCS工作前启动空调
+                    }
                 }
             }
-            *//*        internal void SetAllPCSCommand(object state)
-                    {
-                        throw new NotImplementedException();
-                    }*//*
 
-        }*/
+            //液冷控制
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
+                else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                {
+                    if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
+                    }
+                }
+            }
+        }
+
+
+        static void InitializeTacitc_Timer()
+        {
+            //每30秒 判断策略时段  
+            Tacitc_Timer = new System.Threading.Timer(Tacitc_TimerCallback, null, 0, 30000);
+        }
+        static void Tacitc_TimerCallback(Object state)
+        {
+            frmMain.TacticsList.CheckTacticsOnce();
+        }
+        static void InitializeCloud_timer()
+        {
+            //每60秒 数据上云  
+            Cloud_timer = new System.Threading.Timer(Cloud_timerCallback, null, 0, 60000);
+        }
+        static void Cloud_timerCallback(Object state)
+        {
+            // 定时器触发时要执行的代码  
+            if (frmSet.EMSstatus == 1)
+            {
+                DateTime tempTime = DateTime.Now;
+                //采集数据保存在数据库中
+                frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
+                //采集数据上传云端
+                frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
+            }
+        }
+        static void InitializeUI_timer()
+        {
+            //每两秒 修正ui 
+            UI_timer = new System.Threading.Timer(UI_timerCallback, null, 0, 2000);
+        }
+        static void UI_timerCallback(Object state)
+        {
+            //和页面按钮有关
+            if (!frmMain.Selffrm.BeFoused)
+                return;
+
+            //20次更新一次小面的曲线
+            /*            if (ErrorGridFreshCount == 0)
+                        { 
+                            {
+                                DBConnection.ShowData2DBGrid(dbvError, "select * from warning  where (ResetTime IS NULL)");
+                                ErrorGridFreshCount = 20;
+                            }
+                        }
+                        ErrorGridFreshCount--;*/
+
+            //单个数据            
+            if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+            {
+                string strCap = "手动";
+                if (TacticsList.TacticsOn)
+                {
+                    strCap = "策略";
+                }
+                else if (frmSet.PCSGridModel==1)
+                {
+                    strCap = "离网";
+                }
+                else if (frmSet.SysMode == 2)
+                {
+                    strCap = "网控";
+                }
+                if (frmMain.Selffrm.AllEquipment.PCSList[0].allUkva > 0.5)
+                {
+                    frmMain.Selffrm.labState.Text = strCap + "放电";
+                    frmMain.Selffrm.labPCSuKW.Text = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva.ToString("F1") + "kw";
+                }
+                else if (frmMain.Selffrm.AllEquipment.PCSList[0].allUkva < -0.5)
+                {
+                    frmMain.Selffrm.labState.Text = strCap + "充电";
+                    frmMain.Selffrm.labPCSuKW.Text = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva.ToString("F1") + "kw";
+                }
+                else
+                {
+                    frmMain.Selffrm.labState.Text = strCap + "待机";
+                    frmMain.Selffrm.labPCSuKW.Text = "0.0kw";
+                }
+                //当前PCS的功率 
+                //labState.Text = strCap+PCSClass.PCSStates[AllEquipment.PCSList[0].State];
+                frmMain.Selffrm.labPCSuKW.Text = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva.ToString("F2") + "kw";
+            }
+            // labPCSuKW.Text = AllEquipment.PCSKVA.ToString();
+            //温度
+            if (frmMain.Selffrm.AllEquipment.TempControl!=null)
+                frmMain.Selffrm.labACState.Text = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp.ToString() + "℃";
+            //SOC
+            frmMain.Selffrm.labSOC.Text = frmMain.Selffrm.AllEquipment.BMSSOC.ToString() + "%";
+            frmMain.Selffrm.vpbSOC.Value = (int)frmMain.Selffrm.AllEquipment.BMSSOC;
+
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 == null)
+                return;
+            frmMain.Selffrm.labGridkva.Text = frmMain.Selffrm.AllEquipment.GridKVA.ToString("F3");
+            frmMain.Selffrm.labPCSOKWH.Text = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0].ToString("F3");//AllEquipment.PCSInKWH.ToString();累计充电
+            frmMain.Selffrm.labPCSPKWH.Text = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0].ToString("F3");//AllEquipment.PCSOutKWH.ToString();累计放电
+            frmMain.Selffrm.labE2PKWH.Text = frmMain.Selffrm.AllEquipment.E2OKWH[0].ToString("F3");
+            frmMain.Selffrm.labE2OKWH.Text = frmMain.Selffrm.AllEquipment.E2PKWH[0].ToString("F3");
+        }
 
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -668,58 +942,8 @@ namespace EMS
             if (!NetTime.IsConnectInternet())
                 frmMain.ShowDebugMSG("网络连接异常！");
 
-
-            //下载故障信息
-            //WarmingList.LoadFromMySQL();
-
-
-            //打开设备数据库的自己保存进程
-
-            //连接云soket
-            //OnReceiveTCPUDPCMD = OnReceiveCMD;
-            //TCPCloud.ReconnectTime = frmSet.YunInterval;
-            //TCPCloud.TCPClientIni(frmSet.CloundIP, frmSet.CloundPort);//www.t3cloud.cn 10000 
-            ////TCP232.OnConectedEvent += OnCennectedEvent;
-            //TCPCloud.OnDisconectEvent += OnDisCennectedEvent;
-            //TCPCloud.OnReceiveDataEvent += OnReceiveData;
-            //TCPCloud.OnReconnectFailed += OnReconnectFaildEvent;
-            //TCPCloud.StartMonitor();
-            //TCPCloud.AutoConnect();    //云连接恢复 
-
-
-            //同步数据
-
-
-            //--------运行策略timer或线程 
-            //TacticsList.AutoCheckTactics();
-            //--------运行均衡策略线程
-            //BalaTacticsList.AutoCheckBalaTactics();
-
-          
-
-            /*            if (frmSet.SysAutoRun) //判断是否可以自动运行策略
-                        {
-                            if (frmSet.SysMode == 0 || frmSet.SysMode == 2)//0手工模式,1预设策略,2网络控制（104）
-                            {
-                                TacticsList.TacticsOn = false;
-                                frmSet.PCSMRun();
-                            }
-                            else
-                                TacticsList.TacticsOn = true;
-                        }*/
-/*            if (frmSet.SysMode == 1)
-            {
-                //log.Error("开启策略");
-                TacticsList.TacticsOn = true;
-            }*/
-
-            //打开监控进程（主要是用户侧电表和温度消防）-----严防安全、逆流和超限额
-
-
             frmFlash.AddPostion(10);
             //-------打开监视操作进程或者time，在无人操作时候进入休眠并关闭屏幕和注销用户 
-            tmSystime.Interval = 3000;
-            tmSystime.Enabled = true;
             frmFlash.AddPostion(10);
             //初始化窗体，提高将来的速度
             frmSet.INIForm();
@@ -836,311 +1060,6 @@ namespace EMS
             BeFoused = false;
             frmAbout.ShowForm();
         }
-
-        //定时器 1min    12.5
-/*        private void tmYuntime_Tick(object sender, EventArgs e)
-        {
-            //ping mqttfx 检查是否网络正常
-            Ping ping = new Ping();
-            PingReply reply = ping.Send("www.baidu.com");
-
-            if (reply.Status != IPStatus.Success)
-            {
-                //输入重启指令
-                *//*                if (!Model4G.m485.sp.IsOpen)
-                                {
-                                    try
-                                    {
-                                        Model4G.m485.sp.Open();
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        frmMain.ShowDebugMSG(ex.ToString());
-                                    }
-                                }
-                                Model4G.m485.Restart4G();*//*
-                if (frmMain.Selffrm.AllEquipment.HostStart == false)
-                {
-                    SysIO.Reboot();
-                }
-
-            }
-
-
-        }*/
-
-        //定时器：1s
-        private void tmSystime_Tick(object sender, EventArgs e)
-        {
-/*          
-            if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
-            {
-                //AllEquipment.Report2Cloud.CreateClient();
-                SysIO.Reboot();
-            }*/
-            //19s的循环
-/*            if (sCount == 0)
-            {
-                sCount = 19;
-                //检查云下发命令通道是否连同
-                AllEquipment.Report2Cloud.CheckConnect();
-
-
-                if (AllEquipment.Elemeter2 == null)
-                    return;
-
-                DateTime tempTime = DateTime.Now;
-
-                //12.4
-                if (frmSet.EMSstatus == 1)
-                {
-                    //采集数据保存在数据库中
-                    AllEquipment.Save2DataSoure(tempTime);
-                    //采集数据上传云端
-                    AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
-                }
-
-                //更新图表曲线
-                //TacticsList.AddOneStep(ctMain, tempTime, -1 * AllEquipment.Elemeter2.AllUkva, AllEquipment.Elemeter2.Gridkva, AllEquipment.Elemeter2.Subkw);
-                //ctMain.Series[1].ChartType = SeriesChartType.Line;
-
-                //2.21
-                if (!Selffrm.AllEquipment.ReadDoPUini())
-                {
-                    //更新的月份
-                    lock (Selffrm.AllEquipment)
-                    { 
-                        Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-                        Selffrm.AllEquipment.WriteDoPUini();
-                    }
-
-                }
-
-                //如果日期更新：
-                //1.清理数据库的旧数据
-                //2.保存当天收益到数据库
-                //3.上传当天收益到云
-                //4.下载策略
-                if (Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
-                {
-                    GC.Collect();// 通知托管堆强制回收垃圾   
-                    //删除180天前的数据
-                    frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
-                    //保存当天收益到数据库
-                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(Selffrm.AllEquipment.rDate);
-                    //当日收益发送到云
-                    Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(Selffrm.AllEquipment.rDate);//qiao
-                    //更新日期
-                    Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                    //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
-                    frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
-                    //每晚00：00更新策略
-                    if (TacticsList != null)
-                    {
-                        try
-                        {
-                            if (frmSet.IsMaster)
-                            {
-                                if (TacticsList != null)
-                                {
-                                    try
-                                    {
-                                        TacticsList.LoadFromMySQL();
-                                    }
-                                    catch
-                                    {
-                                        log.Error("定时器刷新数据库失败");
-                                    }
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            log.Error("00：00更新策略失败");
-                        }
-                    }
-                    //更新均衡策略
-                    try {
-                        BalaTacticsList.LoadFromMySQL(); 
-                    }
-                    catch { log.Error("00：00更新均衡策略失败"); }
-                    //在Chart显示计划
-*//*                    if (TacticsList != null)
-                    {
-                        try
-                        {
-                            if (frmSet.IsMaster)
-                            {
-                                TacticsList.ShowTactic2Char(ctMain, true);
-                            }
-                        }
-                        catch 
-                        {
-                            log.Error("Chart显示计划出错");
-                        }
-                    }*//*
-
-
-                    //更新系统时间、表1--4、PCS、BMS
-                    //校对时间 qiao
-                    //if (NetTime.GetandSetTime())
-                    //{
-                    //    DateTime dtTemp=DateTime.Now;
-                    //    byte[] aTime = { (byte)dtTemp.Second, (byte)dtTemp.Minute, (byte)dtTemp.Hour, (byte)dtTemp.Day, 
-                    //                      (byte)dtTemp.Month, (byte)(dtTemp.Year-2000) };
-                    //    if (AllEquipment.Elemeter1 != null)
-                    //        AllEquipment.Elemeter1.SetTime(aTime);
-                    //    if (AllEquipment.Elemeter2 != null)
-                    //        AllEquipment.Elemeter2.SetTime(aTime);
-                    //    byte[] aTime2 = { (byte)(dtTemp.Year-2000),(byte)dtTemp.Month, (byte)dtTemp.Day,
-                    //                    (byte)dtTemp.Hour,(byte)dtTemp.Minute, (byte)dtTemp.Second  };
-                    //    if (AllEquipment.Elemeter3 != null)
-                    //        AllEquipment.Elemeter3.SetTime(aTime2);
-                    //} 
-
-                    //检查mqttp的连接情况，每分钟检查一次
-                    try
-                    {
-                        AllEquipment.Report2Cloud.CheckConnect();       
-                    }
-                    catch { }
-
-                    //1.29 重置重启次数
-                    frmSet.RestartCounts = 5;
-                    frmSet.SaveSet2File();
-
-                }
-                //7.25
-                try
-                {
-                    if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
-                    {
-                        //log.Error("网络中断");
-                        //log.Error("HostStart:" + frmMain.Selffrm.AllEquipment.HostStart + " " + "frmSet.EMSstatus:" + frmSet.EMSstatus+ " " + "SlaveStart:" + frmMain.Selffrm.AllEquipment.SlaveStart);
-                        //在非策略时段 + 运行模式 
-                        if (frmMain.Selffrm.AllEquipment.HostStart == false && frmSet.EMSstatus == 1 &&  frmMain.Selffrm.AllEquipment.SlaveStart == false)
-                        {
-                            //log.Error("RestartCounts:" + frmSet.RestartCounts);
-                            if (frmSet.RestartCounts > 0)
-                            {
-                                //关闭PCS
-                                log.Error("网络原因造成EMS重启");
-                                frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(false);
-                                //重启次数减1 ， 每日限定重启5次.
-                                frmSet.RestartCounts--;
-                                frmSet.SaveSet2File();
-                                Thread.Sleep(5000);
-                                //重启
-                                SysIO.Reboot();
-                            }
-                        }
-                    }
-
-                    
-                }
-                catch { }
-                //空调控制
-                //空调没打开状态， 电池温度处于低温或高温状态
-                //AllEquipment.TempControl.PowerOn = ();
-
-                if ((AllEquipment.TempControl!=null) && (AllEquipment.TempControl.state != 1))//(!AllEquipment.TempControl.PowerOn)
-                {
-                    //if((AllEquipment.BMS.cellMaxTemp>32)||(AllEquipment.BMS.cellMinTemp<5))
-                    if ((AllEquipment.BMS.cellMaxTemp > 32) && (AllEquipment.TempControl.state != 1))
-                        AllEquipment.TempControl.TCPowerOn(true);
-                }
-                else if(AllEquipment.TempControl != null)
-                {
-                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
-                    if ((AllEquipment.PCSList[0].allUkva < 3) && (AllEquipment.BMS.cellMaxTemp < 30) && (AllEquipment.BMS.cellMinTemp > 10))
-                        AllEquipment.TempControl.TCPowerOn(false);
-                }
-
-                //液冷控制
-                if ((AllEquipment.LiquidCool !=null) && (AllEquipment.LiquidCool.state != 1))
-                {
-                    if (AllEquipment.BMS.cellMaxTemp > 25)
-                        AllEquipment.LiquidCool.LCPowerOn(true);
-                }
-                else if ( (AllEquipment.LiquidCool != null) && (AllEquipment.LiquidCool.state != 1))
-                {
-                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
-                    if ((AllEquipment.PCSList[0].allUkva < 3) && (AllEquipment.BMS.cellMaxTemp < 25) && (AllEquipment.BMS.cellMinTemp > 10))
-                        AllEquipment.LiquidCool.LCPowerOn(false);
-                }
-
-
-            }
-            sCount--;*/
-
-            //和页面按钮有关
-            if (!BeFoused)
-                return;
-
-
-            //20次更新一次小面的曲线
-/*            if (ErrorGridFreshCount == 0)
-            { 
-                {
-                    DBConnection.ShowData2DBGrid(dbvError, "select * from warning  where (ResetTime IS NULL)");
-                    ErrorGridFreshCount = 20;
-                }
-            }
-            ErrorGridFreshCount--;*/
-
-
-            //单个数据            
-            if (AllEquipment.PCSList.Count > 0)
-            {
-                string strCap = "手动";
-                if (TacticsList.TacticsOn)
-                {
-                    strCap = "策略";
-                }
-                else if (frmSet.PCSGridModel==1)
-                {
-                    strCap = "离网";
-                }
-                else if (frmSet.SysMode == 2)
-                {
-                    strCap = "网控";
-                }
-                if (AllEquipment.PCSList[0].allUkva > 0.5)
-                {
-                    labState.Text = strCap + "放电";
-                    labPCSuKW.Text = AllEquipment.PCSList[0].allUkva.ToString("F1") + "kw";
-                } 
-                else if (AllEquipment.PCSList[0].allUkva < -0.5)
-                {
-                    labState.Text = strCap + "充电";
-                    labPCSuKW.Text = AllEquipment.PCSList[0].allUkva.ToString("F1") + "kw";
-                }
-                else
-                {
-                    labState.Text = strCap + "待机";
-                    labPCSuKW.Text = "0.0kw";
-                }
-                //当前PCS的功率 
-                //labState.Text = strCap+PCSClass.PCSStates[AllEquipment.PCSList[0].State];
-                labPCSuKW.Text = AllEquipment.PCSList[0].allUkva.ToString("F2") + "kw"; 
-            } 
-            // labPCSuKW.Text = AllEquipment.PCSKVA.ToString();
-            //温度
-            if (AllEquipment.TempControl!=null)
-                labACState.Text = AllEquipment.TempControl.indoorTemp.ToString() + "℃";
-            //SOC
-            labSOC.Text = AllEquipment.BMSSOC.ToString() + "%";
-            vpbSOC.Value = (int)AllEquipment.BMSSOC;
-
-            if (AllEquipment.Elemeter2 == null)
-                return;
-            labGridkva.Text = AllEquipment.GridKVA.ToString("F3");
-            labPCSOKWH.Text = AllEquipment.Elemeter2.PUkwh[0].ToString("F3");//AllEquipment.PCSInKWH.ToString();累计充电
-            labPCSPKWH.Text = AllEquipment.Elemeter2.OUkwh[0].ToString("F3");//AllEquipment.PCSOutKWH.ToString();累计放电
-            labE2PKWH.Text = AllEquipment.E2OKWH[0].ToString("F3");
-            labE2OKWH.Text = AllEquipment.E2PKWH[0].ToString("F3");
-        }
-
 
         private void spDebug_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {

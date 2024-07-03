@@ -44,7 +44,6 @@ namespace EMS
             this.btnWarning = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.tnetest = new EMS.TouchNumberEdit(this.components);
             this.btnConnectChoose = new System.Windows.Forms.Button();
             this.tcbConnectStatus = new EMS.TouchCombox(this.components);
             this.btnEMSRun = new System.Windows.Forms.Button();
@@ -52,9 +51,6 @@ namespace EMS
             this.btnTest = new System.Windows.Forms.Button();
             this.btnBalaClear = new System.Windows.Forms.Button();
             this.btnBalaStart = new System.Windows.Forms.Button();
-            this.btnBalaClose = new System.Windows.Forms.Button();
-            this.btnBalaRun = new System.Windows.Forms.Button();
-            this.tneBMScellNum = new EMS.TouchNumberEdit(this.components);
             this.btnCleanError = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnBMSRead = new System.Windows.Forms.Button();
@@ -113,6 +109,8 @@ namespace EMS
             this.lablPCSwaValue2 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.labPCSwaValue = new System.Windows.Forms.Label();
+            this.btnPostProfit = new System.Windows.Forms.Button();
+            this.tcbtest = new EMS.TouchCombox(this.components);
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -328,7 +326,8 @@ namespace EMS
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.tnetest);
+            this.groupBox3.Controls.Add(this.tcbtest);
+            this.groupBox3.Controls.Add(this.btnPostProfit);
             this.groupBox3.Controls.Add(this.btnConnectChoose);
             this.groupBox3.Controls.Add(this.tcbConnectStatus);
             this.groupBox3.Controls.Add(this.btnEMSRun);
@@ -336,9 +335,6 @@ namespace EMS
             this.groupBox3.Controls.Add(this.btnTest);
             this.groupBox3.Controls.Add(this.btnBalaClear);
             this.groupBox3.Controls.Add(this.btnBalaStart);
-            this.groupBox3.Controls.Add(this.btnBalaClose);
-            this.groupBox3.Controls.Add(this.btnBalaRun);
-            this.groupBox3.Controls.Add(this.tneBMScellNum);
             this.groupBox3.Controls.Add(this.btnCleanError);
             this.groupBox3.ForeColor = System.Drawing.Color.White;
             this.groupBox3.Location = new System.Drawing.Point(3, 557);
@@ -347,26 +343,6 @@ namespace EMS
             this.groupBox3.TabIndex = 28;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "EMS";
-            // 
-            // tnetest
-            // 
-            this.tnetest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnetest.CanEdit = true;
-            this.tnetest.DefaultValue = 0;
-            this.tnetest.FoceInZone = false;
-            this.tnetest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnetest.ForeColor = System.Drawing.Color.White;
-            this.tnetest.Location = new System.Drawing.Point(23, 84);
-            this.tnetest.Maximum = 4000;
-            this.tnetest.Minimum = 0;
-            this.tnetest.Name = "tnetest";
-            this.tnetest.Size = new System.Drawing.Size(106, 32);
-            this.tnetest.strText = "";
-            this.tnetest.TabIndex = 69;
-            this.tnetest.Value = 0;
-            this.tnetest.ValueStep = 1;
-            this.tnetest.Visible = false;
-            this.tnetest.Load += new System.EventHandler(this.tnetest_Load);
             // 
             // btnConnectChoose
             // 
@@ -407,7 +383,7 @@ namespace EMS
             this.btnEMSRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnEMSRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEMSRun.ForeColor = System.Drawing.Color.White;
-            this.btnEMSRun.Location = new System.Drawing.Point(431, 84);
+            this.btnEMSRun.Location = new System.Drawing.Point(446, 84);
             this.btnEMSRun.Name = "btnEMSRun";
             this.btnEMSRun.Size = new System.Drawing.Size(88, 44);
             this.btnEMSRun.TabIndex = 66;
@@ -424,7 +400,7 @@ namespace EMS
             this.tcbEMSstatus.Items = new string[] {
         "测试模式",
         "运行模式"};
-            this.tcbEMSstatus.Location = new System.Drawing.Point(270, 91);
+            this.tcbEMSstatus.Location = new System.Drawing.Point(285, 91);
             this.tcbEMSstatus.Name = "tcbEMSstatus";
             this.tcbEMSstatus.SelectItemIndex = 0;
             this.tcbEMSstatus.Size = new System.Drawing.Size(153, 32);
@@ -439,7 +415,7 @@ namespace EMS
             this.btnTest.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnTest.ForeColor = System.Drawing.Color.White;
-            this.btnTest.Location = new System.Drawing.Point(148, 79);
+            this.btnTest.Location = new System.Drawing.Point(163, 84);
             this.btnTest.Name = "btnTest";
             this.btnTest.Size = new System.Drawing.Size(106, 44);
             this.btnTest.TabIndex = 64;
@@ -455,7 +431,7 @@ namespace EMS
             this.btnBalaClear.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnBalaClear.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBalaClear.ForeColor = System.Drawing.Color.White;
-            this.btnBalaClear.Location = new System.Drawing.Point(708, 20);
+            this.btnBalaClear.Location = new System.Drawing.Point(324, 23);
             this.btnBalaClear.Name = "btnBalaClear";
             this.btnBalaClear.Size = new System.Drawing.Size(88, 44);
             this.btnBalaClear.TabIndex = 63;
@@ -470,61 +446,13 @@ namespace EMS
             this.btnBalaStart.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnBalaStart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBalaStart.ForeColor = System.Drawing.Color.White;
-            this.btnBalaStart.Location = new System.Drawing.Point(602, 20);
+            this.btnBalaStart.Location = new System.Drawing.Point(232, 23);
             this.btnBalaStart.Name = "btnBalaStart";
             this.btnBalaStart.Size = new System.Drawing.Size(88, 44);
             this.btnBalaStart.TabIndex = 61;
             this.btnBalaStart.Text = "开启均衡";
             this.btnBalaStart.UseVisualStyleBackColor = true;
             this.btnBalaStart.Click += new System.EventHandler(this.btnBalaStart_Click);
-            // 
-            // btnBalaClose
-            // 
-            this.btnBalaClose.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaClose.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBalaClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBalaClose.ForeColor = System.Drawing.Color.White;
-            this.btnBalaClose.Location = new System.Drawing.Point(412, 20);
-            this.btnBalaClose.Name = "btnBalaClose";
-            this.btnBalaClose.Size = new System.Drawing.Size(88, 44);
-            this.btnBalaClose.TabIndex = 60;
-            this.btnBalaClose.Text = "测试关闭";
-            this.btnBalaClose.UseVisualStyleBackColor = true;
-            this.btnBalaClose.Click += new System.EventHandler(this.btnBalaClose_Click);
-            // 
-            // btnBalaRun
-            // 
-            this.btnBalaRun.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaRun.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBalaRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBalaRun.ForeColor = System.Drawing.Color.White;
-            this.btnBalaRun.Location = new System.Drawing.Point(318, 20);
-            this.btnBalaRun.Name = "btnBalaRun";
-            this.btnBalaRun.Size = new System.Drawing.Size(88, 44);
-            this.btnBalaRun.TabIndex = 59;
-            this.btnBalaRun.Text = "均衡测试";
-            this.btnBalaRun.UseVisualStyleBackColor = true;
-            this.btnBalaRun.Click += new System.EventHandler(this.btnBalaRun_Click);
-            // 
-            // tneBMScellNum
-            // 
-            this.tneBMScellNum.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellNum.CanEdit = true;
-            this.tneBMScellNum.DefaultValue = 0;
-            this.tneBMScellNum.FoceInZone = false;
-            this.tneBMScellNum.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellNum.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellNum.Location = new System.Drawing.Point(169, 25);
-            this.tneBMScellNum.Maximum = 4000;
-            this.tneBMScellNum.Minimum = 0;
-            this.tneBMScellNum.Name = "tneBMScellNum";
-            this.tneBMScellNum.Size = new System.Drawing.Size(132, 32);
-            this.tneBMScellNum.strText = "";
-            this.tneBMScellNum.TabIndex = 58;
-            this.tneBMScellNum.Value = 0;
-            this.tneBMScellNum.ValueStep = 1;
             // 
             // btnCleanError
             // 
@@ -1343,6 +1271,38 @@ namespace EMS
             this.labPCSwaValue.TabIndex = 45;
             this.labPCSwaValue.Text = "PCS设置值";
             // 
+            // btnPostProfit
+            // 
+            this.btnPostProfit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnPostProfit.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnPostProfit.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnPostProfit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPostProfit.ForeColor = System.Drawing.Color.White;
+            this.btnPostProfit.Location = new System.Drawing.Point(138, 23);
+            this.btnPostProfit.Name = "btnPostProfit";
+            this.btnPostProfit.Size = new System.Drawing.Size(88, 44);
+            this.btnPostProfit.TabIndex = 69;
+            this.btnPostProfit.Text = "上传收益";
+            this.btnPostProfit.UseVisualStyleBackColor = true;
+            this.btnPostProfit.Click += new System.EventHandler(this.btnPostProfit_Click);
+            // 
+            // tcbtest
+            // 
+            this.tcbtest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbtest.CenterShow = true;
+            this.tcbtest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbtest.ForeColor = System.Drawing.Color.White;
+            this.tcbtest.Items = new string[] {
+        "test1",
+        "test2"};
+            this.tcbtest.Location = new System.Drawing.Point(6, 91);
+            this.tcbtest.Name = "tcbtest";
+            this.tcbtest.SelectItemIndex = 0;
+            this.tcbtest.Size = new System.Drawing.Size(153, 32);
+            this.tcbtest.strText = "test1";
+            this.tcbtest.TabIndex = 70;
+            this.tcbtest.Value = 0;
+            // 
             // frmControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1445,9 +1405,6 @@ namespace EMS
         private TouchNumberEdit tneBMScellPV3;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Button btnBalaClose;
-        private System.Windows.Forms.Button btnBalaRun;
-        private TouchNumberEdit tneBMScellNum;
         private System.Windows.Forms.Button btnBalaStart;
         private System.Windows.Forms.Button btnBalaClear;
         private System.Windows.Forms.Button btnTest;
@@ -1456,6 +1413,7 @@ namespace EMS
         private System.Windows.Forms.Button btnBMSRead;
         private System.Windows.Forms.Button btnConnectChoose;
         private TouchCombox tcbConnectStatus;
-        private TouchNumberEdit tnetest;
+        private System.Windows.Forms.Button btnPostProfit;
+        private TouchCombox tcbtest;
     }
 }
