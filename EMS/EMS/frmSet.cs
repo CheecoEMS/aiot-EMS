@@ -712,7 +712,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    frmSet.SetGPIOState(10, 0);
+                    frmSet.SetGPIOState(10, 1);
                     break;
                 case 1:
                    // frmSet.SetGPIOState(10, 1);
@@ -725,7 +725,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    frmSet.SetGPIOState(10, 1);
+                    frmSet.SetGPIOState(10, 0);
                     break;
                 case 1:
                     //frmSet.SetGPIOState(10, 0);
@@ -770,7 +770,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(9, 0);
+                        frmSet.SetGPIOState(9, 1);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(9, 1);
@@ -783,7 +783,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(9, 1);
+                        frmSet.SetGPIOState(9, 0);
                         break;
                     case 1:
                         //frmSet.SetGPIOState(9, 0);
@@ -933,7 +933,6 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.ErrorState[2] = Convert.ToBoolean(ConfigINI.INIRead("System Set", "ErrorState3", "false", INIPath));
                 //1.29
                 RestartCounts = Convert.ToInt32(ConfigINI.INIRead("System Set", "RestartCounts", "0", INIPath));
-
                 GPIO_Select_Mode = Convert.ToInt32(ConfigINI.INIRead("System Set", "GPIOSelect", "0", INIPath));
             }
             catch (Exception ex)
@@ -2258,6 +2257,11 @@ namespace EMS
         private void btnDHRead_Click(object sender, EventArgs e)
         {
             frmMain.Selffrm.AllEquipment.Dehumidifier.GetDataFromEqipment();
+            tneDHSetHumidityBoot.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Boot;
+            tneDHSetHumidityStop.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Stop;
+            tneDHSetTempBoot.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Boot;
+            tneDHSetTempStop.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Stop;
+
         }
 
         //读取数据库，刷新策略时段

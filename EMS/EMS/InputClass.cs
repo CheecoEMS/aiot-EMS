@@ -190,7 +190,6 @@ namespace EMS
         //下载command文件
         public void LoadCommandFromFile()
         {
-            string version;
             if (!File.Exists(strCommandFile))
                 return;
             //读取数据
@@ -6950,7 +6949,7 @@ namespace EMS
                 Thread ClientRecThread = new Thread(ControlEMSTCP);
                 ClientRecThread.IsBackground = true;
                 ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));   // 这段代码是用于设置当前线程的 CPU 亲和性掩码。
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -8535,7 +8534,6 @@ namespace EMS
         /// </summary>
         private void ReadEquipmentDataPCS()
         {
-            int SelectVersion = 0;
             double PCSPower = 0;
 
             CIEC104Slave.PropertyChanged += CIEC104Slave.IEC104_PropertyChanged;
@@ -8628,9 +8626,9 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    if (frmSet.GetGPIOState(0) == 3)
+                    if (frmSet.GetGPIOState(0) == 2)
                     {
-                        if (frmSet.GetGPIOState(0) == 3)
+                        if (frmSet.GetGPIOState(0) == 2)
                         {
                             if (Fire.FireState == 0)
                             {
@@ -8722,7 +8720,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             { 
             case 0:                    
-                if (frmSet.GetGPIOState(1) == 3)
+                if (frmSet.GetGPIOState(1) == 2)
                 {
                     ExcPCSPowerOff();
                     lock (ErrorState)
