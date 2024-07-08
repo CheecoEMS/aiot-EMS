@@ -8640,9 +8640,9 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    if (frmSet.GetGPIOState(0) == 3)
+                    if (frmSet.GetGPIOState(0) == 2)
                     {
-                        if (frmSet.GetGPIOState(0) == 3)
+                        if (frmSet.GetGPIOState(0) == 2)
                         {
                             if (Fire.FireState == 0)
                             {
@@ -8734,7 +8734,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             { 
             case 0:                    
-                if (frmSet.GetGPIOState(1) == 3)
+                if (frmSet.GetGPIOState(1) == 2)
                 {
                     ExcPCSPowerOff();
                     lock (ErrorState)
