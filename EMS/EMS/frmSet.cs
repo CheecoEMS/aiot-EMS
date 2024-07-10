@@ -712,7 +712,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    frmSet.SetGPIOState(10, 0);
+                    frmSet.SetGPIOState(10, 1);
                     break;
                 case 1:
                    // frmSet.SetGPIOState(10, 1);
@@ -725,7 +725,7 @@ namespace EMS
             switch (frmSet.GPIO_Select_Mode)
             {
                 case 0:
-                    frmSet.SetGPIOState(10, 1);
+                    frmSet.SetGPIOState(10, 0);
                     break;
                 case 1:
                     //frmSet.SetGPIOState(10, 0);
@@ -741,7 +741,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(11, 0);
+                        frmSet.SetGPIOState(11, 1);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(11, 1);
@@ -754,7 +754,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(11, 1);
+                        frmSet.SetGPIOState(11, 0);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(11, 0);
@@ -770,7 +770,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(9, 0);
+                        frmSet.SetGPIOState(9, 1);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(9, 1);
@@ -783,7 +783,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(9, 1);
+                        frmSet.SetGPIOState(9, 0);
                         break;
                     case 1:
                         //frmSet.SetGPIOState(9, 0);
@@ -800,7 +800,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(15, 0);
+                        frmSet.SetGPIOState(15, 1);
                         break;
                     case 1:
                         frmSet.SetGPIOState(14, 0);
@@ -813,7 +813,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(15, 1);
+                        frmSet.SetGPIOState(15, 0);
                         break;
                     case 1:
                         frmSet.SetGPIOState(14, 1);

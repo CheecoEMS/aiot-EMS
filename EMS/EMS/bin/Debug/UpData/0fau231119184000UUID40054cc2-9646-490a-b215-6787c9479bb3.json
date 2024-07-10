@@ -1,8 +1,0 @@
-{
-	"timestamp": 1700390400534,
-	"iotCode": "ems0000000",
-	"faultCode": "E00021",
-	"faultLevel": 2,
-	"faultName": "EMS空调通讯异常(6)",
-	"faultBack": "false"
-}

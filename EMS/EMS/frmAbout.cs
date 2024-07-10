@@ -52,7 +52,7 @@ namespace EMS
             InitializeComponent();
             DoubleBuffered = true;
             labSN.Text = "设备SN：" + frmSet.SysID.Trim();
-            labSoftVerb.Text = "软件版本：EMS240525Feature3.2.5";
+            labSoftVerb.Text = "软件版本：EMS240525Feature3.2.7";
         }
 
         static public void CloseForm()

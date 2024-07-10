@@ -363,23 +363,6 @@ namespace EMS
             //frmMain.Selffrm.AllEquipment.runState = 0;
         }
 
-        private void btnBalaRun_Click(object sender, EventArgs e)
-        {
-           try
-           {
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsBala(1, tneBMScellNum.Value);
-           }
-           catch { }
-        }
-
-        private void btnBalaClose_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsBala(0, tneBMScellNum.Value);
-            }
-            catch { }
-        }
 
         private void btnBalaStart_Click(object sender, EventArgs e)
         {
@@ -414,13 +397,22 @@ namespace EMS
         //test 专用
         private void btnTest_Click(object sender, EventArgs e)
         {
-
+            int item = tcbtest.SelectItemIndex;
+            switch (item)
+            { 
+                case 0:
+                    break;
+                case 1:
+                    break;
+                default: 
+                    break;
+            }
         }
 
-        //test 的选择框
-        private void tnetest_Load(object sender, EventArgs e)
+        private void btnPostProfit_Click(object sender, EventArgs e)
         {
-
+            //当日收益发送到云
+            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
         }
     }
 }
