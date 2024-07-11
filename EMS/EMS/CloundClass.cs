@@ -14,6 +14,7 @@ using System.Diagnostics;
 //2.21
 using System.Runtime.InteropServices;
 using MySqlX.XDevAPI.Common;
+using Mysqlx.Session;
 
 namespace EMS
 {
@@ -281,9 +282,8 @@ namespace EMS
 
             if (topic == TacticTopic + "request")
             {
-                log.Error("接收云策略");
-                strID = GetServerTactics(message, ref Result);
-                if (Result && strID!="")
+                Result = GetServerTactics(message);
+                if (Result)
                 {
                     mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                         MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
@@ -296,8 +296,8 @@ namespace EMS
             }
             else if (topic == PriceTopic + "request")
             {
-                strID = GetServerEPrices(message);
-                if (strID != "")
+                Result = GetServerEPrices(message);
+                if (Result)
                 {
                     mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                      MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
@@ -629,7 +629,18 @@ namespace EMS
                     return strID;
 
                 //清理旧数据
-                DBConnection.ExecSQL("delete FROM balatactics");
+                SqlExecutor.EnqueueSqlTask("delete FROM balatactics", 2, outcome =>
+                {
+                    if (outcome)
+                    {
+                        log.Error("SQL  1 execution succeeded.");
+                    }
+                    else
+                    {
+                        log.Error("SQL 1 execution failed.");
+                    }
+                });
+
                 string strData = "";
                 //增加新数据
                 for (int i = 0; i < iTacticCount; i++)
@@ -639,7 +650,20 @@ namespace EMS
 
                     //从云获取策略插入数据库中
                     strData = "INSERT into balatactics (startTime,endTime)VALUES('" + strData + "')";
-                    DBConnection.ExecSQL(strData);
+
+                    //DBConnection.ExecSQL(strData);
+                    SqlExecutor.EnqueueSqlTask(strData, 2, outcome =>
+                    {
+                        if (outcome)
+                        {
+                            log.Error("SQL  1 execution succeeded.");
+                        }
+                        else
+                        {
+                            log.Error("SQL 1 execution failed.");
+                        }
+                    });
+
                 }
                 //更新策略
                 frmMain.BalaTacticsList.LoadFromMySQL();
@@ -701,11 +725,12 @@ namespace EMS
         ///     "value":100 
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string GetServerTactics(string astrData, ref bool result)
+        public bool GetServerTactics(string astrData)
         {
+            bool result = false;
             if (astrData == "")
             {
-                return "";
+                return false;
             }
             JObject jsonObject = null;
             jsonObject = JObject.Parse(astrData);
@@ -716,23 +741,38 @@ namespace EMS
                 string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/strategy")
-                    return "";
+                    return false;
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
                 if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
                 {
-                    result = true;
-                    return strID;
+                    return true;
                 }
 
                 //清理旧数据
-                int count1 = 10;
-                while (!DBConnection.ExecSQL("delete FROM tactics") && count1 > 0)
+                try
                 {
-                    Thread.Sleep(60000);
-                    count1--;
+                    bool hasData = SqlExecutor.CheckRec("select * from tactics");
+                    if (hasData)
+                    {
+                        result = SqlExecutor.ExecuteSqlTaskAsync("delete FROM tactics", 3);
+
+                        if (result)
+                        {
+                            // 处理执行成功的逻辑
+                        }
+                        else
+                        {
+                            return result;
+                        }
+                    }
                 }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
                 string strData = "";
                 //增加新数据
                 for (int i = 0; i < iTacticCount; i++)
@@ -753,37 +793,34 @@ namespace EMS
 
                     //从云获取策略插入数据库中
                     strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
-
-                    int count2 = 10;
-
-                    while (count2 > 0)
+                    try
                     {
-                        if (DBConnection.ExecSQL(strData))
+                        result = SqlExecutor.ExecuteSqlTaskAsync(strData, 3);
+
+                        if (result)
                         {
-                            result = true;
-                            break;
+                            // 处理执行成功的逻辑
                         }
                         else
                         {
-                            Thread.Sleep(60000);
-                            count2--;
+                            return result;
                         }
                     }
-                }
-                if (result)
-                {
-                    result = false;
-                    if (frmMain.TacticsList.LoadFromMySQL())
+                    catch (Exception ex)
                     {
-                        frmMain.ShowShedule2Char(false);
-                        frmMain.TacticsList.ActiveIndex = -1;
-                        result = true;
+                        // 处理异常情况
                     }
+                }
+
+                if (frmMain.TacticsList.LoadFromMySQL())
+                {
+                    frmMain.ShowShedule2Char(false);
+                    frmMain.TacticsList.ActiveIndex = -1;
                 }
             }
             catch
             { }
-            return strID;
+            return true;
         }
 
         /// <summary>
@@ -794,15 +831,16 @@ namespace EMS
         ///     "range":3 //  尖：1峰：2平：3谷：4
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string  GetServerEPrices(string astrData, bool aIsFileData = false)
+        public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
         {
+            bool result = false;
             JObject jsonObject = null;
             string strDataFile = "";
             if (aIsFileData)
             {
                 strDataFile = strDownPath + "\\" + astrData;
                 if (!File.Exists(strDataFile))
-                    return "";
+                    return false;
                 StreamReader file = File.OpenText(strDataFile);
                 JsonTextReader reader = new JsonTextReader(file);
                 jsonObject = (JObject)JToken.ReadFrom(reader);
@@ -810,7 +848,7 @@ namespace EMS
             else
             {
                 if (astrData == "")
-                    return "";
+                    return false;
                 jsonObject = JObject.Parse(astrData); 
             }
             string strID = "";
@@ -821,11 +859,28 @@ namespace EMS
                 int iPriceCount = jsonObject["params"]["price"].Count();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "meter/price")
-                    return "";
+                    return false;
 
-                 
+
                 //清理旧数据
-                DBConnection.ExecSQL("delete FROM electrovalence");
+                try
+                {
+                    result = SqlExecutor.ExecuteSqlTaskAsync("delete FROM electrovalence", 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
                 string strData = "";
                 int isection = 0;
                 //增加新数据
@@ -838,7 +893,24 @@ namespace EMS
                         + isection.ToString() + "','0','"
                         + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
-                    DBConnection.ExecSQL(strData);
+
+                    try
+                    {
+                        result = SqlExecutor.ExecuteSqlTaskAsync(strData, 3);
+
+                        if (result)
+                        {
+                            // 处理执行成功的逻辑
+                        }
+                        else
+                        {
+                            return result;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理异常情况
+                    }
                 }
                 //更新策略
                 frmSet.SaveSet2File();
@@ -849,7 +921,7 @@ namespace EMS
             catch
             { }
             //输出返回数据
-            return strID;
+            return result;
         }
 
         

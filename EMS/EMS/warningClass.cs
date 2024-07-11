@@ -19,14 +19,33 @@ namespace EMS
         public string memo;
         public int InsertWaring()
         {
-            DBConnection.ExecSQL("INSERT INTO warning (WaringID, rTime, wClass,WarningID, Warning,wLevels,memo)" +
+            string sql = "INSERT INTO warning (WaringID, rTime, wClass,WarningID, Warning,wLevels,memo)" +
                 " VALUES('" + rID + "', '"
                 + rDate.ToString("yyyy-M-d H:m:s") + "', '"
                 + wClass + "', '"
                 + WarningID.ToString() + "', '"
                 + Warning + "', '"
                 + wLevels.ToString() + "','"
-                + memo + "'); ");
+                + memo + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
             return DBConnection.GetLastID("select MAX(id) AS max_id from warning ");
         }
     }
@@ -64,30 +83,76 @@ namespace EMS
 
             if (aRecovery)
             {
-                // oneWarning.UserID = "";
-                //oneWarning.CheckTime=null;
-                DBConnection.ExecSQL(" UPDATE warning SET  "
+                string sql = " UPDATE warning SET  "
                     // + "CheckTime = null,"
-                    + "  UserID=''  where id='" + aID.ToString() + "'");
+                    + "  UserID=''  where id='" + aID.ToString() + "'";
+
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
             }
             else
             {
                 DateTime tempTime = DateTime.Now;
-                //oneWarning.UserID = aUserID;
-                //oneWarning.CheckTime = tempTime;
-                DBConnection.ExecSQL(" UPDATE warning SET "
+
+                string sql = " UPDATE warning SET "
                     + "CheckTime = '" + tempTime.ToString("yyyy-M-d H:m:s")
                     + "', UserID='" + aUserID + "' where id='"
-                    + aID.ToString() + "'");
+                    + aID.ToString() + "'";
+
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
             }
         }
 
         //增加确认 CheckTime UserID ResetTime
         public void Recovery(int aID)
         {
-            DBConnection.ExecSQL(" UPDATE warning SET ("
+            string sql = " UPDATE warning SET ("
                 + "ResetTime = '" + DateTime.Now.ToString("yyyy-M-d H:m:s")
-                + "') where id='" + aID.ToString() + "'");
+                + "') where id='" + aID.ToString() + "'";
+
+            SqlExecutor.EnqueueSqlTask(sql, 1, outcome =>
+            {
+                if (outcome)
+                {
+
+                }
+                else
+                {
+
+                }
+            });
+
         }
 
 

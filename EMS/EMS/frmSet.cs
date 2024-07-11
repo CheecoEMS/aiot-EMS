@@ -10,6 +10,7 @@ using EMS;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Google.Protobuf.WellKnownTypes;
+using Mysqlx.Crud;
 
 
 namespace EMS
@@ -328,56 +329,32 @@ namespace EMS
 
         public static void Set_GlobalSet_State()
         {
-            DBConnection.ExecSQL("update  globalset  SET "
+            string sql = "update  globalset  SET "
                 + " MaxGridKW ='" + MaxGridKW.ToString()
                 + "', MinGridKW ='" + MinGridKW.ToString()
                 + "',MaxSOC ='" + MaxSOC.ToString()
                 + "',MinSOC ='" + MinSOC.ToString()
                 + "',UBmsPcsState ='" + frmMain.Selffrm.AllEquipment.UBmsPcsState.ToString()
                 + "', OBmsPcsState ='" + frmMain.Selffrm.AllEquipment.OBmsPcsState.ToString()
-                + "'");
+                + "'";
 
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
-            //        DBConnection.ExecSQL("update  tactics  SET "
-            // + " tType='" + oneForm.tcbtType.strText
-            // + "',PCSType='" + oneForm.tcbPCSType.strText
-            // + "', waValue='" + oneForm.tnedwaValue.Value.ToString()
-            // + "', startTime= '"
-            //       + oneForm.tneStartH.Value.ToString("D2") + ":"
-            //       + oneForm.tneStartm.Value.ToString("D2") + ":"
-            //       + oneForm.tneStartS.Value.ToString("D2")
-            //   //oneForm.dtpStartTime.Value.ToString("H:m:s")
-            //   + "', endTime= '"
-            //  + oneForm.tneEndH.Value.ToString("D2") + ":"
-            //+ oneForm.tneEndm.Value.ToString("D2") + ":"
-            //+ oneForm.tneEndS.Value.ToString("D2")
-            // + "' where id='" + DataID + "'");
-
-            //DBConnection.ExecSQL("insert into GlobalSet (MaxGridKW, MinGridKW, MaxSOC, MinSOC) "
-            //+ "values ('"
-            //+ MaxGridKW.ToString() + "','"
-            //+ MinGridKW.ToString() + "','"
-            //+ MaxSOC.ToString() + "','"
-            //+ MinSOC.ToString() + "') ");
-
-
-
-            //DBConnection.ExecSQL("insert into globalset (MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState) "
-            //+ "values ('"
-            //+ MaxGridKW.ToString() + "','"
-            //+ MinGridKW.ToString() + "','"
-            //+ MaxSOC.ToString() + "','"
-            //+ MinSOC.ToString() + "','"
-            //+ frmMain.Selffrm.AllEquipment.UBmsPcsState.ToString() + "','"
-            //+ "6668"  + "')");
-
-
-
-
-            //      DBConnection.ExecSQL("insert into globalset (UName,UPassword,UPower,AddTime) "
-            //+ oneForm.tbPassword.Text + "','"
-            //+ oneForm.tcbPower.SelectItemIndex.ToString() + "','"
-            //+  
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
 
         }
 
@@ -1432,8 +1409,28 @@ namespace EMS
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
             "delete from warningwhere rTime<'"+astrData+"'"};
+
+
             foreach (string astrSQl in strSQL)
-                DBConnection.ExecSQL(astrSQl);
+            {
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+            }
         }
 
 
@@ -1468,7 +1465,25 @@ namespace EMS
             if (MessageBox.Show("确定要删除当前数据吗", "询问信息", MessageBoxButtons.OKCancel) != DialogResult.OK)
                 return;
 
-            DBConnection.ExecSQL("delete from " + aTableName + " where " + aDataName + "='" + aData + "'");
+            string sql = "delete from " + aTableName + " where " + aDataName + "='" + aData + "'";
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
             aDataGrid.Rows.RemoveAt(aDataGrid.SelectedRows[0].Index);
             dbgEquipment.Update();
         }
@@ -1647,9 +1662,25 @@ namespace EMS
                 return;
             if (MessageBox.Show("确定要删除所有log记录吗", "询问信息", MessageBoxButtons.OKCancel) != DialogResult.OK)
                 return;
+        
+/*            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync("delete from log", 3);
 
-            DBConnection.ExecSQL("delete from log");
-            DBConnection.ShowData2DBGrid(dbgLog, "select * from log");
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }*/
+            SqlExecutor.ShowData2DBGrid(dbgLog, "select * from log");
         }
 
         private void btnSave2File_Click_1(object sender, EventArgs e)
@@ -1771,8 +1802,8 @@ namespace EMS
         private void btnEqipments_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgEquipment);
-            DBConnection.ShowData2DBGrid(oneForm.dbgEquipment, "select * from equipment");
+            SqlExecutor.SetDBGrid(oneForm.dbgEquipment);
+            SqlExecutor.ShowData2DBGrid(oneForm.dbgEquipment, "select * from equipment");
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.FromArgb(20, 169, 255);
@@ -1799,8 +1830,8 @@ namespace EMS
         private void btnE_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgElectrovalence);
-            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
+            SqlExecutor.SetDBGrid(oneForm.dbgElectrovalence);
+            SqlExecutor.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -1825,8 +1856,8 @@ namespace EMS
         private void btnShedule_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgTactics);
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
+            SqlExecutor.SetDBGrid(oneForm.dbgTactics);
+            SqlExecutor.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -1852,8 +1883,8 @@ namespace EMS
         private void btnUser_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgUsers);
-            DBConnection.ShowData2DBGrid(dbgUsers, "select * from users");
+            SqlExecutor.SetDBGrid(oneForm.dbgUsers);
+            SqlExecutor.ShowData2DBGrid(dbgUsers, "select * from users");
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -1900,8 +1931,8 @@ namespace EMS
         private void btnLog_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgLog);
-            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");
+            SqlExecutor.SetDBGrid(oneForm.dbgLog);
+            SqlExecutor.ShowData2DBGrid(oneForm.dbgLog, "select * from log");
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2151,7 +2182,7 @@ namespace EMS
             if (aDlgResult!= DialogResult.Yes)
                 return;
             //删除清理数据库
-            string[] strSQL = {"delete   from cellstemp;",
+            string[] strSQL = {"delete from cellstemp;",
             "delete from battery; ",
             "delete from cellsv; ",
             "delete from electrovalence; ",
@@ -2161,17 +2192,34 @@ namespace EMS
             "delete from elemeter4; ",
             "delete from errorstate; ",
             "delete from fire; ",
-            "delete from log; ",
+            //"delete from log; ",
             "delete from pcs; ",
             "delete from pncontroler; ",
             "delete from profit; ",
-            // "delete from tactics; ",
+            "delete from tactics; ",
             "delete from tempcontrol; ",
             "delete from warning; "};
+
+
             foreach (string astrSQl in strSQL)
             {
-                DBConnection.ExecSQL(astrSQl);
-                Thread.Sleep(100);
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
             }
         }
 

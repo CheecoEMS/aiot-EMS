@@ -401,8 +401,50 @@ namespace EMS
             switch (item)
             { 
                 case 0:
+                    //demo1 insert ,update
+                    SqlExecutor.EnqueueSqlTask("INSERT INTO GlobalSet (MaxGridKW, MinGridKW, MaxSOC, MinSOC)  VALUES ('2','1','1','1')", 1, result =>
+                    {
+                        if (result)
+                        {
+                            log.Error("SQL  1 execution succeeded.");
+                        }
+                        else
+                        {
+                            log.Error("SQL 1 execution failed.");
+                        }
+                    });
+
+                    //demo2 重传某天profit
+/*                    string sqlQuery = "SELECT * FROM profit WHERE rTime = '2024-03-19'"; // 你的查询语句
+                    string directoryPath = @"C:\Users\lenovo\Desktop\modbus版本\M6\FA2.1\EMS\EMS\bin\Debug\UpData"; // 指定目录路径
+                    SqlExecutor.EnqueueSqlReadTask(sqlQuery, 1, SqlExecutor.SaveJsonToFile, directoryPath);*/
+
+                    //demo3
+                    /*            string sqlQuery = "select MaxGridKW ,MinGridKW, MaxSOC, MinSOC from GlobalSet";
+                                int priority = 1;
+                                object[] parameters = new object[4];
+
+                                SqlExecutor.EnqueueSqlReadWithParamsTask(sqlQuery, priority, (results) =>
+                                {
+                                    for (int i = 0; i < results.Length; i++)
+                                    {
+                                        parameters[i] = results[i];
+                                        log.Error(parameters[i]);
+                                    }
+                                }, parameters);*/
+                    //demo4 
+                    /*            public static void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
+                                {
+                                    SqlExecutor.EnqueueSqlDataGridViewTask(astrSQL, 1, adDtaGrid);
+                                }*/
                     break;
                 case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
                     break;
                 default: 
                     break;

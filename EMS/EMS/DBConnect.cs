@@ -6,10 +6,624 @@ using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using DotNetty.Common.Utilities;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using MySqlX.XDevAPI.Common;
 
 
 namespace EMS
 {
+    public class SqlTask
+    {
+        public string Sql { get; set; }
+        public int Priority { get; set; }
+        public bool Result { get; set; }
+        public Action<bool> Callback { get; set; }
+
+        //public Func<bool, bool> CallbackF { get; set; }
+        public Action<string> ReadCallback { get; set; }
+        public DataGridView DataGridView { get; set; }
+
+
+        public SqlTask(string sql, int priority, Action<bool> callback)
+        {
+            Sql = sql;
+            Priority = priority;
+            Callback = callback;
+        }
+
+        public SqlTask(string sql, int priority, Action<string> readCallback)
+        {
+            Sql = sql;
+            Priority = priority;
+            ReadCallback = readCallback;
+        }
+
+        public SqlTask(string sql, int priority, DataGridView dataGridView)
+        {
+            Sql = sql;
+            Priority = priority;
+            DataGridView = dataGridView;
+        }
+
+        public void SetResult(bool result)
+        {
+            Result = result;
+        }
+    }
+
+    public class SqlReadTask : SqlTask
+    {
+        public string DirectoryPath { get; set; }
+        public Action<string, string> ReadCallbackWithPath { get; set; }
+
+        public SqlReadTask(string sql, int priority, Action<string, string> readCallbackWithPath, string directoryPath)
+            : base(sql, priority, result => readCallbackWithPath(result, directoryPath))
+        {
+            DirectoryPath = directoryPath;
+            ReadCallbackWithPath = readCallbackWithPath;
+        }
+    }
+
+    public class SqlReadWithParamsTask : SqlTask
+    {
+        public Action<object[]> ReadCallbackWithParams { get; }
+        public object[] Parameters { get; }
+
+        public SqlReadWithParamsTask(string sql, int priority, Action<object[]> readCallbackWithParams, params object[] parameters)
+            : base(sql, priority, result => ExecuteReadCallbackWithParams(result, readCallbackWithParams, parameters))
+        {
+            ReadCallbackWithParams = readCallbackWithParams;
+            Parameters = parameters;
+        }
+
+        private static void ExecuteReadCallbackWithParams(string result, Action<object[]> readCallbackWithParams, object[] parameters)
+        {
+            // Assuming the result is a JSON string that needs to be deserialized into the parameters array
+            // Use a JSON library such as Newtonsoft.Json to deserialize
+            var deserializedParams = Newtonsoft.Json.JsonConvert.DeserializeObject<object[]>(result);
+            if (deserializedParams != null)
+            {
+                for (int i = 0; i < deserializedParams.Length; i++)
+                {
+                    parameters[i] = deserializedParams[i];
+                }
+            }
+            readCallbackWithParams(parameters);
+        }
+    }
+
+    public class SqlDataGridViewTask : SqlTask
+    {
+        public SqlDataGridViewTask(string sql, int priority, DataGridView dataGridView)
+            : base(sql, priority, dataGridView)
+        {
+        }
+    }
+
+    public class SqlCheckTask : SqlTask
+    {
+        //public bool Result { get; private set; }
+        public Action<bool> CheckCallback { get; set; }
+
+        public SqlCheckTask(string sql, int priority, Action<bool> checkCallback)
+            : base(sql, priority, checkCallback)
+        {
+            CheckCallback = checkCallback;
+        }
+
+        /*        public void SetResult(bool result)
+                {
+                    Result = result;
+                }*/
+    }
+
+    public class PriorityQueue<T>
+    {
+        private readonly SortedDictionary<int, Queue<T>> _queues = new SortedDictionary<int, Queue<T>>();
+
+        public void Enqueue(T item, int priority)
+        {
+            if (!_queues.TryGetValue(priority, out var queue))
+            {
+                queue = new Queue<T>();
+                _queues[priority] = queue;
+            }
+            queue.Enqueue(item);
+        }
+
+        public T Dequeue()
+        {
+            if (_queues.Count == 0)
+            {
+                throw new InvalidOperationException("The queue is empty.");
+            }
+
+            var pair = _queues.First();
+            var item = pair.Value.Dequeue();
+
+            if (pair.Value.Count == 0)
+            {
+                _queues.Remove(pair.Key);
+            }
+
+            return item;
+        }
+
+        public int Count => _queues.Sum(q => q.Value.Count);
+    }
+
+    public class SqlExecutor
+    {
+        private static MySqlConnection connection;
+        private static bool IsConnected = false;
+        private static readonly PriorityQueue<SqlTask> sqlTaskQueue = new PriorityQueue<SqlTask>();
+        private static readonly object lockObject = new object();
+        private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        private static readonly Task processingTask;
+        static private string DataID = "qiao";
+        static private string DataPassword = "1100";
+        static public string connectionStr = "Database=emsdata;Data Source=127.0.0.1;port=3306;User Id=" + DataID + ";Password=" + DataPassword + ";";
+
+        static SqlExecutor()
+        {
+            processingTask = Task.Run(ProcessSqlTasks, cancellationTokenSource.Token);
+        }
+
+        static private void CreateConnection()
+        {
+            try
+            {
+                ChecMysql80();
+                if (connection == null)
+                {
+                    connection = new MySqlConnection(connectionStr);
+                }
+                connection.Close();
+                connection.Open();
+                IsConnected = true;
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+            }
+        }
+
+        private static async Task ProcessSqlTasks()
+        {
+            while (!cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                SqlTask sqlTask = null;
+
+                lock (lockObject)
+                {
+                    if (sqlTaskQueue.Count > 0)
+                    {
+                        sqlTask = sqlTaskQueue.Dequeue();
+                    }
+                }
+
+                if (sqlTask != null)
+                {
+                    if (sqlTask is SqlReadTask sqlReadTask)
+                    {
+                        string result = await ReadSQLAsync(sqlReadTask.Sql);
+                        sqlReadTask.ReadCallbackWithPath?.Invoke(result, sqlReadTask.DirectoryPath);
+                    }
+                    else if (sqlTask is SqlReadWithParamsTask sqlReadWithParamsTask)
+                    {
+                        object[] results = await ReadSQLWithParamsAsync(sqlReadWithParamsTask.Sql, sqlReadWithParamsTask.Parameters.Length);
+                        sqlReadWithParamsTask.ReadCallbackWithParams?.Invoke(results);
+                    }
+                    else if (sqlTask is SqlDataGridViewTask sqlDataGridViewTask)
+                    {
+                        await BindDataToDataGridViewAsync(sqlDataGridViewTask.Sql, sqlDataGridViewTask.DataGridView);
+                    }
+                    else if (sqlTask is SqlCheckTask sqlCheckTask)
+                    {
+                        bool result = await CheckSQLAsync(sqlCheckTask.Sql);
+                        sqlCheckTask.SetResult(result);
+                        sqlCheckTask.CheckCallback?.Invoke(result);
+                    }
+                    else
+                    {
+                        bool result = await ExecSQLAsync(sqlTask.Sql);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
+                }
+                else
+                {
+                    await Task.Delay(100); // No task to process, wait for a while
+                }
+            }
+        }
+
+        public static void EnqueueSqlTask(string sql, int priority, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlTask(sql, priority, callback), priority);
+            }
+        }
+
+        public static void EnqueueSqlReadTask(string sql, int priority, Action<string, string> readCallback, string directoryPath)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlReadTask(sql, priority, readCallback, directoryPath), priority);
+            }
+        }
+
+        public static void EnqueueSqlReadWithParamsTask(string sql, int priority, Action<object[]> readCallbackWithParams, params object[] parameters)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlReadWithParamsTask(sql, priority, readCallbackWithParams, parameters), priority);
+            }
+        }
+
+        public static void EnqueueSqlDataGridViewTask(string sql, int priority, DataGridView dataGridView)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlDataGridViewTask(sql, priority, dataGridView), priority);
+            }
+        }
+
+        public static void EnqueueSqlCheckTask(string sql, int priority, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlCheckTask(sql, priority, callback), priority);
+            }
+        }
+
+        private static async Task<bool> CheckSQLAsync(string sql)
+        {
+            ChecMysql80();
+
+            bool result = false;
+            var tempConnection = new MySqlConnection(connectionStr);
+            await tempConnection.OpenAsync();
+
+            try
+            {
+                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
+                {
+                    result = reader.HasRows;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
+            }
+            finally
+            {
+                await tempConnection.CloseAsync();
+            }
+
+            return result;
+        }
+
+        private static async Task<object[]> ReadSQLWithParamsAsync(string sql, int paramCount)
+        {
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
+
+            var tempConnection = new MySqlConnection(connectionStr);
+            await tempConnection.OpenAsync();
+
+            try
+            {
+                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        object[] values = new object[paramCount];
+                        reader.GetValues(values);
+                        return values;
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
+            }
+            finally
+            {
+                await tempConnection.CloseAsync();
+            }
+
+            return null;
+        }
+
+        public static async Task<bool> ExecSQLAsync(string sql)
+        {
+            ChecMysql80();
+
+            bool result;
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
+
+            var tempConnection = new MySqlConnection(connectionStr);
+            await tempConnection.OpenAsync();
+
+            try
+            {
+                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                result = await sqlCmd.ExecuteNonQueryAsync() > 0;
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
+                return false;
+            }
+            finally
+            {
+                await tempConnection.CloseAsync();
+            }
+
+            return result;
+        }
+
+        public static async Task<string> ReadSQLAsync(string sql)
+        {
+            ChecMysql80();
+
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
+
+            var tempConnection = new MySqlConnection(connectionStr);
+            await tempConnection.OpenAsync();
+
+            try
+            {
+                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        var row = new System.Collections.Generic.Dictionary<string, object>();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            row[reader.GetName(i)] = reader.GetValue(i);
+                        }
+                        return JsonConvert.SerializeObject(row, Formatting.Indented);
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
+                return null;
+            }
+            finally
+            {
+                await tempConnection.CloseAsync();
+            }
+
+            return null;
+        }
+
+        public static async Task BindDataToDataGridViewAsync(string sql, DataGridView dataGridView)
+        {
+            ChecMysql80();
+
+            var tempConnection = new MySqlConnection(connectionStr);
+            await tempConnection.OpenAsync();
+
+            try
+            {
+                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
+                DataSet dataset = new DataSet();
+                await Task.Run(() => sda.Fill(dataset)); // Use Task.Run to run synchronous Fill method asynchronously
+
+                if (dataset.Tables.Count > 0)
+                {
+                    dataGridView.Invoke(new Action(() =>
+                    {
+                        dataGridView.DataSource = dataset.Tables[0];
+                        dataGridView.Update();
+                    }));
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                await tempConnection.CloseAsync();
+            }
+        }
+
+        public static void SaveJsonToFile(string jsonResult, string directoryPath)
+        {
+            if (!string.IsNullOrEmpty(jsonResult))
+            {
+                string filePath = Path.Combine(directoryPath, "profit_data.json");
+                File.WriteAllText(filePath, jsonResult);
+                Console.WriteLine($"Data has been written to {filePath}");
+            }
+            else
+            {
+                Console.WriteLine("No data to write.");
+            }
+        }
+
+        static public void ChecMysql80()
+        {
+            if (!IsMySqlServiceRunning())
+            {
+                StartMysql80();
+            }
+        }
+        static public void StartMysql80()
+        {
+            string serviceName = "MySQL80";
+            StartService(serviceName);
+        }
+
+        static public void StartService(string serviceName)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = "net.exe";
+            psi.Arguments = $"start {serviceName}";
+            psi.UseShellExecute = true;
+            psi.Verb = "runas"; // 以管理员权限运行  
+            try
+            {
+                Process.Start(psi).WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting service: {ex.Message}");
+            }
+        }
+
+        static public bool IsMySqlServiceRunning()
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo("cmd.exe", "/c sc query MySQL80 | findstr RUNNING");
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+
+            using (Process process = new Process())
+            {
+                process.StartInfo = startInfo;
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                return output.Contains("RUNNING");
+            }
+        }
+
+        public static void StopProcessing()
+        {
+            cancellationTokenSource.Cancel();
+            processingTask.Wait();
+        }
+
+
+        public static void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
+        {
+            SqlExecutor.EnqueueSqlDataGridViewTask(astrSQL, 1, adDtaGrid);
+        }
+
+        public static bool CheckRec(string astrSQL)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlCheckTask(astrSQL, 3, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        static public void SetDBGrid(DataGridView adDtaGrid)
+        {
+            adDtaGrid.AllowUserToAddRows = false;
+            adDtaGrid.RowHeadersVisible = false; // 行头隐藏 
+            adDtaGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            adDtaGrid.ReadOnly = true;
+            //设置对齐方式和字体
+            // dataGridView1.RowHeadersBorderStyle = DataGridViewContentAlignment.MiddleCenter;
+            //dataGridView1.Font = new Font("宋体", 11);
+            adDtaGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            adDtaGrid.MultiSelect = false;
+            adDtaGrid.AutoGenerateColumns = false;
+        }
+
+        static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)
+        {
+            string sql = "insert into log (eTime,eClass,Event,Memo)values ('"
+                + DateTime.Now.ToString("yyyy-M-d H:m:s") + "','"
+                + aEClasse + "','"
+                + aEvemt + "','"
+                 + aMemo + "')";
+
+            SqlExecutor.EnqueueSqlTask(sql, 1, outcome =>
+            {
+                if (outcome)
+                {
+
+                }
+                else
+                {
+
+                }
+            });
+        }
+
+        public static bool ExecuteSqlTaskAsync(string astrSQL, int prior)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlTask(astrSQL, prior, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+    }
+
+
+
     class DBConnection
     {
         static public MySqlConnection connection;

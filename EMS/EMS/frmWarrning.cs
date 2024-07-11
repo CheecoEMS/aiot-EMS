@@ -9,8 +9,8 @@ namespace EMS
         public frmWarrning()
         {
             InitializeComponent();
-            DBConnection.SetDBGrid(dbgWarning);
-            DBConnection.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass,wLevels, Warning, memo, CheckTime, UserID, ResetTime "
+            SqlExecutor.SetDBGrid(dbgWarning);
+            SqlExecutor.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass,wLevels, Warning, memo, CheckTime, UserID, ResetTime "
                  + " from warning  where (ResetTime IS NULL )or (ResetTime>='" + DateTime.Now.ToString("yyyy-MM-dd 0:0:0")
                  + "')order by rTime DESC");
         }
@@ -52,11 +52,11 @@ namespace EMS
             string DataID = dbgWarning.SelectedRows[0].Cells[0].Value.ToString();
             frmMain.WarmingList.BeChecked(Convert.ToInt32(DataID), frmMain.UserID, true);
             int iIndex = dbgWarning.SelectedRows[0].Index;
-            DBConnection.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass,wLevels, Warning, memo, CheckTime, UserID, ResetTime "
+            SqlExecutor.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass,wLevels, Warning, memo, CheckTime, UserID, ResetTime "
                 + " from warning   where (ResetTime IS NULL )or (ResetTime>='" + DateTime.Now.ToString("yyyy-MM-dd 0:0:0")
                 + "')order by rTime DESC");
             dbgWarning.Rows[iIndex].Selected = true;
-            DBConnection.RecordLOG("用户操作", "取消确定警告信息", "用户：" + frmMain.UserID + "，数据：" + DataID);
+            SqlExecutor.RecordLOG("用户操作", "取消确定警告信息", "用户：" + frmMain.UserID + "，数据：" + DataID);
         }
 
         private void btnCheck_Click(object sender, EventArgs e)
@@ -72,7 +72,7 @@ namespace EMS
             int iIndex = dbgWarning.SelectedRows[0].Index;
             string DataID = dbgWarning.SelectedRows[0].Cells[0].Value.ToString();
             frmMain.WarmingList.BeChecked(Convert.ToInt32(DataID), frmMain.UserID);
-            DBConnection.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass, wLevels,Warning, memo, CheckTime, UserID, ResetTime "
+            SqlExecutor.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass, wLevels,Warning, memo, CheckTime, UserID, ResetTime "
                 + " from warning   where (ResetTime IS NULL )or (ResetTime>='" + DateTime.Now.ToString("yyyy-MM-dd 0:0:0")
                 + "')order by rTime DESC");
             dbgWarning.Rows[iIndex].Selected = true;
@@ -86,7 +86,7 @@ namespace EMS
 
         private void button3_Click(object sender, EventArgs e)
         {
-            DBConnection.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass, Warning, wLevels,memo, CheckTime, UserID, ResetTime "
+            SqlExecutor.ShowData2DBGrid(dbgWarning, "select id,WaringID, rTime, wClass, Warning, wLevels,memo, CheckTime, UserID, ResetTime "
                              + " from warning  where (ResetTime IS NULL )or (ResetTime>='" + DateTime.Now.ToString("yyyy-MM-dd 0:0:0")
                              + "')order by rTime DESC");
 

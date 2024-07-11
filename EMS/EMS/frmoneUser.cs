@@ -121,27 +121,63 @@ namespace EMS
                 return;
             if (oneForm.IsEdit)
             {
-                DBConnection.ExecSQL("update  users  SET "
+                string sql = "update  users  SET "
                     + "UName= '" + oneForm.tbUserName.Text
                     + "',UPassword='" + oneForm.tbPassword.Text
                     + "',UPower='" + oneForm.tcbPower.SelectItemIndex.ToString()
                     + "',AddTime='" + DateTime.Now.ToString("yyyy-M-d H:m:s")
-                     + "' where id='" + DataID + "'");
+                     + "' where id='" + DataID + "'";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from users");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from users");
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 this.DialogResult = DialogResult.OK;
             }
             else
             {
-                DBConnection.ExecSQL("insert into users (UName,UPassword,UPower,AddTime) "
+                string sql = "insert into users (UName,UPassword,UPower,AddTime) "
                       + "values ('" + oneForm.tbUserName.Text + "','"
                       + oneForm.tbPassword.Text + "','"
                       + oneForm.tcbPower.SelectItemIndex.ToString() + "','"
-                      + DateTime.Now.ToString("yyyy-M-d H:m:s") + "')");
+                      + DateTime.Now.ToString("yyyy-M-d H:m:s") + "')";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from users");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from users");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
 
             }

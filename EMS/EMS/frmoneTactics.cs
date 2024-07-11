@@ -39,22 +39,40 @@ namespace EMS
             oneForm.ShowData(aDBGrid);
             if (oneForm.ShowDialog() == DialogResult.OK)
             {//,,,,,,
-                DBConnection.ExecSQL("update  tactics  SET "
+                string sql = "update  tactics  SET "
                      + " tType='" + oneForm.tcbtType.strText
                      + "',PCSType='" + oneForm.tcbPCSType.strText
                      + "', waValue='" + oneForm.tnedwaValue.Value.ToString()
                      + "', startTime= '"
-                           + oneForm.tneStartH.Value.ToString("D2") + ":"
-                           + oneForm.tneStartm.Value.ToString("D2") + ":"
-                           + oneForm.tneStartS.Value.ToString("D2")
+                     + oneForm.tneStartH.Value.ToString("D2") + ":"
+                     + oneForm.tneStartm.Value.ToString("D2") + ":"
+                     + oneForm.tneStartS.Value.ToString("D2")
                        //oneForm.dtpStartTime.Value.ToString("H:m:s")
-                       + "', endTime= '"
-                      + oneForm.tneEndH.Value.ToString("D2") + ":"
-                    + oneForm.tneEndm.Value.ToString("D2") + ":"
-                    + oneForm.tneEndS.Value.ToString("D2")
-                     + "' where id='" + DataID + "'");
+                     + "', endTime= '"
+                     + oneForm.tneEndH.Value.ToString("D2") + ":"
+                     + oneForm.tneEndm.Value.ToString("D2") + ":"
+                     + oneForm.tneEndS.Value.ToString("D2")
+                     + "' where id='" + DataID + "'";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();
@@ -68,7 +86,7 @@ namespace EMS
             oneForm.CleanForm();
             if (oneForm.ShowDialog() == DialogResult.OK)
             {
-                DBConnection.ExecSQL("insert into tactics (startTime,endTime,tType,PCSType,waValue) "
+                string sql = "insert into tactics (startTime,endTime,tType,PCSType,waValue) "
                     + "values ('"
                     + oneForm.tneStartH.Value.ToString("D2") + ":"
                     + oneForm.tneStartm.Value.ToString("D2") + ":"
@@ -78,9 +96,27 @@ namespace EMS
                     + oneForm.tneEndS.Value.ToString("D2") + "','"
                     + oneForm.tcbtType.strText + "','"
                     + oneForm.tcbPCSType.strText + "','"
-                    + oneForm.tnedwaValue.Value.ToString() + "') ");
+                    + oneForm.tnedwaValue.Value.ToString() + "') ";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Mysqlx.Session;
+using MySqlX.XDevAPI.Common;
+using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 
 namespace EMS
@@ -48,14 +51,33 @@ namespace EMS
             {
                 DateTime dtTemp = Convert.ToDateTime("2022-01-01 " + oneForm.tneH.Value.ToString() + ":"
                     + oneForm.tneM.Value.ToString() + ":0");
-                DBConnection.ExecSQL("update  electrovalence  SET "
-                      + " eName='" + oneForm.tbeName.SelectItemIndex.ToString()
-                      + "',section='" + oneForm.tcbSection.SelectItemIndex.ToString()
-                      + "', startTime= '" + dtTemp.ToString("H:m:0")
-                      + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
-                //aDBGrid.Rows[0].Selected = false;
+                string sql = "update  electrovalence  SET "
+                  + " eName='" + oneForm.tbeName.SelectItemIndex.ToString()
+                  + "',section='" + oneForm.tcbSection.SelectItemIndex.ToString()
+                  + "', startTime= '" + dtTemp.ToString("H:m:0")
+                  + "' where id='" + DataID + "'";
+
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
+
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();
             }
@@ -71,12 +93,31 @@ namespace EMS
             {
                 DateTime dtTemp = Convert.ToDateTime("2022-01-01 " + oneForm.tneH.Value.ToString() + ":"
                     + oneForm.tneM.Value.ToString() + ":0");
-                DBConnection.ExecSQL("insert into electrovalence (section,eName,startTime)  values ('"
+
+                string sql = "insert into electrovalence (section,eName,startTime)  values ('"
                       + oneForm.tcbSection.SelectItemIndex.ToString() + "','"
                       + oneForm.tbeName.strText + "','"
-                      + dtTemp.ToString("H:m:s") + "')");
+                      + dtTemp.ToString("H:m:s") + "')";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }

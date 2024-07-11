@@ -912,7 +912,23 @@ namespace EMS
             DateTime dtTemp = DateTime.Now;
             //删除清理数据库
             string strSQL = "delete   from errorstate";
-           DBConnection.ExecSQL(strSQL);
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
             //
             frmMain.Selffrm.ErrorGridFreshCount = 0;
             //qiao 保存所有的故障设备的值
@@ -953,7 +969,24 @@ namespace EMS
                    + frmMain.Selffrm.AllEquipment.EMSError[1].ToString() + "','"
                    + frmMain.Selffrm.AllEquipment.EMSError[2].ToString() + "','"
                    + frmMain.Selffrm.AllEquipment.EMSError[3].ToString()   + "')";
-            DBConnection.ExecSQL(strSQL);
+            
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
 
             Parent.Fault2Cloud.timestamp = dtTemp;
             Parent.Fault2Cloud.iotCode = aeID;
@@ -965,10 +998,30 @@ namespace EMS
             if (!aError)//aError = 0 : 故障恢复
             {
                 Parent.Fault2Cloud.faultName += "恢复";
-                DBConnection.ExecSQL("UPDATE warning SET  ResetTime='" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "' " +
+                
+                strSQL = "UPDATE warning SET  ResetTime='" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "' " +
                    " where wClass='" + awClass + "' and eID='" + aeID
                     + "'and WaringID='" + aWaringID.ToString() + "' and  wLevels='" + awLevels.ToString()
-                    + "'and Warning='" + aWarning + "' and ResetTime IS NULL");
+                    + "'and Warning='" + aWarning + "' and ResetTime IS NULL";
+
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
                 Parent.Fault2Cloud.faultBack = true;
                 if (awLevels == 2)
                 {
@@ -977,14 +1030,37 @@ namespace EMS
             }
             else
             {
-                if (!DBConnection.CheckRec("select ID from warning where wClass='" + awClass + "' and eID='" + aeID
+                strSQL = "select ID from warning where wClass='" + awClass + "' and eID='" + aeID
                     + "'and WaringID='" + aWaringID.ToString() + "' and  wLevels='" + awLevels.ToString() + "'and Warning='" + aWarning
-                    + "' and ResetTime IS NULL"))
+                    + "' and ResetTime IS NULL";
+
+
+                if (!SqlExecutor.CheckRec(strSQL))
                 {
-                    DBConnection.ExecSQL("INSERT INTO warning(rTime,wClass,eID,WaringID,wLevels,Warning) VALUES('" +
+                    strSQL = "INSERT INTO warning(rTime,wClass,eID,WaringID,wLevels,Warning) VALUES('" +
                         dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + awClass + "','" + aeID + "','" +
-                         aWaringID.ToString() + "','" + awLevels.ToString() + "','" + aWarning + "')");
+                         aWaringID.ToString() + "','" + awLevels.ToString() + "','" + aWarning + "')";
+
+                    try
+                    {
+                        bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+
+                        if (result)
+                        {
+                            // 处理执行成功的逻辑
+                        }
+                        else
+                        {
+                            // 处理执行失败的逻辑
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理异常情况
+                    }
+
                     Parent.Fault2Cloud.faultBack = false;
+
                     //设置故障指示灯 qiao
                     if (awLevels == 3)
                     {
@@ -2301,7 +2377,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
+            string sql = "insert LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
                 + "InwaterPressure,OutwaterPressure,Error1，Error2)value('"
                 + time.ToString("yyyy-M-d H:m:s") + "','"
                 + state.ToString() + "','"
@@ -2311,8 +2387,26 @@ namespace EMS
                 + ExgasTemp.ToString() + "','"
                 + InwaterPressure.ToString() + "','"
                 + OutwaterPressure.ToString() + "','"
-                + Error[0].ToString() + "','" 
-                + Error[1].ToString() + "')");
+                + Error[0].ToString() + "','"
+                + Error[1].ToString() + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
 
     }
@@ -2351,12 +2445,29 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert ups (rTime,V,A )"
+            string sql = "insert ups (rTime,V,A )"
                 + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + v.ToString() + "','"
                 + a.ToString() + "','"
-                +  "')");
-            // + iot_code +//"','"
+                +  "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
     //消防 
@@ -2396,7 +2507,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert fire (rTime,firestate,temp, humidity, waterlogging1,"
+            string sql = "insert fire (rTime,firestate,temp, humidity, waterlogging1,"
                 + "waterlogging2,smoke,CO )"
                 + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + FireState.ToString() + "','"
@@ -2405,8 +2516,25 @@ namespace EMS
                 + Waterlogging1.ToString() + "','"
                 + Waterlogging2.ToString() + "','"
                 + Smoke.ToString() + "','"
-                + Co.ToString() +  "')");
-               // + iot_code +//"','"
+                + Co.ToString() +  "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
  
@@ -2832,14 +2960,32 @@ namespace EMS
         {
             //return;
             //基本信息Gridkva,
-            DBConnection.ExecSQL("insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva,iot_code)"
+            string sql = "insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva,iot_code)"
                 + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + Ukwh[0].ToString() + "','"
                 + Nukwh[0].ToString() + "','"
                 + AllUkva.ToString() + "','"
                 + AllNukva.ToString() + "','"
                 + AllAAkva.ToString() + "','"
-                + iot_code + "')"); //+"')");  
+                + iot_code + "')";
+            
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
 
@@ -3125,7 +3271,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter2 (rTime, "
+            string sql = "insert elemeter2 (rTime, "
                  + "Ukwh,UkwhJ,UkwhF,UkwhP,UkwhG,"
                  + "PUkwh,PUkwhJ,PUkwhF,PUkwhP,PUkwhG,"
                  + "OUkwh,OUkwhJ,OUkwhF,OUkwhP,OUkwhG,"
@@ -3153,7 +3299,26 @@ namespace EMS
                 + ABkv.ToString() + "','" + BCkv.ToString() + "','" + CAkv.ToString() + "','"
                 + AllPFactor.ToString() + "','" + APFactor.ToString() + "','" + BPFactor.ToString() + "','" + CPFactor.ToString() + "','"
                 + HZ.ToString() + "','" + Gridkva.ToString() + "','" + Totalkva.ToString() + "','" + Subkw.ToString() + "','" + Subkwh.ToString() + "','"
-                + Parent.PCSScheduleKVA.ToString() + "')");
+                + Parent.PCSScheduleKVA.ToString() + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
         }
 
     }
@@ -3271,11 +3436,29 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
+            string sql = "insert elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
                 + "Ukva,Nukva,Akva,V,A)value('" + arDate + "','"// rTime.ToString("yyyy-M-d H:m:s")
                  + Akwh[0].ToString() + "','" + Akwh[1].ToString() + "','" + Akwh[2].ToString() + "','" + Akwh[3].ToString() + "','"
                 + Akwh[4].ToString() + "','" + UKva.ToString() + "','" + NUKva.ToString() + "','" + AKva.ToString() + "','"
-                + Lv.ToString() + "','" + La.ToString() + "')");
+                + Lv.ToString() + "','" + La.ToString() + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
 
@@ -4385,7 +4568,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
+            string sql = "insert pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
                 + " aUkwa,  bUkwa,  cUkwa,  allUkwa,   aNUkwr, bNUkwr,   cNUkwr, allNUkwr, "
                 + " aAkwa,  bAkwa,  cAkwa,  allAkwa, aPFactor, bPFactor,   cPFactor,  allPFactor,"
                 + " inputPower, inputV,  inputA, PCSTemp, "
@@ -4401,7 +4584,19 @@ namespace EMS
                  + inputkva.ToString() + "','" + inputV.ToString() + "','" + inputA.ToString() + "','" + PCSTemp.ToString() + "','"
                  + ACInkwh.ToString() + "','" + ACOutkwh.ToString() + "','" + DCInkwh.ToString() + "','" + DCOutkwh.ToString() + "','"
                 + Error[0].ToString() + "','" + Error[1].ToString() + "','" + Error[2].ToString() + "','"
-                + Error[3].ToString() + "','" + Error[7].ToString() + "')");
+                + Error[3].ToString() + "','" + Error[7].ToString() + "')";
+
+            SqlExecutor.EnqueueSqlTask(sql, 1, outcome =>
+            {
+                if (outcome)
+                {
+                    log.Error("SQL  1 execution succeeded.");
+                }
+                else
+                {
+                    log.Error("SQL 1 execution failed.");
+                }
+            });
         }
 
     }
@@ -5314,14 +5509,33 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
+            string sql = "insert battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
                 + " cellMaxV,   cellIDMaxV, cellMinV,  cellIDMinV,   cellMaxTemp,  cellIDMaxtemp,  averageV,averageTemp  "
                 + " )value('" + arDate + "','" //rTime.ToString("yyyy-M-d H:m:s") 
                 + batteryID.ToString() + "','" + v.ToString() + "','" + a.ToString() + "','" + soc.ToString() + "','"
                 + soh.ToString() + "','" + insulationR.ToString() + "','" + positiveR.ToString() + "','"
                 + negativeR.ToString() + "','" + cellMaxV.ToString() + "','" + cellIDMaxV.ToString() + "','"
                 + cellMinV.ToString() + "','" + cellIDMinV.ToString() + "','" + cellMaxTemp.ToString() + "','"
-                + cellIDMaxtemp.ToString() + "','" + averageV.ToString() + "','" + averageTemp.ToString() + "')");
+                + cellIDMaxtemp.ToString() + "','" + averageV.ToString() + "','" + averageTemp.ToString() + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
             //cell
             string strCap = "", strVData = "", strTData = "";
             for (int i = 0; i < 240; i++)
@@ -5333,9 +5547,45 @@ namespace EMS
             strCap = strCap.Substring(0, strCap.Length - 1);
             strVData = strVData.Substring(0, strVData.Length - 2);
             strTData = strTData.Substring(0, strTData.Length - 2);
+            
             //基本信息
-            DBConnection.ExecSQL("insert cellsv (rTime," + strCap + ") value('" + arDate + "','" + strVData + ")");
-            DBConnection.ExecSQL("insert cellstemp (rTime," + strCap + ") value('" + arDate + "','" + strTData + ")");
+            sql = "insert cellsv (rTime," + strCap + ") value('" + arDate + "','" + strVData + ")";
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
+            sql = "insert cellstemp (rTime," + strCap + ") value('" + arDate + "','" + strTData + ")";
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
 
@@ -5568,7 +5818,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
+            string sql = "insert tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
                 + "evaporationTemp,fanControl,error)value('"
                 + time.ToString("yyyy-M-d H:m:s") + "','"
                 + state.ToString() + "','"
@@ -5578,7 +5828,25 @@ namespace EMS
                 + condenserTemp.ToString() + "','"
                 + evaporationTemp.ToString() + "','"
                 + fanControl.ToString() + "','"
-                + error.ToString() + "')");
+                + error.ToString() + "')";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
         }
     }
 
@@ -9231,13 +9499,31 @@ namespace EMS
                     strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
                             + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
                             + "','" + frmSet.Prices[0, i].ToString();
-                } 
+                }
                 //保存到数据库   
-                DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
+                string sql = "insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
                 + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
                 + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price"
                + ")value('" + astrDate + "','" + Profit.ToString() + "','"
-               + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
+               + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')";
+
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
             }
             catch (Exception ex)
             {

@@ -109,3 +109,6 @@
 	修改从机接到策略下发返回true
 	新增485主机读取从机功率
 	修改gpio适配fa
+
+2024/7/11
+	修改mysql操作，切换DBconnect到SqlExecutor

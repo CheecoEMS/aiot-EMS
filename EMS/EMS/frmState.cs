@@ -418,8 +418,8 @@ namespace EMS
                     break;
                 case 2://TC
                     SetBoxSel(true);
-                    DBConnection.SetDBGrid(dbTCError);
-                    DBConnection.ShowData2DBGrid(dbTCError, "select * from warning where wClass='空调' and ResetTime is null");
+                    SqlExecutor.SetDBGrid(dbTCError);
+                    SqlExecutor.ShowData2DBGrid(dbTCError, "select * from warning where wClass='空调' and ResetTime is null");
                     break;
                 case 3://BMS
                     SetBoxSel(true);
@@ -522,7 +522,7 @@ namespace EMS
             tpLiquidCool.Parent = null;
             tpEMS.Parent = null;
             tpTC.Parent = tbcAllPage;
-            DBConnection.ShowData2DBGrid(dbTCError, "select * from warning where wClass='空调' and ResetTime IS NULL");
+            SqlExecutor.ShowData2DBGrid(dbTCError, "select * from warning where wClass='空调' and ResetTime IS NULL");
         }
          
         private void button9_Click(object sender, EventArgs e)

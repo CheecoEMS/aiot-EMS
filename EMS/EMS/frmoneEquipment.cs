@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MySqlX.XDevAPI.Common;
+using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 
 namespace EMS
@@ -33,7 +35,7 @@ namespace EMS
                     tempTCPType = "client";
 
 
-                DBConnection.ExecSQL("insert into equipment(eID,eName,eType,eModel,comType,comName,comRate,comBits,TCPType,serverIP,SerPort,LocPort,pc) "
+                string sql = "insert into equipment(eID,eName,eType,eModel,comType,comName,comRate,comBits,TCPType,serverIP,SerPort,LocPort,pc) "
                     + "values ('" + oneForm.tcbSysID.strText + "','"
                     + oneForm.tbeName.Text + "','"
                     + oneForm.tcbType.strText + "','"
@@ -46,10 +48,28 @@ namespace EMS
                     + oneForm.tbServerIP.Text + "','"
                     + oneForm.tneServerPort.Value.ToString() + "','"
                     + oneForm.tneLocalPort.Value.ToString() + "','"
-                     + oneForm.tnePC.Value.ToString()
-                    + "')");
+                    + oneForm.tnePC.Value.ToString()
+                    + "')";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from equipment");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }
@@ -76,7 +96,7 @@ namespace EMS
                     tempTCPType = "client";
 
 
-                DBConnection.ExecSQL("update  equipment  SET  "
+                string sql = "update  equipment  SET  "
                     + " eID= '" + oneForm.tcbSysID.strText
                     + "', eName='" + oneForm.tbeName.Text
                     + "',eType='" + oneForm.tcbType.strText
@@ -90,9 +110,27 @@ namespace EMS
                     + "',SerPort='" + oneForm.tneServerPort.Value.ToString()
                     + "',LocPort='" + oneForm.tneLocalPort.Value.ToString()
                     + "',pc='" + oneForm.tnePC.Value.ToString()
-                    + "' where id='" + DataID + "'");
+                    + "' where id='" + DataID + "'";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+                try
+                {
+                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
+                }
+
+                SqlExecutor.ShowData2DBGrid(aDBGrid, "select * from equipment");
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();

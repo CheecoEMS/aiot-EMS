@@ -455,8 +455,9 @@ namespace EMS
                 //初始化端口
                 frmSet.InitGPIO();
                 //连接数据库
+                SqlExecutor SE = new SqlExecutor();
                 DBConnection conn = new DBConnection();
-                DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
+                SqlExecutor.SetDBGrid(frmMain.Selffrm.dbvError);
                 //从数据库加载
                 frmSet.LoadFromGlobalSet();
                 //从数据库中加载配置信息
