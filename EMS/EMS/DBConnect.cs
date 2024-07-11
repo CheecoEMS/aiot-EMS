@@ -17,6 +17,13 @@ using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
+    public class Column
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public bool IsNullable { get; set; }
+        public string Key { get; set; }
+    }
     public class SqlTask
     {
         public string Sql { get; set; }
@@ -120,6 +127,22 @@ namespace EMS
                 {
                     Result = result;
                 }*/
+    }
+
+    public class SqlUpdateTableTask : SqlTask
+    {
+        public string TableName { get; set; }
+        public List<Column> TableStructure { get; set; }
+
+        public Action<bool> UpdateCallback { get; set; }//无用
+
+        public SqlUpdateTableTask(string tableName, List<Column> tableStructure, Action<bool> callback)
+            : base("", 1, callback) // 调用基类构造函数并提供适当的参数
+        {
+            TableName = tableName;
+            TableStructure = tableStructure;
+            UpdateCallback = callback;
+        }
     }
 
     public class PriorityQueue<T>
@@ -235,6 +258,10 @@ namespace EMS
                         sqlCheckTask.SetResult(result);
                         sqlCheckTask.CheckCallback?.Invoke(result);
                     }
+                    else if (sqlTask is SqlUpdateTableTask sqlUpdateTableTask)
+                    {
+                        await UpdateDatabaseTable(sqlUpdateTableTask.TableName, sqlUpdateTableTask.TableStructure);
+                    }
                     else
                     {
                         bool result = await ExecSQLAsync(sqlTask.Sql);
@@ -288,6 +315,131 @@ namespace EMS
                 sqlTaskQueue.Enqueue(new SqlCheckTask(sql, priority, callback), priority);
             }
         }
+
+        public static void EnqueueUpdateTableTask(string tableName, List<Column> tableStructure, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlUpdateTableTask(tableName, tableStructure, callback), 1);
+            }
+        }
+
+        public static async Task UpdateDatabaseTable(string tableName, List<Column> targetColumns)
+        {
+            if (TableExists(tableName))
+            {
+                List<Column> existingColumns = GetTableColumns(tableName);
+
+                if (!TableStructureMatches(existingColumns, targetColumns))
+                {
+                    // Backup the existing table
+                    string backupTableName = tableName + "_backup";
+                    string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
+                    await ExecSQLAsync(createBackupTableQuery);
+
+                    // Drop the original table
+                    string dropTableQuery = $"DROP TABLE {tableName};";
+                    await ExecSQLAsync(dropTableQuery);
+
+                    // Create the new table with the target structure
+                    CreateTable(tableName, targetColumns);
+
+                    // Insert the data back into the new table
+                    List<string> commonColumns = GetCommonColumns(existingColumns, targetColumns);
+                    string columnsList = string.Join(", ", commonColumns);
+                    string insertDataQuery = $"INSERT INTO {tableName} ({columnsList}) SELECT {columnsList} FROM {backupTableName};";
+                    await ExecSQLAsync(insertDataQuery);
+
+                    // Drop the backup table
+                    string dropBackupTableQuery = $"DROP TABLE {backupTableName};";
+                    await ExecSQLAsync(dropBackupTableQuery);
+                }
+            }
+            else
+            {
+                CreateTable(tableName, targetColumns);
+            }
+        }
+
+        public static bool TableExists(string tableName)
+        {
+            if (connection == null || !IsConnected)
+            {
+                CreateConnection();
+            }
+            string query = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        }
+
+        private static List<Column> GetTableColumns(string tableName)
+        {
+            string query = $"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY FROM information_schema.columns WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            MySqlDataReader reader = cmd.ExecuteReader();
+
+            List<Column> columns = new List<Column>();
+            while (reader.Read())
+            {
+                columns.Add(new Column
+                {
+                    Name = reader.GetString("COLUMN_NAME"),
+                    Type = reader.GetString("COLUMN_TYPE"),
+                    IsNullable = reader.GetString("IS_NULLABLE") == "YES",
+                    Key = reader.GetString("COLUMN_KEY")
+                });
+            }
+
+            reader.Close();
+            return columns;
+        }
+
+        public static void CreateTable(string tableName, List<Column> columns)
+        {
+            string createTableQuery = $"CREATE TABLE `{tableName}` (";
+            List<string> columnDefinitions = new List<string>();
+
+            foreach (var column in columns)
+            {
+                string columnDefinition = $"`{column.Name}` {column.Type}";
+                if (!column.IsNullable)
+                    columnDefinition += " NOT NULL";
+                if (!string.IsNullOrEmpty(column.Key))
+                    columnDefinition += $" {column.Key}";
+
+                columnDefinitions.Add(columnDefinition);
+            }
+
+            createTableQuery += string.Join(", ", columnDefinitions);
+            createTableQuery += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_520_ci;";
+
+            ExecSQLAsync(createTableQuery).Wait(); // Wait for table creation to complete
+        }
+
+        private static List<string> GetCommonColumns(List<Column> existingColumns, List<Column> targetColumns)
+        {
+            HashSet<string> existingColumnNames = new HashSet<string>(existingColumns.ConvertAll(c => c.Name));
+            List<string> commonColumns = targetColumns.FindAll(c => existingColumnNames.Contains(c.Name)).ConvertAll(c => c.Name);
+            return commonColumns;
+        }
+
+        private static bool TableStructureMatches(List<Column> existingColumns, List<Column> targetColumns)
+        {
+            if (existingColumns.Count != targetColumns.Count)
+                return false;
+
+            for (int i = 0; i < existingColumns.Count; i++)
+            {
+                if (existingColumns[i].Name != targetColumns[i].Name ||
+                    existingColumns[i].Type != targetColumns[i].Type ||
+                    existingColumns[i].IsNullable != targetColumns[i].IsNullable ||
+                    existingColumns[i].Key != targetColumns[i].Key)
+                    return false;
+            }
+
+            return true;
+        }
+
 
         private static async Task<bool> CheckSQLAsync(string sql)
         {
@@ -615,6 +767,19 @@ namespace EMS
                 bResult = result;
                 resetEvent.Set();
             });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        public static bool CompareAndUpdateTableStructure(string tableName, List<Column> targetColumns, Action<bool> callback)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueUpdateTableTask(tableName, targetColumns, callback);
 
             resetEvent.WaitOne(); // 等待任务完成
 

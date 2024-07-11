@@ -439,6 +439,28 @@ namespace EMS
                                 }*/
                     break;
                 case 1:
+                    //注册一个表结构
+                    string tableName = "config";
+                    List<Column> targetColumns = new List<Column>
+                    {
+                        new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" }
+                        // Add more columns as needed
+                    };
+
+                    // 检查表是否存在
+                    if (!SqlExecutor.TableExists(tableName))
+                    {
+                        // 表不存在，创建新表
+                        SqlExecutor.CreateTable(tableName, targetColumns);
+                    }
+                    else
+                    {
+                        // 表已存在，比较并更新表结构
+                        SqlExecutor.UpdateDatabaseTable(tableName, targetColumns).Wait(); // 注意：这里使用了 Wait() 方法等待任务完成
+                    }
+
                     break;
                 case 2:
                     break;

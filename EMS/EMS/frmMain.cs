@@ -455,7 +455,6 @@ namespace EMS
                 //初始化端口
                 frmSet.InitGPIO();
                 //连接数据库
-                SqlExecutor SE = new SqlExecutor();
                 DBConnection conn = new DBConnection();
                 SqlExecutor.SetDBGrid(frmMain.Selffrm.dbvError);
                 //从数据库加载
@@ -558,7 +557,7 @@ namespace EMS
                     }
                 }
 
-                //8.7 每台主机初始化对外接口
+/*                //8.7 每台主机初始化对外接口
                 BaseEquipmentClass oneEquipment = null;
                 oneEquipment = new EMSEquipment();
                 oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
@@ -625,7 +624,7 @@ namespace EMS
 
                 frmFlash.AddPostion(10);
                 //开启任务多线程
-                frmMain.Selffrm.AllEquipment.AutoReadData();
+                frmMain.Selffrm.AllEquipment.AutoReadData();*/
 
             }
             catch (Exception err)
