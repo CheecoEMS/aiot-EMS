@@ -81,8 +81,8 @@ namespace EMS
                        3, "M-d  H:mm");
                     break;
                 case 2:
-                    DBConnection.SetDBGrid(bdgelemeter);
-                    DBConnection.ShowData2DBGrid(bdgelemeter, "select rTime,AllUkva,AllNukva,AllAAkva,AllPFoctor,Subkw,PlanKW from elemeter2" + strSQL);
+                    SqlExecutor.SetDBGrid(bdgelemeter);
+                    SqlExecutor.ShowData2DBGrid(bdgelemeter, "select rTime,AllUkva,AllNukva,AllAAkva,AllPFoctor,Subkw,PlanKW from elemeter2" + strSQL);
                     break;
                 case 3:
                     DBConnection.ShowData2Chart(ctPCS, "select rTime, allUkwa,allNUkwr,allAkwa   from pcs" + strSQL,
@@ -91,8 +91,8 @@ namespace EMS
                     
                     break;
                 case 4:
-                    DBConnection.SetDBGrid(dgBattery);
-                    DBConnection.ShowData2DBGrid(dgBattery, "select * from battery" + strSQL);
+                    SqlExecutor.SetDBGrid(dgBattery);
+                    SqlExecutor.ShowData2DBGrid(dgBattery, "select * from battery" + strSQL);
                     break;
                 case 5:
                     DBConnection.ShowData2Chart(ctCellV, "select rTime, averageV from battery" + strSQL, 1, "M-d H:mm");
@@ -105,12 +105,12 @@ namespace EMS
                        3, "H:m");
                     break;
                 case 7:
-                    DBConnection.SetDBGrid(dbgProfit);
-                    DBConnection.ShowData2DBGrid(dbgProfit, "select * from profit" + strSQL);
+                    SqlExecutor.SetDBGrid(dbgProfit);
+                    SqlExecutor.ShowData2DBGrid(dbgProfit, "select * from profit" + strSQL);
                     break;
                 case 8:
-                    DBConnection.SetDBGrid(dbgControl);
-                    DBConnection.ShowData2DBGrid(dbgControl, "select * from pncontroler" + strSQL);
+                    SqlExecutor.SetDBGrid(dbgControl);
+                    SqlExecutor.ShowData2DBGrid(dbgControl, "select * from pncontroler" + strSQL);
                     break;
 
             }

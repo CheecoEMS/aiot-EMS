@@ -445,26 +445,21 @@ namespace EMS
                     {
                         new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
                         new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" }
+                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" },
                         // Add more columns as needed
                     };
 
-                    // 检查表是否存在
-                    if (!SqlExecutor.TableExists(tableName))
-                    {
-                        // 表不存在，创建新表
-                        SqlExecutor.CreateTable(tableName, targetColumns);
-                    }
-                    else
-                    {
-                        // 表已存在，比较并更新表结构
-                        SqlExecutor.UpdateDatabaseTable(tableName, targetColumns).Wait(); // 注意：这里使用了 Wait() 方法等待任务完成
-                    }
+                    SqlExecutor.ExecuteCompareAndUpdateTableStructure(tableName, targetColumns, 1);
 
                     break;
                 case 2:
+                    //demo2 重传某天profit
+                    string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '2024-03-19'"; // 你的查询语句
+                    string directoryPath = @"C:\Users\lenovo\Desktop"; // 指定目录路径
+                    SqlExecutor.EnqueueSqlReadTask(sqlQuery2, 1, SqlExecutor.SaveJsonToFile, directoryPath);
                     break;
                 case 3:
+
                     break;
                 case 4:
                     break;

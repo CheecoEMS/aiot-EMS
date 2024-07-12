@@ -901,7 +901,7 @@ namespace EMS
 
                 if (sql != "")
                 {
-                    DBConnection.ExecSQL(sql);
+                    SqlExecutor.ExecuteSqlTaskAsync(sql,1);
                 }
 
             }

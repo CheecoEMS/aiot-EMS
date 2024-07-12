@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using MySqlX.XDevAPI.Common;
+using Mysqlx.Session;
 
 
 namespace EMS
@@ -23,6 +24,7 @@ namespace EMS
         public string Type { get; set; }
         public bool IsNullable { get; set; }
         public string Key { get; set; }
+        public string Comment { get; set; }
     }
     public class SqlTask
     {
@@ -31,7 +33,7 @@ namespace EMS
         public bool Result { get; set; }
         public Action<bool> Callback { get; set; }
 
-        //public Func<bool, bool> CallbackF { get; set; }
+        //public Func<bool, bool> CallbackF { get; set; }//调用参数bool， 返回参数  
         public Action<string> ReadCallback { get; set; }
         public DataGridView DataGridView { get; set; }
 
@@ -76,6 +78,17 @@ namespace EMS
         }
     }
 
+    public class SqlLoadTacticsTask : SqlTask
+    {
+        public SqlLoadTacticsTask(string sql, int priority, Action<string> readCallbackWithPath)
+            : base(sql, priority, result => readCallbackWithPath(result))
+        {
+            lock (frmMain.TacticsList)
+            { 
+            }
+        }
+    }
+
     public class SqlReadWithParamsTask : SqlTask
     {
         public Action<object[]> ReadCallbackWithParams { get; }
@@ -109,6 +122,7 @@ namespace EMS
         public SqlDataGridViewTask(string sql, int priority, DataGridView dataGridView)
             : base(sql, priority, dataGridView)
         {
+
         }
     }
 
@@ -134,10 +148,10 @@ namespace EMS
         public string TableName { get; set; }
         public List<Column> TableStructure { get; set; }
 
-        public Action<bool> UpdateCallback { get; set; }//无用
+        public Action<bool> UpdateCallback { get; set; }//无用，消除继承时调用基类的二义性
 
-        public SqlUpdateTableTask(string tableName, List<Column> tableStructure, Action<bool> callback)
-            : base("", 1, callback) // 调用基类构造函数并提供适当的参数
+        public SqlUpdateTableTask(string tableName, List<Column> tableStructure, int priority, Action<bool> callback)
+            : base("", priority, callback) // 调用基类构造函数并提供适当的参数
         {
             TableName = tableName;
             TableStructure = tableStructure;
@@ -261,6 +275,8 @@ namespace EMS
                     else if (sqlTask is SqlUpdateTableTask sqlUpdateTableTask)
                     {
                         await UpdateDatabaseTable(sqlUpdateTableTask.TableName, sqlUpdateTableTask.TableStructure);
+                        sqlTask.SetResult(true);
+                        sqlTask.Callback?.Invoke(true);
                     }
                     else
                     {
@@ -316,11 +332,11 @@ namespace EMS
             }
         }
 
-        public static void EnqueueUpdateTableTask(string tableName, List<Column> tableStructure, Action<bool> callback)
+        public static void EnqueueUpdateTableTask(string tableName, List<Column> tableStructure, int priority, Action<bool> callback)
         {
             lock (lockObject)
             {
-                sqlTaskQueue.Enqueue(new SqlUpdateTableTask(tableName, tableStructure, callback), 1);
+                sqlTaskQueue.Enqueue(new SqlUpdateTableTask(tableName, tableStructure, priority, callback), priority);
             }
         }
 
@@ -445,13 +461,16 @@ namespace EMS
         {
             ChecMysql80();
 
+            if (connection == null || !IsConnected)
+            {
+                CreateConnection();
+            }
+
             bool result = false;
-            var tempConnection = new MySqlConnection(connectionStr);
-            await tempConnection.OpenAsync();
 
             try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlCommand sqlCmd = new MySqlCommand(sql, connection);
                 using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
                 {
                     result = reader.HasRows;
@@ -459,15 +478,13 @@ namespace EMS
             }
             catch (MySqlException ex)
             {
+                IsConnected = false;
                 frmMain.ShowDebugMSG(ex.ToString());
             }
             catch (Exception ex)
             {
+                IsConnected = false;
                 frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
-            }
-            finally
-            {
-                await tempConnection.CloseAsync();
             }
 
             return result;
@@ -478,12 +495,9 @@ namespace EMS
             if ((connection == null) || (!IsConnected))
                 CreateConnection();
 
-            var tempConnection = new MySqlConnection(connectionStr);
-            await tempConnection.OpenAsync();
-
             try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlCommand sqlCmd = new MySqlCommand(sql, connection);
                 using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
                 {
                     if (await reader.ReadAsync())
@@ -504,10 +518,6 @@ namespace EMS
                 IsConnected = false;
                 frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
             }
-            finally
-            {
-                await tempConnection.CloseAsync();
-            }
 
             return null;
         }
@@ -520,12 +530,9 @@ namespace EMS
             if ((connection == null) || (!IsConnected))
                 CreateConnection();
 
-            var tempConnection = new MySqlConnection(connectionStr);
-            await tempConnection.OpenAsync();
-
             try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlCommand sqlCmd = new MySqlCommand(sql, connection);
                 result = await sqlCmd.ExecuteNonQueryAsync() > 0;
             }
             catch (MySqlException ex)
@@ -540,10 +547,6 @@ namespace EMS
                 frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
                 return false;
             }
-            finally
-            {
-                await tempConnection.CloseAsync();
-            }
 
             return result;
         }
@@ -555,12 +558,9 @@ namespace EMS
             if ((connection == null) || (!IsConnected))
                 CreateConnection();
 
-            var tempConnection = new MySqlConnection(connectionStr);
-            await tempConnection.OpenAsync();
-
             try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlCommand sqlCmd = new MySqlCommand(sql, connection);
                 using (MySqlDataReader reader = (MySqlDataReader)await sqlCmd.ExecuteReaderAsync())
                 {
                     if (await reader.ReadAsync())
@@ -586,10 +586,6 @@ namespace EMS
                 frmMain.ShowDebugMSG(sql + "\n" + ex.ToString());
                 return null;
             }
-            finally
-            {
-                await tempConnection.CloseAsync();
-            }
 
             return null;
         }
@@ -598,12 +594,12 @@ namespace EMS
         {
             ChecMysql80();
 
-            var tempConnection = new MySqlConnection(connectionStr);
-            await tempConnection.OpenAsync();
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
 
             try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(sql, tempConnection);
+                MySqlCommand sqlCmd = new MySqlCommand(sql, connection);
                 MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
                 DataSet dataset = new DataSet();
                 await Task.Run(() => sda.Fill(dataset)); // Use Task.Run to run synchronous Fill method asynchronously
@@ -619,15 +615,13 @@ namespace EMS
             }
             catch (MySqlException ex)
             {
+                IsConnected = false;
                 frmMain.ShowDebugMSG(ex.ToString());
             }
             catch (Exception ex)
             {
+                IsConnected = false;
                 frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-                await tempConnection.CloseAsync();
             }
         }
 
@@ -773,18 +767,110 @@ namespace EMS
             return bResult;
         }
 
-        public static bool CompareAndUpdateTableStructure(string tableName, List<Column> targetColumns, Action<bool> callback)
+        public static bool ExecuteCompareAndUpdateTableStructure(string tableName, List<Column> targetColumns, int priority)
         {
             bool bResult = false;
 
             var resetEvent = new System.Threading.AutoResetEvent(false);
 
-            SqlExecutor.EnqueueUpdateTableTask(tableName, targetColumns, callback);
+            SqlExecutor.EnqueueUpdateTableTask(tableName, targetColumns, priority, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
 
             resetEvent.WaitOne(); // 等待任务完成
 
             return bResult;
         }
+
+        public static void CheckTables()
+        {
+            // 定义多个表的结构
+            var tableStructures = new Dictionary<string, List<Column>>
+            {
+                {
+                    "config", new List<Column>
+                    {
+                        new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "NetTick2", Type = "int", IsNullable = true, Key = "" },
+                    }
+                },
+                {
+                    "battery", new List<Column>
+                    {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "batteryID", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "v", Type = "float", IsNullable = true, Key = "", Comment = "电池簇电压" },
+                        new Column { Name = "a", Type = "float", IsNullable = true, Key = "", Comment = "电池簇电流" },
+                        new Column { Name = "soc", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "soh", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "insulationR", Type = "float", IsNullable = true, Key = "", Comment = "绝缘电阻" },
+                        new Column { Name = "positiveR", Type = "float", IsNullable = true, Key = "", Comment = "正极绝缘" },
+                        new Column { Name = "negativeR", Type = "float", IsNullable = true, Key = "", Comment = "负极绝缘" },
+                        new Column { Name = "cellMaxV", Type = "float", IsNullable = true, Key = "", Comment = "单体最高电压" },
+                        new Column { Name = "cellIDMaxV", Type = "int", IsNullable = true, Key = "", Comment = "高电压Cell ID" },
+                        new Column { Name = "cellMinV", Type = "float", IsNullable = true, Key = "", Comment = "单体最低电压" },
+                        new Column { Name = "cellIDMinV", Type = "int", IsNullable = true, Key = "", Comment = "低电压CellID" },
+                        new Column { Name = "cellMaxTemp", Type = "float", IsNullable = true, Key = "", Comment = "最高温度" },
+                        new Column { Name = "cellIDMaxtemp", Type = "int", IsNullable = true, Key = "", Comment = "最高温CellID" },
+                        new Column { Name = "averageV", Type = "float", IsNullable = true, Key = "", Comment = "平均电压" },
+                        new Column { Name = "averageTemp", Type = "float", IsNullable = true, Key = "", Comment = "平均温度" }
+                    }
+                }
+                
+                // Add more tables as needed
+            };
+
+            // 遍历每个表结构，进行检查和更新
+            foreach (var tableStructure in tableStructures)
+            {
+                string tableName = tableStructure.Key;
+                List<Column> columns = tableStructure.Value;
+
+                // 检查表是否存在
+                SqlExecutor.ExecuteCompareAndUpdateTableStructure(tableName, columns, 1);
+            }
+        }
+
+/*        static public int GetLastID(string astrSQL)
+        {
+            ChecMysql80();
+            int iResult = -1;
+            MySqlConnection ctTemp = null;
+            MySqlDataReader rd = GetData(astrSQL, ref ctTemp);
+            try
+            {
+                if (rd.Read())
+                    iResult = rd.GetInt32(0);
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    ctTemp.Dispose();
+                }
+            }
+            return iResult;
+        }*/
     }
 
 

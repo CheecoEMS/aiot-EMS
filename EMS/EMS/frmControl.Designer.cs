@@ -352,7 +352,10 @@ namespace EMS
             this.tcbtest.ForeColor = System.Drawing.Color.White;
             this.tcbtest.Items = new string[] {
         "test1",
-        "test2"};
+        "test2",
+        "test3",
+        "test4",
+        "test5"};
             this.tcbtest.Location = new System.Drawing.Point(6, 91);
             this.tcbtest.Name = "tcbtest";
             this.tcbtest.SelectItemIndex = 0;
