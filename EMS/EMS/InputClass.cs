@@ -7758,6 +7758,18 @@ namespace EMS
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
+        public void ClientControl_Log()
+        {
+            if (ChechPower)
+            {
+                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA *  frmMain.Selffrm.AllEquipment.dRate);
+            }
+            else 
+            {
+                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA *  1);
+            }
+        }
+
         private void MutiReflux()
         {
             dValue = 0;

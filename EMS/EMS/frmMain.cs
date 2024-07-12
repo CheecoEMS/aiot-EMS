@@ -649,6 +649,7 @@ namespace EMS
             if (frmSet.SysCount > 1)
             {
                 frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+                frmMain.Selffrm.AllEquipment.ClientControl_Log();
             }
             else
             {
