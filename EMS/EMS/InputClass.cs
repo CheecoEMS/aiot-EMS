@@ -7579,30 +7579,29 @@ namespace EMS
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        byte[] buffer1 = new byte[1024];
+                        //byte[] buffer1 = new byte[1024];
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
-/*                        itemp = Array.IndexOf(wTpyes, awType);
-                        log.Error("发送第一条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第一条成功返回");
-                        byte[] buffer2 = new byte[1024];
-                        itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                        log.Error("发送第二条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第二条成功返回");*/
-                        
+                        /*                        itemp = Array.IndexOf(wTpyes, awType);
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
+                                                {
+                                                    continue;
+                                                }
+                                                byte[] buffer2 = new byte[1024];
+                                                itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                                                {
+                                                    continue;
+                                                }*/
+
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                        if (socketLock != null && client != null)
                         {
-                            continue;
+                            double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                            {
+                                continue;
+                            }
                         }
                     }
                 }
@@ -7633,10 +7632,13 @@ namespace EMS
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
-                        itemp = Array.IndexOf(wTpyes, awType);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
-                        {                           
-                            continue;
+                        if (socketLock != null && client != null)
+                        {
+                            itemp = Array.IndexOf(wTpyes, awType);
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
+                            {
+                                continue;
+                            }
                         }
 /*                        byte[] buffer2 = new byte[1024];
                         itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
