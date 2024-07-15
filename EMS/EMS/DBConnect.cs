@@ -1383,8 +1383,7 @@ namespace EMS
                     {
                         new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
                         new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "NetTick2", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" }
                     }
                 },
                 {
@@ -1815,6 +1814,23 @@ namespace EMS
                         new Column{ Name = "UserID", Type = "varchar(15)", IsNullable = true, Default = "NULL", Comment = "确认人", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column{ Name = "ResetTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "恢复时间", CharacterSet = "", Collate = "" },
                         new Column{ Name = "Memo", Type = "text", IsNullable = true, Default = "NULL", Comment = "备注", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" }
+                    }
+                },
+                {
+                    "pncontroler", new List<Column>
+                    {
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "cName", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "cPower", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "response", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "rTimeLength", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "rOutPower", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" },
+                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" },
                     }
                 }
                 // Add more tables as needed

@@ -7801,7 +7801,7 @@ namespace EMS
                             if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6003, 1, ref tempType))
                             {
                                 continue;
-                            }
+                            }                        
                             if (tempType == 0)
                             {
                                 TempWaValue -= tempKVA;
@@ -7868,9 +7868,13 @@ namespace EMS
                         
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+
+                        if (client != null && socketLock != null)
                         {
-                            continue;
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                            {
+                                continue;
+                            }
                         }
                     }
                 }
@@ -7902,9 +7906,13 @@ namespace EMS
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
                         itemp = Array.IndexOf(wTpyes, awType);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
-                        {                           
-                            continue;
+
+                        if (client != null && socketLock != null)
+                        {
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
+                            {
+                                continue;
+                            }
                         }
 /*                        byte[] buffer2 = new byte[1024];
                         itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
