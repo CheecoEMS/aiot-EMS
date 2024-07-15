@@ -415,9 +415,9 @@ namespace EMS
                     });
 
                     //demo2 重传某天profit
-/*                    string sqlQuery = "SELECT * FROM profit WHERE rTime = '2024-03-19'"; // 你的查询语句
-                    string directoryPath = @"C:\Users\lenovo\Desktop\modbus版本\M6\FA2.1\EMS\EMS\bin\Debug\UpData"; // 指定目录路径
-                    SqlExecutor.EnqueueSqlReadTask(sqlQuery, 1, SqlExecutor.SaveJsonToFile, directoryPath);*/
+                    /*                    string sqlQuery = "SELECT * FROM profit WHERE rTime = '2024-03-19'"; // 你的查询语句
+                                        string directoryPath = @"C:\Users\lenovo\Desktop"; // 指定目录路径
+                                        SqlExecutor.EnqueueSqlReadTask(sqlQuery, 1, SqlExecutor.SaveJsonToFile, directoryPath);*/
 
                     //demo3
                     /*            string sqlQuery = "select MaxGridKW ,MinGridKW, MaxSOC, MinSOC from GlobalSet";
