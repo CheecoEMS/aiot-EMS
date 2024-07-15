@@ -212,6 +212,7 @@ namespace EMS
         static private string DataID = "qiao";
         static private string DataPassword = "1100";
         static public string connectionStr = "Database=emsdata;Data Source=127.0.0.1;port=3306;User Id=" + DataID + ";Password=" + DataPassword + ";";
+        private static ILog log = LogManager.GetLogger("SqlExecutor");
 
         static SqlExecutor()
         {
@@ -419,25 +420,43 @@ namespace EMS
 
         public static void CreateTable(string tableName, List<Column> columns)
         {
+            // 基础的 CREATE TABLE 语句
             string createTableQuery = $"CREATE TABLE `{tableName}` (";
             List<string> columnDefinitions = new List<string>();
 
             foreach (var column in columns)
             {
+                // 确保类型定义中不包含不需要的精度信息
                 string columnDefinition = $"`{column.Name}` {column.Type}";
+
                 if (!column.IsNullable)
                     columnDefinition += " NOT NULL";
+
                 if (!string.IsNullOrEmpty(column.Key))
                     columnDefinition += $" {column.Key}";
+
+                if (!string.IsNullOrEmpty(column.Comment))
+                    columnDefinition += $" COMMENT '{column.Comment}'";
 
                 columnDefinitions.Add(columnDefinition);
             }
 
             createTableQuery += string.Join(", ", columnDefinitions);
-            createTableQuery += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_520_ci;";
+            createTableQuery += ")";
 
+            // 设置表级别的选项
+            string tableOptions = " ENGINE=InnoDB AUTO_INCREMENT=1 ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+            createTableQuery += tableOptions;
+
+            // 输出生成的 SQL 语句以进行调试
+            //log.Error(createTableQuery);
+
+            // 执行 SQL 语句
             ExecSQLAsync(createTableQuery).Wait(); // Wait for table creation to complete
         }
+
+
 
         private static List<string> GetCommonColumns(List<Column> existingColumns, List<Column> targetColumns)
         {
@@ -1586,7 +1605,7 @@ namespace EMS
                         new Column { Name = "ct", Type = "int", IsNullable = true, Key = "", Comment = "" }
                     }
                 },
-                { 
+                {
                     "errorstate", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
@@ -1677,45 +1696,64 @@ namespace EMS
                 {
                     "pcs", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "State", Type = "int", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aV", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "bV", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "cV", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aA", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "bA", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "cA", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "hz", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aUkwa", Type = "float", IsNullable = true, Key = "", Comment = "A 相输出有功功率" },
-                        new Column { Name = "bUkwa", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "cUkwa", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "allUkwa", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aNUkwr", Type = "float", IsNullable = true, Key = "", Comment = "A 相输出无功功率" },
-                        new Column { Name = "bNUkwr", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "cNUkwr", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "allNUkwr", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aAkwa", Type = "float", IsNullable = true, Key = "", Comment = "A 相输出视在功率" },
-                        new Column { Name = "bAkwa", Type = "float", IsNullable = true, Key = "", Comment = "apparent pow" },
-                        new Column { Name = "cAkwa", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "allAkwa", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "aPFactor", Type = "float", IsNullable = true, Key = "", Comment = "A相功率因数" },
-                        new Column { Name = "bPFactor", Type = "float", IsNullable = true, Key = "", Comment = "Power Factor" },
-                        new Column { Name = "cPFactor", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "allPFactor", Type = "float", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "inputPower", Type = "float", IsNullable = true, Key = "", Comment = "输入功率" },
-                        new Column { Name = "inputV", Type = "float", IsNullable = true, Key = "", Comment = "输入电压" },
-                        new Column { Name = "inputA", Type = "float", IsNullable = true, Key = "", Comment = "输入电流" },
-                        new Column { Name = "PCSTemp", Type = "float", IsNullable = true, Key = "", Comment = "散热片温度" },
-                        new Column { Name = "ACInkwh", Type = "float", IsNullable = true, Key = "", Comment = "交流累计充电电量" },
-                        new Column { Name = "ACOutkwh", Type = "float", IsNullable = true, Key = "", Comment = "交流累计放电电量" },
-                        new Column { Name = "DCinkwh", Type = "float", IsNullable = true, Key = "", Comment = "直流累计充电电量" },
-                        new Column { Name = "DCOutkwh", Type = "float", IsNullable = true, Key = "", Comment = "直流累计放电电量" },  
-                        
-                        new Column { Name = "DSP2inputkva", Type = "int", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "DSP2inputV", Type = "int", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "DSP2inputA", Type = "int", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "DSP2DCInputV", Type = "int", IsNullable = true, Key = "", Comment = "" }
+                        new Column { Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "State", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aV", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "bV", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "cV", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aA", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "bA", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "cA", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "hz", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aUkwa", Type = "float", IsNullable = true, Default = "NULL", Comment = "A 相输出有功功率" },
+                        new Column { Name = "bUkwa", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "cUkwa", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "allUkwa", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aNUkwr", Type = "float", IsNullable = true, Default = "NULL", Comment = "A 相输出无功功率" },
+                        new Column { Name = "bNUkwr", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "cNUkwr", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "allNUkwr", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aAkwa", Type = "float", IsNullable = true, Default = "NULL", Comment = "A 相输出视在功率" },
+                        new Column { Name = "bAkwa", Type = "float", IsNullable = true, Default = "NULL", Comment = "apparent pow" },
+                        new Column { Name = "cAkwa", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "allAkwa", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "aPFactor", Type = "float", IsNullable = true, Default = "NULL", Comment = "A相功率因数" },
+                        new Column { Name = "bPFactor", Type = "float", IsNullable = true, Default = "NULL", Comment = "Power Factor" },
+                        new Column { Name = "cPFactor", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "allPFactor", Type = "float", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "inputPower", Type = "float", IsNullable = true, Default = "NULL", Comment = "输入功率" },
+                        new Column { Name = "inputV", Type = "float", IsNullable = true, Default = "NULL", Comment = "输入电压" },
+                        new Column { Name = "inputA", Type = "float", IsNullable = true, Default = "NULL", Comment = "输入电流" },
+                        new Column { Name = "PCSTemp", Type = "float", IsNullable = true, Default = "NULL", Comment = "散热片温度" },
+                        new Column { Name = "ACInkwh", Type = "float", IsNullable = true, Default = "NULL", Comment = "交流累计充电电量" },
+                        new Column { Name = "ACOutkwh", Type = "float", IsNullable = true, Default = "NULL", Comment = "交流累计放电电量" },
+                        new Column { Name = "DCinkwh", Type = "float", IsNullable = true, Default = "NULL", Comment = "直流累计充电电量" },
+                        new Column { Name = "DCOutkwh", Type = "float", IsNullable = true, Default = "NULL", Comment = "直流累计放电电量" },
+                        new Column { Name = "Error1", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "Error2", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "Error3", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "Error4", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "Error7", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DCInputV", Type = "int", IsNullable = true, Default = "NULL", Comment = "直流母线电压" },
+                        new Column { Name = "DSP2aV", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2bV", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2cV", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2aA", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2bA", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2cA", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2hz", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2aUkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2bUkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2cUkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2allUkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2allNUkvar", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2allAkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2allPFactor", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2inputkva", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2inputV", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2inputA", Type = "int", IsNullable = true, Default = "NULL" },
+                        new Column { Name = "DSP2DCInputV", Type = "int", IsNullable = true, Default = "NULL" }
                     }
                 },
                 {
@@ -1751,7 +1789,7 @@ namespace EMS
                     }
                 },
                 {
-                    "tacticsColumns", new List<Column>
+                    "tactics", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
                         new Column { Name = "startTime", Type = "time", IsNullable = true, Default = "NULL", Comment = "策略开始时间" },
@@ -1821,16 +1859,16 @@ namespace EMS
                     {
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY" },
-                        new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" },
-                        new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "cName", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "cPower", Type = "float", IsNullable = true, Key = "" },
-                        new Column { Name = "response", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "rTimeLength", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "rOutPower", Type = "float", IsNullable = true, Key = "" },
-                        new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" },
-                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" , Comment = "调度编号"},
+                        new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" , Comment = "下达时间"},
+                        new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "命令模式"},
+                        new Column { Name = "cName", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "命令类型"},
+                        new Column { Name = "cPower", Type = "float", IsNullable = true, Key = "" , Comment = "目标功率"},
+                        new Column { Name = "response", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "相应状态"},
+                        new Column { Name = "rTimeLength", Type = "int", IsNullable = true, Key = "" , Comment = "响应时长（秒）"},
+                        new Column { Name = "rOutPower", Type = "float", IsNullable = true, Key = "" , Comment = "放电电量（kwh）"},
+                        new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" , Comment = "充电电量（kwh)"},
+                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"},
                     }
                 }
                 // Add more tables as needed
