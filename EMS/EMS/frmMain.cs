@@ -13,6 +13,7 @@ using System.Net.NetworkInformation;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
+using M2Mqtt;
 
 //351200 
 
@@ -74,6 +75,7 @@ namespace EMS
         private static System.Threading.Timer Tacitc_Timer;
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
+        private static System.Threading.Timer Heartbeat_Timer;
 
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
@@ -460,9 +462,9 @@ namespace EMS
                 DBConnection conn = new DBConnection();
                 SqlExecutor.SetDBGrid(frmMain.Selffrm.dbvError);
                 //从数据库加载
-                frmSet.LoadFromGlobalSet();
+                //frmSet.LoadFromGlobalSet();
                 //从数据库中加载配置信息
-                frmSet.LoadFromConfig();
+                //frmSet.LoadFromConfig();
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
@@ -504,7 +506,7 @@ namespace EMS
                 //下载电价信息
                 ElectrovalenceList.LoadFromMySQL();
                 //下载策略
-                TacticsList.LoadFromMySQL();
+                //TacticsList.LoadFromMySQL();
                 //策略曲线图展示
                 ShowShedule2Char(true);
                 //下载均衡策略
@@ -559,8 +561,15 @@ namespace EMS
                     }
                 }
 
-/*                //8.7 每台主机初始化对外接口
-                BaseEquipmentClass oneEquipment = null;
+                SqlExecutor.ExecuteEnqueueTacticsSqlTask(3, TacticsList.TacticsList);
+
+                for (int i = 0; i < TacticsList.TacticsList.Count; i++)
+                {
+                    log.Error(TacticsList.TacticsList[i].startTime);
+                }
+
+                //8.7 每台主机初始化对外接口
+/*                BaseEquipmentClass oneEquipment = null;
                 oneEquipment = new EMSEquipment();
                 oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
                 oneEquipment = (EMSEquipment)oneEquipment;
@@ -622,6 +631,8 @@ namespace EMS
                 InitializeTacitc_Timer();
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
+                InitializeHeartbeat_Timer();
+                Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
 
                 frmFlash.AddPostion(10);
@@ -641,6 +652,19 @@ namespace EMS
         /*            定时器              */
         /*                                */
         /*********************************/
+
+        static void InitializeHeartbeat_Timer()
+        {
+            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 10000);
+        }
+        static void Heartbeat_TimerCallback(Object state)
+        {
+
+            if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
+            {
+                frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
+            }
+        }
 
         static void InitializeCXFN_Timer()
         {

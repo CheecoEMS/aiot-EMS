@@ -42,8 +42,16 @@ namespace EMS
         public string AIOTTableTopic;
         public string BalaTableTopic;
         public string BalaTacticTopic;
+        public string HeartbeatTopic;
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
+        public bool receivedHeartbeatResponse = false;
+        public bool SendAgain = true;
+        public string HeartbeatID;
+
+        private static System.Threading.Timer Publish_Timer;
+        //计时器
+        public TimeMeasurement Clock_Watch = new TimeMeasurement();
 
         private static ILog log = LogManager.GetLogger("CloudClass");
 
@@ -90,6 +98,17 @@ namespace EMS
         }
 
 
+        public void InitializePublish_Timer()
+        {
+            Publish_Timer = new System.Threading.Timer(Publish_TimerCallback, null, 0, 10000);
+        }
+        private void Publish_TimerCallback(Object state)
+        {
+            //数据上云
+            log.Error("数据上云");
+            
+        }
+
 
 
 
@@ -106,6 +125,7 @@ namespace EMS
             AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
             BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
             BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
+            HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
         }
 
 
@@ -116,39 +136,27 @@ namespace EMS
             string INIPath = strSysPath + "Config.ini";
             String iotcode = ConfigINI.INIRead("System Set", "SysID", "202300001", INIPath).Trim();
 
-
             EMQX_CLIENT_ID = iotcode;
-            log.Error("EMQX_CLIENT_ID: " + EMQX_CLIENT_ID);
-
             try
             {
-                //mqttClient = null;
+                // 断开并释放现有的 MQTT 客户端
                 if (mqttClient != null)
                 {
-                   // mqttClient.d
+                    if (mqttClient.IsConnected)
+                    {
+                        mqttClient.Disconnect();
+                    }
+                    mqttClient = null;
                 }
-                 //   mqttClient.Disconnect();
-                // mqttClient.ConnectionClosed
                 //建立连接
-                //mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, false, null, null, MqttSslProtocols.TLSv1_2);
-                //mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, false, null, null, MqttSslProtocols.None);
-                mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, true, null, null, MqttSslProtocols.TLSv1_2);
-                //下面这种方法是个坑，并不能正常访问到MQTT服务
-                // mqttClient = new MqttClient(IPAddress.Parse(EMQX_BROKER_IP));
-                //mqttClient.ProtocolVersion = MqttProtocolVersion.Version_3_1;               
+                mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, true, null, null, MqttSslProtocols.TLSv1_2);            
                 mqttClient.Connect(EMQX_CLIENT_ID,
                                             "aiot",// user,
                                             "Lab123123123",//pwd,
                                             true, // cleanSession
                                             60); // keepAlivePeriod 
-                //log.Error("mqttClient连接成功");
-                //2.21
-                //AutoCloud();
                 connectflag = 1;
-
-                //2.21 暂时注释
                 mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
-
                 return mqttClient;
             }
             catch (Exception ex)
@@ -166,17 +174,15 @@ namespace EMS
         {
             try
             {
-                if ((mqttClient != null) && (mqttClient.IsConnected))
-                {
-                    //断开连接
-                    mqttClient.Disconnect();
-                }
                 CreateClient();
                 ListenTopic(PriceTopic + "request");
                 ListenTopic(TacticTopic + "request");
                 ListenTopic(EMSLimitTopic + "request");
                 ListenTopic(AIOTTableTopic + "request");
                 ListenTopic(BalaTableTopic + "request");
+                ListenTopic(HeartbeatTopic);
+                
+                log.Error(HeartbeatTopic);
                 FirstRun = true;
             }
             catch {
@@ -187,35 +193,30 @@ namespace EMS
 
         public void mqttReconnect()
         {
-            //string RecCommandInfo = new StackTrace().ToString();
-            //Logger.Error("err:"+RecCommandInfo);
-
-
-            //Logger.LogInit();
-            //DateTime now = DateTime.Now;
-
-            //Logger.Info("CreateClient: " + now);
             try
             {
-                //mqttClient = null;
-                /*                if (mqttClient != null)
-                                    mqttClient.Disconnect();*/
-                if (mqttClient != null)
+                //停止定时器
+                if (Publish_Timer != null)
                 {
-                    mqttClient.Connect(EMQX_CLIENT_ID,
-                                               "aiot",// user,
-                                               "Lab123123123",//pwd,
-                                               true, // cleanSession
-                                               60); // keepAlivePeriod 
-                                                    //mqttClient.Connect(EMQX_CLIENT_ID);
-                                                    //mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
+                    Publish_Timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    Publish_Timer.Dispose();
+                    Publish_Timer = null;
 
-                    ListenTopic(PriceTopic + "request");
-                    ListenTopic(TacticTopic + "request");
-                    ListenTopic(EMSLimitTopic + "request");
-                    ListenTopic(AIOTTableTopic + "request");
-                    ListenTopic(BalaTableTopic + "request");
+                    log.Error("停止定时器");
                 }
+
+                CreateClient();
+                ListenTopic(PriceTopic + "request");
+                ListenTopic(TacticTopic + "request");
+                ListenTopic(EMSLimitTopic + "request");
+                ListenTopic(AIOTTableTopic + "request");
+                ListenTopic(BalaTableTopic + "request");
+                ListenTopic(HeartbeatTopic);
+
+                // 重新启动定时器
+                log.Error("重新启动定时器");
+                InitializePublish_Timer();
+                SendAgain = true;
             }
             catch (Exception ex)
             {
@@ -228,7 +229,7 @@ namespace EMS
 
         public void CheckConnect()
         {
-            if (connectflag == 1)
+/*            if (connectflag == 1)
             {
                 //mqttClient.Disconnect();
                 if (mqttClient != null)
@@ -239,8 +240,35 @@ namespace EMS
                     }
                 }
 
+            }*/
+        }
+
+        // 发送心跳报文的方法
+        public void SendHeartbeat()
+        {
+            if (mqttClient != null)
+            {
+/*                if (Clock_Watch.MeasureIntervalInSeconds() > 13)
+                {
+                    //检测超时
+                    mqttReconnect();
+                }*/
+                if (SendAgain)
+                {
+                    HeartbeatID = Guid.NewGuid().ToString();
+                    string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
+                    mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
+                        MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+
+                    SendAgain = false;
+                }
+                else 
+                {
+                    mqttReconnect();
+                }
             }
         }
+
 
         /// <summary>
         /// 给一个topic写数据
@@ -322,6 +350,12 @@ namespace EMS
                 mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                      MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
             }
+            else if (topic == HeartbeatTopic)
+            {
+                GetHeartbeat(message);
+            }
+
+
 /*            else if (topic == BalaTacticTopic)
             {
                 strID = GetServerBalaTactics(message);
@@ -592,6 +626,20 @@ namespace EMS
         //接收到的文件
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public void GetHeartbeat(string astrData, bool aIsFileData = false)
+        {
+            JObject jsonObject = null;
+            jsonObject = JObject.Parse(astrData);
+            string ID = jsonObject["HeartBeatID"].ToString();
+            if (ID == HeartbeatID)
+            {
+                receivedHeartbeatResponse = true;
+                SendAgain = true;
+                Clock_Watch.RestartMeasurement();
+            }
+        }
+
 
         //接收均衡策略数据
         /// <param name="astrTacticFile"></param>

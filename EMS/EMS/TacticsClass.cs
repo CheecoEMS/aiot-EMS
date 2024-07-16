@@ -12,12 +12,12 @@ namespace EMS
     //策略的一个节点
     public class TacticsClass
     {
-        //
-        public DateTime startTime;
-        public DateTime endTime;
-        public string tType;
-        public string PCSType;
-        public int waValue;
+        public DateTime startTime;//策略起始时间
+        public DateTime endTime;//策略结束时间
+        public DateTime date;//策略执行日期
+        public string tType;//策略充放模式
+        public string PCSType;//pcs工作模式
+        public int waValue;//策略功率
     }
 
     //全部策列，策略类
@@ -35,7 +35,7 @@ namespace EMS
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "时段内均充均放" };
         public static string[] tTypes = { "待机", "充电", "放电" };
         //策略列表
-        List<TacticsClass> TacticsList = new List<TacticsClass>();
+        public List<TacticsClass> TacticsList = new List<TacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
@@ -111,6 +111,40 @@ namespace EMS
         }
 
         //数据库中重新装载策略数据
+/*        public List<TacticsClass> GetTacticsForToday()
+        {
+            List<TacticsClass> tactics = new List<TacticsClass>();
+            string query = "SELECT * FROM tactics WHERE strategyDate = CURDATE()";
+
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                connection.Open();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        TacticsClass tactic = new TacticsClass
+                        {
+                            Id = reader.GetInt32("id"),
+                            StrategyDate = reader.GetDateTime("strategyDate"),
+                            StartTime = reader.GetTimeSpan("startTime"),
+                            TType = reader.GetString("tType"),
+                            PCSType = reader.GetString("PCSType"),
+                            WaValue = reader.GetFloat("waValue"),
+                            MinPower = reader.GetInt32("MinPower"),
+                            RTime = reader.GetDateTime("rTime"),
+                            EndTime = reader.GetTimeSpan("endTime")
+                        };
+                        tactics.Add(tactic);
+                    }
+                }
+            }
+
+            return tactics;
+        }*/
+
+
         public bool LoadFromMySQL()
         {
             bool Result = false;

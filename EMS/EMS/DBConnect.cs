@@ -14,17 +14,22 @@ using System.Linq;
 using Newtonsoft.Json;
 using MySqlX.XDevAPI.Common;
 using Mysqlx.Session;
-
+using System.Diagnostics.Eventing.Reader;
 
 namespace EMS
 {
+    /// <summary>
+    /// 定义构建数据库所需字段
+    /// </summary>
     public class Column
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public bool IsNullable { get; set; }
-        public string Key { get; set; }
-        public string Comment { get; set; }
+        public string Name { get; set; }//字段名
+        public string Type { get; set; }//数据类型
+        public bool IsNullable { get; set; }//是否可以为空
+        public string Key { get; set; }//是否为主键
+        public string Comment { get; set; }//注释
+
+        //暂时丢弃字段
         public string CharacterSet { get; set; }
 
         public string Collate { get; set; }
@@ -33,6 +38,13 @@ namespace EMS
 
 
     }
+
+    /*******************************************************************************************************************/
+    /// <summary>
+    /// 定义所有的sqlTask
+    /// </summary>
+
+
     public class SqlTask
     {
         public string Sql { get; set; }
@@ -166,6 +178,18 @@ namespace EMS
         }
     }
 
+    public class SqlTacticsSqlTask : SqlTask
+    {
+        public List<TacticsClass> Tactics { get; private set; }
+
+        public SqlTacticsSqlTask(int priority, List<TacticsClass> tactics, Action<bool> callback) : base("", priority, callback)
+        {
+            Tactics = tactics;
+        }
+    }
+
+    /*******************************************************************************************************************/
+
     public class PriorityQueue<T>
     {
         private readonly SortedDictionary<int, Queue<T>> _queues = new SortedDictionary<int, Queue<T>>();
@@ -286,6 +310,12 @@ namespace EMS
                         sqlTask.SetResult(true);
                         sqlTask.Callback?.Invoke(true);
                     }
+                    else if (sqlTask is SqlTacticsSqlTask sqlTacticsSqlTask)
+                    {
+                        bool result = await LoadTacticsFromMySQL(sqlTacticsSqlTask.Tactics);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
                     else
                     {
                         bool result = await ExecSQLAsync(sqlTask.Sql);
@@ -345,6 +375,14 @@ namespace EMS
             lock (lockObject)
             {
                 sqlTaskQueue.Enqueue(new SqlUpdateTableTask(tableName, tableStructure, priority, callback), priority);
+            }
+        }
+
+        public static void EnqueueTacticsSqlTask(int priority, List<TacticsClass> tactics, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlTacticsSqlTask(priority, tactics, callback), priority);
             }
         }
 
@@ -763,19 +801,15 @@ namespace EMS
                 + aEvemt + "','"
                  + aMemo + "')";
 
-            SqlExecutor.EnqueueSqlTask(sql, 1, outcome =>
-            {
-                if (outcome)
-                {
-
-                }
-                else
-                {
-
-                }
-            });
+            SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
         }
 
+        /// <summary>
+        /// 同步函数：无数据返回的sql执行一条sql语句：insert或者update
+        /// </summary>
+        /// <param name="astrSQL"></param>
+        /// <param name="prior"></param>
+        /// <returns></returns>
         public static bool ExecuteSqlTaskAsync(string astrSQL, int prior)
         {
             bool bResult = false;
@@ -810,6 +844,29 @@ namespace EMS
             return bResult;
         }
 
+        /// <summary>
+        /// 同步等待录入策略成功
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueTacticsSqlTask(int priority, List<TacticsClass> tactics)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueTacticsSqlTask(priority, tactics, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
 
         /*        static public int GetLastID(string astrSQL)
         {
@@ -846,6 +903,130 @@ namespace EMS
             }
             return iResult;
         }*/
+
+        /// <summary>
+        /// 回调函数：从数据库中获取策略
+        /// </summary>
+        static public MySqlDataReader GetData(string astrSQL)
+        {
+            try
+            {
+                ChecMysql80();
+
+                if ((connection == null) || (!IsConnected))
+                    CreateConnection();
+
+                MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX"; 
+                MySqlDataReader sdr = sqlCmd.ExecuteReader();//使用 ExecuteReader 方法创建 SqlDataReader 对象 
+                return sdr;
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false; 
+                frmMain.ShowDebugMSG(ex.ToString());
+                return null;
+            }
+        }
+
+
+        public static async Task<bool> LoadTacticsFromMySQL(List<TacticsClass> Tactics)
+        {
+            ChecMysql80();
+
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
+
+            bool result = false;
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue from tactics  order by startTime";
+            MySqlDataReader rd = null;
+            //MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";                                                                       
+            //MySqlDataReader rd = sqlCmd.ExecuteReader(); //使用 ExecuteReader 方法创建 SqlDataReader 对象 
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows)
+                    {
+                        //清空EMS存储的策略数据
+                        while (Tactics.Count > 0)
+                        {
+                            Tactics.RemoveAt(0);
+                        }
+
+                        //从数据库中拉取策略数据
+                        while (rd.Read())
+                        {
+                            TacticsClass oneTactics = new TacticsClass();
+                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            oneTactics.tType = rd.GetString(2);
+                            oneTactics.PCSType = rd.GetString(3);
+                            if (oneTactics.PCSType == "恒流")
+                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                            if (oneTactics.PCSType == "恒压")
+                            {
+                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                if (oneTactics.waValue < 0)
+                                    oneTactics.waValue = 0;
+                            }
+
+                            //限额
+                            oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                            if (oneTactics.waValue > 110)
+                                oneTactics.waValue = 110;
+                            //修正充放电的正负功率
+                            if (oneTactics.tType == "放电")
+                                oneTactics.waValue = -rd.GetInt32(4);
+                            else
+                                oneTactics.waValue = rd.GetInt32(4);
+
+                            Tactics.Add(oneTactics);
+                        }
+                    }
+                }
+                else 
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally 
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }            
+            }
+
+            return result;
+            // 执行 SQL 语句
+            //result = await ExecSQLAsync(sql);
+        }
+
+
+
+        /// <summary>
+        /// 调用函数：检查数据库
+        /// </summary>
 
         public static void CheckTables()
         {
@@ -1401,8 +1582,66 @@ namespace EMS
                     "config", new List<Column>
                     {
                         new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
-                        new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" }
+                        new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" , Comment = "是否开启104服务 0关1开" },
+                        new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" , Comment = "判断超时的时间间隔" },
+                        new Column { Name = "SysName", Type = "varchar(255)", IsNullable = true, Key = ""},
+                        new Column { Name = "SysID", Type = "int", IsNullable = true, Key = "" , Comment = "储能柜唯一序列号" },
+                        new Column { Name = "SysPower", Type = "int", IsNullable = true, Key = "" , Comment = "储能柜容量规格" },
+                        new Column { Name = "SysSelfPower", Type = "int", IsNullable = true, Key = ""},
+                        new Column { Name = "SysAddr", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "SysInstTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "CellCount", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "SysInterval", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "YunInterval", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "IsMaster", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "Master485Addr", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "i485Addr", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "AutoRun", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "SysMode", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "PCSGridModel", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "PCSType", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "PCSwaValue", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "BMSwaValue", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "DebugComName", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "DebugRate", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "UseYunTactics", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "UseBalaTactics", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "PCSForceRun", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "EMSstatus", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "ErrorState2", Type = "bool", IsNullable = true, Key = "" }
+                    }
+                },
+                {
+                    "ComponentSettings", new List<Column>
+                    {
+                        //空调
+                        new Column { Name = "SetHotTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "SetCoolTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "CoolTempReturn", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "HotTempReturn", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "SetHumidity", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "HumiReturn", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "TCRunWithSys", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "TCAuto", Type = "bool", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "TCMode", Type = "int", IsNullable = true, Key = ""  },
+                        new Column { Name = "TCMaxTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "TCMinTemp", Type = "double", IsNullable = true, Key = ""},
+                        new Column { Name = "TCMaxHumi", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "TCMinHumi", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "FenMaxTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "FenMinTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "FenMode", Type = "int", IsNullable = true, Key = "" },
+                        //液冷
+                        new Column { Name = "LCModel", Type = "int", IsNullable = true, Key = ""},
+                        new Column { Name = "LCTemperSelect", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "LCWaterPump", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "LCSetHotTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "LCSetCoolTemp", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "LCHotTempReturn", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "LCCoolTempReturn", Type = "double", IsNullable = true, Key = "" }
                     }
                 },
                 {
@@ -2023,8 +2262,6 @@ namespace EMS
             try
             {
                 ChecMysql80();
-                //if ((connection == null) || (!IsConnected)) 
-                //    CreateConnection(); 
                 MySqlConnection tempConnection = new MySqlConnection(connectionStr);
                 aConnect = tempConnection;
                 tempConnection.Open();
