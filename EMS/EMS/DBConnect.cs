@@ -178,18 +178,70 @@ namespace EMS
         }
     }
 
-    public class SqlTacticsSqlTask : SqlTask
+    public class SqlTacticsTask : SqlTask
     {
         public List<TacticsClass> Tactics { get; private set; }
 
-        public SqlTacticsSqlTask(int priority, List<TacticsClass> tactics, Action<bool> callback) : base("", priority, callback)
+        public SqlTacticsTask(int priority, List<TacticsClass> tactics, Action<bool> callback) : base("", priority, callback)
         {
             Tactics = tactics;
         }
     }
 
+    public class SqlBalaTacticsTask : SqlTask
+    {
+        public List<BalaTacticsClass> BalaTactics { get; private set; }
+
+        public SqlBalaTacticsTask(int priority, List<BalaTacticsClass> balatactics, Action<bool> callback) : base("", priority, callback)
+        {
+            BalaTactics = balatactics;
+        }
+    }
+
+    public class SqlElectrovalenceTask : SqlTask
+    {
+        public List<ElectrovalenceClass> Electrovalences { get; private set; }
+
+        public SqlElectrovalenceTask(int priority, List<ElectrovalenceClass> electrovalences, Action<bool> callback) : base("", priority, callback)
+        {
+            Electrovalences = electrovalences;
+        }
+    }
+
+/*    public class SqlCloudLimitClassTask : SqlTask
+    {
+        public List<CloudLimitClass>  CloudLimits { get; private set; }
+
+        public SqlCloudLimitClassTask(int priority, List<CloudLimitClass> cloudLimits, Action<bool> callback) : base("", priority, callback)
+        {
+            CloudLimits = cloudLimits;
+        }
+    }*/
+
+    public class SqlCloudLimitClassTask : SqlTask
+    {
+        public CloudLimitClass CloudLimits { get; private set; }
+
+        public SqlCloudLimitClassTask(int priority, CloudLimitClass cloudLimits, Action<bool> callback) : base("", priority, callback)
+        {
+            CloudLimits = cloudLimits;
+        }
+    }
+
+    public class SqlJFPGSqlTask : SqlTask
+    {
+        public SqlJFPGSqlTask(int priority, Action<bool> callback) : base("", priority, callback)
+        {
+
+        }
+    }
+
     /*******************************************************************************************************************/
 
+    /// <summary>
+    /// 定义任务队列数据类型
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class PriorityQueue<T>
     {
         private readonly SortedDictionary<int, Queue<T>> _queues = new SortedDictionary<int, Queue<T>>();
@@ -225,6 +277,9 @@ namespace EMS
         public int Count => _queues.Sum(q => q.Value.Count);
     }
 
+    /// <summary>
+    /// 定义一个管理sql事务的任务队列
+    /// </summary>
     public class SqlExecutor
     {
         private static MySqlConnection connection;
@@ -268,6 +323,10 @@ namespace EMS
             }
         }
 
+        /// <summary>
+        /// 任务处理核心
+        /// </summary>
+        /// <returns></returns>
         private static async Task ProcessSqlTasks()
         {
             while (!cancellationTokenSource.Token.IsCancellationRequested)
@@ -310,9 +369,33 @@ namespace EMS
                         sqlTask.SetResult(true);
                         sqlTask.Callback?.Invoke(true);
                     }
-                    else if (sqlTask is SqlTacticsSqlTask sqlTacticsSqlTask)
+                    else if (sqlTask is SqlTacticsTask sqlTacticsSqlTask)
                     {
                         bool result = await LoadTacticsFromMySQL(sqlTacticsSqlTask.Tactics);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
+                    else if (sqlTask is SqlBalaTacticsTask sqlBalaTacticsSqlTask)
+                    {
+                        bool result = await LoadBalaTacticsFromMySQL(sqlBalaTacticsSqlTask.BalaTactics);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
+                    else if (sqlTask is SqlElectrovalenceTask sqlElectrovalenceSqlTask)
+                    {
+                        bool result = await LoadElectrovalenceFromMySQL(sqlElectrovalenceSqlTask.Electrovalences);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
+                    else if (sqlTask is SqlCloudLimitClassTask sqlCloudLimitClassTask)
+                    {
+                        bool result = await LoadCloudLimitsFromMySQL(sqlCloudLimitClassTask.CloudLimits);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
+                    else if (sqlTask is SqlJFPGSqlTask sqlJFPGSqlTask)
+                    {
+                        bool result = await LoadJFPGFromMySQL();
                         sqlTask.SetResult(result);
                         sqlTask.Callback?.Invoke(result);
                     }
@@ -330,6 +413,7 @@ namespace EMS
             }
         }
 
+        /************************************任务入队函数******************************************/
         public static void EnqueueSqlTask(string sql, int priority, Action<bool> callback)
         {
             lock (lockObject)
@@ -378,147 +462,60 @@ namespace EMS
             }
         }
 
-        public static void EnqueueTacticsSqlTask(int priority, List<TacticsClass> tactics, Action<bool> callback)
+        public static void EnqueueSqlTacticsTask(int priority, List<TacticsClass> tactics, Action<bool> callback)
         {
             lock (lockObject)
             {
-                sqlTaskQueue.Enqueue(new SqlTacticsSqlTask(priority, tactics, callback), priority);
+                sqlTaskQueue.Enqueue(new SqlTacticsTask(priority, tactics, callback), priority);
             }
         }
 
-        public static async Task UpdateDatabaseTable(string tableName, List<Column> targetColumns)
+        public static void EnqueueSqlBalaTacticsTask(int priority, List<BalaTacticsClass> balatactics, Action<bool> callback)
         {
-            if (TableExists(tableName))
+            lock (lockObject)
             {
-                List<Column> existingColumns = GetTableColumns(tableName);
+                sqlTaskQueue.Enqueue(new SqlBalaTacticsTask(priority, balatactics, callback), priority);
+            }
+        }
 
-                if (!TableStructureMatches(existingColumns, targetColumns))
+        public static void EnqueueSqlElectrovalenceTask(int priority, List<ElectrovalenceClass> electrovalences, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlElectrovalenceTask(priority, electrovalences, callback), priority);
+            }
+        }
+
+        public static void EnqueueSqlCloudLimitTask(int priority, CloudLimitClass cloudLimits, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlCloudLimitClassTask(priority, cloudLimits, callback), priority);
+            }
+        }
+
+        /*        public static void EnqueueSqlCloudLimitTask(int priority, List<CloudLimitClass> cloudLimits, Action<bool> callback)
                 {
-                    // Backup the existing table
-                    string backupTableName = tableName + "_backup";
-                    string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
-                    await ExecSQLAsync(createBackupTableQuery);
+                    lock (lockObject)
+                    {
+                        sqlTaskQueue.Enqueue(new SqlCloudLimitClassTask(priority, cloudLimits, callback), priority);
+                    }
+                }*/
 
-                    // Drop the original table
-                    string dropTableQuery = $"DROP TABLE {tableName};";
-                    await ExecSQLAsync(dropTableQuery);
 
-                    // Create the new table with the target structure
-                    CreateTable(tableName, targetColumns);
-
-                    // Insert the data back into the new table
-                    List<string> commonColumns = GetCommonColumns(existingColumns, targetColumns);
-                    string columnsList = string.Join(", ", commonColumns);
-                    string insertDataQuery = $"INSERT INTO {tableName} ({columnsList}) SELECT {columnsList} FROM {backupTableName};";
-                    await ExecSQLAsync(insertDataQuery);
-
-                    // Drop the backup table
-                    string dropBackupTableQuery = $"DROP TABLE {backupTableName};";
-                    await ExecSQLAsync(dropBackupTableQuery);
-                }
-            }
-            else
-            {
-                CreateTable(tableName, targetColumns);
-            }
-        }
-
-        public static bool TableExists(string tableName)
+        public static void EnqueueJFPGSqlTask(int priority, Action<bool> callback)
         {
-            if (connection == null || !IsConnected)
+            lock (lockObject)
             {
-                CreateConnection();
+                sqlTaskQueue.Enqueue(new SqlJFPGSqlTask(priority, callback), priority);
             }
-            string query = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
-            MySqlCommand cmd = new MySqlCommand(query, connection);
-            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
         }
 
-        private static List<Column> GetTableColumns(string tableName)
-        {
-            string query = $"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY FROM information_schema.columns WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
-            MySqlCommand cmd = new MySqlCommand(query, connection);
-            MySqlDataReader reader = cmd.ExecuteReader();
-
-            List<Column> columns = new List<Column>();
-            while (reader.Read())
-            {
-                columns.Add(new Column
-                {
-                    Name = reader.GetString("COLUMN_NAME"),
-                    Type = reader.GetString("COLUMN_TYPE"),
-                    IsNullable = reader.GetString("IS_NULLABLE") == "YES",
-                    Key = reader.GetString("COLUMN_KEY")
-                });
-            }
-
-            reader.Close();
-            return columns;
-        }
-
-        public static void CreateTable(string tableName, List<Column> columns)
-        {
-            // 基础的 CREATE TABLE 语句
-            string createTableQuery = $"CREATE TABLE `{tableName}` (";
-            List<string> columnDefinitions = new List<string>();
-
-            foreach (var column in columns)
-            {
-                // 确保类型定义中不包含不需要的精度信息
-                string columnDefinition = $"`{column.Name}` {column.Type}";
-
-                if (!column.IsNullable)
-                    columnDefinition += " NOT NULL";
-
-                if (!string.IsNullOrEmpty(column.Key))
-                    columnDefinition += $" {column.Key}";
-
-                if (!string.IsNullOrEmpty(column.Comment))
-                    columnDefinition += $" COMMENT '{column.Comment}'";
-
-                columnDefinitions.Add(columnDefinition);
-            }
-
-            createTableQuery += string.Join(", ", columnDefinitions);
-            createTableQuery += ")";
-
-            // 设置表级别的选项
-            string tableOptions = " ENGINE=InnoDB AUTO_INCREMENT=1 ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-
-            createTableQuery += tableOptions;
-
-            // 输出生成的 SQL 语句以进行调试
-            //log.Error(createTableQuery);
-
-            // 执行 SQL 语句
-            ExecSQLAsync(createTableQuery).Wait(); // Wait for table creation to complete
-        }
+        /*********************************************************************************************/
 
 
 
-        private static List<string> GetCommonColumns(List<Column> existingColumns, List<Column> targetColumns)
-        {
-            HashSet<string> existingColumnNames = new HashSet<string>(existingColumns.ConvertAll(c => c.Name));
-            List<string> commonColumns = targetColumns.FindAll(c => existingColumnNames.Contains(c.Name)).ConvertAll(c => c.Name);
-            return commonColumns;
-        }
-
-        private static bool TableStructureMatches(List<Column> existingColumns, List<Column> targetColumns)
-        {
-            if (existingColumns.Count != targetColumns.Count)
-                return false;
-
-            for (int i = 0; i < existingColumns.Count; i++)
-            {
-                if (existingColumns[i].Name != targetColumns[i].Name ||
-                    existingColumns[i].Type != targetColumns[i].Type ||
-                    existingColumns[i].IsNullable != targetColumns[i].IsNullable ||
-                    existingColumns[i].Key != targetColumns[i].Key)
-                    return false;
-            }
-
-            return true;
-        }
+        /********************************队列任务处理函数***************************************/
 
 
         private static async Task<bool> CheckSQLAsync(string sql)
@@ -689,6 +686,393 @@ namespace EMS
             }
         }
 
+        /// <summary>
+        /// 回调函数：从数据库中获取策略
+        /// </summary>
+        public static async Task<bool> LoadTacticsFromMySQL(List<TacticsClass> Tactics)
+        {
+            bool result = false;
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue from tactics  order by startTime";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows)
+                    {
+                        //清空EMS存储的策略数据
+                        while (Tactics.Count > 0)
+                        {
+                            Tactics.RemoveAt(0);
+                        }
+
+                        //从数据库中拉取策略数据
+                        while (rd.Read())
+                        {
+                            TacticsClass oneTactics = new TacticsClass();
+                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            oneTactics.tType = rd.GetString(2);
+                            oneTactics.PCSType = rd.GetString(3);
+                            if (oneTactics.PCSType == "恒流")
+                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                            if (oneTactics.PCSType == "恒压")
+                            {
+                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                if (oneTactics.waValue < 0)
+                                    oneTactics.waValue = 0;
+                            }
+
+                            //限额
+                            oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                            if (oneTactics.waValue > 110)
+                                oneTactics.waValue = 110;
+                            //修正充放电的正负功率
+                            if (oneTactics.tType == "放电")
+                                oneTactics.waValue = -rd.GetInt32(4);
+                            else
+                                oneTactics.waValue = rd.GetInt32(4);
+
+                            Tactics.Add(oneTactics);
+                        }
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+
+        public static async Task<bool> LoadBalaTacticsFromMySQL(List<BalaTacticsClass> BalaTactics)
+        {
+            bool result = false;
+            string astrSQL = "select startTime,endTime from balatactics  order by startTime";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows)
+                    {
+                        //清空EMS存储的策略数据
+                        while (BalaTactics.Count > 0)
+                        {
+                            BalaTactics.RemoveAt(0);
+                        }
+
+                        //从数据库中拉取策略数据
+                        while (rd.Read())
+                        {
+                            BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
+                            oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                            oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+
+                            BalaTactics.Add(oneBalaTactics);
+                        }
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+        public static async Task<bool> LoadElectrovalenceFromMySQL(List<ElectrovalenceClass> Electrovalences)
+        {
+            bool result = false;
+            string astrSQL = "select section ,startTime, eName  from electrovalence ";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows)
+                    {
+                        while (Electrovalences.Count > 0)
+                        {
+                            //ElectrovalenceList[0]
+                            Electrovalences.RemoveAt(0);
+                        }
+
+                        while (rd.Read())
+                        {
+                            ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
+                            oneElectrovalence.section = rd.GetInt32(0);
+                            oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            oneElectrovalence.eName = rd.GetString(2);
+
+                            Electrovalences.Add(oneElectrovalence);
+                        }
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+        public static async Task<bool> LoadCloudLimitsFromMySQL(CloudLimitClass CloudLimits)
+        {
+            bool result = false;
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, MaxDemandRatio, EnableActiveReduce, PUM, AllUkvaWindowSize, PumTime FROM CloudLimits ";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows && rd.Read())
+                    {
+                        CloudLimits.MaxGridKW = rd.GetInt32(0);
+                        CloudLimits.MinGridKW = rd.GetInt32(1);
+                        CloudLimits.MaxSOC = rd.GetInt32(2);
+                        CloudLimits.MinSOC = rd.GetInt32(3);
+                        CloudLimits.UBmsPcsState = rd.GetDouble(4);
+                        CloudLimits.OBmsPcsState = rd.GetDouble(5);
+                        CloudLimits.WarnMaxGridKW = rd.GetInt32(6);
+                        CloudLimits.WarnMinGridKW = rd.GetInt32(7);
+                        CloudLimits.PcsKva = rd.GetInt32(8);
+                        CloudLimits.MaxDemandRatio = rd.GetDouble(9);
+                        CloudLimits.EnableActiveReduce = rd.GetInt32(10);
+                        CloudLimits.PUM = rd.GetDouble(11);
+                        CloudLimits.AllUkvaWindowSize = rd.GetInt32(12);
+                        CloudLimits.PumTime = rd.GetInt32(13);
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+        /*        public static async Task<bool> LoadCloudLimitsFromMySQL(List<CloudLimitClass> CloudLimits)
+                {
+                    bool result = false;
+                    string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, MaxDemandRatio, EnableActiveReduce, PUM, AllUkvaWindowSize, PumTime FROM CloudLimits ";
+                    MySqlDataReader rd = null;
+
+                    try
+                    {
+                        rd = GetData(astrSQL);
+                        if (rd != null)
+                        {
+                            if (rd.HasRows)
+                            {
+                                while (CloudLimits.Count > 0)
+                                {
+                                    CloudLimits.RemoveAt(0);
+                                }
+
+                                CloudLimitClass oneCloudLimitClass = new CloudLimitClass();
+                                oneCloudLimitClass.MaxGridKW = rd.GetInt32(0);
+                                oneCloudLimitClass.MinGridKW = rd.GetInt32(1);
+                                oneCloudLimitClass.MaxSOC = rd.GetInt32(2);
+                                oneCloudLimitClass.MinSOC = rd.GetInt32(3);
+                                oneCloudLimitClass.UBmsPcsState = rd.GetDouble(4);
+                                oneCloudLimitClass.OBmsPcsState = rd.GetDouble(5);
+                                oneCloudLimitClass.WarnMaxGridKW = rd.GetInt32(6);
+                                oneCloudLimitClass.WarnMinGridKW = rd.GetInt32(7);
+                                oneCloudLimitClass.PcsKva = rd.GetInt32(8);
+                                oneCloudLimitClass.MaxDemandRatio = rd.GetDouble(9);
+                                oneCloudLimitClass.EnableActiveReduce = rd.GetInt32(10);
+                                oneCloudLimitClass.PUM = rd.GetDouble(11);
+                                oneCloudLimitClass.AllUkvaWindowSize = rd.GetInt32(12);
+                                oneCloudLimitClass.PumTime = rd.GetInt32(13);
+                                CloudLimits.Add(oneCloudLimitClass);
+
+                            }
+                            result = true;
+                        }
+                        else
+                        {
+                            IsConnected = false;
+                            result = false;
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        IsConnected = false;
+                        result = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        IsConnected = false;
+                        result = false;
+                    }
+                    finally
+                    {
+                        if (rd != null)
+                        {
+                            if (!rd.IsClosed)
+                                rd.Close();
+                            rd.Dispose();
+                        }
+                    }
+
+                    return result;
+                }*/
+
+        public static async Task<bool> LoadJFPGFromMySQL()
+        {
+            ChecMysql80();
+
+            if ((connection == null) || (!IsConnected))
+                CreateConnection();
+
+            string astrSQL = "select startTime, eName from electrovalence ";
+            MySqlDataReader rd = null;
+            try
+            {
+
+                byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
+                int i = 0;
+                DateTime dtTemp;
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    while (rd.Read())
+                    {
+                        tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                        dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                        tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
+                        tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
+                        i++;
+                    }
+                    byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                    byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                    if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
+                    }
+                    if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                        frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                }
+            }
+            catch { }
+            finally
+            {
+                if (!rd.IsClosed)
+                    rd.Close();
+                rd.Dispose();
+            }
+
+            return true;
+        }
+
+        /*************************************************************************************/
+
+
+
+        /*******************************调用函数******************************************/
+
         public static void SaveJsonToFile(string jsonResult, string directoryPath)
         {
             if (!string.IsNullOrEmpty(jsonResult))
@@ -756,157 +1140,11 @@ namespace EMS
             processingTask.Wait();
         }
 
-
-        public static void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
-        {
-            SqlExecutor.EnqueueSqlDataGridViewTask(astrSQL, 1, adDtaGrid);
-        }
-
-        public static bool CheckRec(string astrSQL)
-        {
-            bool bResult = false;
-
-            var resetEvent = new System.Threading.AutoResetEvent(false);
-
-            SqlExecutor.EnqueueSqlCheckTask(astrSQL, 3, (result) =>
-            {
-                bResult = result;
-                resetEvent.Set();
-            });
-
-            resetEvent.WaitOne(); // 等待任务完成
-
-            return bResult;
-        }
-
-        static public void SetDBGrid(DataGridView adDtaGrid)
-        {
-            adDtaGrid.AllowUserToAddRows = false;
-            adDtaGrid.RowHeadersVisible = false; // 行头隐藏 
-            adDtaGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            adDtaGrid.ReadOnly = true;
-            //设置对齐方式和字体
-            // dataGridView1.RowHeadersBorderStyle = DataGridViewContentAlignment.MiddleCenter;
-            //dataGridView1.Font = new Font("宋体", 11);
-            adDtaGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
-            adDtaGrid.MultiSelect = false;
-            adDtaGrid.AutoGenerateColumns = false;
-        }
-
-        static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)
-        {
-            string sql = "insert into log (eTime,eClass,Event,Memo)values ('"
-                + DateTime.Now.ToString("yyyy-M-d H:m:s") + "','"
-                + aEClasse + "','"
-                + aEvemt + "','"
-                 + aMemo + "')";
-
-            SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
-        }
-
         /// <summary>
-        /// 同步函数：无数据返回的sql执行一条sql语句：insert或者update
+        ///  通过sql获取SqlDataReader 对象 
         /// </summary>
         /// <param name="astrSQL"></param>
-        /// <param name="prior"></param>
         /// <returns></returns>
-        public static bool ExecuteSqlTaskAsync(string astrSQL, int prior)
-        {
-            bool bResult = false;
-
-            var resetEvent = new System.Threading.AutoResetEvent(false);
-
-            SqlExecutor.EnqueueSqlTask(astrSQL, prior, (result) =>
-            {
-                bResult = result;
-                resetEvent.Set();
-            });
-
-            resetEvent.WaitOne(); // 等待任务完成
-
-            return bResult;
-        }
-
-        public static bool ExecuteCompareAndUpdateTableStructure(string tableName, List<Column> targetColumns, int priority)
-        {
-            bool bResult = false;
-
-            var resetEvent = new System.Threading.AutoResetEvent(false);
-
-            SqlExecutor.EnqueueUpdateTableTask(tableName, targetColumns, priority, (result) =>
-            {
-                bResult = result;
-                resetEvent.Set();
-            });
-
-            resetEvent.WaitOne(); // 等待任务完成
-
-            return bResult;
-        }
-
-        /// <summary>
-        /// 同步等待录入策略成功
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="targetColumns"></param>
-        /// <param name="priority"></param>
-        /// <returns></returns>
-        public static bool ExecuteEnqueueTacticsSqlTask(int priority, List<TacticsClass> tactics)
-        {
-            bool bResult = false;
-
-            var resetEvent = new System.Threading.AutoResetEvent(false);
-
-            SqlExecutor.EnqueueTacticsSqlTask(priority, tactics, (result) =>
-            {
-                bResult = result;
-                resetEvent.Set();
-            });
-
-            resetEvent.WaitOne(); // 等待任务完成
-
-            return bResult;
-        }
-
-        /*        static public int GetLastID(string astrSQL)
-        {
-            ChecMysql80();
-            int iResult = -1;
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = GetData(astrSQL, ref ctTemp);
-            try
-            {
-                if (rd.Read())
-                    iResult = rd.GetInt32(0);
-            }
-            catch (MySqlException ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-                if (rd != null)
-                {
-                    if (rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    ctTemp.Dispose();
-                }
-            }
-            return iResult;
-        }*/
-
-        /// <summary>
-        /// 回调函数：从数据库中获取策略
-        /// </summary>
         static public MySqlDataReader GetData(string astrSQL)
         {
             try
@@ -927,107 +1165,428 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                IsConnected = false; 
+                IsConnected = false;
                 frmMain.ShowDebugMSG(ex.ToString());
                 return null;
             }
         }
 
+        /// <summary>
+        ///  注册数据库相关操作
+        /// </summary>
+        /// <returns></returns>
 
-        public static async Task<bool> LoadTacticsFromMySQL(List<TacticsClass> Tactics)
+
+        public static async Task UpdateDatabaseTable(string tableName, List<Column> targetColumns)
         {
-            ChecMysql80();
-
-            if ((connection == null) || (!IsConnected))
-                CreateConnection();
-
-            bool result = false;
-            string astrSQL = "select startTime,endTime, tType, PCSType, waValue from tactics  order by startTime";
-            MySqlDataReader rd = null;
-            //MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";                                                                       
-            //MySqlDataReader rd = sqlCmd.ExecuteReader(); //使用 ExecuteReader 方法创建 SqlDataReader 对象 
-
-            try
+            if (TableExists(tableName))
             {
-                rd = GetData(astrSQL);
-                if (rd != null)
+                List<Column> existingColumns = GetTableColumns(tableName);
+
+                if (!TableStructureMatches(existingColumns, targetColumns))
                 {
-                    if (rd.HasRows)
+                    // Backup the existing table
+                    string backupTableName = tableName + "_backup";
+                    string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
+                    await ExecSQLAsync(createBackupTableQuery);
+
+                    // Drop the original table
+                    string dropTableQuery = $"DROP TABLE {tableName};";
+                    await ExecSQLAsync(dropTableQuery);
+
+                    // Create the new table with the target structure
+                    CreateTable(tableName, targetColumns);
+
+                    // Insert the data back into the new table
+                    List<string> commonColumns = GetCommonColumns(existingColumns, targetColumns);
+                    string columnsList = string.Join(", ", commonColumns);
+                    string insertDataQuery = $"INSERT INTO {tableName} ({columnsList}) SELECT {columnsList} FROM {backupTableName};";
+                    await ExecSQLAsync(insertDataQuery);
+
+                    // Drop the backup table
+                    string dropBackupTableQuery = $"DROP TABLE {backupTableName};";
+                    await ExecSQLAsync(dropBackupTableQuery);
+                }
+                else
+                {
+                    // Drop columns that are not in targetColumns
+                    List<string> columnsToDrop = existingColumns
+                        .Where(col => !targetColumns.Any(tc => tc.Name.Equals(col.Name, StringComparison.OrdinalIgnoreCase)))
+                        .Select(col => col.Name)
+                        .ToList();
+
+                    foreach (var columnName in columnsToDrop)
                     {
-                        //清空EMS存储的策略数据
-                        while (Tactics.Count > 0)
-                        {
-                            Tactics.RemoveAt(0);
-                        }
-
-                        //从数据库中拉取策略数据
-                        while (rd.Read())
-                        {
-                            TacticsClass oneTactics = new TacticsClass();
-                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                            oneTactics.tType = rd.GetString(2);
-                            oneTactics.PCSType = rd.GetString(3);
-                            if (oneTactics.PCSType == "恒流")
-                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
-                            if (oneTactics.PCSType == "恒压")
-                            {
-                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
-                                if (oneTactics.waValue < 0)
-                                    oneTactics.waValue = 0;
-                            }
-
-                            //限额
-                            oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                            if (oneTactics.waValue > 110)
-                                oneTactics.waValue = 110;
-                            //修正充放电的正负功率
-                            if (oneTactics.tType == "放电")
-                                oneTactics.waValue = -rd.GetInt32(4);
-                            else
-                                oneTactics.waValue = rd.GetInt32(4);
-
-                            Tactics.Add(oneTactics);
-                        }
+                        string dropColumnQuery = $"ALTER TABLE {tableName} DROP COLUMN {columnName};";
+                        await ExecSQLAsync(dropColumnQuery);
                     }
                 }
-                else 
+            }
+            else
+            {
+                CreateTable(tableName, targetColumns);
+            }
+        }
+
+        public static bool TableExists(string tableName)
+        {
+            if (connection == null || !IsConnected)
+            {
+                CreateConnection();
+            }
+            string query = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        }
+
+        private static List<Column> GetTableColumns(string tableName)
+        {
+            string query = $"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY FROM information_schema.columns WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            MySqlDataReader reader = cmd.ExecuteReader();
+
+            List<Column> columns = new List<Column>();
+            while (reader.Read())
+            {
+                columns.Add(new Column
                 {
-                    IsConnected = false;
-                    result = false;
-                }
-            }
-            catch (MySqlException ex)
-            {
-                IsConnected = false;
-                result = false;
-            }
-            catch (Exception ex)
-            {
-                IsConnected = false;
-                result = false;
-            }
-            finally 
-            {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }            
+                    Name = reader.GetString("COLUMN_NAME"),
+                    Type = reader.GetString("COLUMN_TYPE"),
+                    IsNullable = reader.GetString("IS_NULLABLE") == "YES",
+                    Key = reader.GetString("COLUMN_KEY")
+                });
             }
 
-            return result;
+            reader.Close();
+            return columns;
+        }
+
+        public static void CreateTable(string tableName, List<Column> columns)
+        {
+            // 基础的 CREATE TABLE 语句
+            string createTableQuery = $"CREATE TABLE `{tableName}` (";
+            List<string> columnDefinitions = new List<string>();
+
+            foreach (var column in columns)
+            {
+                // 确保类型定义中不包含不需要的精度信息
+                string columnDefinition = $"`{column.Name}` {column.Type}";
+
+                if (!column.IsNullable)
+                    columnDefinition += " NOT NULL";
+
+                if (!string.IsNullOrEmpty(column.Key))
+                    columnDefinition += $" {column.Key}";
+
+                if (!string.IsNullOrEmpty(column.Comment))
+                    columnDefinition += $" COMMENT '{column.Comment}'";
+
+                columnDefinitions.Add(columnDefinition);
+            }
+
+            createTableQuery += string.Join(", ", columnDefinitions);
+            createTableQuery += ")";
+
+            // 设置表级别的选项
+            string tableOptions = " ENGINE=InnoDB AUTO_INCREMENT=1 ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+            createTableQuery += tableOptions;
+
+            // 输出生成的 SQL 语句以进行调试
+            //log.Error(createTableQuery);
+
             // 执行 SQL 语句
-            //result = await ExecSQLAsync(sql);
+            ExecSQLAsync(createTableQuery).Wait(); // Wait for table creation to complete
+        }
+
+
+
+        private static List<string> GetCommonColumns(List<Column> existingColumns, List<Column> targetColumns)
+        {
+            HashSet<string> existingColumnNames = new HashSet<string>(existingColumns.ConvertAll(c => c.Name));
+            List<string> commonColumns = targetColumns.FindAll(c => existingColumnNames.Contains(c.Name)).ConvertAll(c => c.Name);
+            return commonColumns;
+        }
+
+        private static bool TableStructureMatches(List<Column> existingColumns, List<Column> targetColumns)
+        {
+            if (existingColumns.Count != targetColumns.Count)
+                return false;
+
+            for (int i = 0; i < existingColumns.Count; i++)
+            {
+                if (existingColumns[i].Name != targetColumns[i].Name ||
+                    existingColumns[i].Type != targetColumns[i].Type ||
+                    existingColumns[i].IsNullable != targetColumns[i].IsNullable ||
+                    existingColumns[i].Key != targetColumns[i].Key)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 注册数据库
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteCompareAndUpdateTableStructure(string tableName, List<Column> targetColumns, int priority)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueUpdateTableTask(tableName, targetColumns, priority, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+        /*********************************************************************************************************/
+
+
+        /********************************北向接口函数************************************************/
+
+
+        /// <summary>
+        /// 图表展示数据库数据
+        /// </summary>
+        /// <param name="adDtaGrid"></param>
+        /// <param name="astrSQL"></param>
+        public static void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
+        {
+            SqlExecutor.EnqueueSqlDataGridViewTask(astrSQL, 1, adDtaGrid);
+        }
+
+
+        /// <summary>
+        /// 查询一条数据记录是否存在
+        /// </summary>
+        /// <param name="astrSQL"></param>
+        public static bool CheckRec(string astrSQL)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlCheckTask(astrSQL, 3, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
         }
 
 
 
         /// <summary>
-        /// 调用函数：检查数据库
+        /// 记录日志
         /// </summary>
+        /// <param name="aEClasse"></param>
+        /// <param name="aEvemt"></param>
+        /// <param name="aMemo"></param>
+        static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)
+        {
+/*            string sql = "insert into log (eTime,eClass,Event,Memo)values ('"
+                + DateTime.Now.ToString("yyyy-M-d H:m:s") + "','"
+                + aEClasse + "','"
+                + aEvemt + "','"
+                 + aMemo + "')";
 
+            SqlExecutor.ExecuteSqlTaskAsync(sql, 1);*/
+        }
+
+        /// <summary>
+        /// 初始化图表参数
+        /// </summary>
+        /// <param name="adDtaGrid"></param>
+        static public void SetDBGrid(DataGridView adDtaGrid)
+        {
+            adDtaGrid.AllowUserToAddRows = false;
+            adDtaGrid.RowHeadersVisible = false; // 行头隐藏 
+            adDtaGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            adDtaGrid.ReadOnly = true;
+            //设置对齐方式和字体
+            // dataGridView1.RowHeadersBorderStyle = DataGridViewContentAlignment.MiddleCenter;
+            //dataGridView1.Font = new Font("宋体", 11);
+            adDtaGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            adDtaGrid.MultiSelect = false;
+            adDtaGrid.AutoGenerateColumns = false;
+        }
+
+
+        /// <summary>
+        /// 异步函数：无返回的sql执行一条sql语句：insert或者update
+        /// </summary>
+        /// <param name="astrSQL"></param>
+        /// <param name="prior"></param>
+        /// <returns></returns>
+        public static bool ExecuteSqlTasksSync(string astrSQL, int prior)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlTask(astrSQL, prior, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        /// <summary>
+        /// 同步函数：有返回的sql执行一条sql语句：insert或者update
+        /// </summary>
+        /// <param name="astrSQL"></param>
+        /// <param name="prior"></param>
+        /// <returns></returns>
+        public static void ExecuteSqlTaskAsync(string astrSQL, int prior)
+        {
+            SqlExecutor.EnqueueSqlTask(astrSQL, prior, (result) =>
+            {
+
+            });
+        }
+
+        /// <summary>
+        /// 同步等待录入策略成功
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueJFPGSqlTask(int priority)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueJFPGSqlTask(priority, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+
+        /// <summary>
+        /// 同步等待录入策略成功
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlTacticsTask(int priority, List<TacticsClass> tactics)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlTacticsTask(priority, tactics, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        /// <summary>
+        /// 同步等待录入均衡策略成功
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlBalaTacticsTask(int priority, List<BalaTacticsClass> balatactics)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlBalaTacticsTask(priority, balatactics, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        /// <summary>
+        /// 同步等待录入电价
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlElectrovalenceTask(int priority, List<ElectrovalenceClass> electrovalences)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlElectrovalenceTask(priority, electrovalences, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        /// <summary>
+        /// 同步等待录入电价
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlCloudLimitTask(int priority, CloudLimitClass cloudLimits)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlCloudLimitTask(priority, cloudLimits, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+
+        /// <summary>
+        /// 对齐EMS与适配的数据库
+        /// </summary>
+        /// <returns></returns>
         public static void CheckTables()
         {
             // 定义多个表的结构
@@ -1585,7 +2144,6 @@ namespace EMS
                         new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" , Comment = "是否开启104服务 0关1开" },
                         new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" , Comment = "判断超时的时间间隔" },
                         new Column { Name = "SysName", Type = "varchar(255)", IsNullable = true, Key = ""},
-                        new Column { Name = "SysID", Type = "int", IsNullable = true, Key = "" , Comment = "储能柜唯一序列号" },
                         new Column { Name = "SysPower", Type = "int", IsNullable = true, Key = "" , Comment = "储能柜容量规格" },
                         new Column { Name = "SysSelfPower", Type = "int", IsNullable = true, Key = ""},
                         new Column { Name = "SysAddr", Type = "varchar(255)", IsNullable = true, Key = "" },
@@ -1887,7 +2445,7 @@ namespace EMS
                     }
                 },
                 {
-                    "globalset", new List<Column>
+                    "CloudLimits", new List<Column>
                     {
                         new Column { Name = "MaxGridKW", Type = "int", IsNullable = true, Comment = "目标电网功率上限" },
                         new Column { Name = "MinGridKW", Type = "int", IsNullable = true, Comment = "目标电网功率下限" },
@@ -2221,7 +2779,7 @@ namespace EMS
         }
 
         //获取SQL的数据，返回dataset
-        static public DataSet GetDataSet(string astrSQL)
+/*        static public DataSet GetDataSet(string astrSQL)
         {
             try
             {
@@ -2253,7 +2811,7 @@ namespace EMS
             {
                 //connection.Close();
             }
-        }
+        }*/
 
         //为读取数据库具体数据
         static public MySqlDataReader GetData(string astrSQL, ref MySqlConnection aConnect)
@@ -2292,7 +2850,7 @@ namespace EMS
         }
 
         //运行SQL，用于增加，删除，编辑
-        static public bool ExecSQL(string astrSQL)
+/*        static public bool ExecSQL(string astrSQL)
         {
             ChecMysql80();
 
@@ -2336,7 +2894,7 @@ namespace EMS
                 }
             }
             return bResult;
-        }
+        }*/
 
         //获取最后一个记录的ID
         static public int GetLastID(string astrSQL)
@@ -2479,7 +3037,7 @@ namespace EMS
 
         //功能：设置dbgrid
         //1将dbgrid的去掉前面的 //2只读设置  //3整行选择显示
-        static public void SetDBGrid(DataGridView adDtaGrid)
+/*        static public void SetDBGrid(DataGridView adDtaGrid)
         {
             adDtaGrid.AllowUserToAddRows = false;
             adDtaGrid.RowHeadersVisible = false; // 行头隐藏 
@@ -2537,7 +3095,7 @@ namespace EMS
                     dataset.Dispose();
                 GC.Collect();
             }
-        }
+        }*/
 
         //显示查询数据
         static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat)
@@ -2594,7 +3152,7 @@ namespace EMS
         }
 
         //只清理和增加一个series的数据
-        static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat, int aSeriesIndex)
+/*        static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat, int aSeriesIndex)
         {
             ChecMysql80();
             //清理旧的数据 
@@ -2634,7 +3192,7 @@ namespace EMS
                     ctTemp.Dispose();
                 }
             }
-        }
+        }*/
 
         //应对功率部分的正负代表充放电
         static public void ShowData2ChartPower(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat)

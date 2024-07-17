@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Google.Protobuf.WellKnownTypes;
 using Mysqlx.Crud;
-
+using System.ComponentModel;
 
 namespace EMS
 {
@@ -24,6 +24,8 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("frmSet");
 
         public static frmSet oneForm = null;
+        //public List<CloudLimitClass> CloudLimits = new List<CloudLimitClass>();
+        //public static CloudLimitClass cloudLimits = new CloudLimitClass();
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
         public static string SysName;
@@ -241,6 +243,7 @@ namespace EMS
                 ctTemp.Dispose();
             }
         }
+
         public static void LoadFromGlobalSet()
         {
             MySqlConnection ctTemp = null;
@@ -336,7 +339,7 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                 if (result)
                 {
@@ -1344,7 +1347,8 @@ namespace EMS
                         {
                             frmMain.Selffrm.AllEquipment.eState = 1;//记策略模式   
                             frmMain.TacticsList.TacticsOn = false;
-                            frmMain.TacticsList.LoadFromMySQL();
+                            //frmMain.TacticsList.LoadFromMySQL();
+                            SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
                             frmMain.ShowShedule2Char(false);
                             frmMain.TacticsList.ActiveIndex = -1;
                         }
@@ -1411,7 +1415,7 @@ namespace EMS
             {
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(astrSQl, 3);
 
                     if (result)
                     {
@@ -1464,7 +1468,7 @@ namespace EMS
             string sql = "delete from " + aTableName + " where " + aDataName + "='" + aData + "'";
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                 if (result)
                 {
@@ -1611,7 +1615,8 @@ namespace EMS
             //apply 
             if (bSheduleChanged)//策略需要更新
             {
-                frmMain.TacticsList.LoadFromMySQL();
+                //frmMain.TacticsList.LoadFromMySQL();
+                SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
                 frmMain.ShowShedule2Char(false);
                 frmMain.TacticsList.ActiveIndex = -1;
             } 
@@ -1619,7 +1624,8 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.TCIni(true);
             if (bEDataChanged) //update 表
             {
-                frmMain.TacticsList.LoadJFPGFromSQL();
+                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+                //frmMain.TacticsList.LoadJFPGFromSQL();
             } 
         }
 
@@ -2201,7 +2207,7 @@ namespace EMS
             {
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(astrSQl, 3);
 
                     if (result)
                     {
@@ -2243,7 +2249,8 @@ namespace EMS
 
         private void btnUpdata_Click(object sender, EventArgs e)
         {
-            frmMain.TacticsList.LoadJFPGFromSQL();
+            //frmMain.TacticsList.LoadJFPGFromSQL();
+            SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
         }
 
         private void btnATAppy_Click(object sender, EventArgs e)
@@ -2307,7 +2314,27 @@ namespace EMS
         //读取数据库，刷新策略时段
         private void btnFlash3_Click(object sender, EventArgs e)
         {
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
+            SqlExecutor.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
     }
+
+    public class CloudLimitClass
+    {
+        public int MaxGridKW;
+        public int MinGridKW;
+        public int MaxSOC;
+        public int MinSOC;
+        public double UBmsPcsState;
+        public double OBmsPcsState;
+        public int WarnMaxGridKW;
+        public int WarnMinGridKW;
+        public int PcsKva;
+        public double MaxDemandRatio;
+        public int EnableActiveReduce;
+        public double PUM;
+        public int AllUkvaWindowSize;
+        public int PumTime;
+    }
+
+
 }

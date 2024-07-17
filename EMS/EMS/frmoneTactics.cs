@@ -56,7 +56,7 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                     if (result)
                     {
@@ -100,7 +100,7 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                     if (result)
                     {

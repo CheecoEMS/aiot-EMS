@@ -30,7 +30,7 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                 if (result)
                 {
@@ -89,7 +89,7 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                     if (result)
                     {
@@ -116,7 +116,7 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                     if (result)
                     {
@@ -156,7 +156,7 @@ namespace EMS
         }
 
 
-        public void LoadFromMySQL()
+/*        public void LoadFromMySQL()
         {
             while (WarningList.Count > 0)
             {
@@ -192,7 +192,7 @@ namespace EMS
                 ctTemp.Close();
                 ctTemp.Dispose();
             }
-        }
+        }*/
 
 
     }

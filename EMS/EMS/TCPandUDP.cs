@@ -196,7 +196,7 @@ namespace Modbus
             }
             catch (System.Exception ex)
             {
-                DBConnection.RecordLOG("云数据", "绑定端口失败", ex.Message.ToString());
+                SqlExecutor.RecordLOG("云数据", "绑定端口失败", ex.Message.ToString());
                 return false;
             }
 
@@ -215,7 +215,7 @@ namespace Modbus
             }
             catch (Exception ex)
             {
-                DBConnection.RecordLOG("云数据", "数据发送失败", ex.Message.ToString());
+                SqlExecutor.RecordLOG("云数据", "数据发送失败", ex.Message.ToString());
             }
         }
 
@@ -270,8 +270,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    //frmMain.WriteLog(e.ToString()); 
-                    DBConnection.RecordLOG("云数据", "数据接受异常", ex.Message.ToString());
+                    SqlExecutor.RecordLOG("云数据", "数据接受异常", ex.Message.ToString());
                     Thread.Sleep(1000);
                 }
             }//while循环接收数据
@@ -1085,7 +1084,7 @@ namespace Modbus
                 }
                 else
                 {
-                    // DBConnection.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
+                    // SqlExecutor.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
                     return bResult;
                 }
             }
@@ -1320,7 +1319,7 @@ namespace Modbus
             }
             catch (Exception ex)
             {
-                //DBConnection.RecordLOG("云数据", "云端口连接失败", ex.Message.ToString());//记录连接失败
+                //SqlExecutor.RecordLOG("云数据", "云端口连接失败", ex.Message.ToString());//记录连接失败
                 Connected = false; 
                 return false;
             }

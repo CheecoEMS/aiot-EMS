@@ -914,7 +914,7 @@ namespace EMS
             string strSQL = "delete   from errorstate";
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(strSQL, 3);
 
                 if (result)
                 {
@@ -972,7 +972,8 @@ namespace EMS
             
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+                 SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
 
                 if (result)
                 {
@@ -981,7 +982,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -1006,7 +1007,8 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+                     SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
+/*                    bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
 
                     if (result)
                     {
@@ -1015,7 +1017,7 @@ namespace EMS
                     else
                     {
                         // 处理执行失败的逻辑
-                    }
+                    }*/
                 }
                 catch (Exception ex)
                 {
@@ -1043,7 +1045,8 @@ namespace EMS
 
                     try
                     {
-                        bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
+                        SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
+/*                        bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
 
                         if (result)
                         {
@@ -1052,7 +1055,7 @@ namespace EMS
                         else
                         {
                             // 处理执行失败的逻辑
-                        }
+                        }*/
                     }
                     catch (Exception ex)
                     {
@@ -2392,7 +2395,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -2401,7 +2405,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -2453,7 +2457,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -2462,7 +2467,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -2520,7 +2525,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -2529,7 +2535,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -2568,7 +2574,7 @@ namespace EMS
                         if (WaterlogData != 0)
                         {
                             tempError=true; 
-                            //DBConnection.RecordLOG("系统", "水浸传感器", "水浸触发");
+                            //SqlExecutor.RecordLOG("系统", "水浸传感器", "水浸触发");
                         } 
                     }
                 }
@@ -2625,7 +2631,7 @@ namespace EMS
                         //tempError = true; 
 
 
-                        //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过高");
+                        //SqlExecutor.RecordLOG("系统", "温湿度传感器", "温度过高");
                     }
                     if (tempError != IsError[0])
                     {
@@ -2659,7 +2665,7 @@ namespace EMS
                     if (TempData <0)
                     {
                         tempError = true;
-                        //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过低");
+                        //SqlExecutor.RecordLOG("系统", "温湿度传感器", "温度过低");
                     }
                     if (tempError != IsError[1])
                     {
@@ -2725,9 +2731,9 @@ namespace EMS
                             tempError = true;
                         }
                     }
-                    //DBConnection.RecordLOG("系统", "烟感过高", );
+                    //SqlExecutor.RecordLOG("系统", "烟感过高", );
                 }
-                if(tempError!=IsError)
+                if (tempError!=IsError)
                 {
                     if (tempError)
                     {
@@ -2810,11 +2816,9 @@ namespace EMS
                         }
                         else
                             Parent.EMSError[1] &= 0xBFFF;
-                        //DBConnection.RecordLOG("系统", "一氧化碳传感器", "一氧化碳过高");
+                        //SqlExecutor.RecordLOG("系统", "一氧化碳传感器", "一氧化碳过高");
                     }
-                       // RecodError("一氧化碳传感器", iot_code, 18, ErrorClass.EMSErrorsPower[18],
-                       //     ErrorClass.EMSErrors[18], tempError);
-                       IsError = tempError;
+                    IsError = tempError;
                     }
                 }
             else
@@ -2971,7 +2975,8 @@ namespace EMS
             
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                 SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -2980,7 +2985,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -3303,7 +3308,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -3312,7 +3318,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -3444,7 +3450,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -3453,7 +3460,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -3675,17 +3682,6 @@ namespace EMS
 
             try
             {
-                //读取当前状态
-                //if (GetSysData(0, ref strTemp))
-                //    State = Convert.ToInt32(strTemp);//00301 0待机1恒流2、恒压、3恒功率 
-                //如果故障记录跳出自动策略模式
-                //if (aError > 0)
-                //{
-                //    DBConnection.RecordLOG("系统", "策略执行失败", "PCS故障导致策略执行失败");
-                //    return false;
-                //}
-                //回测   
-
                 //设置PCS
                 int iPower;
                 int iPCSTypes = Array.IndexOf(PCSTypes, aPCSType);
@@ -5520,7 +5516,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                 SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -5529,7 +5526,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -5552,7 +5549,8 @@ namespace EMS
             sql = "insert cellsv (rTime," + strCap + ") value('" + arDate + "','" + strVData + ")";
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -5561,7 +5559,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -5571,7 +5569,8 @@ namespace EMS
             sql = "insert cellstemp (rTime," + strCap + ") value('" + arDate + "','" + strTData + ")";
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -5580,7 +5579,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -5832,7 +5831,8 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
+/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
 
                 if (result)
                 {
@@ -5841,7 +5841,7 @@ namespace EMS
                 else
                 {
                     // 处理执行失败的逻辑
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -6394,12 +6394,12 @@ namespace EMS
                             aData = (int)(Math.Abs(aData) * UBmsPcsState);
                             if ((BMSSOC > frmSet.MaxSOC) && (aData != 0))
                             {
-                                DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
+                                SqlExecutor.RecordLOG("系统", "充电失败", "SOC过高");
                                 aData = 0;
                             }
                             else if ((BMS.MaxChargeA == 0) && (aData != 0))
                             {
-                                DBConnection.RecordLOG("系统", "充电失败", "BMS禁止充电");
+                                SqlExecutor.RecordLOG("系统", "充电失败", "BMS禁止充电");
                                 aData = 0;
                             }
                             break;
@@ -6407,12 +6407,12 @@ namespace EMS
                             aData = -1 * (int)(Math.Abs(aData) * OBmsPcsState);
                             if ((BMSSOC < frmSet.MinSOC) && (aData != 0))
                             {
-                                DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
+                                SqlExecutor.RecordLOG("系统", "放电失败", "SOC过低");
                                 aData = 0;
                             }
                             else if ((BMS.MaxDischargeA == 0) && (aData != 0))
                             {
-                                DBConnection.RecordLOG("系统", "放电失败", "BMS禁止放电");
+                                SqlExecutor.RecordLOG("系统", "放电失败", "BMS禁止放电");
                                 aData = 0;
                             }
                             break;
@@ -6514,43 +6514,54 @@ namespace EMS
         ////从文件中读取故障信息
         public void LoadErrorState()
         {
-            MySqlConnection ctTemp = null;
+/*            MySqlConnection ctTemp = null;
             MySqlDataReader sdr = DBConnection.GetData("select id, TCError,PCSError1,PCSError2,PCSError3,PCSError4,PCSError5,"
                 + "PCSError6,PCSError7,PCSError8,BMSError1,BMSError2,BMSError3,BMSError4,BMSError5,EMSError1,EMSError2,EMSError3,EMSError4 "
-                + "  from errorstate order by id desc limit 1", ref ctTemp);
+                + "  from errorstate order by id desc limit 1", ref ctTemp);*/
+
+            string astrSQL = "select id, TCError,PCSError1,PCSError2,PCSError3,PCSError4,PCSError5,"
+                + "PCSError6,PCSError7,PCSError8,BMSError1,BMSError2,BMSError3,BMSError4,BMSError5,EMSError1,EMSError2,EMSError3,EMSError4 "
+                + "  from errorstate order by id desc limit 1";
+            MySqlDataReader sdr = null;
             //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
             try
             {
-                    while (sdr.Read())
+                sdr = SqlExecutor.GetData(astrSQL);
+                if (sdr != null)
+                {
+                    if (sdr.HasRows)
                     {
-                        if (TempControl!=null)
-                            TempControl.errorOld = sdr.GetUInt32(1);
-                        if (PCSList.Count > 0)
+                        while (sdr.Read())
                         {
-                            PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
-                            PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
-                            PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
-                            PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
-                            PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
-                            PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
-                            PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
-                            PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
+                            if (TempControl!=null)
+                                TempControl.errorOld = sdr.GetUInt32(1);
+                            if (PCSList.Count > 0)
+                            {
+                                PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
+                                PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
+                                PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
+                                PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
+                                PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
+                                PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
+                                PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
+                                PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
+                            }
+                            if (BMS!=null)
+                            {
+                                BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
+                                BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
+                                BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
+                                BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
+                                BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
+                            }
+                            //OldError = (ushort)sdr.GetUInt32(15);
+                            OldEMSError[0]= (ushort)sdr.GetUInt32(15);
+                            OldEMSError[1] = (ushort)sdr.GetUInt32(16);
+                            OldEMSError[2] = (ushort)sdr.GetUInt32(17);
+                            OldEMSError[3] = (ushort)sdr.GetUInt32(18);
                         }
-                        if (BMS!=null)
-                        {
-                            BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
-                            BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
-                            BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
-                            BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
-                            BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
-                        }
-                        //OldError = (ushort)sdr.GetUInt32(15);
-                        OldEMSError[0]= (ushort)sdr.GetUInt32(15);
-                        OldEMSError[1] = (ushort)sdr.GetUInt32(16);
-                        OldEMSError[2] = (ushort)sdr.GetUInt32(17);
-                        OldEMSError[3] = (ushort)sdr.GetUInt32(18);
                     }
-                
+                }
             }
             catch
             { }
@@ -6561,11 +6572,6 @@ namespace EMS
                     if (!sdr.IsClosed)
                         sdr.Close();
                     sdr.Dispose();
-                }
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    ctTemp.Dispose();
                 }
             }
 
@@ -6579,152 +6585,165 @@ namespace EMS
             int eType = 0;
             BaseEquipmentClass oneEquipment = null; //oneEquipment当作指针用
             //creat reader 
-            MySqlConnection ctTemp = null;
+/*            MySqlConnection ctTemp = null;
             MySqlDataReader sdr = DBConnection.GetData("select eID,eType,eModel,comType,comName,comRate,comBits,"
-                + "TCPType,serverIP,SerPort,LocPort,eName,pc from equipment", ref ctTemp);
-            //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
+                + "TCPType,serverIP,SerPort,LocPort,eName,pc from equipment", ref ctTemp);*/
+
+            string astrSQL = "select eID,eType,eModel,comType,comName,comRate,comBits,TCPType,serverIP,SerPort,LocPort,eName,pc from equipment";
+            MySqlDataReader sdr = null;
+
             try
             {
+                sdr = SqlExecutor.GetData(astrSQL);
+
                 //0用户侧电表，1设备电表，2辅组电表，3PCS逆变器，4BMS，5空调系统，6消防，7计量电表，
                 //8水浸传感器，9一氧化碳传感器，10温湿度传感器，11烟雾传感器,12UPS,13其他
-                while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                if (sdr != null)
                 {
-                    string adata = sdr.GetString(1).Trim();
-                    eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
-                    switch (eType)
+                    if (sdr.HasRows)
                     {
-                        case 0:
-                            oneEquipment = new Elemeter1Class();
-                            Elemeter1List.Add((Elemeter1Class)oneEquipment);
-                            Elemeter1_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 1:
-                            Elemeter2 = new Elemeter2Class();
-                            oneEquipment = Elemeter2;  //父类指针指向子类对象
-                            Elemeter2_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 2:
-                            Elemeter3 = new Elemeter3Class();
-                            oneEquipment = Elemeter3;
-                            Elemeter3_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 3://pcs
-                            oneEquipment = new PCSClass(frmSet.iPCSfactory);
-                            PCSList.Add((PCSClass)oneEquipment);
-                            PCS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 4://BMSClass
-                            oneEquipment = new BMSClass();
-                            BMS = (BMSClass)oneEquipment;
-                            BMS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 5://TempControlList  8u
-                            oneEquipment = new TempControlClass();
-                            TempControl = (TempControlClass)oneEquipment;
-                            TempControl_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 8://水浸传感器
-                            oneEquipment = new WaterloggingClass();
-                            if (WaterLog1 == null)
-                            {   WaterLog1 = (WaterloggingClass)oneEquipment;
-                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        {
+                            string adata = sdr.GetString(1).Trim();
+                            eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
+                            switch (eType)
+                            {
+                                case 0:
+                                    oneEquipment = new Elemeter1Class();
+                                    Elemeter1List.Add((Elemeter1Class)oneEquipment);
+                                    Elemeter1_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 1:
+                                    Elemeter2 = new Elemeter2Class();
+                                    oneEquipment = Elemeter2;  //父类指针指向子类对象
+                                    Elemeter2_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 2:
+                                    Elemeter3 = new Elemeter3Class();
+                                    oneEquipment = Elemeter3;
+                                    Elemeter3_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 3://pcs
+                                    oneEquipment = new PCSClass(frmSet.iPCSfactory);
+                                    PCSList.Add((PCSClass)oneEquipment);
+                                    PCS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 4://BMSClass
+                                    oneEquipment = new BMSClass();
+                                    BMS = (BMSClass)oneEquipment;
+                                    BMS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 5://TempControlList  8u
+                                    oneEquipment = new TempControlClass();
+                                    TempControl = (TempControlClass)oneEquipment;
+                                    TempControl_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 8://水浸传感器
+                                    oneEquipment = new WaterloggingClass();
+                                    if (WaterLog1 == null)
+                                    {
+                                        WaterLog1 = (WaterloggingClass)oneEquipment;
+                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                    }
+                                    else
+                                    {
+                                        WaterLog2 = (WaterloggingClass)oneEquipment;
+                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                    }
+                                    break;
+                                case 9://一氧化碳传感器
+                                    co = new CoClass();
+                                    oneEquipment = co;
+                                    Co_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 10://温湿度传感器
+                                    TempHum = new TempHumClass();
+                                    oneEquipment = TempHum;
+                                    TempHum_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 11://11烟雾传感器
+                                    Smoke = new SmokeClass();
+                                    oneEquipment = Smoke;
+                                    Smoke_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 12:
+                                    UPS = new UPSClass();
+                                    oneEquipment = UPS;
+                                    UPS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 13://液冷机
+                                    LiquidCool = new LiquidCoolClass();
+                                    oneEquipment = LiquidCool;
+                                    LiquidCool_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 14:
+                                    DSP2 = new DSP2Class(1);
+                                    oneEquipment = DSP2;
+                                    DSP2_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 15:
+                                    Elemeter2H = new Elemeter2Class();
+                                    oneEquipment = Elemeter2H;
+                                    Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 16://2.21
+                                    Elemeter1Z = new Elemeter2Class();
+                                    oneEquipment = Elemeter1Z;
+                                    Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 17://5.05
+                                    Led = new LEDClass();
+                                    oneEquipment = Led;
+                                    LED_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 18://5.05
+                                    Dehumidifier = new DehumidifierClass();
+                                    oneEquipment = Dehumidifier;
+                                    Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+
                             }
-                            else
-                            {   WaterLog2 = (WaterloggingClass)oneEquipment;
-                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+
+                            oneEquipment.Parent = this;
+                            oneEquipment.eID = sdr.GetInt32(0);
+                            oneEquipment.eType = eType;
+                            oneEquipment.eModel = sdr.GetString(2);
+                            oneEquipment.comType = sdr.GetInt32(3);
+                            oneEquipment.comName = sdr.GetString(4);
+                            oneEquipment.comRate = sdr.GetInt32(5);
+                            oneEquipment.comBits = sdr.GetInt32(6);
+                            oneEquipment.TCPType = sdr.GetString(7);
+                            oneEquipment.serverIP = sdr.GetString(8);
+                            oneEquipment.SerPort = sdr.GetInt32(9);
+                            oneEquipment.LocPort = sdr.GetInt32(10);
+                            oneEquipment.iot_code = sdr.GetString(11);
+                            oneEquipment.pc = sdr.GetInt32(12);
+                            //oneEquipment.version = oneEquipment.LoadVersionFromFile();
+                            oneEquipment.LoadCommandFromFile(); //下载comlist
+                                                                //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
+                                                                //oneEquipment.Parent = this;
+                            switch (oneEquipment.comType)
+                            {
+                                case 0:
+                                    oneEquipment.m485 = new modbus485();
+                                    oneEquipment.m485.ParentEquipment = this;
+                                    oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
+                                                           System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
+                                    break;
+                                case 1:
+                                    break;
+                                case 2:
+                                    break;
                             }
-                            break;
-                        case 9://一氧化碳传感器
-                            co = new CoClass();
-                            oneEquipment = co;
-                            Co_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 10://温湿度传感器
-                            TempHum = new TempHumClass();
-                            oneEquipment = TempHum;
-                            TempHum_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 11://11烟雾传感器
-                            Smoke = new SmokeClass();
-                            oneEquipment = Smoke;
-                            Smoke_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 12:
-                            UPS = new UPSClass();
-                            oneEquipment = UPS;
-                            UPS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 13://液冷机
-                            LiquidCool = new LiquidCoolClass();
-                            oneEquipment = LiquidCool;
-                            LiquidCool_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 14:
-                            DSP2 = new DSP2Class(1);
-                            oneEquipment = DSP2;
-                            DSP2_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 15:
-                            Elemeter2H = new Elemeter2Class();
-                            oneEquipment = Elemeter2H;
-                            Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 16://2.21
-                            Elemeter1Z = new Elemeter2Class();
-                            oneEquipment = Elemeter1Z;
-                            Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 17://5.05
-                            Led = new LEDClass();
-                            oneEquipment = Led;
-                            LED_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 18://5.05
-                            Dehumidifier = new DehumidifierClass();
-                            oneEquipment = Dehumidifier;
-                            Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
-                            break;
 
+
+                        }
+                        ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List != null);
+                        if (ChechPower)
+                        {
+                            ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List.Count > 0);
+                        }
                     }
-
-                   oneEquipment.Parent = this;
-                    oneEquipment.eID = sdr.GetInt32(0);
-                    oneEquipment.eType = eType;
-                    oneEquipment.eModel = sdr.GetString(2);
-                    oneEquipment.comType = sdr.GetInt32(3);
-                    oneEquipment.comName = sdr.GetString(4);
-                    oneEquipment.comRate = sdr.GetInt32(5);
-                    oneEquipment.comBits = sdr.GetInt32(6);
-                    oneEquipment.TCPType = sdr.GetString(7);
-                    oneEquipment.serverIP = sdr.GetString(8);
-                    oneEquipment.SerPort = sdr.GetInt32(9);
-                    oneEquipment.LocPort = sdr.GetInt32(10);
-                    oneEquipment.iot_code = sdr.GetString(11); 
-                    oneEquipment.pc = sdr.GetInt32(12);
-                    //oneEquipment.version = oneEquipment.LoadVersionFromFile();
-                    oneEquipment.LoadCommandFromFile(); //下载comlist
-                    //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
-                    //oneEquipment.Parent = this;
-                    switch (oneEquipment.comType)
-                    {
-                        case 0:
-                            oneEquipment.m485 = new modbus485();
-                            oneEquipment.m485.ParentEquipment = this;
-                            oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate,oneEquipment.comBits,
-                                                   System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
-                            break;
-                        case 1:
-                            break;
-                        case 2:
-                            break; 
-                    }
-                   
-
-                }
-                ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List != null);
-                if (ChechPower)
-                {
-                    ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List.Count > 0);
                 }
             }
             catch (Exception ex)
@@ -6738,11 +6757,6 @@ namespace EMS
                     if (!sdr.IsClosed)
                         sdr.Close();
                     sdr.Dispose();
-                }
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    ctTemp.Dispose();
                 }
             }
             Report2Cloud = new CloudClass();
@@ -7022,7 +7036,8 @@ namespace EMS
                                 {
                                     try
                                     {
-                                        frmMain.TacticsList.LoadFromMySQL();
+                                        SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                                        //frmMain.TacticsList.LoadFromMySQL();
                                     }
                                     catch
                                     {
@@ -7039,7 +7054,8 @@ namespace EMS
                     //更新均衡策略
                     try
                     {
-                        frmMain.BalaTacticsList.LoadFromMySQL();
+                        //frmMain.BalaTacticsList.LoadFromMySQL();
+                        SqlExecutor.ExecuteEnqueueSqlBalaTacticsTask(3, frmMain.BalaTacticsList.BalaTacticsList);
                     }
                     catch { log.Error("00：00更新均衡策略失败"); }
                     //在Chart显示计划
@@ -8375,7 +8391,7 @@ namespace EMS
                                         NetControl = false;
                                         NetConnect = false;
                                         frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                        //DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                                        //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
                                         continue;
                                     }
                                     else
@@ -8448,7 +8464,7 @@ namespace EMS
                                         }
                                     }
                                     NetControl = false;
-                                    DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                                    SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
                                 }
                                 else
                                 {
@@ -8934,7 +8950,7 @@ namespace EMS
                                     //EMSError[2] &= 0xFF7F;
                                     EMSError[2] |= 0x80;
                                 }
-                                //DBConnection.RecordLOG("系统", "消防系统", "消防触发");
+                                //SqlExecutor.RecordLOG("系统", "消防系统", "消防触发");
                             }
                         }
                     }
@@ -8963,7 +8979,7 @@ namespace EMS
                                     //EMSError[2] &= 0xFF7F;
                                     EMSError[2] |= 0x80;
                                 }
-                                //DBConnection.RecordLOG("系统", "消防系统", "消防触发");
+                                //SqlExecutor.RecordLOG("系统", "消防系统", "消防触发");
                             }
                         }
                     }
@@ -8992,7 +9008,7 @@ namespace EMS
                                     //EMSError[2] &= 0xFF7F;
                                     EMSError[2] |= 0x80;
                                 }
-                                //DBConnection.RecordLOG("系统", "消防系统", "消防触发");
+                                //SqlExecutor.RecordLOG("系统", "消防系统", "消防触发");
                             }
                         }
                     }
@@ -9517,7 +9533,7 @@ namespace EMS
 
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
 
                     if (result)
                     {

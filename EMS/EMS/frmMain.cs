@@ -43,6 +43,8 @@ namespace EMS
         static public ElectrovalenceListClass ElectrovalenceList = new ElectrovalenceListClass();
         //充放电策略时段 
         static public TacticsListClass TacticsList = new TacticsListClass();
+        //
+        public static CloudLimitClass cloudLimits = new CloudLimitClass();
         //均衡策略时段
         static public BalaTacticsListClass BalaTacticsList = new BalaTacticsListClass();
 
@@ -504,15 +506,18 @@ namespace EMS
                 //
                 TacticsList.Parent = frmMain.Selffrm.AllEquipment;
                 //下载电价信息
-                ElectrovalenceList.LoadFromMySQL();
+                //ElectrovalenceList.LoadFromMySQL();
+                SqlExecutor.ExecuteEnqueueSqlElectrovalenceTask(3,frmMain.ElectrovalenceList.ElectrovalenceList);
                 //下载策略
+                SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, TacticsList.TacticsList);
                 //TacticsList.LoadFromMySQL();
                 //策略曲线图展示
                 ShowShedule2Char(true);
                 //下载均衡策略
                 if (BalaTacticsList != null)
                 {
-                    BalaTacticsList.LoadFromMySQL();
+                    //BalaTacticsList.LoadFromMySQL();
+                    SqlExecutor.ExecuteEnqueueSqlBalaTacticsTask(3, frmMain.BalaTacticsList.BalaTacticsList);
                 }
                 try
                 {
@@ -561,12 +566,11 @@ namespace EMS
                     }
                 }
 
-                SqlExecutor.ExecuteEnqueueTacticsSqlTask(3, TacticsList.TacticsList);
 
-                for (int i = 0; i < TacticsList.TacticsList.Count; i++)
-                {
-                    log.Error(TacticsList.TacticsList[i].startTime);
-                }
+                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+                SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmMain.cloudLimits);
+
+                log.Error("cloudLimits: " +   frmMain.cloudLimits.MaxDemandRatio);
 
                 //8.7 每台主机初始化对外接口
 /*                BaseEquipmentClass oneEquipment = null;
@@ -729,7 +733,8 @@ namespace EMS
                             {
                                 try
                                 {
-                                    frmMain.TacticsList.LoadFromMySQL();
+                                    SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                                    //frmMain.TacticsList.LoadFromMySQL();
                                 }
                                 catch
                                 {
@@ -746,7 +751,8 @@ namespace EMS
                 //更新均衡策略
                 try
                 {
-                    frmMain.BalaTacticsList.LoadFromMySQL();
+                    //frmMain.BalaTacticsList.LoadFromMySQL();
+                    SqlExecutor.ExecuteEnqueueSqlBalaTacticsTask(3, frmMain.BalaTacticsList.BalaTacticsList);
                 }
                 catch { log.Error("00：00更新均衡策略失败"); }
             }
@@ -1181,7 +1187,7 @@ namespace EMS
 
         private void button1_Click(object sender, EventArgs e)
         {
-            DBConnection.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
+            SqlExecutor.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
         }
 
 
@@ -1218,17 +1224,17 @@ namespace EMS
             //    if (AllEquipment.Elemeter2 != null)
             //AllEquipment.Elemeter2.SetTime  (aTime); 
         }
-         
-        private void button1_Click_3(object sender, EventArgs e)
+
+/*        private void button1_Click_3(object sender, EventArgs e)
         {
             TacticsList.AddOneStep(ctMain, DateTime.Now, -1 * AllEquipment.Elemeter2.AllUkva, AllEquipment.Elemeter2.Gridkva, AllEquipment.Elemeter2.Subkw);
-        }
+        }*/
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            TacticsList.LoadHistay(ctMain);
-        }
- 
+        /*        private void button2_Click(object sender, EventArgs e)
+                {
+                    TacticsList.LoadHistay(ctMain);
+                }*/
+
         private void label2_Click(object sender, EventArgs e)
         {
             //this.AllEquipment.Elemeter3.Save2DataSource(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));

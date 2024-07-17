@@ -329,7 +329,6 @@ namespace EMS
                 {
                     mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                      MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                    frmMain.TacticsList.LoadJFPGFromSQL();
                 }
             }
             else if (topic == EMSLimitTopic + "request")
@@ -714,7 +713,8 @@ namespace EMS
 
                 }
                 //更新策略
-                frmMain.BalaTacticsList.LoadFromMySQL();
+                SqlExecutor.ExecuteEnqueueSqlBalaTacticsTask(3, frmMain.BalaTacticsList.BalaTacticsList);
+                //frmMain.BalaTacticsList.LoadFromMySQL();
                 frmMain.ShowShedule2Char(false);
                 frmMain.BalaTacticsList.ActiveIndex = -1;
                 if (aIsFileData)
@@ -804,7 +804,7 @@ namespace EMS
                     bool hasData = SqlExecutor.CheckRec("select * from tactics");
                     if (hasData)
                     {
-                        result = SqlExecutor.ExecuteSqlTaskAsync("delete FROM tactics", 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync("delete FROM tactics", 3);
 
                         if (result)
                         {
@@ -843,7 +843,7 @@ namespace EMS
                     strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
                     try
                     {
-                        result = SqlExecutor.ExecuteSqlTaskAsync(strData, 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 3);
 
                         if (result)
                         {
@@ -860,7 +860,8 @@ namespace EMS
                     }
                 }
 
-                if (frmMain.TacticsList.LoadFromMySQL())
+                //if (frmMain.TacticsList.LoadFromMySQL())
+                if(SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList))
                 {
                     frmMain.ShowShedule2Char(false);
                     frmMain.TacticsList.ActiveIndex = -1;
@@ -913,7 +914,7 @@ namespace EMS
                 //清理旧数据
                 try
                 {
-                    result = SqlExecutor.ExecuteSqlTaskAsync("delete FROM electrovalence", 3);
+                    result = SqlExecutor.ExecuteSqlTasksSync("delete FROM electrovalence", 3);
 
                     if (result)
                     {
@@ -944,7 +945,7 @@ namespace EMS
 
                     try
                     {
-                        result = SqlExecutor.ExecuteSqlTaskAsync(strData, 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 3);
 
                         if (result)
                         {
@@ -962,7 +963,8 @@ namespace EMS
                 }
                 //更新策略
                 frmSet.SaveSet2File();
-                frmMain.TacticsList.LoadJFPGFromSQL();
+                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+                //frmMain.TacticsList.LoadJFPGFromSQL();
                 if (aIsFileData)
                     File.Delete(strDataFile);
             }

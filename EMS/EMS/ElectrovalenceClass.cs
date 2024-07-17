@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace EMS
 {
     //电表的阶梯电价一个节点
-    class ElectrovalenceClass
+    public class ElectrovalenceClass
     {
         public int section = 0;
         public DateTime startTime;
@@ -17,7 +17,7 @@ namespace EMS
     //全部电表的阶梯电价
     public class ElectrovalenceListClass
     {
-        List<ElectrovalenceClass> ElectrovalenceList = new List<ElectrovalenceClass>();
+        public List<ElectrovalenceClass> ElectrovalenceList = new List<ElectrovalenceClass>();
 
         string[] JFPGs = { "无", "尖", "峰", "平", "谷" };
 
@@ -39,7 +39,7 @@ namespace EMS
 
 
         //数据库中装载电价的阶梯数据
-        public void LoadFromMySQL()
+/*        public void LoadFromMySQL()
         {
             //TacticsList.Clear();
             while (ElectrovalenceList.Count > 0)
@@ -77,6 +77,6 @@ namespace EMS
                 ctTemp.Close();
                 ctTemp.Dispose();
             }
-        }
+        }*/
     }
 }

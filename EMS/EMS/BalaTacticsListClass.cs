@@ -34,7 +34,7 @@ namespace EMS
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "时段内均充均放" };
         public static string[] tTypes = { "待机", "充电", "放电" };
         //策略列表
-        List<BalaTacticsClass> BalaTacticsList = new List<BalaTacticsClass>();
+        public List<BalaTacticsClass> BalaTacticsList = new List<BalaTacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public bool BalaHasOn = false;  //策略标识符
         public int ActiveIndex = -2;
@@ -110,12 +110,12 @@ namespace EMS
                 }*/
 
         //数据库中重新装载策略数据
-        public void LoadFromMySQL()
+/*        public void LoadFromMySQL()
         {
             MySqlConnection ctTemp = null;
             MySqlDataReader rd = null;
-/*            MySqlDataReader rd = DBConnection.GetData("select startTime,endTime"
-                 + " from balatactics  order by startTime", ref ctTemp);*/
+*//*            MySqlDataReader rd = DBConnection.GetData("select startTime,endTime"
+                 + " from balatactics  order by startTime", ref ctTemp);*//*
             try
             {
                  rd = DBConnection.GetData("select startTime,endTime"
@@ -159,7 +159,7 @@ namespace EMS
                     ctTemp.Dispose();
                 }
             }
-        }
+        }*/
 
         /*        /// <summary>
                 /// 检查昨天的数据是否存在

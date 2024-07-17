@@ -68,7 +68,7 @@ namespace EMS
         //}
 
 
-        public void LoadJFPGFromSQL()
+/*        public void LoadJFPGFromSQL()
         {
             MySqlConnection ctTemp = null;
             MySqlDataReader rd = DBConnection.GetData("select startTime, eName "
@@ -108,7 +108,7 @@ namespace EMS
                 ctTemp.Close();
                 ctTemp.Dispose();
             }
-        }
+        }*/
 
         //数据库中重新装载策略数据
 /*        public List<TacticsClass> GetTacticsForToday()
@@ -145,7 +145,7 @@ namespace EMS
         }*/
 
 
-        public bool LoadFromMySQL()
+/*        public bool LoadFromMySQL()
         {
             bool Result = false;
             MySqlConnection ctTemp = null;
@@ -221,7 +221,7 @@ namespace EMS
 
             }
             return Result;
-        }
+        }*/
 
         /// <summary>
         /// 检查昨天的数据是否存在
@@ -284,7 +284,8 @@ namespace EMS
 
             if (TacticsList.Count == 0)
             {
-                LoadFromMySQL();
+                //LoadFromMySQL();
+                SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
             }
 
             now = DateTime.Now;
@@ -440,8 +441,10 @@ namespace EMS
             {
                 Thread.Sleep(2000);
 
-                if (TacticsList.Count == 0) {
-                    LoadFromMySQL();
+                if (TacticsList.Count == 0)
+                {
+                    SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                    //LoadFromMySQL();
                 }
                    
                 now = DateTime.Now;
@@ -685,7 +688,7 @@ namespace EMS
         /// 显示历史数据
         /// </summary>
         /// <param name="aOneChar"></param>
-        public void LoadHistay(Chart aOneChar)
+/*        public void LoadHistay(Chart aOneChar)
         {
             // string strDate = DateTime.Now.ToString("yyyy-MM-dd ");
             MySqlConnection ctTemp = null;
@@ -715,7 +718,7 @@ namespace EMS
                 ctTemp.Close();
                 ctTemp.Dispose();
             }
-        }
+        }*/
 
 
         /// <summary>

@@ -253,7 +253,7 @@ namespace Modbus
                 return bResult;
             else
             {
-                // DBConnection.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
+                // SqlExecutor.RecordLOG("通讯异常", "反应超时", "无法判断具体设备");
                 return bResult;
             }
 
