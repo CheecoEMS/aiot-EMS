@@ -205,7 +205,8 @@ namespace EMS
         private void ShowINIData()
         {
             frmSet.LoadSetInf();
-            frmSet.LoadFromGlobalSet();
+            //frmSet.LoadFromGlobalSet();
+            frmSet.LoadFromCouldimits();
             tcbSYSModel.SetSelectItemIndex(frmSet.SysMode); 
             tcbPCSType.SetstrText(frmSet.PCSType);
             if (frmSet.PCSwaValue > 0)

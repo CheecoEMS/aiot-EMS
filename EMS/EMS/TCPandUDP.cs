@@ -332,6 +332,33 @@ namespace Modbus
         private static ILog log = LogManager.GetLogger("TCPServerClass");
 
 
+        //异常处理逻
+        private void HandleSocketException(int ID, ref Socket clientSocket, SocketException ex)
+        {
+            if (ex.SocketErrorCode == SocketError.TimedOut)
+            {
+                // Log the timeout
+                log.Error("接收超时");
+                if (ID != 0)//0是从机首次连接时，主机发送的问询报文
+                {
+                    frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
+                    DestorySocket(ref clientSocket);
+                    log.Error("剔除"+ID+"号从机");
+                }
+            }
+            else
+            {
+                log.Error("物联断开或从机EMS下线");
+                if (ID != 0)//0是从机首次连接时，主机发送的问询报文
+                {
+                    frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
+                    DestorySocket(ref clientSocket);
+                    log.Error("剔除"+ID+"号从机");
+                }
+            }
+        }
+
+
         /// <summary>
         /// 检查是否有未释放的ClientSocket
         /// </summary>
@@ -915,15 +942,22 @@ namespace Modbus
                 {
                     lock (socketLock)
                     {
-                        int res = clientSocket.Send(aMessage);
-                        if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
+                        if (clientSocket != null || clientSocket.Connected)
                         {
-                            bResult = true;
-
+                            bResult = false;
                         }
                         else
                         {
-                            bResult = false;
+                            int res = clientSocket.Send(aMessage);
+                            if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
+                            {
+                                bResult = true;
+
+                            }
+                            else
+                            {
+                                bResult = false;
+                            }
                         }
                     }
                 }
@@ -988,6 +1022,8 @@ namespace Modbus
                             log.Error("剔除"+ID+"号从机");
                         }
                     }
+
+                    //HandleSocketException(ID, ref clientSocket, ex);
                 }
                 return bResult;
             }

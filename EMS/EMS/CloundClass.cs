@@ -119,7 +119,7 @@ namespace EMS
             TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
             EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
             //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
-            string strID = frmSet.SysID;
+            string strID = frmSet.config.SysID;
             if (strID.Length >= 7)
                 strID = strID.Substring(strID.Length - 7, 7);
             AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
@@ -1040,12 +1040,17 @@ namespace EMS
                 }
                 else
                 {
-                    frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
+/*                    frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
                     frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
                     frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
                     frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
-                    //frmSet.SaveSet2File();
-                    frmSet.SetToGlobalSet();
+                    frmSet.SetToGlobalSet();*/
+
+                    frmSet.cloudLimits.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
+                    frmSet.cloudLimits.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
+                    frmSet.cloudLimits.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
+                    frmSet.cloudLimits.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
+                    frmSet.Set_Cloudlimits();
                 }
             }
             catch 

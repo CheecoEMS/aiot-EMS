@@ -79,7 +79,13 @@ namespace EMS
                 //用户登录
                 return true;
             }
-            else   if (!DBConnection.ChecUserc("select UPower from users where UName='"+
+            else 
+            {
+                return false;
+            }
+
+            //hjq 24/7/18 暂时注销
+/*            else   if (!DBConnection.ChecUserc("select UPower from users where UName='"+
                 oneForm.UserTxtBox.Text+"'and uPassword='"+oneForm.PasswordTxtBox.Text+"'", ref iPower))
             {
                 MessageBox.Show("用户或密码有误！！！");
@@ -92,7 +98,7 @@ namespace EMS
                //frmMain.Selffrm.btnLogin.Text = "注销登录";
                 //用户登录
                 return true;
-            }
+            }*/
         }
 
         //用户登录

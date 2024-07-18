@@ -74,7 +74,7 @@ namespace EMS
                 //    DBConnection.ShowData2Chart(ctSOverall, "select  * from profit "+ strSQL,
                 //        5, "yyyy-M-d");
                 //    break;
-                case 1:
+/*                case 1:
                     // DBConnection.ShowData2ChartPower(ctPower, "select rTime, Gridkva ,AllAAkva from elemeter2 " + strSQL,
                     //   3, "yyyy-M-d  H:mm");
                     DBConnection.ShowData2Chart(ctPower, "select rTime, Gridkva,AllUkva ,Subkw  from elemeter2" + strSQL,
@@ -111,7 +111,7 @@ namespace EMS
                 case 8:
                     SqlExecutor.SetDBGrid(dbgControl);
                     SqlExecutor.ShowData2DBGrid(dbgControl, "select * from pncontroler" + strSQL);
-                    break;
+                    break;*/
 
             }
             GC.Collect();

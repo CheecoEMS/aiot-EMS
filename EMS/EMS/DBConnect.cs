@@ -97,16 +97,6 @@ namespace EMS
         }
     }
 
-    public class SqlLoadTacticsTask : SqlTask
-    {
-        public SqlLoadTacticsTask(string sql, int priority, Action<string> readCallbackWithPath)
-            : base(sql, priority, result => readCallbackWithPath(result))
-        {
-            lock (frmMain.TacticsList)
-            { 
-            }
-        }
-    }
 
     public class SqlReadWithParamsTask : SqlTask
     {
@@ -162,6 +152,8 @@ namespace EMS
                 }*/
     }
 
+
+
     public class SqlUpdateTableTask : SqlTask
     {
         public string TableName { get; set; }
@@ -215,6 +207,16 @@ namespace EMS
         public SqlCloudLimitClassTask(int priority, CloudLimitClass cloudLimits, Action<bool> callback) : base("", priority, callback)
         {
             CloudLimits = cloudLimits;
+        }
+    }
+
+    public class SqlConfigClassTask : SqlTask
+    {
+        public ConfigClass Config { get; private set; }
+
+        public SqlConfigClassTask(int priority, ConfigClass config, Action<bool> callback) : base("", priority, callback)
+        {
+            Config = config;
         }
     }
 
@@ -383,6 +385,12 @@ namespace EMS
                         sqlTask.SetResult(result);
                         sqlTask.Callback?.Invoke(result);
                     }
+                    else if (sqlTask is SqlConfigClassTask sqlConfigClassTask)
+                    {
+                        bool result = await LoadConfigFromMySQL(sqlConfigClassTask.Config);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
                     else if (sqlTask is SqlJFPGSqlTask sqlJFPGSqlTask)
                     {
                         bool result = await LoadJFPGFromMySQL();
@@ -481,6 +489,14 @@ namespace EMS
             lock (lockObject)
             {
                 sqlTaskQueue.Enqueue(new SqlCloudLimitClassTask(priority, cloudLimits, callback), priority);
+            }
+        }
+
+        public static void EnqueueSqlConfigClassTask(int priority, ConfigClass config, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlConfigClassTask(priority, config, callback), priority);
             }
         }
 
@@ -693,15 +709,23 @@ namespace EMS
                         while (rd.Read())
                         {
                             TacticsClass oneTactics = new TacticsClass();
-                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                            oneTactics.tType = rd.GetString(2);
-                            oneTactics.PCSType = rd.GetString(3);
+                            // 检查字段是否为 null 并提供默认值
+                            string startTimeStr = rd.IsDBNull(0) ? "00:00:00" : rd.GetString(0); // 默认值 "00:00:00"
+                            string endTimeStr = rd.IsDBNull(1) ? "00:00:00" : rd.GetString(1); // 默认值 "00:00:00"
+                            string tType = rd.IsDBNull(2) ? "充电" : rd.GetString(2); // 提供默认策略类型
+                            string PCSType = rd.IsDBNull(3) ? "恒功率" : rd.GetString(3); // 提供默认PCS类型
+                            int waValue = rd.IsDBNull(4) ? 0 : rd.GetInt32(4); // 提供默认值0
+
+                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + startTimeStr);
+                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + endTimeStr);
+                            oneTactics.tType = tType;
+                            oneTactics.PCSType = PCSType;
+
                             if (oneTactics.PCSType == "恒流")
-                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                                oneTactics.waValue = (int)(waValue * 0.8);
                             if (oneTactics.PCSType == "恒压")
                             {
-                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                oneTactics.waValue = (int)((waValue - 648) * 0.7);
                                 if (oneTactics.waValue < 0)
                                     oneTactics.waValue = 0;
                             }
@@ -710,11 +734,12 @@ namespace EMS
                             oneTactics.waValue = Math.Abs(oneTactics.waValue);
                             if (oneTactics.waValue > 110)
                                 oneTactics.waValue = 110;
+
                             //修正充放电的正负功率
                             if (oneTactics.tType == "放电")
-                                oneTactics.waValue = -rd.GetInt32(4);
+                                oneTactics.waValue = -waValue;
                             else
-                                oneTactics.waValue = rd.GetInt32(4);
+                                oneTactics.waValue = waValue;
 
                             Tactics.Add(oneTactics);
                         }
@@ -774,8 +799,12 @@ namespace EMS
                         while (rd.Read())
                         {
                             BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
-                            oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                            oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            // 检查字段是否为 null 并提供默认值
+                            string startTimeStr = rd.IsDBNull(0) ? "00:00:00" : rd.GetString(0); // 默认值 "00:00:00"
+                            string endTimeStr = rd.IsDBNull(1) ? "00:00:00" : rd.GetString(1); // 默认值 "00:00:00"
+
+                            oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + startTimeStr);
+                            oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + endTimeStr);
 
                             BalaTactics.Add(oneBalaTactics);
                         }
@@ -833,9 +862,11 @@ namespace EMS
                         while (rd.Read())
                         {
                             ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
-                            oneElectrovalence.section = rd.GetInt32(0);
-                            oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                            oneElectrovalence.eName = rd.GetString(2);
+                            // 检查字段是否为 null 并提供默认值
+                            oneElectrovalence.section = rd.IsDBNull(0) ? 0 : rd.GetInt32(0); // 默认值 0
+                            string startTimeStr = rd.IsDBNull(1) ? "00:00:00" : rd.GetString(1); // 默认值 "00:00:00"
+                            oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + startTimeStr);
+                            oneElectrovalence.eName = rd.IsDBNull(2) ? string.Empty : rd.GetString(2); // 默认值空字符串
 
                             Electrovalences.Add(oneElectrovalence);
                         }
@@ -874,7 +905,7 @@ namespace EMS
         public static async Task<bool> LoadCloudLimitsFromMySQL(CloudLimitClass CloudLimits)
         {
             bool result = false;
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, MaxDemandRatio, EnableActiveReduce, PUM, AllUkvaWindowSize, PumTime FROM CloudLimits ";
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime FROM CloudLimits ;";
             MySqlDataReader rd = null;
 
             try
@@ -884,20 +915,103 @@ namespace EMS
                 {
                     if (rd.HasRows && rd.Read())
                     {
-                        CloudLimits.MaxGridKW = rd.GetInt32(0);
-                        CloudLimits.MinGridKW = rd.GetInt32(1);
-                        CloudLimits.MaxSOC = rd.GetInt32(2);
-                        CloudLimits.MinSOC = rd.GetInt32(3);
-                        CloudLimits.UBmsPcsState = rd.GetDouble(4);
-                        CloudLimits.OBmsPcsState = rd.GetDouble(5);
-                        CloudLimits.WarnMaxGridKW = rd.GetInt32(6);
-                        CloudLimits.WarnMinGridKW = rd.GetInt32(7);
-                        CloudLimits.PcsKva = rd.GetInt32(8);
-                        CloudLimits.MaxDemandRatio = rd.GetDouble(9);
-                        CloudLimits.EnableActiveReduce = rd.GetInt32(10);
-                        CloudLimits.PUM = rd.GetDouble(11);
-                        CloudLimits.AllUkvaWindowSize = rd.GetInt32(12);
-                        CloudLimits.PumTime = rd.GetInt32(13);
+                        CloudLimits.MaxGridKW = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                        CloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                        CloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
+                        CloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                        CloudLimits.UBmsPcsState = rd.IsDBNull(4) ? 1.0 : rd.GetDouble(4);
+                        CloudLimits.OBmsPcsState = rd.IsDBNull(5) ? 1.0 : rd.GetDouble(5);
+                        CloudLimits.WarnMaxGridKW = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                        CloudLimits.WarnMinGridKW = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                        CloudLimits.PcsKva = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                        CloudLimits.Client_PUMdemand_Max = rd.IsDBNull(9) ? 0.0 : rd.GetDouble(9);
+                        CloudLimits.EnableActiveReduce = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                        CloudLimits.PumScale = rd.IsDBNull(11) ? 0.0 : rd.GetDouble(11);
+                        CloudLimits.AllUkvaWindowSize = rd.IsDBNull(12) ? 5 : rd.GetInt32(12);
+                        CloudLimits.PumTime = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+        
+        public static async Task<bool> LoadConfigFromMySQL(ConfigClass config)
+        {
+            bool result = false;
+            string astrSQL = "SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime," 
+                                + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr," 
+                                + "AutoRun, SysMode, PCSGridModel, PCSType, PCSwaValue, BMSwaValue, DebugComName,"
+                                + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
+                                + "EMSstatus, ErrorState2 , GPIOSelect, MasterIp, ConnectStatus FROM config; ";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows && rd.Read())
+                    {
+                        config.SysID = rd.IsDBNull(0) ? "j0001" : rd.GetString(0);
+                        config.Open104 = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                        config.NetTick = rd.IsDBNull(2) ? 10 : rd.GetInt32(2);
+                        config.SysName = rd.IsDBNull(3) ? "浙江驰库" : rd.GetString(3);
+                        config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                        config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                        config.SysAddr = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
+                        config.SysInstTime = rd.IsDBNull(7) ? DateTime.MinValue : rd.GetDateTime(7);
+                        config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
+                        config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                        config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                        config.IsMaster = rd.IsDBNull(11) ? true : rd.GetBoolean(11);
+                        config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
+                        config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
+                        config.AutoRun = rd.IsDBNull(14) ? false : rd.GetBoolean(14);
+                        config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
+                        config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
+                        config.PCSType = rd.IsDBNull(17) ? "恒功率" : rd.GetString(17);
+                        config.PCSwaValue = rd.IsDBNull(18) ? 0 : rd.GetInt32(18);
+                        config.BMSwaValue = rd.IsDBNull(19) ? 50.0 : rd.GetDouble(19);
+                        config.DebugComName = rd.IsDBNull(20) ? "com7" : rd.GetString(20);
+                        config.DebugRate = rd.IsDBNull(21) ? 38400: rd.GetInt32(21);
+                        config.SysCount = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
+                        config.UseYunTactics = rd.IsDBNull(23) ? false : rd.GetBoolean(23);
+                        config.UseBalaTactics = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
+                        config.iPCSfactory = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
+                        config.BMSVerb = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
+                        config.PCSForceRun = rd.IsDBNull(27) ? false : rd.GetBoolean(27);
+                        config.EMSstatus = rd.IsDBNull(28) ? false : rd.GetBoolean(28);
+                        config.ErrorState2 = rd.IsDBNull(29) ? false : rd.GetBoolean(29);
+                        config.GPIOSelect = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
+                        config.MasterIp = rd.IsDBNull(31) ? "192.168.186.9" : rd.GetString(31);
+                        config.ConnectStatus = rd.IsDBNull(32) ? "485" : rd.GetString(32);
                     }
                     result = true;
                 }
@@ -931,6 +1045,7 @@ namespace EMS
         }
 
 
+
         public static async Task<bool> LoadJFPGFromMySQL()
         {
             ChecMysql80();
@@ -955,8 +1070,13 @@ namespace EMS
                 {
                     while (rd.Read())
                     {
-                        tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                        dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                        // 检查费率号是否为null，并提供默认值0
+                        tempJFPG[i * 3 + 0] = rd.IsDBNull(1) ? (byte)0 : (byte)rd.GetInt32(1);
+
+                        // 检查起始时间是否为null，并提供默认时间字符串
+                        string startTimeStr = rd.IsDBNull(0) ? "00:00:00" : rd.GetString(0);
+                        dtTemp = Convert.ToDateTime("2022-01-01 " + startTimeStr);
+
                         tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
                         tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
                         i++;
@@ -1268,6 +1388,66 @@ namespace EMS
 
         /********************************北向接口函数************************************************/
 
+        /// <summary>
+        /// 表格数据保存文件
+        /// </summary>
+        /// <param name="aDataGrid"></param>
+        static public void SaveGrid2File(DataGridView aDataGrid)
+        {
+            ChecMysql80();
+            if (aDataGrid.RowCount <= 0)
+                return;
+            string fileName = DateTime.Now.ToString("yyMMdd");//可以在这里设置默认文件名 
+            SaveFileDialog saveDialog = new SaveFileDialog();//实例化文件对象
+            saveDialog.DefaultExt = "txt";//文件默认扩展名xls
+            saveDialog.Filter = "LOG文件|*.txt";//获取或设置当前文件名筛选器字符串，该字符串决定对话框的“另存为文件类型”或“文件类型”框中出现的选择内容。
+            saveDialog.FileName = fileName;
+            DialogResult aResult = saveDialog.ShowDialog();//打开保存窗口给你选择路径和设置文件名
+            if (aResult != DialogResult.OK)
+                return;
+            string saveFileName = saveDialog.FileName;//文件保存名
+            //实例化一个文件流--->与写入文件相关联  
+            FileStream fs = new FileStream(saveFileName, FileMode.Create);
+            //实例化一个StreamWriter-->与fs相关联  
+            StreamWriter sw = new StreamWriter(fs);
+
+            try
+            {
+                string strDataLine = "";
+                for (int i = 0; i < aDataGrid.ColumnCount; i++)//遍历循环获取DataGridView标题
+                {
+                    strDataLine += aDataGrid.Columns[i].HeaderText + "    "; //Columns[i].HeaderText表示第i列的表头
+                }
+                sw.WriteLine(strDataLine);
+                strDataLine = "";
+                //写入数值
+                for (int r = 0; r < aDataGrid.Rows.Count; r++)//这里表示数据的行标,dataGridView1.Rows.Count表示行数
+                {
+                    for (int i = 0; i < aDataGrid.ColumnCount; i++)//遍历r行的列数
+                    {
+                        strDataLine += aDataGrid.Rows[r].Cells[i].Value + "   "; //dataGridView1.Rows[r].Cells[i].Value获取列的r行i值
+                    }
+                    sw.WriteLine(strDataLine);
+                    strDataLine = "";
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                //清空缓冲区  
+                sw.Flush();
+                //关闭流  
+                sw.Close();
+                fs.Close();
+            }
+        }
 
         /// <summary>
         /// 图表展示数据库数据
@@ -1340,7 +1520,7 @@ namespace EMS
 
 
         /// <summary>
-        /// 异步函数：无返回的sql执行一条sql语句：insert或者update
+        /// 同步函数：无返回的sql执行一条sql语句：insert或者update
         /// </summary>
         /// <param name="astrSQL"></param>
         /// <param name="prior"></param>
@@ -1363,7 +1543,7 @@ namespace EMS
         }
 
         /// <summary>
-        /// 同步函数：有返回的sql执行一条sql语句：insert或者update
+        /// 异步函数：有返回的sql执行一条sql语句：insert或者update
         /// </summary>
         /// <param name="astrSQL"></param>
         /// <param name="prior"></param>
@@ -1474,7 +1654,7 @@ namespace EMS
         }
 
         /// <summary>
-        /// 同步等待录入电价
+        /// 同步云参数
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="targetColumns"></param>
@@ -1497,6 +1677,29 @@ namespace EMS
             return bResult;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlConfigClassTask(int priority, ConfigClass config)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlConfigClassTask(priority, config, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
 
         /// <summary>
         /// 对齐EMS与适配的数据库
@@ -2084,7 +2287,10 @@ namespace EMS
                         new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "PCSForceRun", Type = "bool", IsNullable = true, Key = "" },
                         new Column { Name = "EMSstatus", Type = "bool", IsNullable = true, Key = "" },
-                        new Column { Name = "ErrorState2", Type = "bool", IsNullable = true, Key = "" }
+                        new Column { Name = "ErrorState2", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" },
+                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" }
                     }
                 },
                 {
@@ -2371,9 +2577,9 @@ namespace EMS
                         new Column { Name = "WarnMaxGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率上限" },
                         new Column { Name = "WarnMinGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率下限" },
                         new Column { Name = "PcsKva", Type = "int", IsNullable = true, Comment = "触发需量抬升的放电功率" },
-                        new Column { Name = "MaxDemandRatio", Type = "double", IsNullable = true, Comment = "最大需量比例" },
+                        new Column { Name = "Client_PUMdemand_Max", Type = "double", IsNullable = true, Comment = "最大需量比例" },
                         new Column { Name = "EnableActiveReduce", Type = "int", IsNullable = true, Comment = "开启主动降容：1(开) 0(关)" },
-                        new Column { Name = "PUM", Type = "double", IsNullable = true, Comment = "需量比例" },
+                        new Column { Name = "PumScale", Type = "double", IsNullable = true, Comment = "需量比例" },
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },
                         new Column { Name = "PumTime", Type = "int", IsNullable = true, Comment = "强制放电时间" }
                     }
@@ -2849,7 +3055,7 @@ namespace EMS
         }
 
         //检查是否存在SQL约定的数据 （含有为True，不存在为False）
-        static public bool CheckRec(string astrSQL )
+/*        static public bool CheckRec(string astrSQL )
         {
             ChecMysql80();
             //aiData = -1;
@@ -2894,7 +3100,7 @@ namespace EMS
                 //tempConnection.Dispose();
             }
             return bResult;
-        }
+        }*/
 
 
         /// <summary>
@@ -3173,7 +3379,7 @@ namespace EMS
         }
 
         //将dbgrid的数据保存到文件
-        static public void SaveGrid2File(DataGridView aDataGrid)
+/*        static public void SaveGrid2File(DataGridView aDataGrid)
         {
             ChecMysql80();
             if (aDataGrid.RowCount <= 0)
@@ -3228,7 +3434,7 @@ namespace EMS
                 sw.Close();
                 fs.Close();
             }
-        }
+        }*/
 
         //记录LOg事件
         static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)

@@ -6266,7 +6266,7 @@ namespace EMS
             AllUkvaWindow.Enqueue(value);
             AllUkvaSum += value;
 
-            if (AllUkvaWindow.Count > AllUkvaWindowSize)
+            if (AllUkvaWindow.Count > frmSet.cloudLimits.AllUkvaWindowSize)
             {
                 AllUkvaSum -= AllUkvaWindow.Dequeue();
             }
@@ -6391,8 +6391,8 @@ namespace EMS
                             aData = 0;
                             break;
                         case "充电":
-                            aData = (int)(Math.Abs(aData) * UBmsPcsState);
-                            if ((BMSSOC > frmSet.MaxSOC) && (aData != 0))
+                            aData = (int)(Math.Abs(aData) * frmSet.cloudLimits.UBmsPcsState);
+                            if ((BMSSOC > frmSet.cloudLimits.MaxSOC) && (aData != 0))
                             {
                                 SqlExecutor.RecordLOG("系统", "充电失败", "SOC过高");
                                 aData = 0;
@@ -6404,8 +6404,8 @@ namespace EMS
                             }
                             break;
                         case "放电":
-                            aData = -1 * (int)(Math.Abs(aData) * OBmsPcsState);
-                            if ((BMSSOC < frmSet.MinSOC) && (aData != 0))
+                            aData = -1 * (int)(Math.Abs(aData) * frmSet.cloudLimits.OBmsPcsState);
+                            if ((BMSSOC < frmSet.cloudLimits.MinSOC) && (aData != 0))
                             {
                                 SqlExecutor.RecordLOG("系统", "放电失败", "SOC过低");
                                 aData = 0;
@@ -7480,8 +7480,8 @@ namespace EMS
         //单机的防逆流
         public void SingleReflux_Log()
         {
-            log.Debug("超限防逆需量上限：" + frmSet.MaxGridKW + " "
-                +"超限防逆电网功率下限：" +  frmSet.MinGridKW + " "
+            log.Debug("超限防逆需量上限：" + frmSet.cloudLimits.MaxGridKW + " "
+                +"超限防逆电网功率下限：" +  frmSet.cloudLimits.MinGridKW + " "
                 +"超限防逆电网功率：" +  GridKVA + " "
                 +"超限防逆计算差值: " + dValue + " "
                 +"超限防逆计算修正比: " + dRate + " "
@@ -7528,7 +7528,7 @@ namespace EMS
                 {
                     //判断操作为恢复策略还是等待
                     //若电网平均功率低于需量的上限阈值，则恢复策略
-                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.PUM)/100)
+                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100)
                     {
                         //重新下发策略
                         lock (frmMain.Selffrm.AllEquipment)
@@ -7557,7 +7557,7 @@ namespace EMS
                     if (wTypeActive == "充电")
                     {
                         //当前需量 超过 最大需量的X倍 ：强制放电
-                        if (GridKVA_window > (Client_PUMdemand_Max*frmSet.PUM)/100 && FineToCharge == true)
+                        if (GridKVA_window > (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100 && FineToCharge == true)
                         {
                             //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
                             lock (frmMain.Selffrm.AllEquipment)
@@ -7577,9 +7577,9 @@ namespace EMS
                         else
                         {
                             //判断电网功率是否超过需量上限
-                            if (GridKVA >=  Client_PUMdemand_Max*frmSet.PUM/100)
+                            if (GridKVA >=  Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100)
                             {
-                                dValue = GridKVA - Client_PUMdemand_Max*frmSet.PUM/100;
+                                dValue = GridKVA - Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100;
                                 if (dValue > Math.Abs(PCSKVA))
                                 {
                                     dRate = 0;
@@ -7599,7 +7599,7 @@ namespace EMS
                             }
                             else
                             {
-                                dValue = (Client_PUMdemand_Max*frmSet.PUM)/100 - (GridKVA - Math.Abs(PCSKVA));
+                                dValue = (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100 - (GridKVA - Math.Abs(PCSKVA));
                                 if (dValue >= Math.Abs(PCSScheduleKVA))
                                 {
                                     dRate = 1;
@@ -7624,10 +7624,10 @@ namespace EMS
                 {
                     if (wTypeActive == "放电")
                     {
-                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        if (GridKVA <= frmSet.cloudLimits.MinGridKW)//逆流处理
                         {
                             //逆流
-                            dValue = frmSet.MinGridKW - GridKVA;
+                            dValue = frmSet.cloudLimits.MinGridKW - GridKVA;
                             //限流qiao 
                             if (dValue >= Math.Abs(PCSKVA))
                             {
@@ -7647,7 +7647,7 @@ namespace EMS
                         }
                         else//放电功率调整
                         {
-                            dValue = (GridKVA + Math.Abs(PCSKVA)) - frmSet.MinGridKW;
+                            dValue = (GridKVA + Math.Abs(PCSKVA)) - frmSet.cloudLimits.MinGridKW;
                             if (dValue >= Math.Abs(PCSScheduleKVA))
                             {
                                 dRate = 1;
@@ -7667,7 +7667,7 @@ namespace EMS
             }
             else
             {
-                PowerCap = frmSet.MaxGridKW;
+                PowerCap = frmSet.cloudLimits.MaxGridKW;
 
                 if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
                 {
@@ -7698,10 +7698,10 @@ namespace EMS
                         else { dRate = 0; }
                     }
                 }
-                else if ((GridKVA <= frmSet.MinGridKW) && (wTypeActive == "放电"))
+                else if ((GridKVA <= frmSet.cloudLimits.MinGridKW) && (wTypeActive == "放电"))
                 {
                     //逆流
-                    dValue = frmSet.MinGridKW - GridKVA;
+                    dValue = frmSet.cloudLimits.MinGridKW - GridKVA;
                     //限流qiao 
                     if (dValue >= Math.Abs(PCSKVA))
                     {
@@ -7743,7 +7743,7 @@ namespace EMS
                     }
                     else if (wTypeActive == "放电")
                     {
-                        dValue = (GridKVA_window + Math.Abs(PCSKVA)) - frmSet.MinGridKW;
+                        dValue = (GridKVA_window + Math.Abs(PCSKVA)) - frmSet.cloudLimits.MinGridKW;
                         if (dValue > 0)
                         {
                             if (dValue >= Math.Abs(PCSScheduleKVA))
@@ -8037,8 +8037,8 @@ namespace EMS
         //多机的防逆流
         public void MutiReflux_Log()
         {
-            log.Debug("超限防逆上限：" + frmSet.MaxGridKW + " "
-                +"超限防逆下限：" + frmSet.MinGridKW + " "
+            log.Debug("超限防逆上限：" + frmSet.cloudLimits.MaxGridKW + " "
+                +"超限防逆下限：" + frmSet.cloudLimits.MinGridKW + " "
                 +"超限防逆电网功率：" +  GridKVA + " "
                 +"超限防逆计算差值: " + dValue + " "
                 +"超限防逆计算修正比: " + dRate + " "
@@ -8079,7 +8079,7 @@ namespace EMS
                 {
                     //判断操作为恢复策略还是等待
                     //if (E1_PUMdemand_now < (Client_PUMdemand_Max*frmSet.PUM)/100)
-                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.PUM)/100)
+                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100)
                     {
                         //重新读取策略
                         recoverSchedule = true;
@@ -8109,7 +8109,7 @@ namespace EMS
                         if (wTypeActive == "充电")
                         {
                             //当前需量 超过 最大需量的X倍 ：强制放电
-                            if (GridKVA_window > (Client_PUMdemand_Max*frmSet.PUM)/100 && FineToCharge == true)
+                            if (GridKVA_window > (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100 && FineToCharge == true)
                             {
                                 //修改成放电
                                 lock (frmMain.Selffrm.AllEquipment)
@@ -8130,9 +8130,9 @@ namespace EMS
                             }
                             else
                             {
-                                if (GridKVA >=  Client_PUMdemand_Max*frmSet.PUM/100)
+                                if (GridKVA >=  Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100)
                                 { 
-                                    dValue = GridKVA - Client_PUMdemand_Max*frmSet.PUM/100;
+                                    dValue = GridKVA - Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100;
                                     if (dValue > Math.Abs(AllwaValue))
                                     {
                                         dRate = 0;
@@ -8152,7 +8152,7 @@ namespace EMS
                                 }
                                 else
                                 {
-                                    dValue = (Client_PUMdemand_Max*frmSet.PUM)/100 - (GridKVA - Math.Abs(AllwaValue));
+                                    dValue = (Client_PUMdemand_Max*frmSet.cloudLimits.PumScale)/100 - (GridKVA - Math.Abs(AllwaValue));
                                     if (dValue >= Math.Abs(AllPCSScheduleKVA))
                                     {
                                         dRate = 1;
@@ -8179,10 +8179,10 @@ namespace EMS
                 {
                     if (wTypeActive == "放电")
                     {
-                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        if (GridKVA <= frmSet.cloudLimits.MinGridKW)//逆流处理
                         {
                             //逆流
-                            dValue = frmSet.MinGridKW - GridKVA;
+                            dValue = frmSet.cloudLimits.MinGridKW - GridKVA;
                             //限流qiao 
                             if (dValue >= Math.Abs(AllwaValue))
                             {
@@ -8202,7 +8202,7 @@ namespace EMS
                         }
                         else//放电功率调整
                         {
-                            dValue = (GridKVA + Math.Abs(AllwaValue)) - frmSet.MinGridKW;
+                            dValue = (GridKVA + Math.Abs(AllwaValue)) - frmSet.cloudLimits.MinGridKW;
                             if (dValue >=  Math.Abs(AllPCSScheduleKVA))
                             {
                                 dRate = 1;
@@ -8224,7 +8224,7 @@ namespace EMS
             }
             else
             {
-                PowerCap = frmSet.MaxGridKW;
+                PowerCap = frmSet.cloudLimits.MaxGridKW;
                 if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
                 {
                     lock (frmMain.Selffrm.AllEquipment)
@@ -8255,9 +8255,9 @@ namespace EMS
                             dRate = 0;
                     }
                 }
-                else if ((GridKVA <= frmSet.MinGridKW)  && (wTypeActive == "放电") &&(frmSet.PCSGridModel == 0))//0并网，1离网 模式需要不控制
+                else if ((GridKVA <= frmSet.cloudLimits.MinGridKW)  && (wTypeActive == "放电") &&(frmSet.PCSGridModel == 0))//0并网，1离网 模式需要不控制
                 { //逆流
-                    dValue = frmSet.MinGridKW - GridKVA;
+                    dValue = frmSet.cloudLimits.MinGridKW - GridKVA;
                     //限流qiao 
                     if (dValue >= Math.Abs(AllwaValue))
                     {
@@ -8298,7 +8298,7 @@ namespace EMS
                     }
                     else if (wTypeActive == "放电")
                     {
-                        dValue = (GridKVA_window + Math.Abs(AllwaValue)) - frmSet.MinGridKW;
+                        dValue = (GridKVA_window + Math.Abs(AllwaValue)) - frmSet.cloudLimits.MinGridKW;
                         if (dValue > 0)
                         {
                             if ((dValue > Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
@@ -9109,14 +9109,17 @@ namespace EMS
             {
                 if (BMS.MaxChargeA == 0 && BMS.soc > 90) //双重确认为充电2级故障，修改充放阈值,记录需要进行均衡策略的单体ID
                 {
-                    if (frmMain.Selffrm.AllEquipment.UBmsPcsState != 0)
+                    if (frmSet.cloudLimits.UBmsPcsState != 0)
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmMain.Selffrm.AllEquipment)
-                            frmMain.Selffrm.AllEquipment.UBmsPcsState = 0;
+                        lock (frmSet.cloudLimits)
+                            frmSet.cloudLimits.UBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        //
+                        frmSet.Set_Cloudlimits_Async();
+
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
 
@@ -9177,12 +9180,14 @@ namespace EMS
                 }
                 else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
                 {
-                    if (frmMain.Selffrm.AllEquipment.OBmsPcsState != 0)
+                    if (frmSet.cloudLimits.OBmsPcsState != 0)
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmMain.Selffrm.AllEquipment)
-                            frmMain.Selffrm.AllEquipment.OBmsPcsState = 0;
+                        lock (frmSet.cloudLimits)
+                            frmSet.cloudLimits.OBmsPcsState = 0;
 
+                        //
+                        frmSet.Set_Cloudlimits_Async();
                         //记录单体电压 温度 电流
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
                     }
@@ -9198,19 +9203,19 @@ namespace EMS
 
                 if (BMS.soc >= 50 && BMS.MaxChargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmMain.Selffrm.AllEquipment.UBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.cloudLimits.UBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        lock (frmMain.Selffrm.AllEquipment)
-                            frmMain.Selffrm.AllEquipment.UBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmSet.cloudLimits)
+                            frmSet.cloudLimits.UBmsPcsState = frmSet.BMSwaValue/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmMain.Selffrm.AllEquipment.OBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.cloudLimits.OBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        lock (frmMain.Selffrm.AllEquipment)
-                            frmMain.Selffrm.AllEquipment.OBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmSet.cloudLimits)
+                            frmSet.cloudLimits.OBmsPcsState = frmSet.BMSwaValue/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
@@ -9250,8 +9255,8 @@ namespace EMS
                 CheckBMSWrror(Errors);
                 if (( Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
-                    frmMain.Selffrm.AllEquipment.UBmsPcsState = 1;
-                    frmMain.Selffrm.AllEquipment.OBmsPcsState = 1;
+                    frmSet.cloudLimits.UBmsPcsState = 1;
+                    frmSet.cloudLimits.OBmsPcsState = 1;
                     frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
                 }
             }
@@ -9273,7 +9278,7 @@ namespace EMS
                 string NowMonth = ConfigINI.INIRead("Recode Date", "NowMonth", "0", DoPU);
                 if (DateTime.Now.ToString("yyyy-MM") == NowMonth)
                 {
-                    Client_PUMdemand_Max = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "Client_PUMdemand_Max", "0", DoPU));
+                    frmSet.cloudLimits.Client_PUMdemand_Max = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "Client_PUMdemand_Max", "0", DoPU));
                     return true;
                 }
                 return false;
@@ -9412,7 +9417,7 @@ namespace EMS
             //"Recode Date"=配置节点名称，"rDate"=键名，arDate=返回键值，DofD=路径
             
             //记录客户负载最大值
-            ConfigINI.INIWrite("Recode Date", "Client_PUMdemand_Max" , frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max.ToString(), DoPU);
+            ConfigINI.INIWrite("Recode Date", "Client_PUMdemand_Max" , frmSet.cloudLimits.Client_PUMdemand_Max.ToString(), DoPU);
             //记录时间
             ConfigINI.INIWrite("Recode Date", "rDate", dateTime.ToString("yyyy-MM-d H:m:s"), DoPU);
             //记录当月

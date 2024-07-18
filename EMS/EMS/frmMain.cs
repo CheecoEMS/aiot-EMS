@@ -43,8 +43,6 @@ namespace EMS
         static public ElectrovalenceListClass ElectrovalenceList = new ElectrovalenceListClass();
         //充放电策略时段 
         static public TacticsListClass TacticsList = new TacticsListClass();
-        //
-        public static CloudLimitClass cloudLimits = new CloudLimitClass();
         //均衡策略时段
         static public BalaTacticsListClass BalaTacticsList = new BalaTacticsListClass();
 
@@ -464,8 +462,11 @@ namespace EMS
                 DBConnection conn = new DBConnection();
                 SqlExecutor.SetDBGrid(frmMain.Selffrm.dbvError);
                 //从数据库加载
+                SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
                 //frmSet.LoadFromGlobalSet();
+
                 //从数据库中加载配置信息
+                SqlExecutor.ExecuteEnqueueSqlConfigClassTask(3, frmSet.config);
                 //frmSet.LoadFromConfig();
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
@@ -491,7 +492,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
                
                 //配置各个部件的设备码
-                string strID= frmSet.SysID;
+                string strID= frmSet.config.SysID;
                 if (strID.Length >= 7)
                     strID = strID.Substring(strID.Length - 7, 7);//截取SysID的最后7位
                 frmMain.Selffrm.AllEquipment.iot_code = "ems" + strID;
@@ -558,22 +559,18 @@ namespace EMS
                     if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
                     {
                         //更新的月份
-                        lock (Selffrm.AllEquipment)
+                        lock (frmSet.cloudLimits)
                         {
-                            Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-                            Selffrm.AllEquipment.WriteDoPUini();
+                            frmSet.cloudLimits.Client_PUMdemand_Max = 0;
+                           
                         }
+                        Selffrm.AllEquipment.WriteDoPUini();
                     }
                 }
 
 
-                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
-                SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmMain.cloudLimits);
-
-                log.Error("cloudLimits: " +   frmMain.cloudLimits.MaxDemandRatio);
-
                 //8.7 每台主机初始化对外接口
-/*                BaseEquipmentClass oneEquipment = null;
+                BaseEquipmentClass oneEquipment = null;
                 oneEquipment = new EMSEquipment();
                 oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
                 oneEquipment = (EMSEquipment)oneEquipment;
@@ -641,7 +638,7 @@ namespace EMS
 
                 frmFlash.AddPostion(10);
                 //开启任务多线程
-                frmMain.Selffrm.AllEquipment.AutoReadData();*/
+                frmMain.Selffrm.AllEquipment.AutoReadData();
 
             }
             catch (Exception err)

@@ -406,9 +406,9 @@ namespace EMS
             switch (DataIndex)
             {
                 case 10://qiao
-                    SetBoxSel(false);
+/*                    SetBoxSel(false);
                     DBConnection.ShowData2ChartPower(ctFreshChart, "select rTime, Totalkva  ,Gridkva ,AllAAkva from elemeter2",
-                              3, "H:mm:s");
+                              3, "H:mm:s");*/
                     break;
                 case 0://E
                     SetBoxSel(false);

@@ -24,8 +24,8 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("frmSet");
 
         public static frmSet oneForm = null;
-        //public List<CloudLimitClass> CloudLimits = new List<CloudLimitClass>();
-        //public static CloudLimitClass cloudLimits = new CloudLimitClass();
+        public static CloudLimitClass cloudLimits = new CloudLimitClass();
+        public static ConfigClass config = new ConfigClass();
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
         public static string SysName;
@@ -128,9 +128,6 @@ namespace EMS
 
         //05.10 Gpio 判断
         public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
-        // 05.13 添加 UBmsPcsState  0BmsPcsState 
-        public static int UBmsPcsState;
-        public static int OBmsPcsState;
 
         public static int Open104 = 0; //是否开启104， 1：开启 0：关闭
         //public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
@@ -178,7 +175,10 @@ namespace EMS
                 if (oneForm == null)
                     oneForm = new frmSet();
                 LoadSetInf();
-                LoadFromGlobalSet();
+                //LoadFromGlobalSet();
+                
+                LoadFromCouldimits();
+                LoadFromConfig();
                 oneForm.ShowINIdata();
                 //DBConnection.SetDBGrid(oneForm.dbgLog);
                 //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
@@ -213,35 +213,6 @@ namespace EMS
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
-        }
-
-        //从数据库读取
-        public static void LoadFromConfig()
-        {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select SysID ,Open104"//MaxPower
-                 + " from config ", ref ctTemp);
-            try
-            {
-                while (rd.Read())
-                {
-                    //SysID = rd.GetInt32(0);
-                    Open104 = rd.GetInt32(1);
-                }
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
-            }
-            finally
-            {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
-            }
         }
 
         public static void LoadFromGlobalSet()
@@ -293,40 +264,126 @@ namespace EMS
 
         }
 
-
-        public static void Get_GlobalSet_State()
+        public static void LoadFromConfig()
         {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select MaxGridKW ,MinGridKW, MaxSOC, MinSOC,UBmsPcsState ,OBmsPcsState "//MaxPower
-                 + " from GlobalSet ", ref ctTemp);
+            SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
+        }
+
+        public static void Set_Config()
+        {
+            string sql = "update  cloudlimits  SET "
+                + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
+                + "', MinGridKW ='" + frmSet.cloudLimits.MinGridKW.ToString()
+                + "',MaxSOC ='" + frmSet.cloudLimits.MaxSOC.ToString()
+                + "',MinSOC ='" + frmSet.cloudLimits.MinSOC.ToString()
+                + "',UBmsPcsState ='" + frmSet.cloudLimits.UBmsPcsState.ToString()
+                + "', OBmsPcsState ='" + frmSet.cloudLimits.OBmsPcsState.ToString()
+                + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
+                + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
+                + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
+                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
+                + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
+                + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
+                + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
+                + "'";
+
             try
             {
-                while (rd.Read())
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
+
+                if (result)
                 {
-                    MaxGridKW = rd.GetInt32(0);
-                    MinGridKW = rd.GetInt32(1);
-                    MaxSOC = rd.GetInt32(2);
-                    MinSOC = rd.GetInt32(3);
-                    frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                    frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
                 }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
+                // 处理异常情况
             }
-            finally
-            {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
-            }
+
         }
 
-        public static void Set_GlobalSet_State()
+
+        public static void LoadFromCouldimits()
+        {
+            SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
+        }
+
+        public static void Set_Cloudlimits()
+        {
+            string sql = "update  cloudlimits  SET "
+                + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
+                + "', MinGridKW ='" + frmSet.cloudLimits.MinGridKW.ToString()
+                + "',MaxSOC ='" + frmSet.cloudLimits.MaxSOC.ToString()
+                + "',MinSOC ='" + frmSet.cloudLimits.MinSOC.ToString()
+                + "',UBmsPcsState ='" + frmSet.cloudLimits.UBmsPcsState.ToString()
+                + "', OBmsPcsState ='" + frmSet.cloudLimits.OBmsPcsState.ToString()
+                + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
+                + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
+                + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
+                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
+                + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
+                + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
+                + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
+                + "'";
+
+            try
+            {
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
+
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
+        }
+
+        public static void Set_Cloudlimits_Async()
+        {
+            string sql = "update  cloudlimits  SET "
+                + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
+                + "', MinGridKW ='" + frmSet.cloudLimits.MinGridKW.ToString()
+                + "',MaxSOC ='" + frmSet.cloudLimits.MaxSOC.ToString()
+                + "',MinSOC ='" + frmSet.cloudLimits.MinSOC.ToString()
+                + "',UBmsPcsState ='" + frmSet.cloudLimits.UBmsPcsState.ToString()
+                + "', OBmsPcsState ='" + frmSet.cloudLimits.OBmsPcsState.ToString()
+                + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
+                + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
+                + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
+                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
+                + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
+                + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
+                + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
+                + "'";
+
+            try
+            {
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
+        }
+
+/*        public static void Set_GlobalSet_State()
         {
             string sql = "update  globalset  SET "
                 + " MaxGridKW ='" + MaxGridKW.ToString()
@@ -355,7 +412,7 @@ namespace EMS
                 // 处理异常情况
             }
 
-        }
+        }*/
 
         public List<ModbusCommand> VersionList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
 
@@ -1059,7 +1116,7 @@ namespace EMS
                 //rtbMemo.Text = strMemo; 
                 tneSysInterval.SetIntValue(SysInterval);
                 tneUnInterval.SetIntValue(YunInterval);
-                ttbSystemID.SetstrText(SysID);
+                ttbSystemID.SetstrText(frmSet.config.SysID);
                 tcbIsMaster.SetValue(IsMaster);
                 //tbMasterID.Text = MasterID;
                 tne485Addr.SetIntValue(i485Addr);
@@ -1081,8 +1138,8 @@ namespace EMS
                     tcbPCSMode.SetSelectItemIndex(1);
                 tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));
                 tneBMSwaValue.SetIntValue((int)Math.Abs(BMSwaValue));//7.24
-                tneMaxSOC.SetIntValue(MaxSOC);
-                tneMinSOC.SetIntValue(MinSOC);
+                tneMaxSOC.SetIntValue(cloudLimits.MaxSOC);
+                tneMinSOC.SetIntValue(cloudLimits.MinSOC);
                 tneSetHotTemp.SetIntValue((int)(SetHotTemp));
                 tneSetCoolTemp.SetIntValue((int)(SetCoolTemp));
                 tneCoolTempReturn.SetIntValue((int)(CoolTempReturn));
@@ -1099,8 +1156,8 @@ namespace EMS
                 tneTCMinHumidity.SetIntValue((int)(TCMinHumi));
                 tcbDebugComName.SetstrText(DebugComName);
                 labDebugRate.Text = DebugRate.ToString();
-                tneMaxGridKWH.SetIntValue(MaxGridKW);
-                tneMinGridKWH.SetIntValue(MinGridKW);
+                tneMaxGridKWH.SetIntValue(cloudLimits.MaxGridKW);
+                tneMinGridKWH.SetIntValue(cloudLimits.MinGridKW);
                 DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
                 //tneFM0.SetIntValue(dtTemp.Month);
                 //tneFD0.SetIntValue(dtTemp.Day);
@@ -1138,7 +1195,7 @@ namespace EMS
                 //10.25
                 tneWarnGridkva.SetIntValue(WarnGridkva);
                 //11.13
-                tnePUM.SetIntValue(PUM);
+                tnePUM.SetValue(cloudLimits.PumScale);
 
                 //液冷
                 tcbLCModel.SetSelectItemIndex(LCModel);
@@ -1180,7 +1237,7 @@ namespace EMS
             // 
             SysInterval = (int)tneSysInterval.Value;
             YunInterval = (int)tneUnInterval.Value;
-            SysID = ttbSystemID.strText;
+            frmSet.config.SysID = ttbSystemID.strText;
             IsMaster = tcbIsMaster.Checked;
             //MasterID= tbMasterID.Text ; 
             i485Addr = (int)tne485Addr.Value;
@@ -1201,8 +1258,8 @@ namespace EMS
             else
                 PCSwaValue = -1 * (int)tnePCSwaValue.Value;
             BMSwaValue = (double)tneBMSwaValue.Value;//7.24
-            MaxSOC = (int)tneMaxSOC.Value;
-            MinSOC = (int)tneMinSOC.Value;
+            cloudLimits.MaxSOC = (int)tneMaxSOC.Value;
+            cloudLimits.MinSOC = (int)tneMinSOC.Value;
             SetHotTemp = (int)tneSetHotTemp.Value;
             SetCoolTemp = (int)tneSetCoolTemp.Value;
             CoolTempReturn = (int)tneCoolTempReturn.Value;
@@ -1218,8 +1275,8 @@ namespace EMS
             TCMinHumi = (int)tneTCMinHumidity.Value;
             DebugComName = tcbDebugComName.strText;
             DebugRate = 9600;
-            MaxGridKW = (int)tneMaxGridKWH.Value;
-            MinGridKW = (int)tneMinGridKWH.Value;
+            cloudLimits.MaxGridKW = (int)tneMaxGridKWH.Value;
+            cloudLimits.MinGridKW = (int)tneMinGridKWH.Value;
             //frmMain.TacticsList.AutoTactics = (SysMode == 1);
             // 
             //TimeZones[0] = tneFM0.Value.ToString() + "-" + tneFD0.Value.ToString();
@@ -1250,7 +1307,7 @@ namespace EMS
             //10.25
             WarnGridkva = (int)tneWarnGridkva.Value;
             //11.13
-            PUM = (int)tnePUM.Value;
+            cloudLimits.PumScale = tnePUM.Value;
 
             //液冷
             LCModel = tcbLCModel.SelectItemIndex;      //全自动
@@ -1608,7 +1665,8 @@ namespace EMS
             //Set_GlobalSet_State();
             GetINIData();
             SaveSet2File();
-            Set_GlobalSet_State();
+            //Set_GlobalSet_State();
+            Set_Cloudlimits();
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -1688,7 +1746,7 @@ namespace EMS
         private void btnSave2File_Click_1(object sender, EventArgs e)
         {
             //到处到文件
-            DBConnection.SaveGrid2File(dbgLog);
+            SqlExecutor.SaveGrid2File(dbgLog);
         }
 
         private void btnAdd1_Click(object sender, EventArgs e)
@@ -2236,7 +2294,8 @@ namespace EMS
         private void btnClose_Click(object sender, EventArgs e)
         {
             PowerGPIO(0);
-            Set_GlobalSet_State();
+            //Set_GlobalSet_State();
+            Set_Cloudlimits();
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
                 frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
@@ -2320,21 +2379,65 @@ namespace EMS
 
     public class CloudLimitClass
     {
-        public int MaxGridKW;
-        public int MinGridKW;
-        public int MaxSOC;
-        public int MinSOC;
-        public double UBmsPcsState;
-        public double OBmsPcsState;
-        public int WarnMaxGridKW;
-        public int WarnMinGridKW;
-        public int PcsKva;
-        public double MaxDemandRatio;
-        public int EnableActiveReduce;
-        public double PUM;
-        public int AllUkvaWindowSize;
-        public int PumTime;
+        public int MaxGridKW { get; set; }
+        public int MinGridKW { get; set; }
+        public int MaxSOC { get; set; }
+        public int MinSOC { get; set; }
+        public int WarnMaxGridKW { get; set; }
+        public int WarnMinGridKW { get; set; }
+        public int PcsKva { get; set; }
+        public double Client_PUMdemand_Max { get; set; }
+        public int EnableActiveReduce { get; set; }
+        public double PumScale { get; set; }
+        public int AllUkvaWindowSize { get; set; }
+        public int PumTime { get; set; }
     }
 
+
+    //运行时参数变化参数
+    public class OperParamsClass
+    {
+        public double UBmsPcsState { get; set; }
+        public double OBmsPcsState { get; set; }
+        public bool ErrorState2 { get; set; } // bool
+    }
+
+    //初始化不变更参数
+    public class ConfigClass
+    {
+        public string SysID { get; set; } // varchar(255) PRIMARY KEY
+        public int Open104 { get; set; } // int 是否开启104服务 0关1开
+        public int NetTick { get; set; } // int 判断超时的时间间隔
+        public string SysName { get; set; } // varchar(255)
+        public int SysPower { get; set; } // int 储能柜容量规格
+        public int SysSelfPower { get; set; } // int
+        public string SysAddr { get; set; } // varchar(255)
+        public DateTime SysInstTime { get; set; } // datetime
+        public int CellCount { get; set; } // int
+        public int SysInterval { get; set; } // int
+        public int YunInterval { get; set; } // int
+        public bool IsMaster { get; set; } // bool
+        public int Master485Addr { get; set; } // int
+        public int i485Addr { get; set; } // int
+        public bool AutoRun { get; set; } // bool
+        public int SysMode { get; set; } // int
+        public int PCSGridModel { get; set; } // int
+        public string PCSType { get; set; } // varchar(255)
+        public int PCSwaValue { get; set; } // int
+        public double BmsDerateRatio { get; set; } // double
+        public string DebugComName { get; set; } // varchar(255)
+        public int DebugRate { get; set; } // int
+        public int SysCount { get; set; } // int
+        public bool UseYunTactics { get; set; } // bool
+        public bool UseBalaTactics { get; set; } // bool
+        public int iPCSfactory { get; set; } // int
+        public int BMSVerb { get; set; } // int
+        public bool PCSForceRun { get; set; } // bool
+        public bool EMSstatus { get; set; } // bool
+        public int GPIOSelect { get; set; }
+        public string MasterIp { get; set; }
+        public string ConnectStatus { get; set; }
+
+    }
 
 }
