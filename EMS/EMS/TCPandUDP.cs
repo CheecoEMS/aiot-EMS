@@ -916,15 +916,22 @@ namespace Modbus
                 {
                     lock (socketLock)
                     {
-                        int res = clientSocket.Send(aMessage);
-                        if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
+                        if (clientSocket == null || !clientSocket.Connected)
                         {
-                            bResult = true;
-
+                            bResult = false;
                         }
                         else
                         {
-                            bResult = false;
+                            int res = clientSocket.Send(aMessage);
+                            if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
+                            {
+                                bResult = true;
+
+                            }
+                            else
+                            {
+                                bResult = false;
+                            }
                         }
                     }
                 }
