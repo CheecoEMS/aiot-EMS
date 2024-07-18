@@ -208,16 +208,6 @@ namespace EMS
         }
     }
 
-/*    public class SqlCloudLimitClassTask : SqlTask
-    {
-        public List<CloudLimitClass>  CloudLimits { get; private set; }
-
-        public SqlCloudLimitClassTask(int priority, List<CloudLimitClass> cloudLimits, Action<bool> callback) : base("", priority, callback)
-        {
-            CloudLimits = cloudLimits;
-        }
-    }*/
-
     public class SqlCloudLimitClassTask : SqlTask
     {
         public CloudLimitClass CloudLimits { get; private set; }
@@ -493,15 +483,6 @@ namespace EMS
                 sqlTaskQueue.Enqueue(new SqlCloudLimitClassTask(priority, cloudLimits, callback), priority);
             }
         }
-
-        /*        public static void EnqueueSqlCloudLimitTask(int priority, List<CloudLimitClass> cloudLimits, Action<bool> callback)
-                {
-                    lock (lockObject)
-                    {
-                        sqlTaskQueue.Enqueue(new SqlCloudLimitClassTask(priority, cloudLimits, callback), priority);
-                    }
-                }*/
-
 
         public static void EnqueueJFPGSqlTask(int priority, Action<bool> callback)
         {
@@ -949,72 +930,6 @@ namespace EMS
             return result;
         }
 
-        /*        public static async Task<bool> LoadCloudLimitsFromMySQL(List<CloudLimitClass> CloudLimits)
-                {
-                    bool result = false;
-                    string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, MaxDemandRatio, EnableActiveReduce, PUM, AllUkvaWindowSize, PumTime FROM CloudLimits ";
-                    MySqlDataReader rd = null;
-
-                    try
-                    {
-                        rd = GetData(astrSQL);
-                        if (rd != null)
-                        {
-                            if (rd.HasRows)
-                            {
-                                while (CloudLimits.Count > 0)
-                                {
-                                    CloudLimits.RemoveAt(0);
-                                }
-
-                                CloudLimitClass oneCloudLimitClass = new CloudLimitClass();
-                                oneCloudLimitClass.MaxGridKW = rd.GetInt32(0);
-                                oneCloudLimitClass.MinGridKW = rd.GetInt32(1);
-                                oneCloudLimitClass.MaxSOC = rd.GetInt32(2);
-                                oneCloudLimitClass.MinSOC = rd.GetInt32(3);
-                                oneCloudLimitClass.UBmsPcsState = rd.GetDouble(4);
-                                oneCloudLimitClass.OBmsPcsState = rd.GetDouble(5);
-                                oneCloudLimitClass.WarnMaxGridKW = rd.GetInt32(6);
-                                oneCloudLimitClass.WarnMinGridKW = rd.GetInt32(7);
-                                oneCloudLimitClass.PcsKva = rd.GetInt32(8);
-                                oneCloudLimitClass.MaxDemandRatio = rd.GetDouble(9);
-                                oneCloudLimitClass.EnableActiveReduce = rd.GetInt32(10);
-                                oneCloudLimitClass.PUM = rd.GetDouble(11);
-                                oneCloudLimitClass.AllUkvaWindowSize = rd.GetInt32(12);
-                                oneCloudLimitClass.PumTime = rd.GetInt32(13);
-                                CloudLimits.Add(oneCloudLimitClass);
-
-                            }
-                            result = true;
-                        }
-                        else
-                        {
-                            IsConnected = false;
-                            result = false;
-                        }
-                    }
-                    catch (MySqlException ex)
-                    {
-                        IsConnected = false;
-                        result = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        IsConnected = false;
-                        result = false;
-                    }
-                    finally
-                    {
-                        if (rd != null)
-                        {
-                            if (!rd.IsClosed)
-                                rd.Close();
-                            rd.Dispose();
-                        }
-                    }
-
-                    return result;
-                }*/
 
         public static async Task<bool> LoadJFPGFromMySQL()
         {
