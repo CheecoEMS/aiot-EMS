@@ -231,6 +231,17 @@ namespace EMS
         }
     }
 
+    public class SqlComponentSettingsClassTask : SqlTask
+    {
+        public ComponentSettingsClass ComponentSettings { get; private set; }
+
+        public SqlComponentSettingsClassTask(int priority, ComponentSettingsClass componentsettings, Action<bool> callback) : base("", priority, callback)
+        {
+            ComponentSettings = componentsettings;
+        }
+    }
+
+
     public class SqlJFPGSqlTask : SqlTask
     {
         public SqlJFPGSqlTask(int priority, Action<bool> callback) : base("", priority, callback)
@@ -408,6 +419,12 @@ namespace EMS
                         sqlTask.SetResult(result);
                         sqlTask.Callback?.Invoke(result);
                     }
+                    else if (sqlTask is SqlComponentSettingsClassTask sqlComponentSettingsClassTask)
+                    {
+                        bool result = await LoadComponentSettingsFromMySQL(sqlComponentSettingsClassTask.ComponentSettings);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
                     else if (sqlTask is SqlJFPGSqlTask sqlJFPGSqlTask)
                     {
                         bool result = await LoadJFPGFromMySQL();
@@ -524,6 +541,14 @@ namespace EMS
             }
         }
 
+        public static void EnqueueSqlComponentSettingsClassTask(int priority, ComponentSettingsClass componentsettings, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlComponentSettingsClassTask(priority, componentsettings, callback), priority);
+            }
+        }
+        
 
         public static void EnqueueJFPGSqlTask(int priority, Action<bool> callback)
         {
@@ -1010,7 +1035,7 @@ namespace EMS
                         config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
                         config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
                         config.SysAddr = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
-                        config.SysInstTime = rd.IsDBNull(7) ? DateTime.MinValue : rd.GetDateTime(7);
+                        config.SysInstTime = rd.IsDBNull(7) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : rd.GetString(7);
                         config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
                         config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
                         config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
@@ -1028,7 +1053,7 @@ namespace EMS
                         config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
                         config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
                         config.PCSForceRun = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
-                        config.EMSstatus = rd.IsDBNull(25) ? false : rd.GetBoolean(25);
+                        config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
                         config.ErrorState2 = rd.IsDBNull(26) ? false : rd.GetBoolean(26);
                         config.GPIOSelect = rd.IsDBNull(27) ? 0 : rd.GetInt32(27);
                         config.MasterIp = rd.IsDBNull(28) ? "192.168.186.9" : rd.GetString(28);
@@ -1065,8 +1090,6 @@ namespace EMS
             return result;
         }
 
-        
-
         public static async Task<bool> LoadVariChargeFromMySQL(VariChargeClass varicharge)
         {
             bool result = false;
@@ -1082,6 +1105,85 @@ namespace EMS
                     {
                         varicharge.UBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(0);
                         varicharge.OBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(1);
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
+
+        
+        public static async Task<bool> LoadComponentSettingsFromMySQL(ComponentSettingsClass componentSettings)
+        {
+            bool result = false;
+            string astrSQL = @"
+                    SELECT SetHotTemp, SetCoolTemp, CoolTempReturn, HotTempReturn, SetHumidity, HumiReturn, 
+                           TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi, 
+                           FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump, 
+                           LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
+                    FROM ComponentSettings;";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows && rd.Read())
+                    {
+                        componentSettings.SetHotTemp = rd.IsDBNull(0) ? 1 : rd.GetDouble(0);
+                        componentSettings.SetCoolTemp = rd.IsDBNull(1) ? 1 : rd.GetDouble(1);
+                        componentSettings.CoolTempReturn = rd.IsDBNull(2) ? 1 : rd.GetDouble(2);
+                        componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
+                        componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
+                        componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
+                        componentSettings.TCRunWithSys = rd.IsDBNull(6) ? false : rd.GetBoolean(6);
+                        componentSettings.TCAuto = rd.IsDBNull(7) ? false : rd.GetBoolean(7);
+                        componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
+                        componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
+                        componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
+                        componentSettings.TCMaxHumi = rd.IsDBNull(11) ? 1 : rd.GetDouble(11);
+                        componentSettings.TCMinHumi = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
+                        componentSettings.FenMaxTemp = rd.IsDBNull(13) ? 1 : rd.GetDouble(13);
+                        componentSettings.FenMinTemp = rd.IsDBNull(14) ? 1 : rd.GetDouble(14);
+                        componentSettings.FenMode = rd.IsDBNull(15) ? 1 : rd.GetInt32(15);
+                        componentSettings.LCModel = rd.IsDBNull(16) ? 1 : rd.GetInt32(16);
+                        componentSettings.LCTemperSelect = rd.IsDBNull(17) ? 1 : rd.GetInt32(17);
+                        componentSettings.LCWaterPump = rd.IsDBNull(18) ? 1 : rd.GetInt32(18);
+                        componentSettings.LCSetHotTemp = rd.IsDBNull(19) ? 1 : rd.GetDouble(19);
+                        componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
+                        componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
+                        componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
+                        componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetDouble(23);
+                        componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetDouble(24);
+                        componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetDouble(25);
+                        componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetDouble(26);
+                        componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetDouble(27);
                     }
                     result = true;
                 }
@@ -1793,6 +1895,31 @@ namespace EMS
             return bResult;
         }
 
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlComponentSettingsClassTask(int priority, ComponentSettingsClass componentsettings)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlComponentSettingsClassTask(priority, componentsettings, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
         /// <summary>
         /// 对齐EMS与适配的数据库
         /// </summary>
@@ -2375,7 +2502,7 @@ namespace EMS
                         new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "PCSForceRun", Type = "bool", IsNullable = true, Key = "" },
-                        new Column { Name = "EMSstatus", Type = "bool", IsNullable = true, Key = "" },
+                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "ErrorState2", Type = "bool", IsNullable = true, Key = "" },
                         new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" },
@@ -2393,7 +2520,7 @@ namespace EMS
                         new Column { Name = "SetHumidity", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "HumiReturn", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "TCRunWithSys", Type = "bool", IsNullable = true, Key = "" },
-                        new Column { Name = "TCAuto", Type = "bool", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "TCAuto", Type = "bool", IsNullable = false, Key = "" },
                         new Column { Name = "TCMode", Type = "int", IsNullable = true, Key = ""  },
                         new Column { Name = "TCMaxTemp", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "TCMinTemp", Type = "double", IsNullable = true, Key = ""},
@@ -2409,7 +2536,13 @@ namespace EMS
                         new Column { Name = "LCSetHotTemp", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "LCSetCoolTemp", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "LCHotTempReturn", Type = "double", IsNullable = true, Key = "" },
-                        new Column { Name = "LCCoolTempReturn", Type = "double", IsNullable = true, Key = "" }
+                        new Column { Name = "LCCoolTempReturn", Type = "double", IsNullable = true, Key = "" },
+                        //除湿机
+                        new Column { Name = "DHSetRunStatus", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "DHSetTempBoot", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "DHSetTempStop", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "DHSetHumidityBoot", Type = "double", IsNullable = true, Key = "" },
+                        new Column { Name = "DHSetHumidityStop", Type = "double", IsNullable = true, Key = "" }
                     }
                 },
                 {

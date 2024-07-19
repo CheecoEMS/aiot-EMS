@@ -133,7 +133,7 @@ namespace EMS
 
         static public void SetControl(int aSysMode, string aPCSType, string aPCSMode, int aPCSValue, int aPCSOn,bool SaveParam)
         { 
-            frmSet.SysMode = aSysMode;//0手动，1策略，2网控
+            frmSet.config.SysMode = aSysMode;//0手动，1策略，2网控
             frmSet.PCSType = aPCSType;//待机，恒压、恒流、恒功率、AC恒压（离网） ，自适应需量
             if (aPCSMode == "充电")//0充电为正
                 frmSet.PCSwaValue = Math.Abs(aPCSValue); 
@@ -177,28 +177,28 @@ namespace EMS
         private void GetINIData()
         {
             
-            frmSet.SysMode = tcbSYSModel.SelectItemIndex;
+            frmSet.config.SysMode = tcbSYSModel.SelectItemIndex;
             frmSet.PCSType = tcbPCSType.strText; //待机 恒压 恒流 恒功率 自适应需量
             if (tcbPCSMode.SelectItemIndex == 0)//0充电为正
                 frmSet.PCSwaValue = (int)tnePCSwaValue.Value;
             else
                 frmSet.PCSwaValue = -1 * (int)tnePCSwaValue.Value;
-            frmSet.BMSwaValue = tneBMSwaValue.Value;//7.24 添加BMS 1级告警时PCS降低的功率比例
-            frmSet.SetHotTemp = (int)tneSetHotTemp.Value;
-            frmSet.SetCoolTemp = (int)tneSetCoolTemp.Value;
+            frmSet.cloudLimits.BmsDerateRatio = tneBMSwaValue.Value;//7.24 添加BMS 1级告警时PCS降低的功率比例
+            frmSet.componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
+            frmSet.componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
             frmSet.CoolTempReturn = (int)tneCoolTempReturn.Value;
             frmSet.HotTempReturn = (int)tneHotTempReturn.Value;
             
             //12.4
-            frmSet.EMSstatus = tcbEMSstatus.SelectItemIndex; //0:测试模式 1：运行模式
+            frmSet.config.EMSstatus = tcbEMSstatus.SelectItemIndex; //0:测试模式 1：运行模式
             int iConnectStatus = tcbConnectStatus.SelectItemIndex;
             if (iConnectStatus == 0)
             {
-                frmSet.ConnectStatus = "485";
+                frmSet.config.ConnectStatus = "485";
             }
             else if (iConnectStatus == 1)
             {
-                frmSet.ConnectStatus = "tcp";
+                frmSet.config.ConnectStatus = "tcp";
             }
 
         }
@@ -207,27 +207,27 @@ namespace EMS
             frmSet.LoadSetInf();
             //frmSet.LoadFromGlobalSet();
             frmSet.LoadFromCloudlimits();
-            tcbSYSModel.SetSelectItemIndex(frmSet.SysMode); 
+            tcbSYSModel.SetSelectItemIndex(frmSet.config.SysMode); 
             tcbPCSType.SetstrText(frmSet.PCSType);
             if (frmSet.PCSwaValue > 0)
                 tcbPCSMode.SetSelectItemIndex(0);
             else
                 tcbPCSMode.SetSelectItemIndex(1);
             tnePCSwaValue.SetIntValue(Math.Abs(frmSet.PCSwaValue));
-            tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.BMSwaValue));//7.24
-            tneSetHotTemp.SetIntValue((int)(frmSet.SetHotTemp));
-            tneSetCoolTemp.SetIntValue((int)(frmSet.SetCoolTemp));
+            tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
+            tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
+            tneSetCoolTemp.SetIntValue((int)(frmSet.componentSettings.SetCoolTemp));
             tneCoolTempReturn.SetIntValue((int)(frmSet.CoolTempReturn));
             tneHotTempReturn.SetIntValue((int)(frmSet.HotTempReturn));
 
             //12.4
-            tcbEMSstatus.SetSelectItemIndex(frmSet.EMSstatus);
+            tcbEMSstatus.SetSelectItemIndex(frmSet.config.EMSstatus);
 
-            if (frmSet.ConnectStatus == "485")
+            if (frmSet.config.ConnectStatus == "485")
             {
                 tcbConnectStatus.SetSelectItemIndex(0);
             }
-            else if (frmSet.ConnectStatus == "tcp")
+            else if (frmSet.config.ConnectStatus == "tcp")
             {
                 tcbConnectStatus.SetSelectItemIndex(1);
             }

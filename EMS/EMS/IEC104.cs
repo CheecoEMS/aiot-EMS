@@ -455,7 +455,7 @@ namespace IEC104
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref message, ref count);         //a对地电压
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref message, ref count);         //b对地电压
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref message, ref count);         //c对地电压
-            if (frmSet.SysCount == 1)
+            if (frmSet.config.SysCount == 1)
                 Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
             else
                 Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
@@ -717,7 +717,7 @@ namespace IEC104
                         float input = Get_YD_Input(msg);
                         lock (frmMain.Selffrm.AllEquipment)
                         {
-                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = (input / frmSet.SysCount);
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = (input / frmSet.config.SysCount);
                             if (input >= 0)
                             {
                                 frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
@@ -875,7 +875,7 @@ namespace IEC104
                         lock (frmMain.Selffrm.AllEquipment)
                         {
                             frmMain.Selffrm.AllEquipment.eState = 1;
-                            frmSet.SysMode = 1;
+                            frmSet.config.SysMode = 1;
                             frmMain.TacticsList.TacticsOn = true; //恢复策略模式
                             frmMain.TacticsList.ActiveIndex = -2;
                         }
@@ -885,7 +885,7 @@ namespace IEC104
                         lock (frmMain.Selffrm.AllEquipment)
                         {
                             frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
-                            frmSet.SysMode = 2;
+                            frmSet.config.SysMode = 2;
                             frmMain.TacticsList.TacticsOn = false;   //关闭策略
 
                             //初始化设置

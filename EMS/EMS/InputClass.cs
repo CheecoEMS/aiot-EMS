@@ -1086,7 +1086,7 @@ namespace EMS
 
                 }
             }
-            if (frmSet.EMSstatus == 1)
+            if (frmSet.config.EMSstatus == 1)
                 Parent.Report2Cloud.SaveFault2Cloud(dtTemp.ToString("yyMMddHHmmss"));
         }
     }
@@ -1145,13 +1145,13 @@ namespace EMS
             {
                 lock (this.m485.sp)
                 {
-                    SetSysData(7, (short)frmSet.DHSetTempBoot, false);
-                    SetSysData(8, (short)frmSet.DHSetTempStop, false);
-                    SetSysData(9, (short)frmSet.DHSetHumidityBoot, false);
-                    SetSysData(10, (short)frmSet.DHSetHumidityStop, false);
-                    if ((short)frmSet.DHSetRunStatus == 0)
+                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, false);
+                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, false);
+                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, false);
+                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, false);
+                    if ((short)frmSet.componentSettings.DHSetRunStatus == 0)
                     {
-                        SetSysData(11, (short)frmSet.DHSetRunStatus, false);
+                        SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);
                     }
                     else {
                         SetSysData(11, 0X00FF, false);
@@ -1216,10 +1216,10 @@ namespace EMS
             try
             {
                 {
-                    SetSysData(7, (short)frmSet.DHSetTempBoot, true);
-                    SetSysData(8, (short)frmSet.DHSetTempStop, true);
-                    SetSysData(9, (short)frmSet.DHSetHumidityBoot, true);
-                    SetSysData(10, (short)frmSet.DHSetHumidityStop, true);
+                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, true);
+                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, true);
+                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, true);
+                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, true);
                 }
                 return true;
             }
@@ -2038,13 +2038,13 @@ namespace EMS
             {
                 lock (this.m485.sp)
                 {
-                    SetSysData(1, frmSet.LCModel, false);
-                    SetSysData(2, frmSet.LCTemperSelect, false);
-                    SetSysData(3, (short)frmSet.LCSetCoolTemp, false);
-                    SetSysData(4, (short)frmSet.LCSetHotTemp, false);
-                    SetSysData(5, (short)frmSet.LCCoolTempReturn, false);
-                    SetSysData(6, (short)frmSet.LCHotTempReturn, false);
-                    SetSysData(7, frmSet.LCWaterPump, false);
+                    SetSysData(1, frmSet.componentSettings.LCModel, false);
+                    SetSysData(2, frmSet.componentSettings.LCTemperSelect, false);
+                    SetSysData(3, (short)frmSet.componentSettings.LCSetCoolTemp, false);
+                    SetSysData(4, (short)frmSet.componentSettings.LCSetHotTemp, false);
+                    SetSysData(5, (short)frmSet.componentSettings.LCCoolTempReturn, false);
+                    SetSysData(6, (short)frmSet.componentSettings.LCHotTempReturn, false);
+                    SetSysData(7, frmSet.componentSettings.LCWaterPump, false);
                 }
                 return true;
             }
@@ -3690,7 +3690,7 @@ namespace EMS
                 {
                     if (aData * Parent.waValueActive == 0)//qiao
                         SetSysData(47, 0, false);
-                   if(!frmSet. PCSForceRun)
+                   if(!frmSet.config.PCSForceRun)
                    {
                         if ((aData < 0) && (Parent.BMS.MaxChargeA == 0))
                             aData = 0;
@@ -3701,7 +3701,7 @@ namespace EMS
                     switch (iPCSTypes)//0待机1恒流2、恒压、3恒功率
                     {
                         case 0://待机  
-                             SetSysData(84, frmSet.PCSGridModel, false);//0并网,1离网
+                             SetSysData(84, frmSet.config.PCSGridModel, false);//0并网,1离网
                              SetSysData(82, 0xFF00,false);//1远程、0本地
                             iPower = ((aData * 10) / 3);////负给电网放电，正从电网充电
                             SetSysData(55, iPower, false);//三相四线
@@ -3764,7 +3764,7 @@ namespace EMS
                 //设置PCS 
                 int iPCSTypes = Array.IndexOf(PCSTypes, aPCSWorkType);
                 //如果不是强制开机，判断BMS属性是否满足PCS运行条件
-                if (! frmSet.PCSForceRun)
+                if (! frmSet.config.PCSForceRun)
                 {
                     //1-DC恒压 2 - DC恒流3 - DC恒功率4 - AC恒压5 - AC恒流6 - AC恒功率 
                     if ((aData < 0) && (Parent.BMS.MaxChargeA == 0)) //BMS最大充电电流为0，不能充
@@ -4862,7 +4862,7 @@ namespace EMS
         private void UpdateCellTemp(double[] aCellTemps, int aStart, string aData)
         {
 
-            switch (frmSet.BMSVerb)
+            switch (frmSet.config.BMSVerb)
             {
                 //case 0:
                 //     UpdateCellTemp0(aCellTemps, aStart, aData);
@@ -5135,7 +5135,7 @@ namespace EMS
             }
 
             //读取BMS当前容量
-            BMSCap = (frmSet.SysSelfPower * frmMain.Selffrm.AllEquipment.BMS.soc * frmMain.Selffrm.AllEquipment.BMS.soh / 10000);
+            BMSCap = (frmSet.config.SysSelfPower * frmMain.Selffrm.AllEquipment.BMS.soc * frmMain.Selffrm.AllEquipment.BMS.soh / 10000);
         }
 
         public void GetBalaInfo()
@@ -5630,22 +5630,22 @@ namespace EMS
                     SetSysData(36, (short)frmSet.FenMaxTemp, false);
                     SetSysData(37, (short)frmSet.FenMinTemp, false);*/
 
-                    SetSysData(11, (short)frmSet.SetCoolTemp,false);
+                    SetSysData(11, (short)frmSet.componentSettings.SetCoolTemp,false);
                     SetSysData(12, (short)frmSet.CoolTempReturn, false);
-                    SetSysData(13, (short)frmSet.SetHotTemp, false);
+                    SetSysData(13, (short)frmSet.componentSettings.SetHotTemp, false);
                     SetSysData(14, (short)frmSet.HotTempReturn, false);
                     if (aWithAllSet)
                     {
-                        SetSysData(16, (short)frmSet.SetHumidity, false);
-                        SetSysData(17, (short)frmSet.HumiReturn, false);
-                        SetSysData(18, (short)frmSet.TCMaxTemp, false);
-                        SetSysData(19, (short)frmSet.TCMinTemp, false);
-                        SetSysData(20, (short)frmSet.TCMaxHumi, false);
-                        SetSysData(21, (short)frmSet.TCMinTemp, false);
+                        SetSysData(16, (short)frmSet.componentSettings.SetHumidity, false);
+                        SetSysData(17, (short)frmSet.componentSettings.HumiReturn, false);
+                        SetSysData(18, (short)frmSet.componentSettings.TCMaxTemp, false);
+                        SetSysData(19, (short)frmSet.componentSettings.TCMinTemp, false);
+                        SetSysData(20, (short)frmSet.componentSettings.TCMaxHumi, false);
+                        SetSysData(21, (short)frmSet.componentSettings.TCMinTemp, false);
                         SetSysData(22, 0, false);//设置强制自动模式 803 强制模式
                                                  //设置强制自动模式
-                        SetSysData(23, Convert.ToInt16(frmSet.TCMode), false);
-                        if (frmSet.TCRunWithSys)
+                        SetSysData(23, Convert.ToInt16(frmSet.componentSettings.TCMode), false);
+                        if (frmSet.componentSettings.TCRunWithSys)
                             SetSysData(24, 0, false);//来电运行 自动
                         else
                             SetSysData(24, 1, false);//来电运行 禁止
@@ -6460,7 +6460,6 @@ namespace EMS
                             {
                                 if (frmMain.Selffrm.AllEquipment.PCSList[j].PcsRun != 255)
                                 {
-
                                     PCSList[j].ExcSetPCSPower(false);
                                 }
                             }
@@ -6624,7 +6623,7 @@ namespace EMS
                                     Elemeter3_Version = oneEquipment.LoadVersionFromFile();
                                     break;
                                 case 3://pcs
-                                    oneEquipment = new PCSClass(frmSet.iPCSfactory);
+                                    oneEquipment = new PCSClass(frmSet.config.iPCSfactory);
                                     PCSList.Add((PCSClass)oneEquipment);
                                     PCS_Version = oneEquipment.LoadVersionFromFile();
                                     break;
@@ -6892,18 +6891,18 @@ namespace EMS
                 //8.7
                 //AutoReadEMSCom7();//读取从机EMS信息
 
-                if (frmSet.IsMaster)
+                if (frmSet.config.IsMaster)
                 {
-                    if (frmSet.ConnectStatus == "485")
+                    if (frmSet.config.ConnectStatus == "485")
                     {
-                        if (frmSet.SysCount > 1)
+                        if (frmSet.config.SysCount > 1)
                         {
                             frmMain.Selffrm.AllEquipment.AutoControlEMS();
                         }
                     }
-                    else if (frmSet.ConnectStatus == "tcp")
+                    else if (frmSet.config.ConnectStatus == "tcp")
                     {
-                        if (frmSet.SysCount > 1)
+                        if (frmSet.config.SysCount > 1)
                         {
                             frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
                         }
@@ -6912,7 +6911,7 @@ namespace EMS
                 }
                 else
                 {
-                    if (frmSet.ConnectStatus == "485")
+                    if (frmSet.config.ConnectStatus == "485")
                     {
                         frmMain.Selffrm.AllEquipment.Auto_Read_Serial();
                     }
@@ -6985,7 +6984,7 @@ namespace EMS
         {
             while (true)
             {
-                if (frmSet.EMSstatus == 1)
+                if (frmSet.config.EMSstatus == 1)
                 {
                     DateTime tempTime = DateTime.Now;
                     //采集数据保存在数据库中
@@ -7030,7 +7029,7 @@ namespace EMS
                     {
                         try
                         {
-                            if (frmSet.IsMaster)
+                            if (frmSet.config.IsMaster)
                             {
                                 if (frmMain.TacticsList != null)
                                 {
@@ -7154,7 +7153,7 @@ namespace EMS
                 }*/
 
                 //空调控制
-                if(frmSet.EMSstatus == 1)  
+                if(frmSet.config.EMSstatus == 1)  
                 {
                     if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
                     {
@@ -7408,7 +7407,7 @@ namespace EMS
         {
             try
             {
-                if (frmSet.SysCount > 1)
+                if (frmSet.config.SysCount > 1)
                 {
                     //实例化等待连接的线程
                     Thread ClientRecThread = new Thread(ReadCom7Data);
@@ -7850,7 +7849,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7906,7 +7905,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7985,13 +7984,13 @@ namespace EMS
         {
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
                     return;
                 foreach (EMSEquipment oneEMSE in EMSList)
                 {
                     //oneEMSE.ExcPCSCommand(awType, aPCSType, aPCSValueRate, bAllParam);
 
-                    if (frmSet.SysCount > 1)
+                    if (frmSet.config.SysCount > 1)
                     {
                         oneEMSE.ExcPCSCommand(awType, aPCSType, aPCSValueRate, bAllParam);
                     }
@@ -8006,7 +8005,7 @@ namespace EMS
 
         public void SetAllPCSSheduleKVA(double aPCSScheduleKVA)
         {
-            if ((!frmSet.IsMaster) || (frmSet.PCSGridModel == 1))
+            if ((!frmSet.config.IsMaster) || (frmSet.config.PCSGridModel == 1))
                 return;
             foreach (EMSEquipment oneEMSE in EMSList)
             {
@@ -8022,7 +8021,7 @@ namespace EMS
         //8.6
         public void SetAllPCSOn(bool aOn)
         {
-            if ((!frmSet.IsMaster)|| (frmSet.PCSGridModel == 1))
+            if ((!frmSet.config.IsMaster)|| (frmSet.config.PCSGridModel == 1))
                 return;
             foreach (EMSEquipment oneEMSE in EMSList)
             {
@@ -8255,7 +8254,7 @@ namespace EMS
                             dRate = 0;
                     }
                 }
-                else if ((GridKVA <= frmSet.cloudLimits.MinGridKW)  && (wTypeActive == "放电") &&(frmSet.PCSGridModel == 0))//0并网，1离网 模式需要不控制
+                else if ((GridKVA <= frmSet.cloudLimits.MinGridKW)  && (wTypeActive == "放电") &&(frmSet.config.PCSGridModel == 0))//0并网，1离网 模式需要不控制
                 { //逆流
                     dValue = frmSet.cloudLimits.MinGridKW - GridKVA;
                     //限流qiao 
@@ -8301,7 +8300,7 @@ namespace EMS
                         dValue = (GridKVA_window + Math.Abs(AllwaValue)) - frmSet.cloudLimits.MinGridKW;
                         if (dValue > 0)
                         {
-                            if ((dValue > Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
+                            if ((dValue > Math.Abs(AllPCSScheduleKVA)) || (frmSet.config.PCSGridModel == 1))
                             {
                                 dRate = 1;
 
@@ -8340,7 +8339,7 @@ namespace EMS
                 try
                 {
                     //如果是从机
-                    if (!frmSet.IsMaster)
+                    if (!frmSet.config.IsMaster)
                     {
                         //获取pcs功率
                         double PCSPower = 0;
@@ -8352,7 +8351,7 @@ namespace EMS
                         PCSKVA = Math.Round(PCSPower, 2);
 
                         //判断是否超时控制，如果超时就停机等待
-                        if (frmSet.ConnectStatus == "tcp")
+                        if (frmSet.config.ConnectStatus == "tcp")
                         {
                             if (frmMain.Selffrm.ModbusTcpClient.Connected)
                             {
@@ -8487,12 +8486,12 @@ namespace EMS
                         }
                         PCSKVA = Math.Round(PCSPower, 2);
 
-                        if (frmSet.ConnectStatus == "tcp")
+                        if (frmSet.config.ConnectStatus == "tcp")
                         {
                             //问询从机功率
                             ReadAllEmsTCP();
                         }
-                        else if (frmSet.ConnectStatus == "485")
+                        else if (frmSet.config.ConnectStatus == "485")
                         {
                             ReadAllEmsRTU();
                         }
@@ -8535,7 +8534,7 @@ namespace EMS
                         }
 
                         //如果主机是单机  
-                        if (frmSet.SysCount == 1)
+                        if (frmSet.config.SysCount == 1)
                         {
                             //2.21
                             //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
@@ -8573,7 +8572,7 @@ namespace EMS
                                 SingleReflux();
                                 continue;
                             }
-                            AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                            AllPCSScheduleKVA = PCSScheduleKVA * frmSet.config.SysCount;
                                     
                             //多机器的主机                          
                             Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now*(EMSList.Count+1);
@@ -8929,7 +8928,7 @@ namespace EMS
         //级联
         public  void FireFBGPIO()
         {
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.config.GPIOSelect)
             {
                 case 0:
                     if (frmSet.GetGPIOState(0) == 2)
@@ -9023,7 +9022,7 @@ namespace EMS
 
         public void EmergencyStopFBGPIO() {
 
-            switch (frmSet.GPIO_Select_Mode)
+            switch (frmSet.config.GPIOSelect)
             { 
             case 0:                    
                 if (frmSet.GetGPIOState(1) == 2)
@@ -9203,19 +9202,19 @@ namespace EMS
 
                 if (BMS.soc >= 50 && BMS.MaxChargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmSet.variCharge.UBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.variCharge.UBmsPcsState != frmSet.cloudLimits.BmsDerateRatio/100)
                     {
                         lock (frmSet.variCharge)
-                            frmSet.variCharge.UBmsPcsState = frmSet.BMSwaValue/100;
+                            frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmSet.variCharge.OBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.variCharge.OBmsPcsState != frmSet.cloudLimits.BmsDerateRatio/100)
                     {
                         lock (frmSet.variCharge)
-                            frmSet.variCharge.OBmsPcsState = frmSet.BMSwaValue/100;
+                            frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
