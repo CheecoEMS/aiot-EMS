@@ -1070,6 +1070,7 @@ namespace EMS
                         lock (Parent.ErrorState)
                         {
                             Parent.ErrorState[2] = true;
+                            frmSet.config.ErrorState2 = true;
                             //Parent.LedErrorState[2] = true;
 
                             //powerOff
@@ -2588,6 +2589,7 @@ namespace EMS
                         lock (Parent.ErrorState)
                         {
                             Parent.ErrorState[2] = true;
+                            frmSet.config.ErrorState2 = true;
                         }
                     }                  
                     IsError = tempError;
@@ -2643,6 +2645,7 @@ namespace EMS
                             lock (Parent.ErrorState)
                             {
                                 Parent.ErrorState[2] = true;
+                                frmSet.config.ErrorState2 = true;
                             }
                             lock (Parent.EMSError)
                             {
@@ -2677,6 +2680,7 @@ namespace EMS
                             lock (Parent.ErrorState)
                             {
                                 Parent.ErrorState[2] = true;
+                                frmSet.config.ErrorState2 = true;
                             }
                             lock (Parent.EMSError)
                             {
@@ -2743,6 +2747,7 @@ namespace EMS
                         lock (Parent.ErrorState)
                         {
                             Parent.ErrorState[2] = true;
+                            frmSet.config.ErrorState2 = true;
                         }
                         lock (Parent.EMSError)
                         {
@@ -2807,6 +2812,7 @@ namespace EMS
                             lock (Parent.ErrorState)
                             {
                                 Parent.ErrorState[2] = true;
+                                frmSet.config.ErrorState2 = true;
                             }
                             lock (Parent.EMSError)
                             {
@@ -5631,9 +5637,9 @@ namespace EMS
                     SetSysData(37, (short)frmSet.FenMinTemp, false);*/
 
                     SetSysData(11, (short)frmSet.componentSettings.SetCoolTemp,false);
-                    SetSysData(12, (short)frmSet.CoolTempReturn, false);
+                    SetSysData(12, (short)frmSet.componentSettings.CoolTempReturn, false);
                     SetSysData(13, (short)frmSet.componentSettings.SetHotTemp, false);
-                    SetSysData(14, (short)frmSet.HotTempReturn, false);
+                    SetSysData(14, (short)frmSet.componentSettings.HotTempReturn, false);
                     if (aWithAllSet)
                     {
                         SetSysData(16, (short)frmSet.componentSettings.SetHumidity, false);
@@ -7094,8 +7100,8 @@ namespace EMS
 
 
                     //1.29 重置重启次数
-                    frmSet.RestartCounts = 5;
-                    frmSet.SaveSet2File();
+                    //frmSet.RestartCounts = 5;
+                    //frmSet.SaveSet2File();
 
                 }
                 //检查mqttp的连接情况，每分钟检查一次
@@ -8478,30 +8484,6 @@ namespace EMS
                     }
                     else//如果是主机
                     {
-                        double PCSPower = 0;
-                        for (int i = 0; i < PCSList.Count; i++)
-                        {
-                            PCSList[i].GetallUkva();
-                            PCSPower += PCSList[i].allUkva;
-                        }
-                        PCSKVA = Math.Round(PCSPower, 2);
-
-                        if (frmSet.config.ConnectStatus == "tcp")
-                        {
-                            //问询从机功率
-                            ReadAllEmsTCP();
-                        }
-                        else if (frmSet.config.ConnectStatus == "485")
-                        {
-                            ReadAllEmsRTU();
-                        }
-
-                        if (Elemeter1Z != null)
-                        {
-                            AllwaValue = Elemeter1Z.AllUkva;
-                        }
-
-
                         //没有关口表
                         if (!ChechPower)
                         {
@@ -8536,6 +8518,15 @@ namespace EMS
                         //如果主机是单机  
                         if (frmSet.config.SysCount == 1)
                         {
+                            double PCSPower = 0;
+                            for (int i = 0; i < PCSList.Count; i++)
+                            {
+                                PCSList[i].GetallUkva();
+                                PCSPower += PCSList[i].allUkva;
+                            }
+                            PCSKVA = Math.Round(PCSPower, 2);
+
+
                             //2.21
                             //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
                             Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
@@ -8554,6 +8545,29 @@ namespace EMS
                         }
                         else
                         {
+                            double PCSPower = 0;
+                            for (int i = 0; i < PCSList.Count; i++)
+                            {
+                                PCSList[i].GetallUkva();
+                                PCSPower += PCSList[i].allUkva;
+                            }
+                            PCSKVA = Math.Round(PCSPower, 2);
+                            if (frmSet.config.ConnectStatus == "tcp")
+                            {
+                                //问询从机功率
+                                ReadAllEmsTCP();
+                            }
+                            else if (frmSet.config.ConnectStatus == "485")
+                            {
+                                ReadAllEmsRTU();
+                            }
+
+                            if (Elemeter1Z != null)
+                            {
+                                AllwaValue = Elemeter1Z.AllUkva;
+                            }
+
+
                             //冗余判断
                             if (EMSList.Count == 0)
                             {

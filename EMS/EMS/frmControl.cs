@@ -141,7 +141,10 @@ namespace EMS
                 frmSet.PCSwaValue = -1 * Math.Abs(aPCSValue);
 
             if (SaveParam)
+            {
                 frmSet.SaveSet2File();
+                frmSet.Set_Config();
+            }
             //执行
             if (aPCSOn!=0)
             {
@@ -186,8 +189,8 @@ namespace EMS
             frmSet.cloudLimits.BmsDerateRatio = tneBMSwaValue.Value;//7.24 添加BMS 1级告警时PCS降低的功率比例
             frmSet.componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
             frmSet.componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
-            frmSet.CoolTempReturn = (int)tneCoolTempReturn.Value;
-            frmSet.HotTempReturn = (int)tneHotTempReturn.Value;
+            frmSet.componentSettings.CoolTempReturn = (int)tneCoolTempReturn.Value;
+            frmSet.componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
             
             //12.4
             frmSet.config.EMSstatus = tcbEMSstatus.SelectItemIndex; //0:测试模式 1：运行模式
@@ -217,8 +220,8 @@ namespace EMS
             tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
             tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
             tneSetCoolTemp.SetIntValue((int)(frmSet.componentSettings.SetCoolTemp));
-            tneCoolTempReturn.SetIntValue((int)(frmSet.CoolTempReturn));
-            tneHotTempReturn.SetIntValue((int)(frmSet.HotTempReturn));
+            tneCoolTempReturn.SetIntValue((int)(frmSet.componentSettings.CoolTempReturn));
+            tneHotTempReturn.SetIntValue((int)(frmSet.componentSettings.HotTempReturn));
 
             //12.4
             tcbEMSstatus.SetSelectItemIndex(frmSet.config.EMSstatus);
@@ -252,7 +255,8 @@ namespace EMS
         private void btnTempRun_Click(object sender, EventArgs e)
         {
             GetINIData();
-            frmSet.SaveSet2File(); 
+            //frmSet.SaveSet2File();
+            frmSet.Set_ComponentSettings();
             frmMain.Selffrm.AllEquipment.TCIni(false);
             frmMain.Selffrm.AllEquipment.TCPowerOn(true);
         }
@@ -292,7 +296,8 @@ namespace EMS
             {
                 //保存当前数据重新赋值给frmset的属性
                 GetINIData(); //桌面选定执行功率存入设置中
-                frmSet.SaveSet2File();
+
+                frmSet.Set_Config();
                 //执行
                 frmSet.PCSMRun();
             }
@@ -316,7 +321,7 @@ namespace EMS
             try
             {
                 GetINIData();
-                frmSet.SaveSet2File();
+                //frmSet.SaveSet2File();
 
                 //8.3
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
@@ -344,8 +349,8 @@ namespace EMS
             try
             {
                 GetINIData();
-                frmSet.SaveSet2File();
-
+                //frmSet.SaveSet2File();
+                frmSet.Set_Config();
             }
             catch { }
         }
@@ -359,8 +364,10 @@ namespace EMS
         private void btnCleanError_Click(object sender, EventArgs e)
         {
             frmMain.Selffrm.AllEquipment.ErrorState[2] = false;
-            frmSet.SaveSet2File();
+            frmSet.config.ErrorState2 = false;
+            //frmSet.SaveSet2File();
             frmSet.ErrorGPIO(0);
+            frmSet.Set_Config();
             //frmMain.Selffrm.AllEquipment.runState = 0;
         }
 

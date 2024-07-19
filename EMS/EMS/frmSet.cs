@@ -182,6 +182,7 @@ namespace EMS
 
                 LoadFromCloudlimits();
                 LoadFromConfig();
+                LoadFromComponentSettings();
                 oneForm.ShowINIdata();
                 //DBConnection.SetDBGrid(oneForm.dbgLog);
                 //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
@@ -1172,8 +1173,8 @@ namespace EMS
                 tneMinSOC.SetIntValue(cloudLimits.MinSOC);
                 tneSetHotTemp.SetIntValue((int)(componentSettings.SetHotTemp));
                 tneSetCoolTemp.SetIntValue((int)(componentSettings.SetCoolTemp));
-                tneCoolTempReturn.SetIntValue((int)(CoolTempReturn));
-                tneHotTempReturn.SetIntValue((int)(HotTempReturn));
+                tneCoolTempReturn.SetIntValue((int)(componentSettings.CoolTempReturn));
+                tneHotTempReturn.SetIntValue((int)(componentSettings.HotTempReturn));
 
                 tneSetHumidity.SetIntValue((int)(componentSettings.SetHumidity));
                 tneHumiReturn.SetIntValue((int)(componentSettings.HumiReturn));
@@ -1292,8 +1293,8 @@ namespace EMS
             cloudLimits.MinSOC = (int)tneMinSOC.Value;
             componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
             componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
-            CoolTempReturn = (int)tneCoolTempReturn.Value;
-            HotTempReturn = (int)tneHotTempReturn.Value;
+            componentSettings.CoolTempReturn = (int)tneCoolTempReturn.Value;
+            componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
             componentSettings.SetHumidity = (int)tneSetHumidity.Value;
             componentSettings.HumiReturn = (int)tneHumiReturn.Value;
             componentSettings.TCRunWithSys = tcbTCRunWithSys.Checked;
@@ -1626,7 +1627,7 @@ namespace EMS
             {
                //保存当前数据
                 GetINIData();
-                SaveSet2File();
+                //SaveSet2File();
                //执行
                 PCSMRun();
                 //充放电先打开空调 (液冷机) 
@@ -1656,7 +1657,8 @@ namespace EMS
             {
                 //保存当前数据
                 GetINIData();
-                SaveSet2File();
+                //SaveSet2File();
+                Set_Cloudlimits();
             }
             catch
             {
@@ -1697,6 +1699,8 @@ namespace EMS
             SaveSet2File();
             //Set_GlobalSet_State();
             Set_Cloudlimits();
+            Set_Config();
+            Set_ComponentSettings();
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -2345,7 +2349,8 @@ namespace EMS
         private void btnATAppy_Click(object sender, EventArgs e)
         {
             GetINIData();
-            SaveSet2File();
+            //SaveSet2File();
+            Set_ComponentSettings();
             bTCDataChanged = false;
             frmMain.Selffrm.AllEquipment.TCIni(true);
         }
@@ -2355,7 +2360,8 @@ namespace EMS
             try
             {
                 GetINIData();
-                SaveSet2File();
+                //SaveSet2File();
+                Set_ComponentSettings();
                 frmMain.Selffrm.AllEquipment.LCIni();
             }
             catch { }
@@ -2384,7 +2390,8 @@ namespace EMS
             try
             {
                 GetINIData();
-                SaveSet2File();
+                //SaveSet2File();
+                Set_ComponentSettings();
                 frmMain.Selffrm.AllEquipment.DHIni();
             }
             catch { }

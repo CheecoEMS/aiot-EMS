@@ -227,8 +227,8 @@ namespace EMS
                     //lbfanControl.Text = oneTempControl.fanControl.ToString();
                     tneSetHotTemp.SetValue(0.1 * frmSet.componentSettings.SetHotTemp);
                     tneSetCoolTemp.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
-                    tneCoolTempReturn.SetValue(0.1 * (frmSet.CoolTempReturn));
-                    tneHotTempReturn.SetValue(0.1 * (frmSet.HotTempReturn));
+                    tneCoolTempReturn.SetValue(0.1 * (frmSet.componentSettings.CoolTempReturn));
+                    tneHotTempReturn.SetValue(0.1 * (frmSet.componentSettings.HotTempReturn));
                     //tneSetHumidity.SetIntValue((int)(SetHumidity));
                     //tneHumiReturn.SetIntValue((int)(HumiReturn));
                     //tcbTCRunWithSys.SetValue(TCRunWithSys);
