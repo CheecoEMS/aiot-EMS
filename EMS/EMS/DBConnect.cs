@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using MySqlX.XDevAPI.Common;
 using Mysqlx.Session;
 using System.Diagnostics.Eventing.Reader;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace EMS
 {
@@ -220,6 +221,16 @@ namespace EMS
         }
     }
 
+    public class SqlVariChargeClassTask : SqlTask
+    {
+        public VariChargeClass VariCharge { get; private set; }
+
+        public SqlVariChargeClassTask(int priority, VariChargeClass varicharge, Action<bool> callback) : base("", priority, callback)
+        {
+            VariCharge = varicharge;
+        }
+    }
+
     public class SqlJFPGSqlTask : SqlTask
     {
         public SqlJFPGSqlTask(int priority, Action<bool> callback) : base("", priority, callback)
@@ -391,6 +402,12 @@ namespace EMS
                         sqlTask.SetResult(result);
                         sqlTask.Callback?.Invoke(result);
                     }
+                    else if (sqlTask is SqlVariChargeClassTask sqlVariChargeClassTask)
+                    {
+                        bool result = await LoadVariChargeFromMySQL(sqlVariChargeClassTask.VariCharge);
+                        sqlTask.SetResult(result);
+                        sqlTask.Callback?.Invoke(result);
+                    }
                     else if (sqlTask is SqlJFPGSqlTask sqlJFPGSqlTask)
                     {
                         bool result = await LoadJFPGFromMySQL();
@@ -499,6 +516,14 @@ namespace EMS
                 sqlTaskQueue.Enqueue(new SqlConfigClassTask(priority, config, callback), priority);
             }
         }
+        public static void EnqueueSqlVariChargeTask(int priority, VariChargeClass varicharge, Action<bool> callback)
+        {
+            lock (lockObject)
+            {
+                sqlTaskQueue.Enqueue(new SqlVariChargeClassTask(priority, varicharge, callback), priority);
+            }
+        }
+
 
         public static void EnqueueJFPGSqlTask(int priority, Action<bool> callback)
         {
@@ -689,7 +714,7 @@ namespace EMS
         public static async Task<bool> LoadTacticsFromMySQL(List<TacticsClass> Tactics)
         {
             bool result = false;
-            string astrSQL = "select startTime,endTime, tType, PCSType, waValue from tactics  order by startTime";
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue from tactics  order by startTime;";
             MySqlDataReader rd = null;
 
             try
@@ -779,7 +804,7 @@ namespace EMS
         public static async Task<bool> LoadBalaTacticsFromMySQL(List<BalaTacticsClass> BalaTactics)
         {
             bool result = false;
-            string astrSQL = "select startTime,endTime from balatactics  order by startTime";
+            string astrSQL = "select startTime,endTime from balatactics  order by startTime;";
             MySqlDataReader rd = null;
 
             try
@@ -843,7 +868,7 @@ namespace EMS
         public static async Task<bool> LoadElectrovalenceFromMySQL(List<ElectrovalenceClass> Electrovalences)
         {
             bool result = false;
-            string astrSQL = "select section ,startTime, eName  from electrovalence ";
+            string astrSQL = "select section ,startTime, eName  from electrovalence; ";
             MySqlDataReader rd = null;
 
             try
@@ -905,7 +930,7 @@ namespace EMS
         public static async Task<bool> LoadCloudLimitsFromMySQL(CloudLimitClass CloudLimits)
         {
             bool result = false;
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, UBmsPcsState, OBmsPcsState, WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime FROM CloudLimits ;";
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime ， BmsDerateRatio FROM CloudLimits ;";
             MySqlDataReader rd = null;
 
             try
@@ -919,16 +944,15 @@ namespace EMS
                         CloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
                         CloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
                         CloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
-                        CloudLimits.UBmsPcsState = rd.IsDBNull(4) ? 1.0 : rd.GetDouble(4);
-                        CloudLimits.OBmsPcsState = rd.IsDBNull(5) ? 1.0 : rd.GetDouble(5);
-                        CloudLimits.WarnMaxGridKW = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
-                        CloudLimits.WarnMinGridKW = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
-                        CloudLimits.PcsKva = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
-                        CloudLimits.Client_PUMdemand_Max = rd.IsDBNull(9) ? 0.0 : rd.GetDouble(9);
-                        CloudLimits.EnableActiveReduce = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                        CloudLimits.PumScale = rd.IsDBNull(11) ? 0.0 : rd.GetDouble(11);
-                        CloudLimits.AllUkvaWindowSize = rd.IsDBNull(12) ? 5 : rd.GetInt32(12);
-                        CloudLimits.PumTime = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
+                        CloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                        CloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                        CloudLimits.PcsKva = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                        CloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0.0 : rd.GetDouble(7);
+                        CloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                        CloudLimits.PumScale = rd.IsDBNull(9) ? 0.0 : rd.GetDouble(9);
+                        CloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 5 : rd.GetInt32(10);
+                        CloudLimits.PumTime = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
+                        CloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
                     }
                     result = true;
                 }
@@ -967,7 +991,7 @@ namespace EMS
             bool result = false;
             string astrSQL = "SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime," 
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr," 
-                                + "AutoRun, SysMode, PCSGridModel, PCSType, PCSwaValue, BMSwaValue, DebugComName,"
+                                + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
                                 + "EMSstatus, ErrorState2 , GPIOSelect, MasterIp, ConnectStatus FROM config; ";
             MySqlDataReader rd = null;
@@ -996,22 +1020,19 @@ namespace EMS
                         config.AutoRun = rd.IsDBNull(14) ? false : rd.GetBoolean(14);
                         config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
                         config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
-                        config.PCSType = rd.IsDBNull(17) ? "恒功率" : rd.GetString(17);
-                        config.PCSwaValue = rd.IsDBNull(18) ? 0 : rd.GetInt32(18);
-                        config.BMSwaValue = rd.IsDBNull(19) ? 50.0 : rd.GetDouble(19);
-                        config.DebugComName = rd.IsDBNull(20) ? "com7" : rd.GetString(20);
-                        config.DebugRate = rd.IsDBNull(21) ? 38400: rd.GetInt32(21);
-                        config.SysCount = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
-                        config.UseYunTactics = rd.IsDBNull(23) ? false : rd.GetBoolean(23);
-                        config.UseBalaTactics = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
-                        config.iPCSfactory = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
-                        config.BMSVerb = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
-                        config.PCSForceRun = rd.IsDBNull(27) ? false : rd.GetBoolean(27);
-                        config.EMSstatus = rd.IsDBNull(28) ? false : rd.GetBoolean(28);
-                        config.ErrorState2 = rd.IsDBNull(29) ? false : rd.GetBoolean(29);
-                        config.GPIOSelect = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
-                        config.MasterIp = rd.IsDBNull(31) ? "192.168.186.9" : rd.GetString(31);
-                        config.ConnectStatus = rd.IsDBNull(32) ? "485" : rd.GetString(32);
+                        config.DebugComName = rd.IsDBNull(17) ? "com7" : rd.GetString(17);
+                        config.DebugRate = rd.IsDBNull(18) ? 38400: rd.GetInt32(18);
+                        config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
+                        config.UseYunTactics = rd.IsDBNull(20) ? false : rd.GetBoolean(20);
+                        config.UseBalaTactics = rd.IsDBNull(21) ? false : rd.GetBoolean(21);
+                        config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
+                        config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
+                        config.PCSForceRun = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
+                        config.EMSstatus = rd.IsDBNull(25) ? false : rd.GetBoolean(25);
+                        config.ErrorState2 = rd.IsDBNull(26) ? false : rd.GetBoolean(26);
+                        config.GPIOSelect = rd.IsDBNull(27) ? 0 : rd.GetInt32(27);
+                        config.MasterIp = rd.IsDBNull(28) ? "192.168.186.9" : rd.GetString(28);
+                        config.ConnectStatus = rd.IsDBNull(29) ? "485" : rd.GetString(29);
                     }
                     result = true;
                 }
@@ -1044,7 +1065,54 @@ namespace EMS
             return result;
         }
 
+        
 
+        public static async Task<bool> LoadVariChargeFromMySQL(VariChargeClass varicharge)
+        {
+            bool result = false;
+            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge;";
+            MySqlDataReader rd = null;
+
+            try
+            {
+                rd = GetData(astrSQL);
+                if (rd != null)
+                {
+                    if (rd.HasRows && rd.Read())
+                    {
+                        varicharge.UBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(0);
+                        varicharge.OBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(1);
+                    }
+                    result = true;
+                }
+                else
+                {
+                    IsConnected = false;
+                    result = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                result = false;
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+            }
+
+            return result;
+        }
 
         public static async Task<bool> LoadJFPGFromMySQL()
         {
@@ -1053,7 +1121,7 @@ namespace EMS
             if ((connection == null) || (!IsConnected))
                 CreateConnection();
 
-            string astrSQL = "select startTime, eName from electrovalence ";
+            string astrSQL = "select startTime, eName from electrovalence; ";
             MySqlDataReader rd = null;
             try
             {
@@ -1702,6 +1770,30 @@ namespace EMS
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="targetColumns"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static bool ExecuteEnqueueSqlVariChargeTask(int priority, VariChargeClass varicharge)
+        {
+            bool bResult = false;
+
+            var resetEvent = new System.Threading.AutoResetEvent(false);
+
+            SqlExecutor.EnqueueSqlVariChargeTask(priority, varicharge, (result) =>
+            {
+                bResult = result;
+                resetEvent.Set();
+            });
+
+            resetEvent.WaitOne(); // 等待任务完成
+
+            return bResult;
+        }
+
+        /// <summary>
         /// 对齐EMS与适配的数据库
         /// </summary>
         /// <returns></returns>
@@ -2275,9 +2367,6 @@ namespace EMS
                         new Column { Name = "AutoRun", Type = "bool", IsNullable = true, Key = "" },
                         new Column { Name = "SysMode", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "PCSGridModel", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "PCSType", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "PCSwaValue", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "BMSwaValue", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "DebugComName", Type = "varchar(255)", IsNullable = true, Key = "" },
                         new Column { Name = "DebugRate", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = "" },
@@ -2572,8 +2661,6 @@ namespace EMS
                         new Column { Name = "MinGridKW", Type = "int", IsNullable = true, Comment = "目标电网功率下限" },
                         new Column { Name = "MaxSOC", Type = "int", IsNullable = true, Comment = "最高SOC" },
                         new Column { Name = "MinSOC", Type = "int", IsNullable = true, Comment = "最低SOC" },
-                        new Column { Name = "UBmsPcsState", Type = "double", IsNullable = true, Comment = "" },
-                        new Column { Name = "OBmsPcsState", Type = "double", IsNullable = true, Comment = "" },
                         new Column { Name = "WarnMaxGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率上限" },
                         new Column { Name = "WarnMinGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率下限" },
                         new Column { Name = "PcsKva", Type = "int", IsNullable = true, Comment = "触发需量抬升的放电功率" },
@@ -2581,7 +2668,8 @@ namespace EMS
                         new Column { Name = "EnableActiveReduce", Type = "int", IsNullable = true, Comment = "开启主动降容：1(开) 0(关)" },
                         new Column { Name = "PumScale", Type = "double", IsNullable = true, Comment = "需量比例" },
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },
-                        new Column { Name = "PumTime", Type = "int", IsNullable = true, Comment = "强制放电时间" }
+                        new Column { Name = "PumTime", Type = "int", IsNullable = true, Comment = "强制放电时间" },
+                        new Column { Name = "BmsDerateRatio", Type = "double", IsNullable = true, Comment = "BMS触发1级告警致功率降额比" }
                     }
                 },
                 {
@@ -2788,6 +2876,14 @@ namespace EMS
                         new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" , Comment = "充电电量（kwh)"},
                         new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"},
                     }
+                },
+                {
+                    "VariCharge", new List<Column>
+                    {
+                        new Column { Name = "UBmsPcsState", Type = "double", IsNullable = true, Key = "" , Comment = "充电限制"},
+                        new Column { Name = "OBmsPcsState", Type = "double", IsNullable = true, Key = "" , Comment = "放电限制"},
+                    }
+
                 }
                 // Add more tables as needed
             };

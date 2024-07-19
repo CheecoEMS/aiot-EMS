@@ -462,11 +462,15 @@ namespace EMS
                 DBConnection conn = new DBConnection();
                 SqlExecutor.SetDBGrid(frmMain.Selffrm.dbvError);
                 //从数据库加载
-                SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
+                //SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
+                frmSet.LoadFromConfig();
+                frmSet.LoadFromVariCharge();
+                frmSet.LoadFromCloudlimits();
                 //frmSet.LoadFromGlobalSet();
 
                 //从数据库中加载配置信息
-                SqlExecutor.ExecuteEnqueueSqlConfigClassTask(3, frmSet.config);
+                //SqlExecutor.ExecuteEnqueueSqlConfigClassTask(3, frmSet.config);
+
                 //frmSet.LoadFromConfig();
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)

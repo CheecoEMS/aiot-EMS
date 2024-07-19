@@ -206,7 +206,7 @@ namespace EMS
         {
             frmSet.LoadSetInf();
             //frmSet.LoadFromGlobalSet();
-            frmSet.LoadFromCouldimits();
+            frmSet.LoadFromCloudlimits();
             tcbSYSModel.SetSelectItemIndex(frmSet.SysMode); 
             tcbPCSType.SetstrText(frmSet.PCSType);
             if (frmSet.PCSwaValue > 0)

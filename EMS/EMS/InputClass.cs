@@ -6391,7 +6391,7 @@ namespace EMS
                             aData = 0;
                             break;
                         case "充电":
-                            aData = (int)(Math.Abs(aData) * frmSet.cloudLimits.UBmsPcsState);
+                            aData = (int)(Math.Abs(aData) * frmSet.variCharge.UBmsPcsState);
                             if ((BMSSOC > frmSet.cloudLimits.MaxSOC) && (aData != 0))
                             {
                                 SqlExecutor.RecordLOG("系统", "充电失败", "SOC过高");
@@ -6404,7 +6404,7 @@ namespace EMS
                             }
                             break;
                         case "放电":
-                            aData = -1 * (int)(Math.Abs(aData) * frmSet.cloudLimits.OBmsPcsState);
+                            aData = -1 * (int)(Math.Abs(aData) * frmSet.variCharge.OBmsPcsState);
                             if ((BMSSOC < frmSet.cloudLimits.MinSOC) && (aData != 0))
                             {
                                 SqlExecutor.RecordLOG("系统", "放电失败", "SOC过低");
@@ -9109,11 +9109,11 @@ namespace EMS
             {
                 if (BMS.MaxChargeA == 0 && BMS.soc > 90) //双重确认为充电2级故障，修改充放阈值,记录需要进行均衡策略的单体ID
                 {
-                    if (frmSet.cloudLimits.UBmsPcsState != 0)
+                    if (frmSet.variCharge.UBmsPcsState != 0)
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmSet.cloudLimits)
-                            frmSet.cloudLimits.UBmsPcsState = 0;
+                        lock (frmSet.variCharge)
+                            frmSet.variCharge.UBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
@@ -9180,11 +9180,11 @@ namespace EMS
                 }
                 else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
                 {
-                    if (frmSet.cloudLimits.OBmsPcsState != 0)
+                    if (frmSet.variCharge.OBmsPcsState != 0)
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmSet.cloudLimits)
-                            frmSet.cloudLimits.OBmsPcsState = 0;
+                        lock (frmSet.variCharge)
+                            frmSet.variCharge.OBmsPcsState = 0;
 
                         //
                         frmSet.Set_Cloudlimits_Async();
@@ -9203,19 +9203,19 @@ namespace EMS
 
                 if (BMS.soc >= 50 && BMS.MaxChargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmSet.cloudLimits.UBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.variCharge.UBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        lock (frmSet.cloudLimits)
-                            frmSet.cloudLimits.UBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmSet.variCharge)
+                            frmSet.variCharge.UBmsPcsState = frmSet.BMSwaValue/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
                 {
-                    if (frmSet.cloudLimits.OBmsPcsState != frmSet.BMSwaValue/100)
+                    if (frmSet.variCharge.OBmsPcsState != frmSet.BMSwaValue/100)
                     {
-                        lock (frmSet.cloudLimits)
-                            frmSet.cloudLimits.OBmsPcsState = frmSet.BMSwaValue/100;
+                        lock (frmSet.variCharge)
+                            frmSet.variCharge.OBmsPcsState = frmSet.BMSwaValue/100;
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
@@ -9255,8 +9255,8 @@ namespace EMS
                 CheckBMSWrror(Errors);
                 if (( Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
-                    frmSet.cloudLimits.UBmsPcsState = 1;
-                    frmSet.cloudLimits.OBmsPcsState = 1;
+                    frmSet.variCharge.UBmsPcsState = 1;
+                    frmSet.variCharge.OBmsPcsState = 1;
                     frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
                 }
             }
