@@ -707,6 +707,7 @@ namespace EMS
             //2.保存当天收益到数据库
             //3.上传当天收益到云
             //4.下载策略
+
             Task.Run(() =>
             {
                 if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
@@ -722,34 +723,19 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
-                    //校准电表日期
-                    if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                    {
-                        frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                    }
-                    if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-                    {
-                        foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                        {
-                            tempEleMeter.timing(73);
-                        }
-                    }
-                    if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                    {
-                        frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                    }
                     //每晚00：00更新策略
                     if (frmMain.TacticsList != null)
                     {
                         try
                         {
-                            if (frmSet.IsMaster)
+                            if (frmSet.config.IsMaster)
                             {
                                 if (frmMain.TacticsList != null)
                                 {
                                     try
                                     {
-                                        frmMain.TacticsList.LoadFromMySQL();
+                                        SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                                        //frmMain.TacticsList.LoadFromMySQL();
                                     }
                                     catch
                                     {
@@ -766,17 +752,18 @@ namespace EMS
                     //更新均衡策略
                     try
                     {
-                        frmMain.BalaTacticsList.LoadFromMySQL();
+                        //frmMain.BalaTacticsList.LoadFromMySQL();
+                        SqlExecutor.ExecuteEnqueueSqlBalaTacticsTask(3, frmMain.BalaTacticsList.BalaTacticsList);
                     }
                     catch { log.Error("00：00更新均衡策略失败"); }
                 }
 
                 //检查mqttp的连接情况，每分钟检查一次
-                /*                try
-                                {
-                                    frmMain.Selffrm.AllEquipment.Report2Cloud.CheckConnect();
-                                }
-                                catch { }*/
+                try
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.CheckConnect();
+                }
+                catch { }
 
                 if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
                 {
@@ -811,6 +798,7 @@ namespace EMS
             });
         }
 
+
         static void InitializeTacitc_Timer()
         {
             //每30秒 判断策略时段  
@@ -818,10 +806,7 @@ namespace EMS
         }
         static void Tacitc_TimerCallback(Object state)
         {
-            Task.Run(() =>
-            {
-                frmMain.TacticsList.CheckTacticsOnce();
-            });
+            frmMain.TacticsList.CheckTacticsOnce();
         }
         static void InitializeCloud_timer()
         {
@@ -837,7 +822,7 @@ namespace EMS
                 {
                     DateTime tempTime = DateTime.Now;
                     //采集数据保存在数据库中
-                    frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
+                    //frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
                     //采集数据上传云端
                     frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
                 }
@@ -918,6 +903,7 @@ namespace EMS
                 frmMain.Selffrm.labE2OKWH.Text = frmMain.Selffrm.AllEquipment.E2PKWH[0].ToString("F3");
             });
         }
+
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
