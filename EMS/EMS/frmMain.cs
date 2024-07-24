@@ -568,7 +568,7 @@ namespace EMS
 
 
                 //8.7 每台主机初始化对外接口
-                BaseEquipmentClass oneEquipment = null;
+/*                BaseEquipmentClass oneEquipment = null;
                 oneEquipment = new EMSEquipment();
                 oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
                 oneEquipment = (EMSEquipment)oneEquipment;
@@ -636,7 +636,7 @@ namespace EMS
 
                 frmFlash.AddPostion(10);
                 //开启任务多线程
-                frmMain.Selffrm.AllEquipment.AutoReadData();
+                frmMain.Selffrm.AllEquipment.AutoReadData();*/
 
             }
             catch (Exception err)
@@ -838,7 +838,7 @@ namespace EMS
                 {
                     DateTime tempTime = DateTime.Now;
                     //采集数据保存在数据库中
-                    //frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
+                    frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
                     //采集数据上传云端
                     frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
                 }

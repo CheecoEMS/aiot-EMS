@@ -16,6 +16,8 @@ using MySqlX.XDevAPI.Common;
 using Mysqlx.Session;
 using System.Diagnostics.Eventing.Reader;
 using static Org.BouncyCastle.Math.EC.ECCurve;
+using Newtonsoft.Json.Linq;
+using static Mysqlx.Crud.Order.Types;
 
 namespace EMS
 {
@@ -1282,14 +1284,67 @@ namespace EMS
         {
             if (!string.IsNullOrEmpty(jsonResult))
             {
-                string filePath = Path.Combine(directoryPath, "profit_data.json");
-                File.WriteAllText(filePath, jsonResult);
-                Console.WriteLine($"Data has been written to {filePath}");
+                /*                string filePath = Path.Combine(directoryPath, "profit_data.json");
+                                File.WriteAllText(filePath, jsonResult);
+                                Console.WriteLine($"Data has been written to {filePath}");*/
+                JObject jsonObject = JObject.Parse(jsonResult);
+                var output = new
+                {
+                    time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
+                    iot_code =frmSet.SysID,
+                    DaliyAuxiliaryKWH = new string[]
+                    {
+                        FormatValue(jsonObject["auxkwhAll"]),
+                        FormatValue(jsonObject["auxkwh1"]),
+                        FormatValue(jsonObject["auxkwh2"]),
+                        FormatValue(jsonObject["auxkwh3"]),
+                        FormatValue(jsonObject["auxkwh4"])
+                    },
+                    DaliyE2PKWH = new string[]
+                    {
+                        FormatValue(jsonObject["inPower"]),
+                        FormatValue(jsonObject["in1kwh"]),
+                        FormatValue(jsonObject["in2kwh"]),
+                        FormatValue(jsonObject["in3kwh"]),
+                        FormatValue(jsonObject["in4kwh"])
+                    },
+                    DaliyE2OKWH = new string[]
+                    {
+                        FormatValue(jsonObject["outPower"]),
+                        FormatValue(jsonObject["out1kwh"]),
+                        FormatValue(jsonObject["out2kwh"]),
+                        FormatValue(jsonObject["out3kwh"]),
+                        FormatValue(jsonObject["out4kwh"])
+                    },
+                    DaliyPrice = new string[]
+                    {
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    },
+                    DaliyProfit = FormatValue(jsonObject["profit"])
+                };
+                string outputJson = JsonConvert.SerializeObject(output, Formatting.Indented);
+
+                frmMain.Selffrm.AllEquipment.Report2Cloud.RetainProfit2Cloud(outputJson);
             }
             else
             {
                 Console.WriteLine("No data to write.");
             }
+        }
+
+        private static long ConvertToUnixTimestamp(DateTime date)
+        {
+            DateTimeOffset dateTimeOffset = new DateTimeOffset(date);
+            return dateTimeOffset.ToUnixTimeMilliseconds();
+        }
+
+        private static string FormatValue(JToken value)
+        {
+            return value.Value<double>().ToString("0.000");
         }
 
         static public void ChecMysql80()

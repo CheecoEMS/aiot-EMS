@@ -43,6 +43,7 @@ namespace EMS
         public string BalaTableTopic;
         public string BalaTacticTopic;
         public string HeartbeatTopic;
+        public string RetranTopic;
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
         public bool receivedHeartbeatResponse = false;
@@ -126,6 +127,7 @@ namespace EMS
             BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
             BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
             HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
+            RetranTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/retransmission";
         }
 
 
@@ -181,8 +183,8 @@ namespace EMS
                 ListenTopic(AIOTTableTopic + "request");
                 ListenTopic(BalaTableTopic + "request");
                 ListenTopic(HeartbeatTopic);
-                
-                log.Error(HeartbeatTopic);
+                ListenTopic(RetranTopic + "request");
+
                 FirstRun = true;
             }
             catch {
@@ -212,7 +214,7 @@ namespace EMS
                 ListenTopic(AIOTTableTopic + "request");
                 ListenTopic(BalaTableTopic + "request");
                 ListenTopic(HeartbeatTopic);
-
+                ListenTopic(RetranTopic + "request");
                 // 重新启动定时器
                 log.Error("重新启动定时器");
                 InitializePublish_Timer();
@@ -377,6 +379,10 @@ namespace EMS
             {
                 GetHeartbeat(message);
             }
+            else if (topic == RetranTopic)
+            {
+                DataRetransmission(message);
+            }
 
 
 /*            else if (topic == BalaTacticTopic)
@@ -503,11 +509,62 @@ namespace EMS
             return tStr;
         }
 
+
+
+
         /// <summary>
         /// 写入json文件
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="savePath"></param>
+        /// 
+
+        public static void ConvertToJson(string json, string aDirection)
+        {
+            try
+            {
+                // 创建一个 StreamReader 的实例来读取文件 
+                // using (StreamReader sr = new StreamReader("c:/jamaica.txt"))  while ((line = sr.ReadLine()) != null)
+                if (!Directory.Exists(aDirection))
+                    Directory.CreateDirectory(aDirection);
+
+                JObject jsonObject = JObject.Parse(json);
+                string strID = jsonObject["time"].ToString();
+                string aSavePath = "\\0pem" + strID + ".json";
+                
+                using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
+                {
+                    sw.WriteLine(json);
+                }
+            }
+            catch (Exception e)
+            {
+                // 向用户显示出错消息
+                Console.WriteLine("The file could not be read:" + e.Message);
+            }
+
+            //string str = JsonConvert.SerializeObject(obj);
+
+            ////json格式化
+            //JsonSerializer jsonSerializer = new JsonSerializer();
+            //TextReader textReader = new StringReader(str);
+            //JsonTextReader jsonTextReader = new JsonTextReader(textReader);
+            //object _object = jsonSerializer.Deserialize(jsonTextReader);
+            //if (_object != null)
+            //{
+            //    StringWriter stringWriter = new StringWriter();
+            //    JsonTextWriter jsonWriter = new JsonTextWriter(stringWriter)
+            //    {
+            //        Formatting = Formatting.Indented,
+            //        Indentation = 4,
+            //        IndentChar = ' '
+            //    };
+            //    jsonSerializer.Serialize(jsonWriter, _object);
+            //    File.WriteAllText(savePath, stringWriter.ToString());
+            //}
+        }
+
+
         public static void ConvertToJson(object aObj, string aDirection, string aSavePath)
         {
             try
@@ -638,6 +695,11 @@ namespace EMS
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + astrDate + ".json");
         }
 
+        public void RetainProfit2Cloud(string json)
+        {
+            ConvertToJson(json, strUpPath);
+        }
+
         public void SaveFault2Cloud(string astrDate)
         {
             string id = Guid.NewGuid().ToString();
@@ -650,7 +712,42 @@ namespace EMS
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public void GetHeartbeat(string astrData, bool aIsFileData = false)
+        public bool DataRetransmission(string astrData)
+        {
+            bool result = false;
+            if (astrData == "")
+                return false;
+            JObject jsonObject = JObject.Parse(astrData);
+            string strID = "";
+            try
+            {
+                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
+                string strTopic = jsonObject["method"].ToString();
+                if (strTopic != "ems/retransmission")
+                    return false;
+                //9.11
+                string param = jsonObject["type"].ToString();
+                if (param == "profit")
+                {
+                    string tempDate = jsonObject["time"].ToString();
+                    string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                    //string directoryPath = @"C:\Users\lenovo\Desktop"; // 指定目录路径
+                    SqlExecutor.EnqueueSqlReadTask(sqlQuery2, 1, SqlExecutor.SaveJsonToFile, frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath);
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return result;
+        }
+
+        public void GetHeartbeat(string astrData)
         {
             JObject jsonObject = null;
             jsonObject = JObject.Parse(astrData);
