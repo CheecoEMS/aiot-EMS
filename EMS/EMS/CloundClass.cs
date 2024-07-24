@@ -305,8 +305,8 @@ namespace EMS
             string ErrorstrResponse = "{ \"jsonrpc\":\"2.0\", \"result\":false, \"id\":\"";
             string topic = e.Topic.ToString();
             string message = System.Text.Encoding.Default.GetString(e.Message);
-            string strID = "";
-            //同时订阅两个或者以上主题时，分类收集收到的信息
+            JObject jsonObject = JObject.Parse(message);
+            string strID = jsonObject["id"].ToString();
 
             if (topic == TacticTopic + "request")
             {
@@ -333,21 +333,45 @@ namespace EMS
             }
             else if (topic == EMSLimitTopic + "request")
             {
-                strID = GetServerEMSLimit(message);
-                mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                Result = GetServerEMSLimit(message);
+                if (Result)
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
+                else
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
             }
             else if (topic == AIOTTableTopic + "request")
             {
-                strID = GetAiotTable(message);
-                mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                Result = GetAiotTable(message);
+                if (Result)
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
+                else
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
             }
             else if (topic == BalaTableTopic + "request")
             {
-                strID = GetBalaTable(message);
-                mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                Result = GetBalaTable(message);
+                if (Result)
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
+                else
+                {
+                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                }
             }
             else if (topic == HeartbeatTopic)
             {
@@ -727,10 +751,11 @@ namespace EMS
 
 
         //接收到均衡控制命令
-        public string GetBalaTable(string astrData)
+        public bool GetBalaTable(string astrData)
         {
+            bool result = false;
             if (astrData == "")
-                return "";
+                return false;
             JObject jsonObject = JObject.Parse(astrData);
             string strID = "";
             try
@@ -738,7 +763,7 @@ namespace EMS
                 strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "aiot/table")
-                    return "";
+                    return false;
                 //9.11
                 int iBalaStart = int.Parse(jsonObject["params"]["table"]["BalaStart"].ToString());
                 if (FirstRun)
@@ -750,6 +775,8 @@ namespace EMS
                    //从机器不执行网络命令(不开放离网模式)
                    frmControl.SetBala(iBalaStart);
                 }
+
+                result = true;
                 /*
                  mode:    0手工模式,1预设策略,2网络控制
                  charge:  0待机、1恒压、2恒流、3恒功率、4AC恒压
@@ -759,8 +786,10 @@ namespace EMS
                  */
             }
             catch
-            { }
-            return strID;
+            {
+                return false;
+            }
+            return result;
         }
 
 
@@ -801,10 +830,10 @@ namespace EMS
                 //清理旧数据
                 try
                 {
-                    bool hasData = SqlExecutor.CheckRec("select * from tactics");
+                    bool hasData = SqlExecutor.CheckRec("select * from tactics");//同步
                     if (hasData)
                     {
-                        result = SqlExecutor.ExecuteSqlTasksSync("delete FROM tactics", 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync("delete FROM tactics", 4);//同步
 
                         if (result)
                         {
@@ -843,7 +872,7 @@ namespace EMS
                     strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
                     try
                     {
-                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 4);//同步
 
                         if (result)
                         {
@@ -861,10 +890,24 @@ namespace EMS
                 }
 
                 //if (frmMain.TacticsList.LoadFromMySQL())
-                if(SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList))
+                try
                 {
-                    frmMain.ShowShedule2Char(false);
-                    frmMain.TacticsList.ActiveIndex = -1;
+                    result =SqlExecutor.ExecuteEnqueueSqlTacticsTask(4, frmMain.TacticsList.TacticsList);//同步
+
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                        frmMain.ShowShedule2Char(false);
+                        frmMain.TacticsList.ActiveIndex = -1;
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理异常情况
                 }
             }
             catch
@@ -914,15 +957,18 @@ namespace EMS
                 //清理旧数据
                 try
                 {
-                    result = SqlExecutor.ExecuteSqlTasksSync("delete FROM electrovalence", 3);
-
-                    if (result)
+                    bool hasData = SqlExecutor.CheckRec("select * from electrovalence");//同步
+                    if (hasData)
                     {
-                        // 处理执行成功的逻辑
-                    }
-                    else
-                    {
-                        return result;
+                        result = SqlExecutor.ExecuteSqlTasksSync("delete FROM electrovalence", 4);//同步
+                        if (result)
+                        {
+                            // 处理执行成功的逻辑
+                        }
+                        else
+                        {
+                            return result;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -945,7 +991,7 @@ namespace EMS
 
                     try
                     {
-                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 3);
+                        result = SqlExecutor.ExecuteSqlTasksSync(strData, 4);//同步
 
                         if (result)
                         {
@@ -963,7 +1009,15 @@ namespace EMS
                 }
                 //更新策略
                 frmSet.SaveSet2File();
-                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+                result = SqlExecutor.ExecuteEnqueueJFPGSqlTask(4);
+                if (result)
+                {
+                    // 处理执行成功的逻辑
+                }
+                else
+                {
+                    return result;
+                }
                 //frmMain.TacticsList.LoadJFPGFromSQL();
                 if (aIsFileData)
                     File.Delete(strDataFile);
@@ -976,10 +1030,11 @@ namespace EMS
 
         
         //云发来的策略数据
-        public string GetAiotTable(string astrData)
+        public bool GetAiotTable(string astrData)
         {
+            bool result = false;
             if (astrData == "")
-                return "";
+                return false;
             JObject jsonObject = JObject.Parse(astrData);
             string strID = "";
             string[] ipcsSets = { "充电", "放电" };
@@ -990,7 +1045,7 @@ namespace EMS
                 //string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "aiot/table")
-                    return "";
+                    return false;
                 //iMode手工、策略
                 int iMode= int.Parse(jsonObject["params"]["table"]["mode"].ToString());
                 //充放电 //0充电为正,1放电
@@ -1008,7 +1063,7 @@ namespace EMS
                     //从机器不执行网络命令(不开放离网模式)
                     if ((frmSet.config.IsMaster)&&(ipcsSet!=4))
                         frmControl.SetControl(iMode, PCSClass.PCSTypes[ipcsSet], ipcsSets[icharge], ipcsSetValue,iOn, true);
-                } 
+                }
                 /*
                  mode:    0手工模式,1预设策略,2网络控制
                  charge:  0待机、1恒压、2恒流、3恒功率、4AC恒压
@@ -1016,17 +1071,19 @@ namespace EMS
                  pcsSetValue：正整数
                  on: 0关机、1运行
                  */
+                result = true;
             }
             catch
             { }
-            return strID;
+            return result;
         }
 
         //设置窗口的几个限制值
-        public string GetServerEMSLimit(string astrData)
+        public bool GetServerEMSLimit(string astrData)
         {
+            bool result = false;
             if (astrData == "")
-                return "";
+                return false;
             JObject jsonObject = JObject.Parse(astrData);
             string strID = "";
             try
@@ -1036,7 +1093,7 @@ namespace EMS
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/limit")
                 {
-                    return "";
+                    return false;
                 }
                 else
                 {
@@ -1050,13 +1107,23 @@ namespace EMS
                     frmSet.cloudLimits.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
                     frmSet.cloudLimits.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
                     frmSet.cloudLimits.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
-                    frmSet.Set_Cloudlimits();
+                    result = frmSet.Set_Cloudlimits();
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        return result;
+                    }
                 }
             }
-            catch 
-            { }
+            catch (Exception ex)
+            {
+                return false;
+            }
             //输出返回数据
-            return strID; 
+            return result; 
         }
 
         static public byte[] Back3Data(int aAddr, short iLen)

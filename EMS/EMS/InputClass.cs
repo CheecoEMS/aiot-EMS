@@ -915,15 +915,18 @@ namespace EMS
             string strSQL = "delete   from errorstate";
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTasksSync(strSQL, 3);
+                if (SqlExecutor.CheckRec("select * from errorstate"))
+                {
+                    bool result = SqlExecutor.ExecuteSqlTasksSync(strSQL, 3);
 
-                if (result)
-                {
-                    // 处理执行成功的逻辑
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
+                    if (result)
+                    {
+                        // 处理执行成功的逻辑
+                    }
+                    else
+                    {
+                        // 处理执行失败的逻辑
+                    }
                 }
             }
             catch (Exception ex)
@@ -974,16 +977,6 @@ namespace EMS
             try
             {
                  SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
-/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
-
-                if (result)
-                {
-                    // 处理执行成功的逻辑
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                }*/
             }
             catch (Exception ex)
             {
@@ -1009,16 +1002,6 @@ namespace EMS
                 try
                 {
                      SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
-/*                    bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
-
-                    if (result)
-                    {
-                        // 处理执行成功的逻辑
-                    }
-                    else
-                    {
-                        // 处理执行失败的逻辑
-                    }*/
                 }
                 catch (Exception ex)
                 {
@@ -1047,16 +1030,6 @@ namespace EMS
                     try
                     {
                         SqlExecutor.ExecuteSqlTaskAsync(strSQL, 2);
-/*                        bool result = SqlExecutor.ExecuteSqlTaskAsync(strSQL, 3);
-
-                        if (result)
-                        {
-                            // 处理执行成功的逻辑
-                        }
-                        else
-                        {
-                            // 处理执行失败的逻辑
-                        }*/
                     }
                     catch (Exception ex)
                     {
@@ -5578,16 +5551,6 @@ namespace EMS
             try
             {
                  SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
-/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
-
-                if (result)
-                {
-                    // 处理执行成功的逻辑
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                }*/
             }
             catch (Exception ex)
             {
@@ -5611,16 +5574,6 @@ namespace EMS
             try
             {
                 SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
-/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
-
-                if (result)
-                {
-                    // 处理执行成功的逻辑
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                }*/
             }
             catch (Exception ex)
             {
@@ -5631,16 +5584,6 @@ namespace EMS
             try
             {
                 SqlExecutor.ExecuteSqlTaskAsync(sql, 1);
-/*                bool result = SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
-
-                if (result)
-                {
-                    // 处理执行成功的逻辑
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                }*/
             }
             catch (Exception ex)
             {
@@ -7120,7 +7063,7 @@ namespace EMS
                                 {
                                     try
                                     {
-                                        SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                                        SqlExecutor.ExecuteEnqueueSqlTacticsTaskAsyn(2, frmMain.TacticsList.TacticsList);
                                         //frmMain.TacticsList.LoadFromMySQL();
                                     }
                                     catch
@@ -9375,7 +9318,7 @@ namespace EMS
                         //记录单体电压 温度 电流
                         frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
                         //
-                        frmSet.Set_Cloudlimits_Async();
+                        
 
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
@@ -9433,6 +9376,8 @@ namespace EMS
                         var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
                         var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
                         frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
+
+                        frmSet.Set_VariCharge();
                     }
                 }
                 else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
@@ -9514,6 +9459,7 @@ namespace EMS
                 {
                     frmSet.variCharge.UBmsPcsState = 1;
                     frmSet.variCharge.OBmsPcsState = 1;
+                    frmSet.Set_VariCharge();
                     frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
                 }
             }

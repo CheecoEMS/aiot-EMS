@@ -143,7 +143,7 @@ namespace EMS
             if (SaveParam)
             {
                 frmSet.SaveSet2File();
-                frmSet.Set_Config();
+                frmSet.Set_Config_Asyn();
             }
             //执行
             if (aPCSOn!=0)
@@ -296,8 +296,6 @@ namespace EMS
             {
                 //保存当前数据重新赋值给frmset的属性
                 GetINIData(); //桌面选定执行功率存入设置中
-
-                frmSet.Set_Config();
                 //执行
                 frmSet.PCSMRun();
             }

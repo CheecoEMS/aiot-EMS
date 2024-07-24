@@ -1640,7 +1640,7 @@ namespace EMS
 
             var resetEvent = new System.Threading.AutoResetEvent(false);
 
-            SqlExecutor.EnqueueSqlCheckTask(astrSQL, 3, (result) =>
+            SqlExecutor.EnqueueSqlCheckTask(astrSQL, 4, (result) =>
             {
                 bResult = result;
                 resetEvent.Set();
@@ -1750,6 +1750,13 @@ namespace EMS
             return bResult;
         }
 
+        public static void ExecuteEnqueueJFPGSqlTaskAsyn(int priority)
+        {
+            SqlExecutor.EnqueueJFPGSqlTask(priority, (result) =>
+            {
+
+            });
+        }
 
         /// <summary>
         /// 同步等待录入策略成功
@@ -1773,6 +1780,11 @@ namespace EMS
             resetEvent.WaitOne(); // 等待任务完成
 
             return bResult;
+        }
+
+        public static void ExecuteEnqueueSqlTacticsTaskAsyn(int priority, List<TacticsClass> tactics)
+        {
+            SqlExecutor.EnqueueSqlTacticsTask(priority, tactics, (result) =>{ });
         }
 
         /// <summary>

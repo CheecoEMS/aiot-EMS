@@ -734,7 +734,7 @@ namespace EMS
                                 {
                                     try
                                     {
-                                        SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                                        SqlExecutor.ExecuteEnqueueSqlTacticsTaskAsyn(2, frmMain.TacticsList.TacticsList);
                                         //frmMain.TacticsList.LoadFromMySQL();
                                     }
                                     catch

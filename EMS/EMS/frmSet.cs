@@ -224,6 +224,50 @@ namespace EMS
             SqlExecutor.ExecuteEnqueueSqlComponentSettingsClassTask(3, frmSet.componentSettings);
         }
 
+        public static void Set_ComponentSettings_Asyn()
+        {
+            string sql = "UPDATE ComponentSettings SET "
+                + "SetHotTemp = '" + componentSettings.SetHotTemp.ToString() + "', "
+                + "SetCoolTemp = '" + componentSettings.SetCoolTemp.ToString() + "', "
+                + "CoolTempReturn = '" + componentSettings.CoolTempReturn.ToString() + "', "
+                + "HotTempReturn = '" + componentSettings.HotTempReturn.ToString() + "', "
+                + "SetHumidity = '" + componentSettings.SetHumidity.ToString() + "', "
+                + "HumiReturn = '" + componentSettings.HumiReturn.ToString() + "', "
+                + "TCRunWithSys = '" + componentSettings.TCRunWithSys.ToString() + "', "
+                + "TCAuto = '" + componentSettings.TCAuto.ToString() + "', "
+                + "TCMode = '" + componentSettings.TCMode.ToString() + "', "
+                + "TCMaxTemp = '" + componentSettings.TCMaxTemp.ToString() + "', "
+                + "TCMinTemp = '" + componentSettings.TCMinTemp.ToString() + "', "
+                + "TCMaxHumi = '" + componentSettings.TCMaxHumi.ToString() + "', "
+                + "TCMinHumi = '" + componentSettings.TCMinHumi.ToString() + "', "
+                + "FenMaxTemp = '" + componentSettings.FenMaxTemp.ToString() + "', "
+                + "FenMinTemp = '" + componentSettings.FenMinTemp.ToString() + "', "
+                + "FenMode = '" + componentSettings.FenMode.ToString() + "', "
+                + "LCModel = '" + componentSettings.LCModel.ToString() + "', "
+                + "LCTemperSelect = '" + componentSettings.LCTemperSelect.ToString() + "', "
+                + "LCWaterPump = '" + componentSettings.LCWaterPump.ToString() + "', "
+                + "LCSetHotTemp = '" + componentSettings.LCSetHotTemp.ToString() + "', "
+                + "LCSetCoolTemp = '" + componentSettings.LCSetCoolTemp.ToString() + "', "
+                + "LCHotTempReturn = '" + componentSettings.LCHotTempReturn.ToString() + "', "
+                + "LCCoolTempReturn = '" + componentSettings.LCCoolTempReturn.ToString() + "', "
+                + "DHSetRunStatus = '" + componentSettings.DHSetRunStatus.ToString() + "', "
+                + "DHSetTempBoot = '" + componentSettings.DHSetTempBoot.ToString() + "', "
+                + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
+                + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
+                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString() + "', "
+                + "';";
+
+            try
+            {
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 2);
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
+        }
+
         public static void Set_ComponentSettings()
         {
             string sql = "UPDATE ComponentSettings SET "
@@ -292,7 +336,7 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 5);
 
                 if (result)
                 {
@@ -314,6 +358,51 @@ namespace EMS
         public static void LoadFromConfig()
         {
             SqlExecutor.ExecuteEnqueueSqlConfigClassTask(3, frmSet.config);
+        }
+
+        public static void Set_Config_Asyn()
+        {
+            string sql = "UPDATE config SET "
+                        + "Open104 = '" + frmSet.config.Open104.ToString()
+                        + "', NetTick = '" + frmSet.config.NetTick.ToString()
+                        + "', SysName = '" + frmSet.config.SysName
+                        + "', SysPower = '" + frmSet.config.SysPower.ToString()
+                        + "', SysSelfPower = '" + frmSet.config.SysSelfPower.ToString()
+                        + "', SysAddr = '" + frmSet.config.SysAddr
+                        + "', SysInstTime = '" + frmSet.config.SysInstTime
+                        + "', CellCount = '" + frmSet.config.CellCount.ToString()
+                        + "', SysInterval = '" + frmSet.config.SysInterval.ToString()
+                        + "', YunInterval = '" + frmSet.config.YunInterval.ToString()
+                        + "', IsMaster = '" + frmSet.config.IsMaster.ToString()
+                        + "', Master485Addr = '" + frmSet.config.Master485Addr.ToString()
+                        + "', i485Addr = '" + frmSet.config.i485Addr.ToString()
+                        + "', AutoRun = '" + frmSet.config.AutoRun.ToString()
+                        + "', SysMode = '" + frmSet.config.SysMode.ToString()
+                        + "', PCSGridModel = '" + frmSet.config.PCSGridModel.ToString()
+                        + "', DebugComName = '" + frmSet.config.DebugComName
+                        + "', DebugRate = '" + frmSet.config.DebugRate.ToString()
+                        + "', SysCount = '" + frmSet.config.SysCount.ToString()
+                        + "', iPCSfactory = '" + frmSet.config.iPCSfactory.ToString()
+                        + "', BMSVerb = '" + frmSet.config.BMSVerb.ToString()
+                        + "', PCSForceRun = '" + frmSet.config.PCSForceRun.ToString()
+                        + "', GPIOSelect = '" + frmSet.config.GPIOSelect.ToString()
+                        + "', MasterIp = '" + frmSet.config.MasterIp
+                        + "', ConnectStatus = '" + frmSet.config.ConnectStatus
+                        + "', ErrorState2 = '" + frmSet.config.ErrorState2.ToString()
+                        + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
+                        + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
+                        + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
+                        + "' WHERE SysID = '" + frmSet.config.SysID + "';";
+
+            try
+            {
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 2);
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+            }
+
         }
 
         public static void Set_Config()
@@ -376,7 +465,7 @@ namespace EMS
             SqlExecutor.ExecuteEnqueueSqlCloudLimitTask(3, frmSet.cloudLimits);
         }
 
-        public static void Set_Cloudlimits()
+        public static bool Set_Cloudlimits()
         {
             string sql = "update  cloudlimits  SET "
                 + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
@@ -396,20 +485,23 @@ namespace EMS
 
             try
             {
-                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 3);
+                bool result = SqlExecutor.ExecuteSqlTasksSync(sql, 4);
 
                 if (result)
                 {
                     // 处理执行成功的逻辑
+                    return true;
                 }
                 else
                 {
                     // 处理执行失败的逻辑
+                    return false;
                 }
             }
             catch (Exception ex)
             {
                 // 处理异常情况
+                return false;
             }
 
         }
@@ -434,7 +526,7 @@ namespace EMS
 
             try
             {
-                SqlExecutor.ExecuteSqlTaskAsync(sql, 3);
+                SqlExecutor.ExecuteSqlTaskAsync(sql, 2);
             }
             catch (Exception ex)
             {
@@ -1436,7 +1528,7 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.eState = 1;//记策略模式   
                             frmMain.TacticsList.TacticsOn = false;
                             //frmMain.TacticsList.LoadFromMySQL();
-                            SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                            SqlExecutor.ExecuteEnqueueSqlTacticsTaskAsyn(2, frmMain.TacticsList.TacticsList);
                             frmMain.ShowShedule2Char(false);
                             frmMain.TacticsList.ActiveIndex = -1;
                         }
@@ -1503,16 +1595,7 @@ namespace EMS
             {
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTasksSync(astrSQl, 3);
-
-                    if (result)
-                    {
-                        // 处理执行成功的逻辑
-                    }
-                    else
-                    {
-                        // 处理执行失败的逻辑
-                    }
+                    SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 2);
                 }
                 catch (Exception ex)
                 {
@@ -1698,9 +1781,9 @@ namespace EMS
             GetINIData();
             SaveSet2File();
             //Set_GlobalSet_State();
-            Set_Cloudlimits();
-            Set_Config();
-            Set_ComponentSettings();
+            Set_Cloudlimits_Async();
+            Set_Config_Asyn();
+            Set_ComponentSettings_Asyn();
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -1708,7 +1791,7 @@ namespace EMS
             if (bSheduleChanged)//策略需要更新
             {
                 //frmMain.TacticsList.LoadFromMySQL();
-                SqlExecutor.ExecuteEnqueueSqlTacticsTask(3, frmMain.TacticsList.TacticsList);
+                SqlExecutor.ExecuteEnqueueSqlTacticsTaskAsyn(2, frmMain.TacticsList.TacticsList);
                 frmMain.ShowShedule2Char(false);
                 frmMain.TacticsList.ActiveIndex = -1;
             } 
@@ -1716,7 +1799,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.TCIni(true);
             if (bEDataChanged) //update 表
             {
-                SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+                SqlExecutor.ExecuteEnqueueJFPGSqlTaskAsyn(2);
                 //frmMain.TacticsList.LoadJFPGFromSQL();
             } 
         }
@@ -2299,16 +2382,7 @@ namespace EMS
             {
                 try
                 {
-                    bool result = SqlExecutor.ExecuteSqlTasksSync(astrSQl, 3);
-
-                    if (result)
-                    {
-                        // 处理执行成功的逻辑
-                    }
-                    else
-                    {
-                        // 处理执行失败的逻辑
-                    }
+                    SqlExecutor.ExecuteSqlTaskAsync(astrSQl, 2);
                 }
                 catch (Exception ex)
                 {
@@ -2330,6 +2404,8 @@ namespace EMS
             PowerGPIO(0);
             //Set_GlobalSet_State();
             Set_Cloudlimits();
+            Set_ComponentSettings();
+            Set_Config();
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
                 frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
@@ -2343,7 +2419,7 @@ namespace EMS
         private void btnUpdata_Click(object sender, EventArgs e)
         {
             //frmMain.TacticsList.LoadJFPGFromSQL();
-            SqlExecutor.ExecuteEnqueueJFPGSqlTask(3);
+            SqlExecutor.ExecuteEnqueueJFPGSqlTaskAsyn(3);
         }
 
         private void btnATAppy_Click(object sender, EventArgs e)
