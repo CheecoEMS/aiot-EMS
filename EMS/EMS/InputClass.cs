@@ -25,6 +25,7 @@ using static Mysqlx.Expect.Open.Types.Condition.Types;
 using static System.Collections.Specialized.BitVector32;
 using System.Net.Sockets;
 using Org.BouncyCastle.Crypto;
+using System.Threading.Tasks;
 
 namespace EMS
 {
@@ -2867,6 +2868,23 @@ namespace EMS
             }
         }
 
+        //校时
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)dt.Second;
+            result[1] = (byte)dt.Minute;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Month;
+            result[5] = (byte)(dt.Year % 100);
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
+        }
 
         /// <summary>
         /// 设置表的时间
@@ -3057,6 +3075,25 @@ namespace EMS
         {
             strCommandFile = "biao2.txt";
         }
+        
+        //校时
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)dt.Second;
+            result[1] = (byte)dt.Minute;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Month;
+            result[5] = (byte)(dt.Year % 100);
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
+        }
+
 
         //设置电压变比 PT008DH，电流变比 CT008EH
         public void SetPTandCT(short aPT, short aCT)
@@ -3358,6 +3395,24 @@ namespace EMS
             SetSysBytes(37, aTime,false);
         }
         //
+
+        //校时
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)(dt.Year % 100);
+            result[1] = (byte)dt.Month;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Minute;
+            result[5] = (byte)dt.Second;
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
+        }
 
         //设置波峰评估的时间段
         public void SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
@@ -6477,6 +6532,7 @@ namespace EMS
             else
             {
                 frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+                Thread.Sleep(2000);
             }
             return bResult;
         }
@@ -6945,7 +7001,7 @@ namespace EMS
             bool GetMsg = false;
             while (true)
             {
-
+                Thread.Sleep(1000);
                 if (frmMain.Selffrm.ems.m485.sp != null)
                 {
                     while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
@@ -6968,22 +7024,45 @@ namespace EMS
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(Read_Serial);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                    Read_Serial();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+        /*        public void Auto_Read_Serial()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(Read_Serial);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(1);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Highest;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
 
 
         public void Systime_Tick()
@@ -7267,22 +7346,45 @@ namespace EMS
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ControlEMSTCP);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                    ControlEMSTCP();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+        /*        public void AutoControlEMSTCP()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ControlEMSTCP);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(1);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Highest;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
 
         /******************************tcp control*****************************************/
 
@@ -7291,6 +7393,7 @@ namespace EMS
         public void ControlEMS() {
             while (true)
             {
+                Thread.Sleep(1000);
                 if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                 {
                     if (!ChechPower)
@@ -7305,25 +7408,48 @@ namespace EMS
             }
         }
 
-        public void AutoControlEMS() {
+        public void AutoControlEMS()
+        {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ControlEMS);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                    ControlEMS();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+        /*        public void AutoControlEMS() {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ControlEMS);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(1);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Highest;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
         /******************************485 control*************************************/
 
 
@@ -7334,6 +7460,7 @@ namespace EMS
             double tempPUMdemand_now;
             while (true)
             {
+                Thread.Sleep(1500);
                 //1 关口表
                 //tempGridKVA = 0;
                 tempPUMdemand_max = 0;
@@ -7386,26 +7513,50 @@ namespace EMS
 
             }
         }
+
         public void AutoRead()
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadData);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal ;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+                    ReadData();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+        /*        public void AutoRead()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ReadData);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(1);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Normal ;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
 
 
         //8.7
@@ -7464,22 +7615,44 @@ namespace EMS
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadCom1Data);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                    ReadCom1Data();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+        /*        public void AutoReadDataCom1()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ReadCom1Data);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(1);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Highest;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
 
         ///Com1 读取函数 
         //单机的防逆流
@@ -8342,6 +8515,7 @@ namespace EMS
 
             while (true)
             {
+                Thread.Sleep(1000);
                 try
                 {
                     //如果是从机
@@ -8611,21 +8785,22 @@ namespace EMS
             
         }
         //Com2 readThread2
-
         public void AutoReadDataCom2()
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadCOM2Data);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(3);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                // ClientRecThread.Join();
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Lowest;
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+                    ReadCOM2Data();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
@@ -8633,12 +8808,34 @@ namespace EMS
             }
         }
 
+        /*        public void AutoReadDataCom2()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ReadCOM2Data);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(3);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        // ClientRecThread.Join();
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Lowest;
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
+
         private void ReadCOM2Data()
         {
             while (true)
             {
                 try
                 {
+                    Thread.Sleep(1500);
                     GetDataFromEqipment();
                 }
                 catch (Exception ex)
@@ -8774,24 +8971,46 @@ namespace EMS
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                    ReadEquipmentDataBMS();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
-
-
             }
         }
+        /*        public void AutoReadDataCom3()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(2);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Highest;
+                        // ClientRecThread.Join();
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+
+
+                    }
+                }*/
 
 
 
@@ -8799,6 +9018,7 @@ namespace EMS
         {
             while (true)
             {
+                Thread.Sleep(1000);
                 try
                 {
                     if (BMS == null)
@@ -8851,27 +9071,51 @@ namespace EMS
         }
 
         //Com4 readThread4
-
         public void AutoReadDataCom4()
         {
             try
             {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
-                ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(0);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
-                // ClientRecThread.Join();
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal;
+                Task.Run(() =>
+                {
+                    // 设置线程优先级为最高
+                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+                    ReadEquipmentDataPCS();
+                }).ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        frmMain.ShowDebugMSG(task.Exception.ToString());
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+        /*        public void AutoReadDataCom4()
+                {
+                    try
+                    {
+                        //实例化等待连接的线程
+                        Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
+                        ClientRecThread.IsBackground = true;
+                        ulong LpId = SetCpuID(0);
+                        SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                        ClientRecThread.Start();
+                        ClientRecThread.Name = "";
+                        // ClientRecThread.Join();
+                        //8.4
+                        ClientRecThread.Priority = ThreadPriority.Normal;
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                }*/
+
+
         /// <summary>
         /// 读取pcs信息
         /// </summary>
@@ -8884,7 +9128,7 @@ namespace EMS
                 try
                 {
                     PCSPower = 0;
-                    Thread.Sleep(100);
+                    Thread.Sleep(1000);
                     //PCS 
                     if (PCSList.Count > 0)
                     {

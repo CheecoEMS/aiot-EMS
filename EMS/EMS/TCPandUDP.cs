@@ -761,23 +761,23 @@ namespace Modbus
         /*                     modbusRTU 在TCP上的实现                             */
         /*                                                                         */
         /**************************************************************************/
-/*        public bool GetString(int ID, ref Socket clientSocket, ref object socketLock, byte CommandType, ushort aRegStart, ushort aRegLength, ref string aResult, bool aIxX2 = true)
-        {
-            ushort[] ResultData = null;//=new byte[100];
-            if (Send3MSG(ID, ref clientSocket, ref socketLock, CommandType, aRegStart, aRegLength, ref ResultData))
-            {
-                for (int i = 0; i < ResultData.Length; i++)
+        /*        public bool GetString(int ID, ref Socket clientSocket, ref object socketLock, byte CommandType, ushort aRegStart, ushort aRegLength, ref string aResult, bool aIxX2 = true)
                 {
-                    if (aIxX2)
-                        aResult += ((byte)(ResultData[i] >> 8)).ToString("X2") + ((byte)(ResultData[i])).ToString("X2");
+                    ushort[] ResultData = null;//=new byte[100];
+                    if (Send3MSG(ID, ref clientSocket, ref socketLock, CommandType, aRegStart, aRegLength, ref ResultData))
+                    {
+                        for (int i = 0; i < ResultData.Length; i++)
+                        {
+                            if (aIxX2)
+                                aResult += ((byte)(ResultData[i] >> 8)).ToString("X2") + ((byte)(ResultData[i])).ToString("X2");
+                            else
+                                aResult += (char)(ResultData[i] >> 8) + (byte)(ResultData[i]);
+                        }
+                        return true;
+                    }
                     else
-                        aResult += (char)(ResultData[i] >> 8) + (byte)(ResultData[i]);
-                }
-                return true;
-            }
-            else
-                return false;
-        }*/
+                        return false;
+                }*/
 
 
         /// <summary>
@@ -791,6 +791,8 @@ namespace Modbus
         /// <param name="aRegLength"></param>
         /// <param name="aResult"></param>
         /// <returns></returns>
+        /// 
+
         public bool GetUShort(int ID, ref Socket clientSocket, ref object socketLock, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort aResult)
         {
             if (clientSocket != null && clientSocket.Connected)

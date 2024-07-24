@@ -2898,7 +2898,7 @@ namespace EMS
                 {
                     "profit", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
                         new Column { Name = "rTime", Type = "date", IsNullable = true, Default = "NULL", Comment = "日期" },
                         new Column { Name = "profit", Type = "float", IsNullable = true, Default = "NULL", Comment = "收益" },
                         new Column { Name = "inPower", Type = "float", IsNullable = true, Default = "NULL", Comment = "充电量kwh" },
@@ -2930,7 +2930,7 @@ namespace EMS
                 {
                     "tactics", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
                         new Column { Name = "startTime", Type = "time", IsNullable = true, Default = "NULL", Comment = "策略开始时间" },
                         new Column { Name = "tType", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "充放电类型", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column { Name = "PCSType", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "PCS状态，恒压、恒流、恒功率", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
@@ -2996,7 +2996,7 @@ namespace EMS
                 {
                     "pncontroler", new List<Column>
                     {
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY" },
                         new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" , Comment = "调度编号"},
                         new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" , Comment = "下达时间"},
