@@ -1,5 +1,4 @@
 ﻿using Google.Protobuf.WellKnownTypes;
-using IEC104;
 using log4net;
 using log4net.Util;
 using Modbus;
@@ -7,13 +6,11 @@ using MySql.Data.MySqlClient;
 using Mysqlx;
 using Mysqlx.Crud;
 using Mysqlx.Prepare;
-using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Asn1.Crmf;
 using Org.BouncyCastle.Bcpg;
 using System;
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
@@ -21,11 +18,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Forms;
-using static IEC104.CIEC104Slave;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 using static System.Collections.Specialized.BitVector32;
 using System.Net.Sockets;
@@ -1410,20 +1405,32 @@ namespace EMS
         }
 
 
-
+        /*************************  新版灯语  ***********************************/
         public void Led_Control_Loop()
         {
             {
+                int errorclass = 0;
                 //LED获取当前告警级别
-                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
-                else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_Error[2] = true; //三级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[2] = false;
+
+                if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
+
+                errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.LedErrorState);
+                if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
 
                 //LED获取当前状态
                 if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
                 else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
 
                 //LED获取当前电量等级
-                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
+                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
+
+                log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}");
+
+                //frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
 
                 if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
                 {
@@ -1530,6 +1537,7 @@ namespace EMS
             }
         }
     }
+
 
     //pcs新增DSP2  11.27
     public class DSP2Class : BaseEquipmentClass
@@ -3687,10 +3695,8 @@ namespace EMS
             {
                 bPrepared = true;
                 if (Get3strData(2, ref strTemp, ref strData)) 
-                {
                     aV = Math.Round(float.Parse(strData), 1);
 
-                }
                 if (Get3strData(3, ref strTemp, ref strData))
                     bV = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(4, ref strTemp, ref strData))
@@ -3959,6 +3965,7 @@ namespace EMS
             {
                 bPrepared = true;
                 allUkva = Convert.ToDouble(strTemp);
+
             }
             Prepared = bPrepared; 
         }
@@ -4137,23 +4144,12 @@ namespace EMS
             string strTemp = "";
             string strData = "";
             bool bPrepared = false;
-
-            if (GetSysData(63, ref strTemp))
+            //
+            if (GetSysData(35, ref strTemp))
             {
+                double dTemp = 0;
                 bPrepared = true;
-                if (Get3strData(59, ref strTemp, ref strData))
-                    SoftwareVersion = strData;
-                if (Get3strData(60, ref strTemp, ref strData))
-                    SoftwareVersion += strData;
-                if (Get3strData(61, ref strTemp, ref strData))
-                    HardwareVersion = strData;
-                if (Get3strData(62, ref strTemp, ref strData))
-                    HardwareVersion += strData;
-            }
 
-            if (GetSysData(37, ref strTemp))
-            {
-                bPrepared = true;
                 if (Get3strData(0, ref strTemp, ref strData))
                     aV = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(1, ref strTemp, ref strData))
@@ -4182,16 +4178,10 @@ namespace EMS
                     inputA = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(13, ref strTemp, ref strData))
                     inputkva = Math.Round(float.Parse(strData), 1);
-            }
-            if (GetSysData(38, ref strTemp))
-            {
-                bPrepared = true;
-                double dTemp = 0;
-                //1
                 if (Get3strData(14, ref strTemp, ref strData))
-                { 
+                {
                     PCSTemp = Math.Round(float.Parse(strData), 1);
-                    if (PCSTemp > 150) 
+                    if (PCSTemp > 150)
                         PCSTemp = 0;
                     IGBTTemp1 = PCSTemp;
                 }
@@ -4237,14 +4227,9 @@ namespace EMS
                 }
 
                 if (Get3strData(20, ref strTemp, ref strData))
-                    InTemp = Math.Round(float.Parse(strData), 1); 
+                    InTemp = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(21, ref strTemp, ref strData))
-                    OutTemp = Math.Round(float.Parse(strData), 1); 
-            }
-            //
-            if (GetSysData(58, ref strTemp))
-            {
-                bPrepared = true;
+                    OutTemp = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(22, ref strTemp, ref strData))
                     aUkva = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(23, ref strTemp, ref strData))
@@ -4253,41 +4238,193 @@ namespace EMS
                     cUkva = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(25, ref strTemp, ref strData))
                     DCInputV = Math.Round(float.Parse(strData), 3);
-            }
-
-            if (GetSysData(39, ref strTemp))
-            {
-                bPrepared = true;
-                //状态
-                //Get3strData(26, ref strTemp, ref strData);
+                if (Get3strData(26, ref strTemp, ref strData))                
+                    PcsStatus = Convert.ToUInt16(strTemp);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData); 
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
                     Error[2] = Convert.ToUInt16(strData);
                 if (Get3strData(30, ref strTemp, ref strData))
                     Error[3] = Convert.ToUInt16(strData);
+
+                if (Get3strData(31, ref strTemp, ref strData))
+                    SoftwareVersion = strData;
+                if (Get3strData(32, ref strTemp, ref strData))
+                    SoftwareVersion += strData;
+                if (Get3strData(33, ref strTemp, ref strData))
+                    HardwareVersion = strData;
+                if (Get3strData(34, ref strTemp, ref strData))
+                    HardwareVersion += strData;
+
             }
 
-            //11.16 : PCS添加设备状态字
-            if (GetSysData(26, ref strTemp))
-            {
-                bPrepared = true;
-                PcsStatus = Convert.ToUInt16(strTemp);
-            }
+            #region 分段读
+            //if (GetSysData(63, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(59, ref strTemp, ref strData))
+            //        SoftwareVersion = strData;
+            //    if (Get3strData(60, ref strTemp, ref strData))
+            //        SoftwareVersion += strData;
+            //    if (Get3strData(61, ref strTemp, ref strData))
+            //        HardwareVersion = strData;
+            //    if (Get3strData(62, ref strTemp, ref strData))
+            //        HardwareVersion += strData;
+            //}
+
+            //if (GetSysData(37, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(0, ref strTemp, ref strData))
+            //        aV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(1, ref strTemp, ref strData))
+            //        bV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(2, ref strTemp, ref strData))
+            //        cV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(3, ref strTemp, ref strData))
+            //        aA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(4, ref strTemp, ref strData))
+            //        bA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(5, ref strTemp, ref strData))
+            //        cA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(6, ref strTemp, ref strData))
+            //        allUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(7, ref strTemp, ref strData))
+            //        allNUkvar = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(8, ref strTemp, ref strData))
+            //        allAkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(9, ref strTemp, ref strData))
+            //        hz = Math.Round(float.Parse(strData), 2);
+            //    if (Get3strData(10, ref strTemp, ref strData))
+            //        allPFactor = Math.Round(float.Parse(strData), 3);
+            //    if (Get3strData(11, ref strTemp, ref strData))
+            //        inputV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(12, ref strTemp, ref strData))
+            //        inputA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(13, ref strTemp, ref strData))
+            //        inputkva = Math.Round(float.Parse(strData), 1);
+            //}
+            //if (GetSysData(38, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    double dTemp = 0;
+            //    //1
+            //    if (Get3strData(14, ref strTemp, ref strData))
+            //    { 
+            //        PCSTemp = Math.Round(float.Parse(strData), 1);
+            //        if (PCSTemp > 150) 
+            //            PCSTemp = 0;
+            //        IGBTTemp1 = PCSTemp;
+            //    }
+            //    //2
+            //    if (Get3strData(15, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp2 = PCSTemp;
+            //    }
+            //    //3
+            //    if (Get3strData(16, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp3 = PCSTemp;
+            //    }
+            //    //4
+            //    if (Get3strData(17, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp4 = PCSTemp;
+            //    }
+            //    //5
+            //    if (Get3strData(18, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp5 = PCSTemp;
+            //    }
+            //    //6
+            //    if (Get3strData(19, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp6 = PCSTemp;
+            //    }
+
+            //    if (Get3strData(20, ref strTemp, ref strData))
+            //        InTemp = Math.Round(float.Parse(strData), 1); 
+            //    if (Get3strData(21, ref strTemp, ref strData))
+            //        OutTemp = Math.Round(float.Parse(strData), 1); 
+            //}
+            ////
+            //if (GetSysData(58, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(22, ref strTemp, ref strData))
+            //        aUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(23, ref strTemp, ref strData))
+            //        bUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(24, ref strTemp, ref strData))
+            //        cUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(25, ref strTemp, ref strData))
+            //        DCInputV = Math.Round(float.Parse(strData), 3);
+            //}
+
+            //if (GetSysData(39, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    //状态
+            //    //Get3strData(26, ref strTemp, ref strData);
+            //    if (Get3strData(27, ref strTemp, ref strData))
+            //        Error[0] = Convert.ToUInt16(strData); 
+            //    if (Get3strData(28, ref strTemp, ref strData))
+            //        Error[1] = Convert.ToUInt16(strData);
+            //    if (Get3strData(29, ref strTemp, ref strData))
+            //        Error[2] = Convert.ToUInt16(strData);
+            //    if (Get3strData(30, ref strTemp, ref strData))
+            //        Error[3] = Convert.ToUInt16(strData);
+            //}
+
+            ////11.16 : PCS添加设备状态字
+            //if (GetSysData(26, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PcsStatus = Convert.ToUInt16(strTemp);
+            //}
 
             //12.15 PCS添加启动/停机状态
-            if (GetSysData(64, ref strTemp))
+            //if (GetSysData(64, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PcsRun = Convert.ToDouble(strTemp);
+            //}
+            //if (GetSysData(65, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PCSwaType = Convert.ToUInt16(strTemp);
+            //}
+            #endregion
+
+            //12.15 PCS添加启动/停机状态
+            //24.7.25 pcs2非连续字段 添加启动/停机状态
+            if (GetSysData(66, ref strTemp)) 
             {
                 bPrepared = true;
-                PcsRun = Convert.ToDouble(strTemp);
+                if (Get3strData(64, ref strTemp, ref strData))
+                    PcsRun = Convert.ToDouble(strTemp);
+                if (Get3strData(65, ref strTemp, ref strData))
+                    PCSwaType = Convert.ToUInt16(strTemp);
             }
-            if (GetSysData(65, ref strTemp))
-            {
-                bPrepared = true;
-                PCSwaType = Convert.ToUInt16(strTemp);
-            }
+
+
             
             //判断PCS的通讯状态
             Prepared = bPrepared;
@@ -5621,7 +5758,7 @@ namespace EMS
         public double ShedulePCSKVA = -1;
         //public double ActivePCSKVA = 0;//从机PCS实际运行功率
         public int PCSType { get; set; } 
-        public int WorkType { get; set; }//0充电1放电
+        public double WorkType { get; set; }//0充电1放电
         //public bool Prepared = true;
         public double waValueActive { get; set; }
         //public AllEquipmentClass Parent = null;
@@ -5670,11 +5807,12 @@ namespace EMS
             if (GetSysData2(1, CID, ref strTemp))
             {
                 waValueActive = Math.Round(double.Parse(strTemp), 3);
-                if (WorkType == 0)
+                bPrepared = true;
+            }
+
+            if (GetSysData2(2, CID, ref strTemp))
                 {
-                    //从PCS读取的功率 ： 充电为负 放电为正 。 写入PCS的功率 ： 充电为正 放电为负
-                    waValueActive =  -1 * waValueActive;
-                }
+                WorkType = Math.Round(double.Parse(strTemp), 3);
                 bPrepared = true;
             }
             Prepared = bPrepared;
@@ -5774,9 +5912,9 @@ namespace EMS
         //考虑到多PCS
         public List<PCSClass> PCSList = new List<PCSClass>();
         //BMS
-        public  BMSClass  BMS;
+        public BMSClass BMS;
         //空调可能有多个
-        public  TempControlClass TempControl;
+        public TempControlClass TempControl;
         //UPS
         public UPSClass UPS;
         //主机EMS 8.7
@@ -5798,6 +5936,11 @@ namespace EMS
         //汇流柜新增DTSD1352
         public Elemeter2Class Elemeter2H;
 
+
+        //新增104变化上传
+        //public CIEC104Slave CIEC104Slave = new CIEC104Slave();
+
+
         public string DofD = "";
 
         //2.21
@@ -5807,9 +5950,9 @@ namespace EMS
 
         //当前策略的功率情况
         public int eState;    //手工、策略、网控 
-        //public string wType;  //充电、放电                 /应该状态
-       // public string PCSType;//待机、恒流、恒压、恒功率--设置项目/策略状态 
-        public int    MaxBMXValue=110;   //BMS限流的功率 kw
+                              //public string wType;  //充电、放电                 /应该状态
+                              // public string PCSType;//待机、恒流、恒压、恒功率--设置项目/策略状态 
+        public int MaxBMXValue = 110;   //BMS限流的功率 kw
 
         //2.21
         public volatile string PrewTypeActive;//策略预备执行动作（准备充电/放电）
@@ -5820,7 +5963,7 @@ namespace EMS
         public volatile string PCSTypeActive;//待机、恒压、恒流恒、恒功率 , AC恒压（离网） ，自适应需量
         public double waValueActive; //对应的 电压(恒压模式) /电流 (恒流模式)/ 功率（恒功率模式）
 
-        public int  ConversionRate = 1; //实际转换率
+        public int ConversionRate = 1; //实际转换率
 
         public string rDate = "";
         public double[] SAuxiliaryKWH = { 0, 0, 0, 0, 0 };   //记录当天开始辅助用电量
@@ -5832,7 +5975,7 @@ namespace EMS
         public bool[] ErrorState = { false, false, false };//1.2.3级别
 
 
-        public ushort[] OldEMSError = {0,0,0,0,0 };
+        public ushort[] OldEMSError = { 0, 0, 0, 0, 0 };
         public ushort[] EMSError = { 0, 0, 0, 0, 0 }; //问题？为什么有5个 和errorclass不同 
 
         //5.07 新增led显示故障
@@ -5891,7 +6034,7 @@ namespace EMS
         public int AllUkvaWindowSize = 4; // 1分钟的窗口大小，每秒一个值
 
         public double WorkKVA { get; set; } = 0;    //实时数据负载功率==电网+pcs功率（放电）、、、、电网+充电功率
-        public  double PCSScheduleKVA { get; set; } = 0;     //实施的功率（手工设置或策略功率）
+        public double PCSScheduleKVA { get; set; } = 0;     //实施的功率（手工设置或策略功率）
         public double AllPCSScheduleKVA = 0;   //主从结构的全部计划功率
         public double AllwaValue = 0;            //主从结构的全部实际功率
         public double PCSKVA { get; set; } = 0;     //实时数据pcs功率 
@@ -5901,11 +6044,11 @@ namespace EMS
         public double BMSKVA { get; set; }   //实时电池的功率
 
         //7.25 BMS 均衡
-        double CellV_Gap = 0.03 ;//定义最低单体电压和理想最高单体电压的差值30mv
+        double CellV_Gap = 0.03;//定义最低单体电压和理想最高单体电压的差值30mv
         public List<double> balaCellV = new List<double>(); //单体电压数据
         public List<double> balaCellID = new List<double>(); //单体电压数据
         public double O_sigma { get; set; } = 0;            //上次的电压方差
-        public  int BalaRun { get; set; } = 0;         //是否运行均衡标识位
+        public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
         public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
 
 
@@ -5913,12 +6056,12 @@ namespace EMS
         // public int[] BMSErrorState = { 0, 0 };
         public bool NetControl = false; //记录当前状态是否为网络控制
         public bool NetConnect = false; //记录当前状态是否连接主机
-        public DateTime NetCtlTime =DateTime.Now; //最后通讯时间
+        public DateTime NetCtlTime = DateTime.Now; //最后通讯时间
 
         //2.21
-        public static string[] EquipNameList = { "用户侧电表", "设备电表", "辅组电表", "PCS逆变器", "BMS", "空调系统" 
+        public static string[] EquipNameList = { "用户侧电表", "设备电表", "辅组电表", "PCS逆变器", "BMS", "空调系统"
                    , "消防","计量电表" ,"水浸传感器","一氧化碳传感器","温湿度传感器","烟雾传感器","UPS","液冷机" ,"DSP2" ,"汇流柜电表","储能电站总表","灯板","除湿机"};
-        public  bool ChechPower;// = (frmMain.Selffrm.AllEquipment.Elemeter1 != null);
+        public bool ChechPower;// = (frmMain.Selffrm.AllEquipment.Elemeter1 != null);
 
 
         //8.8
@@ -5964,13 +6107,14 @@ namespace EMS
         public string LED_Version { get; set; } = "";
         public string Dehumidifier_Version { get; set; } = "";
 
-        //
-    
+        // 7/16 104-最大充放电
+        public double MaxChargePower;
+        public double MaxDisChargePower;
 
 
         public AllEquipmentClass()
         {
-            Fire = new FireClass(); 
+            Fire = new FireClass();
         }
 
         //析构函数
@@ -6044,7 +6188,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.ExecCommand(aWithAllSet); 
+            frmMain.Selffrm.AllEquipment.TempControl.ExecCommand(aWithAllSet);
         }
         //除湿器设置 5.05 swp
         public void DHIni()
@@ -6060,7 +6204,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(aACOn); 
+            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(aACOn);
         }
 
         //复位空调故障
@@ -6068,7 +6212,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.TCCleanError(); 
+            frmMain.Selffrm.AllEquipment.TempControl.TCCleanError();
         }
 
         /// <summary>
@@ -6079,7 +6223,7 @@ namespace EMS
             //执行 策略
             for (int j = 0; j < PCSList.Count; j++)
             {
-                PCSList[j].SetSysData(76, 0xff00,true);
+                PCSList[j].SetSysData(76, 0xff00, true);
             }
         }
 
@@ -6101,7 +6245,6 @@ namespace EMS
                 if (ErrorState[2])
                 {
                     aData = 0;
-                    log.Info("发生3级别告警，功率置0");
                 }
                 if (aPCSType == null)
                     aPCSType = "恒功率";//默认恒功率模式
@@ -6117,7 +6260,7 @@ namespace EMS
                 if (aData > 110)
                     aData = 110;
 
-                if (frmMain.Selffrm.AllEquipment.BMS !=null)
+                if (frmMain.Selffrm.AllEquipment.BMS != null)
                 {
                     switch (aWorkType)
                     {
@@ -6126,23 +6269,19 @@ namespace EMS
                             break;
                         case "充电":
                             aData = (int)(Math.Abs(aData) * UBmsPcsState);
-                            log.Info("充电模式下调整功率比例："+ UBmsPcsState+" "+"aData:" + aData);
                             if ((BMSSOC > frmSet.MaxSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
                                 aData = 0;
-                                log.Info("SOC过高，功率置0");
                             }
                             else if ((BMS.MaxChargeA == 0) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "充电失败", "BMS禁止充电");
                                 aData = 0;
-                                log.Info("BMS禁止充电，功率置0");
                             }
                             break;
                         case "放电":
                             aData = -1 * (int)(Math.Abs(aData) * OBmsPcsState);
-                            log.Info("放电模式下调整功率比例："+ OBmsPcsState+" "+"aData:" + aData);
                             if ((BMSSOC < frmSet.MinSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
@@ -6168,7 +6307,7 @@ namespace EMS
                         if (aPCSType != "待机")
                         {
 
-                            if ((aData != 0)&&(frmMain.Selffrm.AllEquipment.TempControl!=null))
+                            if ((aData != 0) && (frmMain.Selffrm.AllEquipment.TempControl != null))
                             {
                                 if (frmMain.Selffrm.AllEquipment.TempControl.state != 1)
                                 {
@@ -6176,7 +6315,7 @@ namespace EMS
                                 }
                             }
 
-                            if ((aData != 0)&&(frmMain.Selffrm.AllEquipment.LiquidCool != null))
+                            if ((aData != 0) && (frmMain.Selffrm.AllEquipment.LiquidCool != null))
                             {
                                 if (frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                                 {
@@ -6260,36 +6399,36 @@ namespace EMS
             //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
             try
             {
-                    while (sdr.Read())
+                while (sdr.Read())
+                {
+                    if (TempControl != null)
+                        TempControl.errorOld = sdr.GetUInt32(1);
+                    if (PCSList.Count > 0)
                     {
-                        if (TempControl!=null)
-                            TempControl.errorOld = sdr.GetUInt32(1);
-                        if (PCSList.Count > 0)
-                        {
-                            PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
-                            PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
-                            PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
-                            PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
-                            PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
-                            PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
-                            PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
-                            PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
-                        }
-                        if (BMS!=null)
-                        {
-                            BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
-                            BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
-                            BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
-                            BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
-                            BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
-                        }
-                        //OldError = (ushort)sdr.GetUInt32(15);
-                        OldEMSError[0]= (ushort)sdr.GetUInt32(15);
-                        OldEMSError[1] = (ushort)sdr.GetUInt32(16);
-                        OldEMSError[2] = (ushort)sdr.GetUInt32(17);
-                        OldEMSError[3] = (ushort)sdr.GetUInt32(18);
+                        PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
+                        PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
+                        PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
+                        PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
+                        PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
+                        PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
+                        PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
+                        PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
                     }
-                
+                    if (BMS != null)
+                    {
+                        BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
+                        BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
+                        BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
+                        BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
+                        BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
+                    }
+                    //OldError = (ushort)sdr.GetUInt32(15);
+                    OldEMSError[0] = (ushort)sdr.GetUInt32(15);
+                    OldEMSError[1] = (ushort)sdr.GetUInt32(16);
+                    OldEMSError[2] = (ushort)sdr.GetUInt32(17);
+                    OldEMSError[3] = (ushort)sdr.GetUInt32(18);
+                }
+
             }
             catch
             { }
@@ -6365,11 +6504,11 @@ namespace EMS
                         case 8://水浸传感器
                             oneEquipment = new WaterloggingClass();
                             if (WaterLog1 == null)
-                            {   WaterLog1 = (WaterloggingClass)oneEquipment;
+                            { WaterLog1 = (WaterloggingClass)oneEquipment;
                                 Waterlogging_Version = oneEquipment.LoadVersionFromFile();
                             }
                             else
-                            {   WaterLog2 = (WaterloggingClass)oneEquipment;
+                            { WaterLog2 = (WaterloggingClass)oneEquipment;
                                 Waterlogging_Version = oneEquipment.LoadVersionFromFile();
                             }
                             break;
@@ -6426,7 +6565,7 @@ namespace EMS
 
                     }
 
-                   oneEquipment.Parent = this;
+                    oneEquipment.Parent = this;
                     oneEquipment.eID = sdr.GetInt32(0);
                     oneEquipment.eType = eType;
                     oneEquipment.eModel = sdr.GetString(2);
@@ -6438,7 +6577,7 @@ namespace EMS
                     oneEquipment.serverIP = sdr.GetString(8);
                     oneEquipment.SerPort = sdr.GetInt32(9);
                     oneEquipment.LocPort = sdr.GetInt32(10);
-                    oneEquipment.iot_code = sdr.GetString(11); 
+                    oneEquipment.iot_code = sdr.GetString(11);
                     oneEquipment.pc = sdr.GetInt32(12);
                     //oneEquipment.version = oneEquipment.LoadVersionFromFile();
                     oneEquipment.LoadCommandFromFile(); //下载comlist
@@ -6449,15 +6588,15 @@ namespace EMS
                         case 0:
                             oneEquipment.m485 = new modbus485();
                             oneEquipment.m485.ParentEquipment = this;
-                            oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate,oneEquipment.comBits,
+                            oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
                                                    System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
                             break;
                         case 1:
                             break;
                         case 2:
-                            break; 
+                            break;
                     }
-                   
+
 
                 }
                 ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List != null);
@@ -6571,13 +6710,13 @@ namespace EMS
                 for (i = 0; i < PCSList.Count; i++)
                     PCSList[i].Save2DataSource(tempDate);
                 //BMS                
-               if(BMS!=null)
+                if (BMS != null)
                     BMS.Save2DataSource(tempDate);
                 //空调
-               if(TempControl!=null)
+                if (TempControl != null)
                     TempControl.Save2DataSource(tempDate);
                 //液冷
-                if (LiquidCool!=null)
+                if (LiquidCool != null)
                     LiquidCool.Save2DataSource(tempDate);
                 //传感器
                 if (Fire != null)
@@ -6610,9 +6749,9 @@ namespace EMS
                 AutoReadDataCom3();//BMS
                 AutoReadDataCom4(); //PCS 
                 AutoRead();
-                AutoSystime_Tick();
+                //AutoSystime_Tick();
                 //--------运行策略timer或线程 
-                frmMain.TacticsList.AutoCheckTactics();
+                //frmMain.TacticsList.AutoCheckTactics();
                 //--------运行均衡策略线程
                 //BalaTacticsList.AutoCheckBalaTactics();
                 //8.7
@@ -6636,18 +6775,13 @@ namespace EMS
                     }
 
                 }
-/*                else
+                else
                 {
-                    if (frmSet.ConnectStatus == "tcp")
+                    if (frmSet.ConnectStatus == "485")
                     {
-                        frmMain.Selffrm.ModbusTcpClient.AutoConnect();
+                        frmMain.Selffrm.AllEquipment.Auto_Read_Serial();
                     }
-                    
-                }*/
-
-
-
-
+                }
                 //9.7 CPU占用高
                 //AutoReadrunState();
             }
@@ -6665,6 +6799,51 @@ namespace EMS
         /// /////////////////////////////////////////////////////////////////////////////////////
         /// </summary>
         /// 
+        public void Read_Serial()
+        {
+            List<byte> receivedData = new List<byte>();
+            bool GetMsg = false;
+            while (true)
+            {
+
+                if (frmMain.Selffrm.ems.m485.sp != null)
+                {
+                    while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
+                    {
+                        int info = frmMain.Selffrm.ems.m485.sp.ReadByte();
+                        receivedData.Add((byte)info);
+                        GetMsg = true;
+                    }
+                    if (GetMsg)
+                    {
+                        frmMain.Selffrm.OnReceiveCMD2(1, receivedData.ToArray());
+                        GetMsg = false;
+                        receivedData.Clear();
+                    }
+                }
+            }
+        }
+
+        public void Auto_Read_Serial()
+        {
+            try
+            {
+                //实例化等待连接的线程
+                Thread ClientRecThread = new Thread(Read_Serial);
+                ClientRecThread.IsBackground = true;
+                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                ClientRecThread.Start();
+                ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+        }
 
         public void Systime_Tick()
         {
@@ -6689,7 +6868,7 @@ namespace EMS
 
                     frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
                     frmMain.Selffrm.AllEquipment.WriteDoPUini();
-                   
+
                 }
 
                 //如果日期更新：
@@ -6789,55 +6968,55 @@ namespace EMS
                 }
                 catch { }
                 //7.25
-/*                if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
-                {
-                    if (!frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient.IsConnected)
-                    {
-                        //在非策略时段 + 运行模式 
-                        if (frmSet.IsMaster)
-                        {
-                            if (frmMain.Selffrm.AllEquipment.HostStart == false && frmSet.EMSstatus == 1 &&  frmMain.Selffrm.AllEquipment.SlaveStart == false)
-                            {
-                                //log.Error("RestartCounts:" + frmSet.RestartCounts);
-                                if (frmSet.RestartCounts > 0)
+                /*                if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
                                 {
-                                    //关闭PCS
-                                    log.Error("网络原因造成EMS重启");
-                                    frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(false);
-                                    //重启次数减1 ， 每日限定重启5次.
-                                    frmSet.RestartCounts--;
-                                    frmSet.SaveSet2File();
-                                    Thread.Sleep(5000);
-                                    //重启
-                                    SysIO.Reboot();
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (frmMain.Selffrm.AllEquipment.HostStart == false && frmSet.EMSstatus == 1)
-                            {
-                                //log.Error("RestartCounts:" + frmSet.RestartCounts);
-                                if (frmSet.RestartCounts > 0)
-                                {
-                                    //关闭PCS
-                                    log.Error("网络原因造成EMS重启");
-                                    frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(false);
-                                    //重启次数减1 ， 每日限定重启5次.
-                                    frmSet.RestartCounts--;
-                                    frmSet.SaveSet2File();
-                                    Thread.Sleep(5000);
-                                    //重启
-                                    SysIO.Reboot();
-                                }
-                            }
-                        }
-                    }
+                                    if (!frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient.IsConnected)
+                                    {
+                                        //在非策略时段 + 运行模式 
+                                        if (frmSet.IsMaster)
+                                        {
+                                            if (frmMain.Selffrm.AllEquipment.HostStart == false && frmSet.EMSstatus == 1 &&  frmMain.Selffrm.AllEquipment.SlaveStart == false)
+                                            {
+                                                //log.Error("RestartCounts:" + frmSet.RestartCounts);
+                                                if (frmSet.RestartCounts > 0)
+                                                {
+                                                    //关闭PCS
+                                                    log.Error("网络原因造成EMS重启");
+                                                    frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(false);
+                                                    //重启次数减1 ， 每日限定重启5次.
+                                                    frmSet.RestartCounts--;
+                                                    frmSet.SaveSet2File();
+                                                    Thread.Sleep(5000);
+                                                    //重启
+                                                    SysIO.Reboot();
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (frmMain.Selffrm.AllEquipment.HostStart == false && frmSet.EMSstatus == 1)
+                                            {
+                                                //log.Error("RestartCounts:" + frmSet.RestartCounts);
+                                                if (frmSet.RestartCounts > 0)
+                                                {
+                                                    //关闭PCS
+                                                    log.Error("网络原因造成EMS重启");
+                                                    frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(false);
+                                                    //重启次数减1 ， 每日限定重启5次.
+                                                    frmSet.RestartCounts--;
+                                                    frmSet.SaveSet2File();
+                                                    Thread.Sleep(5000);
+                                                    //重启
+                                                    SysIO.Reboot();
+                                                }
+                                            }
+                                        }
+                                    }
 
-                }*/
+                                }*/
 
                 //空调控制
-                if(frmSet.EMSstatus == 1)  
+                if (frmSet.EMSstatus == 1)
                 {
                     if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
                     {
@@ -6856,7 +7035,7 @@ namespace EMS
 
                     //液冷控制
                     if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                    {     
+                    {
                         if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                         {
                             frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
@@ -6872,7 +7051,7 @@ namespace EMS
                 }
 
                 //LED控制
-                if (frmMain.Selffrm.AllEquipment.Led != null) 
+                if (frmMain.Selffrm.AllEquipment.Led != null)
                 {
                     frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
                 }
@@ -6909,35 +7088,35 @@ namespace EMS
             while (true)
             {
                 Thread.Sleep(1000);
-/*                //问询从机功率
-                ReadAllEmsTCP();*/
+                /*                //问询从机功率
+                                ReadAllEmsTCP();*/
                 //发送充放电模式
                 //if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                 //{
-                    if (!ChechPower)
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
-                        SetAllPCSKVATCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
-                    }
-                    else
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
-                        SetAllPCSKVATCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
-                    }
+                if (!ChechPower)
+                {
+                    SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
+                    SetAllPCSKVATCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
+                }
+                else
+                {
+                    SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
+                    SetAllPCSKVATCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
+                }
                 //}
 
                 //发送功率大小
-/*                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
-                {
-                    if (!ChechPower)
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
-                    }
-                    else
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
-                    }
-                }*/
+                /*                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                                {
+                                    if (!ChechPower)
+                                    {
+                                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
+                                    }
+                                    else
+                                    {
+                                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
+                                    }
+                                }*/
             }
         }
 
@@ -6979,7 +7158,7 @@ namespace EMS
                     {
                         SetAllPCSCommand(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate, true);
                     }
-                }              
+                }
             }
         }
 
@@ -7037,18 +7216,18 @@ namespace EMS
                         tempPUMdemand_now += Elemeter1.PUMdemand_now;
                     }
 
-/*                    if (Elemeter1List[0].Prepared)
-                    {
-                        GridKVA = tempGridKVA;
-                        AddValue(GridKVA);
-                        GridKVA_window = GetAverage();
-                    }
-                    else
-                    {
-                        GridKVA = 0;
-                        clearAllUkvaWindow();
-                        GridKVA_window = 0;
-                    }*/
+                    /*                    if (Elemeter1List[0].Prepared)
+                                        {
+                                            GridKVA = tempGridKVA;
+                                            AddValue(GridKVA);
+                                            GridKVA_window = GetAverage();
+                                        }
+                                        else
+                                        {
+                                            GridKVA = 0;
+                                            clearAllUkvaWindow();
+                                            GridKVA_window = 0;
+                                        }*/
                 }
 
                 //2.21
@@ -7056,7 +7235,7 @@ namespace EMS
                 E1_PUMdemand_now = tempPUMdemand_now;
 
 
-                if (Elemeter1Z!=null)
+                if (Elemeter1Z != null)
                 {
                     E2_PUMdemand_Max = Elemeter1Z.PUMdemand_Max;
                     E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
@@ -7076,7 +7255,7 @@ namespace EMS
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal ;
+                ClientRecThread.Priority = ThreadPriority.Normal;
                 // ClientRecThread.Join();
             }
             catch (Exception ex)
@@ -7104,7 +7283,7 @@ namespace EMS
                     ClientRecThread.Priority = ThreadPriority.Lowest;
                     // ClientRecThread.Join();
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -7133,7 +7312,7 @@ namespace EMS
             {
                 oneEMSE.GetDataFromEqipment2(oneEMSE.ID);
             }
-          
+
         }
 
         //Com1 readThread1
@@ -7161,6 +7340,50 @@ namespace EMS
 
         ///Com1 读取函数 
         //单机的防逆流
+        public void SingleReflux_Log()
+        {
+            log.Debug("超限防逆需量上限：" + frmSet.MaxGridKW + " "
+                + "超限防逆电网功率下限：" + frmSet.MinGridKW + " "
+                + "超限防逆电网功率：" + GridKVA + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS单机实际功率：" + PCSKVA + " "
+                + "超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
+                + "超限防逆PCS功率：" + PCSScheduleKVA * dRate + " "
+                + "超限防逆PCS本机当前功率：" + PCSKVA);
+        }
+        public void MutiReflux_Log()
+        {
+            log.Debug("超限防逆上限：" + frmSet.MaxGridKW + " "
+                + "超限防逆下限：" + frmSet.MinGridKW + " "
+                + "超限防逆电网功率：" + GridKVA + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS主从实际功率：" + Math.Abs(AllwaValue) + " "
+                + "超限防逆整体计划功率：" + Math.Abs(AllPCSScheduleKVA) + " "
+                + "超限防逆PCS本机实际计划功率：" + PCSScheduleKVA * dRate + " "
+                + "超限防逆PCS本机当前功率：" + PCSKVA);
+        }
+        public void ClientControl_Log()
+        {
+            if (ChechPower)
+            {
+                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA * frmMain.Selffrm.AllEquipment.dRate);
+            }
+            else
+            {
+                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA * 1);
+            }
+        }
+
+
+
+        ///Com1 读取函数 
+        //单机的防逆流   
         private void SingleReflux()
         {
             dValue = 0;
@@ -7178,7 +7401,7 @@ namespace EMS
                 DateTime dateTime = DateTime.Now;
 
                 //新策略时段修改充放电状态为放电，若未开发策略修改权限。则恢复策略线程权限，重新读取策略
-                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule ==false)
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
                 {
                     //计划策略切换放电
                     lock (frmMain.Selffrm.AllEquipment)
@@ -7195,7 +7418,7 @@ namespace EMS
                 {
                     //判断操作为恢复策略还是等待
                     //若电网平均功率低于需量的上限阈值，则恢复策略
-                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.PUM)/100)
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
                     {
                         //重新下发策略
                         lock (frmMain.Selffrm.AllEquipment)
@@ -7224,7 +7447,7 @@ namespace EMS
                     if (wTypeActive == "充电")
                     {
                         //当前需量 超过 最大需量的X倍 ：强制放电
-                        if (GridKVA_window > (Client_PUMdemand_Max*frmSet.PUM)/100 && FineToCharge == true)
+                        if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
                         {
                             //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
                             lock (frmMain.Selffrm.AllEquipment)
@@ -7244,9 +7467,9 @@ namespace EMS
                         else
                         {
                             //判断电网功率是否超过需量上限
-                            if (GridKVA >=  Client_PUMdemand_Max*frmSet.PUM/100)
+                            if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
                             {
-                                dValue = GridKVA - Client_PUMdemand_Max*frmSet.PUM/100;
+                                dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
                                 if (dValue > Math.Abs(PCSKVA))
                                 {
                                     dRate = 0;
@@ -7266,7 +7489,7 @@ namespace EMS
                             }
                             else
                             {
-                                dValue = (Client_PUMdemand_Max*frmSet.PUM)/100 - (GridKVA - Math.Abs(PCSKVA));
+                                dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(PCSKVA));
                                 if (dValue >= Math.Abs(PCSScheduleKVA))
                                 {
                                     dRate = 1;
@@ -7276,7 +7499,7 @@ namespace EMS
                                 {
                                     if (Math.Abs(PCSScheduleKVA) != 0)
                                     {
-                                        dRate =  (dValue / Math.Abs(PCSScheduleKVA));
+                                        dRate = (dValue / Math.Abs(PCSScheduleKVA));
                                         FineToCharge = true;
                                     }
                                     else { dRate = 0; }
@@ -7287,7 +7510,7 @@ namespace EMS
                 }
 
                 //在非静置状态下放电行为: 强制放电 + 策略放电
-                if ((frmMain.TacticsList.ActiveIndex>=0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
                 {
                     if (wTypeActive == "放电")
                     {
@@ -7298,7 +7521,7 @@ namespace EMS
                             //限流qiao 
                             if (dValue >= Math.Abs(PCSKVA))
                             {
-                                dRate= 0;
+                                dRate = 0;
                             }
                             else
                             {
@@ -7323,7 +7546,7 @@ namespace EMS
                             {
                                 if (PCSScheduleKVA != 0)
                                 {
-                                    dRate =  (dValue / Math.Abs(PCSScheduleKVA));
+                                    dRate = (dValue / Math.Abs(PCSScheduleKVA));
                                 }
                                 else { dRate = 0; }
                             }
@@ -7355,7 +7578,7 @@ namespace EMS
                     }
                 }
 
-                if ((GridKVA >= PowerCap)  && (wTypeActive == "充电"))//表1用于限流和防止超限 ,PCS在不工作时也有0.1，0.2的功率值
+                if ((GridKVA >= PowerCap) && (wTypeActive == "充电"))//表1用于限流和防止超限 ,PCS在不工作时也有0.1，0.2的功率值
                 { //超限
                     dValue = dGridKW - PowerCap;
                     //限流qiao 
@@ -7379,7 +7602,7 @@ namespace EMS
                     //限流qiao 
                     if (dValue >= Math.Abs(PCSKVA))
                     {
-                        dRate= 0;
+                        dRate = 0;
                     }
                     else
                     {
@@ -7395,6 +7618,8 @@ namespace EMS
                     if (wTypeActive == "充电")
                     {
                         dValue = PowerCap - (GridKVA_window - Math.Abs(PCSKVA));
+                        if (dValue > 0)
+                        {
                         if (dValue >= Math.Abs(PCSScheduleKVA))
                         {
                             dRate = 1;
@@ -7408,45 +7633,61 @@ namespace EMS
                             else { dRate = 0; }
                         }
                     }
+                        else
+                        {
+                            dRate = 0;
+                        }
+                    }
                     else if (wTypeActive == "放电")
                     {
                         dValue = (GridKVA_window + Math.Abs(PCSKVA)) - frmSet.MinGridKW;
-                        if (dValue >= Math.Abs(PCSScheduleKVA))
+                        if (dValue > 0)
                         {
-                            dRate = 1;
+                            if (dValue >= Math.Abs(PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
                         }
                         else
                         {
-                            if (PCSScheduleKVA != 0)
-                            {
-                                dRate =  (dValue / Math.Abs(PCSScheduleKVA));
-                            }
-                            else { dRate = 0; }
+                            dRate = 0;
                         }
                     }
                 }
             }
-            log.Debug("超限防逆最大需量：" + PowerCap + " "
-                +"超限防逆电网功率：" +  dGridKW + " "
-                +"超限防逆计算差值: " + dValue + " "
-                +"超限防逆计算修正比: " + dRate + " "
-                +"超限防逆PCS充放电模式：" + wTypeActive + " "
-                +"超限防逆PCS工作状态：" + PCSTypeActive + " "
-                +"超限防逆PCS单机实际功率：" + PCSKVA + " "
-                +"超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
-                +"超限防逆PCS功率：" + PCSScheduleKVA * dRate);
-
-
             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
-
         }
 
+        
+        public void ReadAllEmsRTU()
+        {
+            double TempWaValue = PCSKVA;
+            foreach (EMSEquipment oneEMSE in EMSList)
+            {
+                oneEMSE.GetDataFromEqipment2(oneEMSE.ID);
+                if (oneEMSE.WorkType == 0)
+                {
+                    TempWaValue -= oneEMSE.waValueActive;
+                }
+                else if (oneEMSE.WorkType == 1)
+                {
+                    TempWaValue += oneEMSE.waValueActive;
+                }
+            }
+            AllwaValue = TempWaValue;
+        }
 
-        //502
         public void ReadAllEmsTCP()
         {
-            //bool CorrectRead = true;
-            double waValue = Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva);
+            double TempWaValue = PCSKVA;
             for (int i = 0; i < 10; ++i)
             {
                 int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
@@ -7455,7 +7696,8 @@ namespace EMS
                     continue;
                 }
                 //问询第"+ ID +"台机"
-                ushort tempUShort = 0;
+                ushort tempKVA = 0;
+                ushort tempType = 0;
                 if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                 {
                     try
@@ -7464,18 +7706,27 @@ namespace EMS
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         if (client != null && client.Connected)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempUShort))
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempKVA))
                             {
-                                //CorrectRead = false;                       
                                 continue;
                             }
-                            waValue += tempUShort;
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6003, 1, ref tempType))
+                            {
+                                continue;
+                            }
+                            if (tempType == 0)
+                            {
+                                TempWaValue -= tempKVA;
+                            }
+                            else if (tempType == 1)
+                            {
+                                TempWaValue += tempKVA;
+                            }
                         }
                     }
                     catch (ArgumentException ex)
                     {
                         log.Error("捕获入参ex: " + ex.Message);
-                        //log.Error("报错日志： " + ex.StackTrace);
                     }
 
                     //读取多个寄存器值
@@ -7484,18 +7735,9 @@ namespace EMS
 
                 }
             }
-            AllwaValue = waValue;
-
-            //当所有从机的功率都问询成功，修改储能电站总功率
-            /*            if (CorrectRead)
-                        {
-                            AllwaValue = waValue;
-                        }
-                        else//否则使用推算功率
-                        {
-                            AllwaValue = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva * frmSet.SysCount;
-                        }*/
+            AllwaValue = TempWaValue;
         }
+
 
         public void SetAllPCSKVATCP(string awType, string aPCSType, double aPCSValueRate)
         {
@@ -7505,7 +7747,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.IsMaster) || (frmSet.PCSGridModel == 1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7518,30 +7760,29 @@ namespace EMS
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        byte[] buffer1 = new byte[1024];
+                        //byte[] buffer1 = new byte[1024];
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
-/*                        itemp = Array.IndexOf(wTpyes, awType);
-                        log.Error("发送第一条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第一条成功返回");
-                        byte[] buffer2 = new byte[1024];
-                        itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                        log.Error("发送第二条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第二条成功返回");*/
-                        
+                        /*                        itemp = Array.IndexOf(wTpyes, awType);
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
+                                                {
+                                                    continue;
+                                                }
+                                                byte[] buffer2 = new byte[1024];
+                                                itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                                                {
+                                                    continue;
+                                                }*/
+
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                        if (socketLock != null && client != null)
                         {
-                            continue;
+                            double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                            {
+                                continue;
+                            }
                         }
                     }
                 }
@@ -7557,7 +7798,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.IsMaster) || (frmSet.PCSGridModel == 1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7572,27 +7813,30 @@ namespace EMS
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
-                        itemp = Array.IndexOf(wTpyes, awType);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
-                        {                           
-                            continue;
-                        }
-/*                        byte[] buffer2 = new byte[1024];
-                        itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                        log.Error("发送第二条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                        if (socketLock != null && client != null)
                         {
-                            continue;
+                            itemp = Array.IndexOf(wTpyes, awType);
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
+                            {
+                                continue;
+                            }
                         }
-                        log.Error("发送第二条成功返回");
-                        byte[] buffer3 = new byte[1024];
-                        double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        log.Error("发送第"+ ID +"台机:"+"计划功率："+ PCSScheduleKVA+"发送功率：" + dtemp);
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer3, 6, 0x6002, (ushort)dtemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第三条成功返回");*/
+                        /*                        byte[] buffer2 = new byte[1024];
+                                                itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
+                                                log.Error("发送第二条");
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                                                {
+                                                    continue;
+                                                }
+                                                log.Error("发送第二条成功返回");
+                                                byte[] buffer3 = new byte[1024];
+                                                double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
+                                                log.Error("发送第"+ ID +"台机:"+"计划功率："+ PCSScheduleKVA+"发送功率：" + dtemp);
+                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer3, 6, 0x6002, (ushort)dtemp) == -1)
+                                                {
+                                                    continue;
+                                                }
+                                                log.Error("发送第三条成功返回");*/
                     }
                 }
             }
@@ -7621,18 +7865,12 @@ namespace EMS
             }
         }
 
-
-
-
-
-
-
         //主从模式下，主机控制从机
-        public void SetAllPCSCommand(string awType,string  aPCSType, double aPCSValueRate, bool bAllParam)
+        public void SetAllPCSCommand(string awType, string aPCSType, double aPCSValueRate, bool bAllParam)
         {
             if (SlaveStart)
             {
-                if ((!frmSet.IsMaster)||(frmSet.PCSGridModel==1))
+                if ((!frmSet.IsMaster) || (frmSet.PCSGridModel == 1))
                     return;
                 foreach (EMSEquipment oneEMSE in EMSList)
                 {
@@ -7669,7 +7907,7 @@ namespace EMS
         //8.6
         public void SetAllPCSOn(bool aOn)
         {
-            if ((!frmSet.IsMaster)|| (frmSet.PCSGridModel == 1))
+            if ((!frmSet.IsMaster) || (frmSet.PCSGridModel == 1))
                 return;
             foreach (EMSEquipment oneEMSE in EMSList)
             {
@@ -7680,6 +7918,8 @@ namespace EMS
                 }
             }
         }
+
+
 
         //多机的防逆流
         private void MutiReflux()
@@ -7693,7 +7933,7 @@ namespace EMS
             {
                 DateTime dateTime = DateTime.Now;
 
-                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule ==false)
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
                 {
                     //计划策略切换放电
                     lock (frmMain.Selffrm.AllEquipment)
@@ -7711,7 +7951,7 @@ namespace EMS
                 {
                     //判断操作为恢复策略还是等待
                     //if (E1_PUMdemand_now < (Client_PUMdemand_Max*frmSet.PUM)/100)
-                    if (GridKVA_window < (Client_PUMdemand_Max*frmSet.PUM)/100)
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
                     {
                         //重新读取策略
                         recoverSchedule = true;
@@ -7734,14 +7974,14 @@ namespace EMS
                         }
                     }
                 }
-                if (frmMain.TacticsList.ActiveIndex>=0)
+                if (frmMain.TacticsList.ActiveIndex >= 0)
                 {
                     if (recoverSchedule)
                     {
                         if (wTypeActive == "充电")
                         {
                             //当前需量 超过 最大需量的X倍 ：强制放电
-                            if (GridKVA_window > (Client_PUMdemand_Max*frmSet.PUM)/100 && FineToCharge == true)
+                            if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
                             {
                                 //修改成放电
                                 lock (frmMain.Selffrm.AllEquipment)
@@ -7749,7 +7989,7 @@ namespace EMS
                                     //强制放电
                                     wTypeActive = "放电";
                                     PCSScheduleKVA = 20;
-                                    AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                                    AllPCSScheduleKVA = PCSScheduleKVA * (EMSList.Count + 1);
                                     dRate = 1;
                                     start_Time = DateTime.Now;
                                     recoverSchedule = false;
@@ -7758,13 +7998,13 @@ namespace EMS
                                 {
                                     frmMain.Selffrm.AllEquipment.GotoSchedule = false;
                                 }
-                                FineToCharge = false;                         
+                                FineToCharge = false;
                             }
                             else
                             {
-                                if (GridKVA >=  Client_PUMdemand_Max*frmSet.PUM/100)
-                                { 
-                                    dValue = GridKVA - Client_PUMdemand_Max*frmSet.PUM/100;
+                                if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
+                                {
+                                    dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
                                     if (dValue > Math.Abs(AllwaValue))
                                     {
                                         dRate = 0;
@@ -7784,7 +8024,7 @@ namespace EMS
                                 }
                                 else
                                 {
-                                    dValue = (Client_PUMdemand_Max*frmSet.PUM)/100 - (GridKVA - Math.Abs(AllwaValue));
+                                    dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(AllwaValue));
                                     if (dValue >= Math.Abs(AllPCSScheduleKVA))
                                     {
                                         dRate = 1;
@@ -7794,7 +8034,7 @@ namespace EMS
                                     {
                                         if (Math.Abs(AllPCSScheduleKVA) != 0)
                                         {
-                                            dRate =  (dValue / Math.Abs(AllPCSScheduleKVA));
+                                            dRate = (dValue / Math.Abs(AllPCSScheduleKVA));
                                             FineToCharge = true;
                                         }
                                         else { dRate = 0; }
@@ -7807,7 +8047,7 @@ namespace EMS
 
 
                 //在非静置状态下放电行为
-                if ((frmMain.TacticsList.ActiveIndex>=0) || (recoverSchedule == false))
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (recoverSchedule == false))
                 {
                     if (wTypeActive == "放电")
                     {
@@ -7818,7 +8058,7 @@ namespace EMS
                             //限流qiao 
                             if (dValue >= Math.Abs(AllwaValue))
                             {
-                                dRate= 0;
+                                dRate = 0;
                             }
                             else
                             {
@@ -7828,14 +8068,14 @@ namespace EMS
                                 }
                                 else
                                 {
-                                    dRate= 0;
+                                    dRate = 0;
                                 }
                             }
                         }
                         else//放电功率调整
                         {
                             dValue = (GridKVA + Math.Abs(AllwaValue)) - frmSet.MinGridKW;
-                            if (dValue >=  Math.Abs(AllPCSScheduleKVA))
+                            if (dValue >= Math.Abs(AllPCSScheduleKVA))
                             {
                                 dRate = 1;
                             }
@@ -7843,7 +8083,7 @@ namespace EMS
                             {
                                 if (Math.Abs(AllPCSScheduleKVA) != 0)
                                 {
-                                    dRate =  (dValue / Math.Abs(AllPCSScheduleKVA));
+                                    dRate = (dValue / Math.Abs(AllPCSScheduleKVA));
                                 }
                                 else
                                 {
@@ -7853,26 +8093,9 @@ namespace EMS
                         }
                     }
                 }
-
-
-                /*                log.Debug("E1_PUMdemand_old: " + E1_PUMdemand_old + " " + "E1_PUMdemand_now: " + E1_PUMdemand_now + " "
-                                        + "E1_PUMdemand_Max: " + E1_PUMdemand_Max + " " + "E2_PUMdemand_Max: " + E2_PUMdemand_Max + " "
-                                        + "E2_PUMdemand_now: " + E2_PUMdemand_now + " " + "PCSScheduleKVA: " + PCSScheduleKVA + " "
-                                        + "dRate: " + dRate + " " + "recoverSchedule: " + recoverSchedule + "PCSKVA: " + PCSKVA + " "
-                                        + "wTypeActive: " + wTypeActive + " " + "start_Time" + start_Time.ToString("yyyy-MM-d H:m:s")+ " "
-                                        + "Client_PUMdemand_Max: " + Client_PUMdemand_Max + "frmSet.PUM: " + frmSet.PUM);*/
             }
             else
             {
-
-
-                //9.4   区分自适应需量和恒功率
-                //double PowerCap = 0;  //电网功率上限
-
-                /*            if (frmMain.Selffrm.AllEquipment.PCSTypeActive == "自适应需量")
-                                PowerCap = (PUMdemand * frmSet.PUM)/100;
-                            else*/
-
                 PowerCap = frmSet.MaxGridKW;
                 if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
                 {
@@ -7886,17 +8109,12 @@ namespace EMS
                     }
                 }
 
-
-                //加限流和防逆--------------单机状态
-                //double dGridKW = Math.Abs(GridKVA);// bug 1.26
-                //double dGridKW = GridKVA;
-
                 if ((GridKVA >= PowerCap) && (wTypeActive == "充电"))//表1用于限流和防止超限
                 { //超限
                     dValue = dGridKW - PowerCap;
                     //限流qiao 
                     //直接全部关闭
-                    if (dValue >=  Math.Abs(AllwaValue))
+                    if (dValue >= Math.Abs(AllwaValue))
                     {
                         dRate = 0;
                     }
@@ -7909,13 +8127,13 @@ namespace EMS
                             dRate = 0;
                     }
                 }
-                else if ((GridKVA <= frmSet.MinGridKW)  && (wTypeActive == "放电") &&(frmSet.PCSGridModel == 0))//0并网，1离网 模式需要不控制
+                else if ((GridKVA <= frmSet.MinGridKW) && (wTypeActive == "放电") && (frmSet.PCSGridModel == 0))//0并网，1离网 模式需要不控制
                 { //逆流
                     dValue = frmSet.MinGridKW - GridKVA;
                     //限流qiao 
                     if (dValue >= Math.Abs(AllwaValue))
                     {
-                        dRate= 0;
+                        dRate = 0;
                     }
                     else
                     {
@@ -7930,55 +8148,753 @@ namespace EMS
                     if (wTypeActive == "充电")
                     {
                         dValue = PowerCap - (GridKVA_window - Math.Abs(AllwaValue));
-                        if (dValue >=  Math.Abs(AllPCSScheduleKVA))
+                        if (dValue > 0)
                         {
-                            dRate = 1;
+                            if (dValue >= Math.Abs(AllPCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (AllPCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(AllPCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
                         }
                         else
                         {
-                            if (AllPCSScheduleKVA != 0)
-                            {
-                                dRate = (dValue /  Math.Abs(AllPCSScheduleKVA));
-                            }
-                            else { dRate = 0; }
+                            dRate = 0;
                         }
                     }
                     else if (wTypeActive == "放电")
                     {
                         dValue = (GridKVA_window + Math.Abs(AllwaValue)) - frmSet.MinGridKW;
-                        if ((dValue >= Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
+                        if (dValue > 0)
                         {
-                            dRate = 1;
+                            if ((dValue > Math.Abs(AllPCSScheduleKVA)) || (frmSet.PCSGridModel == 1))
+                            {
+                                dRate = 1;
 
+                            }
+                            else
+                            {
+                                if (AllPCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(AllPCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
                         }
                         else
                         {
-                            if (AllPCSScheduleKVA != 0)
-                            {
-                                dRate = (dValue /  Math.Abs(AllPCSScheduleKVA));
-                            }
-                            else { dRate = 0; }
+                            dRate = 0;
                         }
                     }
                 }
             }
-
-
-            log.Debug("超限防逆最大需量：" + PowerCap + " "
-                +"超限防逆底线：" + frmSet.MinGridKW + " "
-                +"超限防逆电网功率：" +  dGridKW + " "
-                +"超限防逆计算差值: " + dValue + " "
-                +"超限防逆计算修正比: " + dRate + " "
-                +"超限防逆PCS充放电模式：" + wTypeActive + " "
-                +"超限防逆PCS工作状态：" + PCSTypeActive + " "
-                +"超限防逆PCS主从实际功率：" + Math.Abs(AllwaValue) + " "
-                +"超限防逆整体计划功率：" +  Math.Abs(AllPCSScheduleKVA) + " "
-                +"超限防逆PCS本机实际计划功率：" + PCSScheduleKVA * dRate);
-
-
             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
         }
 
+
+
+
+
+        private void _Anti_reflux(double _PCSKVA, double _PCSScheduleKVA) //实际功率 ，计划功率
+        {
+
+            dValue = 0;
+            //加限流和防逆--------------单机状态
+            //double dGridKW = Math.Abs(GridKVA); //当前电网功率   bug 1.26
+            double dGridKW = GridKVA;
+
+            //9.4   区分自适应需量和恒功率
+            double PowerCap = 0;  //电网功率上限
+
+            //策略模式: frmMain.Selffrm.AllEquipment.PCSTypeActive)
+
+            if (frmMain.Selffrm.AllEquipment.PCSTypeActive == "自适应需量")
+            {
+                DateTime dateTime = DateTime.Now;
+
+                //新策略时段修改充放电状态为放电，若未开发策略修改权限。则恢复策略线程权限，重新读取策略
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
+                {
+                    //计划策略切换放电
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                //强制放电5分钟后
+                if ((frmMain.Selffrm.AllEquipment.GotoSchedule == false) && DateTime.Compare(dateTime, start_Time.AddMinutes(5)) > 0)
+                {
+                    //判断操作为恢复策略还是等待
+                    //若电网平均功率低于需量的上限阈值，则恢复策略
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
+                    {
+                        //重新下发策略
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                        }
+                        lock (frmMain.TacticsList)
+                        {
+                            frmMain.TacticsList.ActiveIndex = -2;
+                        }
+                    }
+                    else
+                    {
+                        //结束放电，静置等待
+                        //客户正在拉升需量，继续等待
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            dRate = 0;
+                            _PCSScheduleKVA = 0;
+                        }
+                    }
+                }// if ((GotoSchedule == false) && DateTime.Compare(dateTime,start_Time.AddMinutes(5)) > 0)
+                if (frmMain.TacticsList.ActiveIndex >= 0 && frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    //"恢复策略：" + "当前电网功率:" + GridKVA_window + " " + "客户最大需量的x倍：" + (Client_PUMdemand_Max*frmSet.PUM)/100
+                    if (wTypeActive == "充电")
+                    {
+                        //当前需量 超过 最大需量的X倍 ：强制放电
+                        if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
+                        {
+                            //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                //"强制放电"
+                                wTypeActive = "放电";
+                                _PCSScheduleKVA = 20;
+                                dRate = 1;
+                                start_Time = DateTime.Now;
+                            }
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = false;
+                            }
+                            FineToCharge = false;
+                        }
+                        else
+                        {
+                            //判断电网功率是否超过需量上限
+                            if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
+                            {
+                                dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
+                                if (dValue > Math.Abs(_PCSKVA))
+                                {
+                                    dRate = 0;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA);
+                                        FineToCharge = true;
+                                    }
+                                    else
+                                    {
+                                        dRate = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(_PCSKVA));
+                                if (dValue >= Math.Abs(_PCSScheduleKVA))
+                                {
+                                    dRate = 1;
+                                    FineToCharge = true;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                        FineToCharge = true;
+                                    }
+                                    else { dRate = 0; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //在非静置状态下放电行为: 强制放电 + 策略放电
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        {
+                            //逆流
+                            dValue = frmSet.MinGridKW - GridKVA;
+                            //限流qiao 
+                            if (dValue >= Math.Abs(_PCSKVA))
+                            {
+                                dRate = 0;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else
+                                {
+                                    dRate = 0;
+                                }
+                            }
+                        }
+                        else//放电功率调整
+                        {
+                            dValue = (GridKVA + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+
+                        }
+                    }
+                }
+
+                /*                log.Debug("E1_PUMdemand_old: " + E1_PUMdemand_old + " " + "E1_PUMdemand_now: " + E1_PUMdemand_now + " " 
+                                        + "E1_PUMdemand_Max: " + E1_PUMdemand_Max + " " + "E2_PUMdemand_Max: " + E2_PUMdemand_Max + " "
+                                        + "E2_PUMdemand_now: " + E2_PUMdemand_now + " " + "PCSScheduleKVA: " + PCSScheduleKVA + " "
+                                        + "dRate: " + dRate + " " + "recoverSchedule: " + recoverSchedule + "PCSKVA: " + PCSKVA + " "
+                                        + "wTypeActive: " + wTypeActive + " " + "start_Time" + start_Time.ToString("yyyy-MM-d H:m:s")+ " "
+                                        + "Client_PUMdemand_Max: " + Client_PUMdemand_Max + "frmSet.PUM: " + frmSet.PUM);*/
+            }
+            else
+            {
+                PowerCap = frmSet.MaxGridKW;
+                 
+                if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                if ((GridKVA <= frmSet.MinGridKW) && (wTypeActive == "放电"))
+                {
+                    //逆流
+                    dValue = frmSet.MinGridKW - GridKVA;
+                    //限流qiao 
+                    if (dValue >= Math.Abs(_PCSKVA))
+                    {
+                        dRate = 0;
+                    }
+                    else
+                    {
+                        if (_PCSScheduleKVA != 0)
+                        {
+                            dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                        }
+                        else { dRate = 0; }
+                    }
+                }
+                else
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        dValue = (GridKVA_window + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                        if (dValue > 0)
+                        {
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                        }
+                        else
+                        {
+                            if (_PCSScheduleKVA != 0)
+                            {
+                                dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                            }
+                            else { dRate = 0; }
+                        }
+                    }
+                    else
+                    {
+                        dRate = 0;
+                    }
+                }
+
+            }
+            log.Debug("超限防逆最大需量：" + PowerCap + " "
+                + "超限防逆电网功率：" + dGridKW + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS单机实际功率：" + PCSKVA + " "
+                + "超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
+                + "超限防逆PCS功率：" + PCSScheduleKVA * dRate);
+
+
+            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
+
+        }
+
+
+        public void _Transfinite(double _PCSKVA, double _PCSScheduleKVA)  //实际功率 ，计划功率 
+        {
+            dValue = 0;
+            //加限流和防逆--------------单机状态
+            //double dGridKW = Math.Abs(GridKVA); //当前电网功率   bug 1.26
+            double dGridKW = GridKVA;
+
+            //9.4   区分自适应需量和恒功率
+            double PowerCap = 0;  //电网功率上限
+
+            //策略模式: frmMain.Selffrm.AllEquipment.PCSTypeActive)
+
+            if (frmMain.Selffrm.AllEquipment.PCSTypeActive == "自适应需量")
+            {
+                DateTime dateTime = DateTime.Now;
+
+                //新策略时段修改充放电状态为放电，若未开发策略修改权限。则恢复策略线程权限，重新读取策略
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
+                {
+                    //计划策略切换放电
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                //强制放电5分钟后
+                if ((frmMain.Selffrm.AllEquipment.GotoSchedule == false) && DateTime.Compare(dateTime, start_Time.AddMinutes(5)) > 0)
+                {
+                    //判断操作为恢复策略还是等待
+                    //若电网平均功率低于需量的上限阈值，则恢复策略
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
+                    {
+                        //重新下发策略
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                        }
+                        lock (frmMain.TacticsList)
+                        {
+                            frmMain.TacticsList.ActiveIndex = -2;
+                        }
+                    }
+                    else
+                    {
+                        //结束放电，静置等待
+                        //客户正在拉升需量，继续等待
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            dRate = 0;
+                            _PCSScheduleKVA = 0;
+                        }
+                    }
+                }// if ((GotoSchedule == false) && DateTime.Compare(dateTime,start_Time.AddMinutes(5)) > 0)
+                if (frmMain.TacticsList.ActiveIndex >= 0 && frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    //"恢复策略：" + "当前电网功率:" + GridKVA_window + " " + "客户最大需量的x倍：" + (Client_PUMdemand_Max*frmSet.PUM)/100
+                    if (wTypeActive == "充电")
+                    {
+                        //当前需量 超过 最大需量的X倍 ：强制放电
+                        if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
+                        {
+                            //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                //"强制放电"
+                                wTypeActive = "放电";
+                                _PCSScheduleKVA = 20;
+                                dRate = 1;
+                                start_Time = DateTime.Now;
+                            }
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = false;
+                            }
+                            FineToCharge = false;
+                        }
+                        else
+                        {
+                            //判断电网功率是否超过需量上限
+                            if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
+                            {
+                                dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
+                                if (dValue > Math.Abs(_PCSKVA))
+                                {
+                                    dRate = 0;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA);
+                                        FineToCharge = true;
+                                    }
+                                    else
+                                    {
+                                        dRate = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(_PCSKVA));
+                                if (dValue >= Math.Abs(_PCSScheduleKVA))
+                                {
+                                    dRate = 1;
+                                    FineToCharge = true;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                        FineToCharge = true;
+                                    }
+                                    else { dRate = 0; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //在非静置状态下放电行为: 强制放电 + 策略放电
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        {
+                            //逆流
+                            dValue = frmSet.MinGridKW - GridKVA;
+                            //限流qiao 
+                            if (dValue >= Math.Abs(_PCSKVA))
+                            {
+                                dRate = 0;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else
+                                {
+                                    dRate = 0;
+                                }
+                            }
+                        }
+                        else//放电功率调整
+                        {
+                            dValue = (GridKVA + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+
+                        }
+                    }
+                }
+
+                /*                log.Debug("E1_PUMdemand_old: " + E1_PUMdemand_old + " " + "E1_PUMdemand_now: " + E1_PUMdemand_now + " " 
+                                        + "E1_PUMdemand_Max: " + E1_PUMdemand_Max + " " + "E2_PUMdemand_Max: " + E2_PUMdemand_Max + " "
+                                        + "E2_PUMdemand_now: " + E2_PUMdemand_now + " " + "PCSScheduleKVA: " + PCSScheduleKVA + " "
+                                        + "dRate: " + dRate + " " + "recoverSchedule: " + recoverSchedule + "PCSKVA: " + PCSKVA + " "
+                                        + "wTypeActive: " + wTypeActive + " " + "start_Time" + start_Time.ToString("yyyy-MM-d H:m:s")+ " "
+                                        + "Client_PUMdemand_Max: " + Client_PUMdemand_Max + "frmSet.PUM: " + frmSet.PUM);*/
+            }
+            else
+            {
+                PowerCap = frmSet.MaxGridKW;
+
+                if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+
+                if ((GridKVA >= PowerCap) && (wTypeActive == "充电"))//表1用于限流和防止超限 ,PCS在不工作时也有0.1，0.2的功率值
+                { //超限
+                    dValue = dGridKW - PowerCap;
+                    //限流qiao 
+                    if (dValue >= Math.Abs(_PCSKVA))
+                    {
+                        dRate = 0;
+                    }
+                    else
+                    {
+                        if (_PCSScheduleKVA != 0)
+                        {
+                            dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                        }
+                        else { dRate = 0; }
+                    }
+                }
+                else
+                {
+                    if (wTypeActive == "充电")
+                    {
+                        if (dValue > 0)
+                        {
+                            dValue = PowerCap - (GridKVA_window - Math.Abs(_PCSKVA));
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+                        }
+                        else
+                        {
+                            dRate = 0;
+                        }
+                    }
+                }
+            }
+            log.Debug("超限防逆最大需量：" + PowerCap + " "
+                + "超限防逆电网功率：" + dGridKW + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS单机实际功率：" + PCSKVA + " "
+                + "超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
+                + "超限防逆PCS功率：" + PCSScheduleKVA * dRate);
+
+
+            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
+
+        }
+
+
+
+
+        //超限 - 都是 充电的情况下的
+        public void Transfinite()
+        {
+            if (frmSet.SysCount == 1)
+            {
+
+                double PCSPower = 0;
+                for (int i = 0; i < PCSList.Count; i++)
+                {
+                    PCSList[i].GetallUkva();
+                    PCSPower += PCSList[i].allUkva;
+                }
+                PCSKVA = Math.Round(PCSPower, 2);
+                //2.21
+                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                {
+                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                    WriteDoPUini();
+                }
+                //单机防逆流
+                _Transfinite(PCSKVA, PCSScheduleKVA); ;
+            }
+            else
+            {
+                //冗余判断
+                if (EMSList.Count == 0)
+                {
+                    //2.21
+                    //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                    Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                    if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                    {
+                        Client_PUMdemand_Max = Client_PUMdemand_now;
+                        WriteDoPUini();
+                    }
+                    _Transfinite(PCSKVA, PCSScheduleKVA);
+                }
+                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                //在初始阶段，waValueActive还没被赋值
+
+                //2.23
+                /*                                    foreach (EMSEquipment oneEMSE in EMSList)
+                                            {
+                                                    AllwaValue += oneEMSE.waValueActive;//.ActivePCSKVA;
+                                            }*/
+                double PCSPower = 0;
+                for (int i = 0; i < PCSList.Count; i++)
+                {
+                    PCSList[i].GetallUkva();
+                    PCSPower += PCSList[i].allUkva;
+                }
+                PCSKVA = Math.Round(PCSPower, 2);
+                if (frmSet.ConnectStatus == "tcp")
+                {
+                    //问询从机功率
+                    ReadAllEmsTCP();
+                }
+                else if (frmSet.ConnectStatus == "485")
+                {
+                    AllwaValue = PCSKVA * frmSet.SysCount;
+                }
+
+                if (Elemeter1Z != null)
+                {
+                    AllwaValue = Elemeter1Z.AllUkva;
+                }
+
+
+                //多机器的主机
+
+                //2.21
+                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+
+                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                {
+                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                    WriteDoPUini();
+                }
+
+                _Transfinite(AllwaValue, AllPCSScheduleKVA);
+
+                //MutiReflux();
+            }
+
+        }
+
+
+        //防逆流 - 都是 放电 的情况 
+        public void Anti_reflux()
+        {
+            //如果主机是单机  
+            if (frmSet.SysCount == 1)
+            {
+
+                //获取单机功率
+                double PCSPower = 0;
+                for (int i = 0; i < PCSList.Count; i++)
+                {
+                    PCSList[i].GetallUkva();
+                    PCSPower += PCSList[i].allUkva;
+                }
+                PCSKVA = Math.Round(PCSPower, 2);
+                //2.21
+                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                {
+                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                    WriteDoPUini();
+                }
+                //单机防逆流
+                _Anti_reflux(PCSKVA,PCSScheduleKVA);;
+            }
+            else
+            {
+                //冗余判断
+                if (EMSList.Count == 0)
+                {
+                    //2.21
+                    //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                    Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                    if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                    {
+                        Client_PUMdemand_Max = Client_PUMdemand_now;
+                        WriteDoPUini();
+                    }
+                    _Anti_reflux(PCSKVA, PCSScheduleKVA);
+                }
+                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                //在初始阶段，waValueActive还没被赋值
+
+                //2.23
+                /*                                    foreach (EMSEquipment oneEMSE in EMSList)
+                                            {
+                                                    AllwaValue += oneEMSE.waValueActive;//.ActivePCSKVA;
+                                            }*/
+                double PCSPower = 0;
+                for (int i = 0; i < PCSList.Count; i++)
+                {
+                    PCSList[i].GetallUkva();
+                    PCSPower += PCSList[i].allUkva;
+                }
+                PCSKVA = Math.Round(PCSPower, 2);
+                if (frmSet.ConnectStatus == "tcp")
+                {
+                    //问询从机功率
+                    ReadAllEmsTCP();
+                }
+                else if (frmSet.ConnectStatus == "485")
+                {
+                    AllwaValue = PCSKVA * frmSet.SysCount;
+                }
+
+                if (Elemeter1Z != null)
+                {
+                    AllwaValue = Elemeter1Z.AllUkva;
+                }
+
+
+                //多机器的主机
+
+                //2.21
+                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+
+                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                {
+                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                    WriteDoPUini();
+                }
+                _Anti_reflux(AllwaValue, AllPCSScheduleKVA);
+
+                //MutiReflux();
+            }
+            
+
+        }
 
         //表一队列数据
         private void ReadCom1Data()
@@ -7988,7 +8904,6 @@ namespace EMS
             double tempPUMdemand_max;
             double tempPUMdemand_now;
 */
-
             while (true)
             {
                 try
@@ -8140,7 +9055,24 @@ namespace EMS
                             PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
                         }
                         PCSKVA = Math.Round(PCSPower, 2);
+                        if(frmSet.Open104 == 1)
+                        {
+                             frmMain.Selffrm.Slave104.PCSKVA_104 = PCSKVA;
+                        }                       
+                        if (frmSet.ConnectStatus == "tcp")
+                        {
+                            //问询从机功率
+                            ReadAllEmsTCP();
+                        }
+                        else if (frmSet.ConnectStatus == "485")
+                        {
+                            ReadAllEmsRTU();
+                        }
 
+                        if (Elemeter1Z != null)
+                        {
+                            AllwaValue = Elemeter1Z.AllUkva;
+                        }
                         //没有关口表
                         if (!ChechPower)
                         {
@@ -8172,29 +9104,12 @@ namespace EMS
                             }
                         }
 
-                        //如果主机是单机  
-                        if (frmSet.SysCount == 1)
-                        {
-                            //2.21
-                            //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max) {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                WriteDoPUini();
-                            }
 
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
-
-                            //单机防逆流
-                            SingleReflux();
-                        }
-                        else
+                        //超限防逆流
+                        if (wTypeActive == "充电")
                         {
-                            //冗余判断
-                            if (EMSList.Count == 0)
+                            //如果主机是单机  
+                            if (frmSet.SysCount == 1)
                             {
                                 //2.21
                                 //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
@@ -8204,56 +9119,107 @@ namespace EMS
                                     Client_PUMdemand_Max = Client_PUMdemand_now;
                                     WriteDoPUini();
                                 }
-                                if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
+                                //AllwaValue = ;
+                                //AllPCSScheduleKVA = PCSScheduleKVA;
+                                _Transfinite(PCSKVA, PCSScheduleKVA);//实际功率 ，计划功率
+
+                                //单机防逆流
+                            }
+                            else
+                            {
+                                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                                //在初始阶段，waValueActive还没被赋值
+       
+                                if (frmSet.ConnectStatus == "tcp")
                                 {
-                                    continue;
+                                    //问询从机功率
+                                    ReadAllEmsTCP();
                                 }
-                                SingleReflux();
-                                continue;
-                            }
-                            //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
-                            AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
-                            //在初始阶段，waValueActive还没被赋值
+                                else if (frmSet.ConnectStatus == "485")
+                                {
+                                    AllwaValue = PCSKVA * frmSet.SysCount;
+                                }
 
-                            //2.23
-                            /*                                    foreach (EMSEquipment oneEMSE in EMSList)
-                                                        {
-                                                                AllwaValue += oneEMSE.waValueActive;//.ActivePCSKVA;
-                                                        }*/
+                                if (Elemeter1Z != null)
+                                {
+                                    AllwaValue = Elemeter1Z.AllUkva;
+                                }
+                                //多机器的主机
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                _Transfinite(AllwaValue, AllPCSScheduleKVA);//实际功率 ，计划功率
 
-                            if (frmSet.ConnectStatus == "tcp")
-                            {
-                                //问询从机功率
-                                ReadAllEmsTCP();
-                            }
-                            else if (frmSet.ConnectStatus == "485")
-                            {
-                                AllwaValue = PCSKVA * frmSet.SysCount;
-                            }
-                                    
-                            if (Elemeter1Z != null)
-                            {
-                                AllwaValue = Elemeter1Z.AllUkva;
                             }
 
-                                    
-                            //多机器的主机
 
-                            //2.21
-                            //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
-                                    
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now*(EMSList.Count+1);
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                WriteDoPUini();
-                            }
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
-                            MutiReflux();
                         }
+                        if (wTypeActive == "放电") 
+                        {
+
+                            //如果主机是单机  
+                            if (frmSet.SysCount == 1)
+                            {
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                //单机防逆流
+                                _Anti_reflux(PCSKVA, PCSScheduleKVA);
+
+                            }
+                            else
+                            {
+
+                                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                                //在初始阶段，waValueActive还没被赋值
+                                 PCSPower = 0;
+                                for (int i = 0; i < PCSList.Count; i++)
+                                {
+                                    PCSList[i].GetallUkva();
+                                    PCSPower += PCSList[i].allUkva;
+                                }
+                                PCSKVA = Math.Round(PCSPower, 2);
+                                if (frmSet.ConnectStatus == "tcp")
+                                {
+                                    //问询从机功率
+                                    ReadAllEmsTCP();
+                                }
+                                else if (frmSet.ConnectStatus == "485")
+                                {
+                                    AllwaValue = PCSKVA * frmSet.SysCount;
+                                }
+
+                                if (Elemeter1Z != null)
+                                {
+                                    AllwaValue = Elemeter1Z.AllUkva;
+                                }
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                //MutiReflux();
+                            }
+                            _Anti_reflux(AllwaValue, AllPCSScheduleKVA);
+
+                        }
+
+
                     }//else
                 }//try
                 catch (Exception ex)
@@ -8450,6 +9416,7 @@ namespace EMS
 
         private void ReadEquipmentDataBMS()
         {
+
             while (true)
             {
                 try
@@ -8460,7 +9427,10 @@ namespace EMS
                         continue;
                     }
                     GetDataFromBMS();
-
+                    if(frmSet.Open104 == 1)
+                    {
+                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }                   
                     //均衡操作
                     //StartStopBMSBala();
                     //Thread.Sleep(10);
@@ -8527,7 +9497,7 @@ namespace EMS
         }
 
 
-        public CIEC104Slave CIEC104Slave = new CIEC104Slave();
+
 
         /// <summary>
         /// 读取pcs信息
@@ -8536,10 +9506,6 @@ namespace EMS
         {
             double PCSPower = 0;
 
-            CIEC104Slave.PropertyChanged += CIEC104Slave.IEC104_PropertyChanged;
-            CIEC104Slave.IEC104_Init();
-            //IEC104Class iEC104Class = new IEC104Class();
-            //iEC104Class.PropertyChanged += iEC104Class.IEC104_PropertyChanged;
 
             while (true)
             {
@@ -8560,16 +9526,6 @@ namespace EMS
                         PCSKVA = Math.Round(PCSPower, 2);
                     }
 
-                    for (int i = 0; i < PCSList.Count; i++)
-                    {
-                        PCSList[i].GetDataFromEqipment();
-                        //log.Error("获取PCS状态: " +  PCSList[i].PcsRun);
-                        PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
-
-                        //InKVAH += PCSList[i].ACInkwh;
-                        //OutKVAH += PCSList[i].ACOutkwh;
-                    }
-                    PCSKVA = Math.Round(PCSPower, 2);
 
                     //bms
                     try
@@ -8587,8 +9543,12 @@ namespace EMS
                         frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                     }
 
+                    if(frmSet.Open104 == 1)
+                    {
+                       frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }
 
-                    CIEC104Slave.OnPropertyChanged();
+
                     //iEC104Class.IEC104_YC_DATA = _IEC104_YC_DATA;
 
                     //Get_IEC104_YX_DATA();
@@ -8923,7 +9883,15 @@ namespace EMS
                 //string tempDate = DateTime.Now.ToString("yyyy-MM-d H:m:s");
                 //BMS 
                 BMS.GetDataFromEqipment();
+                if(frmSet.Open104 == 1)
+                {
+                    BMS.Get104Info();
+                    frmMain.Selffrm.Slave104.SOC_104 = BMS.soc;
+                    frmMain.Selffrm.Slave104.DisChargeAmount_104 = BMS.ChargeAmount;
+                    frmMain.Selffrm.Slave104.DisChargeAmount_104 = BMS.DisChargeAmount;
+                }
                 BMSSOC = BMS.soc;//显示的实时数据
+
                 //BMS.GetErrorFromEquipment();
                 if (20 < BMS.soc &&  BMS.soc < 80)
                 {

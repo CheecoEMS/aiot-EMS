@@ -459,7 +459,7 @@ namespace EMS
                     frmSet.SetGPIOState(10, 1);  //2 error
                     frmSet.SetGPIOState(11, 1); //3 error
                   //frmSet.SetGPIOState(12, 1);
-                    frmSet.SetGPIOState(15, 1);//EMS LED
+                    frmSet.SetGPIOState(15, 0);//EMS LED
                     break;
                 case 1:
                     frmSet.Init1_GPIO();
@@ -591,7 +591,7 @@ namespace EMS
             }
         }
 
-        public static void Init2_GPIO()   //新风冷 FB
+        public static void Init2_GPIO()   //新风冷 FB+RTC
         {
             {
                 if (hDriver == IntPtr.Zero)
@@ -741,7 +741,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(11, 0);
+                        frmSet.SetGPIOState(11, 1);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(11, 1);
@@ -754,7 +754,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(11, 1);
+                        frmSet.SetGPIOState(11, 0);
                         break;
                     case 1:
                        // frmSet.SetGPIOState(11, 0);
@@ -773,7 +773,7 @@ namespace EMS
                         frmSet.SetGPIOState(9, 1);
                         break;
                     case 1:
-                       // frmSet.SetGPIOState(9, 1);
+                        // frmSet.SetGPIOState(9, 1);
                         break;
                     case 2:
                         frmSet.SetGPIOState(9, 0);
@@ -792,7 +792,7 @@ namespace EMS
                         frmSet.SetGPIOState(9, 1);
                         break;
                 }
-        }
+            }
 
         public static void PowerGPIO(int option)
         {
@@ -800,7 +800,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(15, 0);
+                        frmSet.SetGPIOState(15, 1);
                         break;
                     case 1:
                         frmSet.SetGPIOState(14, 0);
@@ -813,7 +813,7 @@ namespace EMS
                 switch (frmSet.GPIO_Select_Mode)
                 {
                     case 0:
-                        frmSet.SetGPIOState(15, 1);
+                        frmSet.SetGPIOState(15, 0);
                         break;
                     case 1:
                         frmSet.SetGPIOState(14, 1);
@@ -821,7 +821,7 @@ namespace EMS
                     case 2:
                         frmSet.SetGPIOState(15, 1);
                         break;
-                }
+            }
         }
 
 
@@ -2257,10 +2257,6 @@ namespace EMS
         private void btnDHRead_Click(object sender, EventArgs e)
         {
             frmMain.Selffrm.AllEquipment.Dehumidifier.GetDataFromEqipment();
-            tneDHSetHumidityBoot.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Boot;
-            tneDHSetHumidityStop.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Stop;
-            tneDHSetTempBoot.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Boot;
-            tneDHSetTempStop.Value = (int)frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Stop;
 
         }
 

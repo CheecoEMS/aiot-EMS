@@ -80,6 +80,36 @@ namespace Modbus
         /// <param name="stopBits"></param>
         /// <returns></returns>
         #region //Open / Close Procedures        
+        public bool OpenEMS(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
+        {
+            sp = new SerialPort();
+            if (!sp.IsOpen)
+            {
+                sp.PortName = portName;
+                sp.BaudRate = baudRate;
+                sp.DataBits = databits;
+                sp.Parity = parity;
+                sp.StopBits = stopBits;
+                sp.ReadTimeout = 1000;
+                sp.WriteTimeout = 1000;
+                try
+                {
+                    sp.Open();
+                }
+                catch (Exception ex)
+                {
+                    frmMain.ShowDebugMSG(ex.ToString());
+                    return false;
+                }
+                modbusStatus = portName + " opened successfully";
+                return true;
+            }
+            else
+            {
+                modbusStatus = portName + " already opened";
+                return false;
+            }
+        }
         public bool Open(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
         {
             sp = Checksp(portName);

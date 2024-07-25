@@ -308,12 +308,17 @@ namespace Modbus
         public delegate void OnReceiveDataEventDelegate2(Socket sender, byte[] strData, string strFromIP, int iPort);//建立事件委托
         public event OnReceiveDataEventDelegate2 OnReceiveDataEvent2;//收到数据的事件
 
-        // 定义Soket发送和接收 
+        // 定义Soket发送和接收502
         public Socket ServerSocket = null;//服务器绑定端口初始化socket对象
         public Socket ClientSocket = null;//针对104连接的客户端从机
-
         //服务器端的IP与端口 
         private IPEndPoint ServerIPE = null;
+
+        // 定义Soket发送和接收104
+        public Socket ServerSocket_104 = null;//服务器绑定端口初始化socket对象
+        public Socket ClientSocket_104 = null;//针对104连接的客户端从机
+        //服务器端的IP与端口 
+        private IPEndPoint ServerIPE_104 = null;
         public int LocalPort = 0;
 
         //Soket Sever Connnect监听线程
@@ -338,11 +343,11 @@ namespace Modbus
         /// </summary>
         private void CheckClientSocketExist()
         {
-            if (ClientSocket != null)
+            if (ClientSocket_104 != null)
             {
                 CancleCTS(ref cts);
                 WaitThreadEnd(ref ClientRecThread);
-                DestorySocket(ref ClientSocket);
+                DestorySocket(ref ClientSocket_104);
             }
         }
 
@@ -459,11 +464,11 @@ namespace Modbus
             try
             {
                 //实例化TcpSetver对象  
-                ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
-                ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                ServerIPE_104 = new IPEndPoint(IPAddress.Any, aLocadPort);
+                ServerSocket_104 = new Socket(ServerIPE_104.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 //绑定IP
-                ServerSocket.Bind(ServerIPE);
-                ServerSocket.Listen(10);
+                ServerSocket_104.Bind(ServerIPE_104);
+                ServerSocket_104.Listen(10);
                 return true;
             }
             catch (SocketException ex)
@@ -554,7 +559,7 @@ namespace Modbus
             {
                 try
                 {
-                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
+                    Socket acceptSocket = ServerSocket_104.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
 
                     if (OnConectedEvent != null)
                         OnConectedEvent(acceptSocket);
@@ -595,12 +600,12 @@ namespace Modbus
             {    
                 try
                 {
-                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
+                    Socket acceptSocket = ServerSocket_104.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
                     //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s
                     CheckClientSocketExist();                
                     if (OnConectedEvent != null)
                         OnConectedEvent(acceptSocket);
-                    ClientSocket = acceptSocket;
+                    ClientSocket_104 = acceptSocket;
 
                     CheckCtsExist();
                     // 初始化CancellationTokenSource  
@@ -679,7 +684,7 @@ namespace Modbus
                 return false;
             try
             {
-                ClientSocket.Send(Encoding.ASCII.GetBytes(strMessage));
+                ClientSocket_104.Send(Encoding.ASCII.GetBytes(strMessage));
                 return true;
             }
             catch
@@ -692,27 +697,27 @@ namespace Modbus
         //线程监听函数
         private void ReceiveData(CancellationToken cancelReceiveToken)
         {
-            if ((ClientSocket == null) || (cts == null) || cancelReceiveToken == null)
+            if ((ClientSocket_104 == null) || (cts == null) || cancelReceiveToken == null)
                 return;
 
             while (!cancelReceiveToken.IsCancellationRequested)
             {
                 try
                 {
-                    int receiveNumber = ClientSocket.Receive(RecData);
+                    int receiveNumber = ClientSocket_104.Receive(RecData);
                     if (receiveNumber > 0)
                     {
                         byte[] recdata = RecData.Take(receiveNumber).ToArray();
 
                         if (OnReceiveDataEvent2 != null)
-                            OnReceiveDataEvent2(ClientSocket, recdata, ClientSocket.ToString(), LocalPort);
+                            OnReceiveDataEvent2(ClientSocket_104, recdata, ClientSocket_104.ToString(), LocalPort);
                     }
                 }
                 catch (SocketException ex)
                 {
                     log.Error("Server ReceiveData is false: " + ex.Message);
                     if (OnDisconectEvent != null)
-                        OnDisconectEvent(ClientSocket);
+                        OnDisconectEvent(ClientSocket_104);
 
                     CancleCTS(ref cts);//通知接受线程终止 
                 }
@@ -723,7 +728,7 @@ namespace Modbus
                 }
             }
             //释放socket资源
-            DestorySocket(ref ClientSocket);
+            DestorySocket(ref ClientSocket_104);
             //释放cts资源
             DisposeCTS(ref cts);
         }
@@ -916,6 +921,12 @@ namespace Modbus
                 {
                     lock (socketLock)
                     {
+                        if (clientSocket == null || !clientSocket.Connected)
+                        {
+                            bResult = false;
+                        }
+                        else
+                        {
                         int res = clientSocket.Send(aMessage);
                         if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
                         {
@@ -925,6 +936,7 @@ namespace Modbus
                         else
                         {
                             bResult = false;
+                            }
                         }
                     }
                 }

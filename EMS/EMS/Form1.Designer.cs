@@ -82,7 +82,6 @@ namespace EMS
             this.label3 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.tmSystime = new System.Windows.Forms.Timer(this.components);
             this.panel4 = new System.Windows.Forms.Panel();
             this.labSOC = new System.Windows.Forms.Label();
             this.labACState = new System.Windows.Forms.Label();
@@ -723,7 +722,6 @@ namespace EMS
             // 
             // tmSystime
             // 
-            this.tmSystime.Tick += new System.EventHandler(this.tmSystime_Tick);
             // 
             // panel4
             // 
@@ -1015,7 +1013,6 @@ namespace EMS
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Timer tmSystime;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Panel panel6;

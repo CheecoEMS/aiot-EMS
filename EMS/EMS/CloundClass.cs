@@ -722,7 +722,7 @@ namespace EMS
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
                 if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
                 {
-                    result = false;
+                    result = true;
                     return strID;
                 }
 
@@ -1036,10 +1036,12 @@ namespace EMS
                     double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva);
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
-                    if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")            
+                    if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
                         return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                    else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
                     else
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);                 
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 2);
                 case 0x6004: //PCSType 恒压横流恒功率、AC恒压
                     return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
                 case 0x6005: //EMS运行状态 ： 0正常，1故障，2停机
