@@ -22,6 +22,11 @@ using System.IO;
 namespace Modbus
 
 {
+    public class SocketWrapper
+    {
+        private volatile Socket socket;
+    }
+
     public class ClientManager
     {
         //public int count = 1;
@@ -587,6 +592,9 @@ namespace Modbus
 
                     //设置从机回复消息的等待时长
                     acceptSocket.ReceiveTimeout = 2000; //2s
+
+                    SocketWrapper(acceptSocket);
+
                     object socketLock = new object();
                     //发送问询报文
                     int virtualID = AskEmsID(ref acceptSocket);

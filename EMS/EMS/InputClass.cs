@@ -7560,9 +7560,11 @@ namespace EMS
             {
                 Task.Run(() =>
                 {
-                    // 设置线程优先级为最高
-                    Thread.CurrentThread.Priority = ThreadPriority.Highest;
-                    ReadCom1Data();
+
+                        // 设置线程优先级为最高
+                        Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                        ReadCom1Data();
+                    
                 }).ContinueWith(task =>
                 {
                     if (task.Exception != null)
