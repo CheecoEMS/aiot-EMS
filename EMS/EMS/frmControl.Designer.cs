@@ -44,6 +44,8 @@ namespace EMS
             this.btnWarning = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.tcbtest = new EMS.TouchCombox(this.components);
+            this.btnPostProfit = new System.Windows.Forms.Button();
             this.btnConnectChoose = new System.Windows.Forms.Button();
             this.tcbConnectStatus = new EMS.TouchCombox(this.components);
             this.btnEMSRun = new System.Windows.Forms.Button();
@@ -109,8 +111,7 @@ namespace EMS
             this.lablPCSwaValue2 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.labPCSwaValue = new System.Windows.Forms.Label();
-            this.btnPostProfit = new System.Windows.Forms.Button();
-            this.tcbtest = new EMS.TouchCombox(this.components);
+            this.btnTimeCalibration = new System.Windows.Forms.Button();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -326,6 +327,7 @@ namespace EMS
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.btnTimeCalibration);
             this.groupBox3.Controls.Add(this.tcbtest);
             this.groupBox3.Controls.Add(this.btnPostProfit);
             this.groupBox3.Controls.Add(this.btnConnectChoose);
@@ -343,6 +345,38 @@ namespace EMS
             this.groupBox3.TabIndex = 28;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "EMS";
+            // 
+            // tcbtest
+            // 
+            this.tcbtest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbtest.CenterShow = true;
+            this.tcbtest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbtest.ForeColor = System.Drawing.Color.White;
+            this.tcbtest.Items = new string[] {
+        "test1",
+        "test2"};
+            this.tcbtest.Location = new System.Drawing.Point(6, 91);
+            this.tcbtest.Name = "tcbtest";
+            this.tcbtest.SelectItemIndex = 0;
+            this.tcbtest.Size = new System.Drawing.Size(153, 32);
+            this.tcbtest.strText = "test1";
+            this.tcbtest.TabIndex = 70;
+            this.tcbtest.Value = 0;
+            // 
+            // btnPostProfit
+            // 
+            this.btnPostProfit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnPostProfit.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnPostProfit.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnPostProfit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPostProfit.ForeColor = System.Drawing.Color.White;
+            this.btnPostProfit.Location = new System.Drawing.Point(138, 23);
+            this.btnPostProfit.Name = "btnPostProfit";
+            this.btnPostProfit.Size = new System.Drawing.Size(88, 44);
+            this.btnPostProfit.TabIndex = 69;
+            this.btnPostProfit.Text = "上传收益";
+            this.btnPostProfit.UseVisualStyleBackColor = true;
+            this.btnPostProfit.Click += new System.EventHandler(this.btnPostProfit_Click);
             // 
             // btnConnectChoose
             // 
@@ -1271,37 +1305,20 @@ namespace EMS
             this.labPCSwaValue.TabIndex = 45;
             this.labPCSwaValue.Text = "PCS设置值";
             // 
-            // btnPostProfit
+            // btnTimeCalibration
             // 
-            this.btnPostProfit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPostProfit.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPostProfit.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnPostProfit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPostProfit.ForeColor = System.Drawing.Color.White;
-            this.btnPostProfit.Location = new System.Drawing.Point(138, 23);
-            this.btnPostProfit.Name = "btnPostProfit";
-            this.btnPostProfit.Size = new System.Drawing.Size(88, 44);
-            this.btnPostProfit.TabIndex = 69;
-            this.btnPostProfit.Text = "上传收益";
-            this.btnPostProfit.UseVisualStyleBackColor = true;
-            this.btnPostProfit.Click += new System.EventHandler(this.btnPostProfit_Click);
-            // 
-            // tcbtest
-            // 
-            this.tcbtest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbtest.CenterShow = true;
-            this.tcbtest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbtest.ForeColor = System.Drawing.Color.White;
-            this.tcbtest.Items = new string[] {
-        "test1",
-        "test2"};
-            this.tcbtest.Location = new System.Drawing.Point(6, 91);
-            this.tcbtest.Name = "tcbtest";
-            this.tcbtest.SelectItemIndex = 0;
-            this.tcbtest.Size = new System.Drawing.Size(153, 32);
-            this.tcbtest.strText = "test1";
-            this.tcbtest.TabIndex = 70;
-            this.tcbtest.Value = 0;
+            this.btnTimeCalibration.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnTimeCalibration.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnTimeCalibration.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnTimeCalibration.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTimeCalibration.ForeColor = System.Drawing.Color.White;
+            this.btnTimeCalibration.Location = new System.Drawing.Point(418, 23);
+            this.btnTimeCalibration.Name = "btnTimeCalibration";
+            this.btnTimeCalibration.Size = new System.Drawing.Size(88, 44);
+            this.btnTimeCalibration.TabIndex = 71;
+            this.btnTimeCalibration.Text = "校时";
+            this.btnTimeCalibration.UseVisualStyleBackColor = true;
+            this.btnTimeCalibration.Click += new System.EventHandler(this.btnTimeCalibration_Click);
             // 
             // frmControl
             // 
@@ -1415,5 +1432,6 @@ namespace EMS
         private TouchCombox tcbConnectStatus;
         private System.Windows.Forms.Button btnPostProfit;
         private TouchCombox tcbtest;
+        private System.Windows.Forms.Button btnTimeCalibration;
     }
 }

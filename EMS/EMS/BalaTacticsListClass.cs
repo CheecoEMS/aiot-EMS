@@ -114,32 +114,34 @@ namespace EMS
         {
             MySqlConnection ctTemp = null;
             MySqlDataReader rd = null;
-/*            MySqlDataReader rd = DBConnection.GetData("select startTime,endTime"
-                 + " from balatactics  order by startTime", ref ctTemp);*/
             try
             {
                  rd = DBConnection.GetData("select startTime,endTime"
                     + " from balatactics  order by startTime", ref ctTemp);
-                
-                lock (BalaTacticsList)
+
+                if (rd != null)
                 {
-                    //TacticsList.Clear();
-                    while (BalaTacticsList.Count > 0)
+                    lock (BalaTacticsList)
                     {
-                        // WarningList[0].Dispose();
-                        //TacticsList[0].c
-                        BalaTacticsList.RemoveAt(0);
-                    }
+                        if (rd.HasRows)
+                        {
+                            while (BalaTacticsList.Count > 0)
+                            {
+                                BalaTacticsList.RemoveAt(0);
+                            }
 
-                    while (rd.Read())
-                    {
-                        BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
-                        oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                        oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            while (rd.Read())
+                            {
+                                BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
+                                oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                                oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
 
-                        BalaTacticsList.Add(oneBalaTactics);
+                                BalaTacticsList.Add(oneBalaTactics);
+                            }
+                        }
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -153,10 +155,11 @@ namespace EMS
                         rd.Close();
                     rd.Dispose();
                 }
-                if (ctTemp != null) 
+
+                if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
                 }
             }
         }

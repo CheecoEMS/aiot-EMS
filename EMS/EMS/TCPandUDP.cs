@@ -402,7 +402,6 @@ namespace Modbus
                 {
                     cts.Dispose(); // 释放CancellationTokenSource资源  
                     cts = null; // 将cts设置为null，以防止后续误用
-                    GC.Collect();
                 }
                 catch (ObjectDisposedException ex)
                 {
@@ -430,7 +429,6 @@ namespace Modbus
                         aSocket.Close();//释放相关的资源
                     }
                     aSocket = null;// //将 clientSocket 变量设置为 null:避免在后续代码中误用已经关闭的套接字,若错误使用clientSocket，会引发NullReferenceException
-                    GC.Collect();
                 }
             }
             catch (SocketException ex)
@@ -1346,7 +1344,6 @@ namespace Modbus
                         aSocket.Close();//释放相关的资源
                     }
                     aSocket = null;// //将 clientSocket 变量设置为 null:避免在后续代码中误用已经关闭的套接字,若错误使用clientSocket，会引发NullReferenceException
-                    GC.Collect();
                 }
             }
             catch (SocketException ex)
@@ -1440,7 +1437,6 @@ namespace Modbus
                 {
                     cts.Dispose(); // 释放CancellationTokenSource资源  
                     cts = null; // 将cts设置为null，以防止后续误用
-                    GC.Collect();
                 }
                 catch (ObjectDisposedException ex)
                 {

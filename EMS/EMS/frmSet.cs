@@ -220,24 +220,36 @@ namespace EMS
                  + " from config ", ref ctTemp);
             try
             {
-                while (rd.Read())
+                if (rd != null)
                 {
-                    //SysID = rd.GetInt32(0);
-                    Open104 = rd.GetInt32(1);
+                    if (rd.HasRows)
+                    {
+                        if (rd.Read())
+                        {
+                            //SysID = rd.GetInt32(0);
+                            Open104 = rd.GetInt32(1);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
         public static void LoadFromGlobalSet()
@@ -247,28 +259,40 @@ namespace EMS
                  + " from GlobalSet ", ref ctTemp);
             try
             {
-                while (rd.Read())
+                if (rd != null)
                 {
-                    MaxGridKW = rd.GetInt32(0);
-                    MinGridKW = rd.GetInt32(1);
-                    MaxSOC = rd.GetInt32(2);
-                    MinSOC = rd.GetInt32(3);
-                    frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                    frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
+                    if (rd.HasRows)
+                    {
+                        if (rd.Read())
+                        {
+                            MaxGridKW = rd.GetInt32(0);
+                            MinGridKW = rd.GetInt32(1);
+                            MaxSOC = rd.GetInt32(2);
+                            MinSOC = rd.GetInt32(3);
+                            frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
+                            frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
 
@@ -301,28 +325,40 @@ namespace EMS
                  + " from GlobalSet ", ref ctTemp);
             try
             {
-                while (rd.Read())
+                if (rd != null)
                 {
-                    MaxGridKW = rd.GetInt32(0);
-                    MinGridKW = rd.GetInt32(1);
-                    MaxSOC = rd.GetInt32(2);
-                    MinSOC = rd.GetInt32(3);
-                    frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                    frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
+                    if (rd.HasRows)
+                    {
+                        if (rd.Read())
+                        {
+                            MaxGridKW = rd.GetInt32(0);
+                            MinGridKW = rd.GetInt32(1);
+                            MaxSOC = rd.GetInt32(2);
+                            MinSOC = rd.GetInt32(3);
+                            frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
+                            frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
 

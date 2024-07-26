@@ -82,31 +82,45 @@ namespace EMS
                                     0, 0 };//14*3=42    14个时段 ： 号 时 分
                 int i = 0;
                 DateTime dtTemp;
-                while (rd.Read())
+
+                if (rd != null)
                 {
-                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
-                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
-                    i++;
+                    if (rd.HasRows)
+                    {
+                        while (rd.Read())
+                        {
+                            tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                            dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                            tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
+                            tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
+                            i++;
+                        }
+                        byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                        byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                        {
+                            frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
+                        }
+                        if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                            frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                    }
                 }
-                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
-                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
             }
             catch { }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
 
@@ -126,8 +140,6 @@ namespace EMS
                     {
                         while (TacticsList.Count > 0)
                         {
-                            // WarningList[0].Dispose();
-                            //TacticsList[0].c
                             TacticsList.RemoveAt(0);
                         }
                         while (rd.Read())
@@ -179,10 +191,11 @@ namespace EMS
                         rd.Close();
                     rd.Dispose();
                 }
+
                 if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
                 }
 
             }
@@ -663,23 +676,37 @@ namespace EMS
             try
             {
                 DateTime dtTemp;
-                while (rd.Read())
+
+                if (rd != null)
                 {
-                    dtTemp = Convert.ToDateTime(rd.GetString(0));
-                    AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                    if (rd.HasRows)
+                    {
+                        while (rd.Read())
+                        {
+                            dtTemp = Convert.ToDateTime(rd.GetString(0));
+                            AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                        }
+                    }
                 }
-                ctTemp.Dispose();
             }
-            catch
+            catch (Exception ex)
             {
+
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
 

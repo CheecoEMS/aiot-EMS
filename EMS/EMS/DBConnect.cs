@@ -6,10 +6,61 @@ using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
-
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace EMS
 {
+    class MySqlConnectionPool : IDisposable
+    {
+        private readonly string _connectionString;
+        private readonly ConcurrentBag<MySqlConnection> _connections;
+        private readonly int _maxConnections;
+        private int _currentConnections;
+
+        public MySqlConnectionPool(string connectionString, int maxConnections)
+        {
+            _connectionString = connectionString;
+            _maxConnections = maxConnections;
+            _connections = new ConcurrentBag<MySqlConnection>();
+            _currentConnections = 0;
+        }
+
+        public MySqlConnection GetConnection()
+        {
+            if (_connections.TryTake(out var connection))
+            {
+                return connection;
+            }
+            else if (_currentConnections < _maxConnections)
+            {
+                Interlocked.Increment(ref _currentConnections);
+                return new MySqlConnection(_connectionString);
+            }
+            else
+            {
+                throw new InvalidOperationException("No available connections in the pool.");
+            }
+        }
+
+        public void ReturnConnection(MySqlConnection connection)
+        {
+            if (connection != null)
+            {
+                _connections.Add(connection);
+            }
+        }
+
+        public void Dispose()
+        {
+            while (_connections.TryTake(out var connection))
+            {
+                connection.Dispose();
+            }
+        }
+    }
+
+
     class DBConnection
     {
         static public MySqlConnection connection;
@@ -18,10 +69,13 @@ namespace EMS
         static private string DataPassword = "1100";
         static public string connectionStr = "Database=emsdata;Data Source=127.0.0.1;port=3306;User Id=" + DataID + ";Password=" + DataPassword + ";";
         private static ILog log = LogManager.GetLogger("DB");
+        public static MySqlConnectionPool _connectionPool;
+
         //链接数据库
         public DBConnection()
         {
-
+            //创建连接池
+            _connectionPool = new MySqlConnectionPool(connectionStr, 10);
         }
         
         //检查mysql服务是否开启
@@ -92,7 +146,6 @@ namespace EMS
             catch (MySqlException ex)
             {
                 IsConnected = false;
-                log.Error(ex.Message);
             }
             catch (Exception ex)
             {
@@ -104,54 +157,70 @@ namespace EMS
         //获取SQL的数据，返回dataset
         static public DataSet GetDataSet(string astrSQL)
         {
+            MySqlConnection connection = null;
             try
             {
                 ChecMysql80();
-                if ((connection == null) || (!IsConnected))
-                    CreateConnection();
+                /*                if ((connection == null) || (!IsConnected))
+                                    CreateConnection();*/
 
-                MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";
-                MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
 
-                DataSet ds = new DataSet();
-                sda.Fill(ds);
-                IsConnected = true;
-                return ds;
+
+                    MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";
+                    MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
+
+                    DataSet ds = new DataSet();
+                    sda.Fill(ds);
+                    IsConnected = true;
+
+                    return ds;
+                }
+                else
+                {
+                    return null;
+                }
             }
             catch (MySqlException ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
                 IsConnected = false;
                 return null;
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
                 IsConnected = false;
                 return null; ;
             }
             finally
             {
-                //connection.Close();
+                if (connection != null)
+                {
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
+                }
             }
         }
 
         //为读取数据库具体数据
         static public MySqlDataReader GetData(string astrSQL, ref MySqlConnection aConnect)
         {
-            //MySqlConnection tempConnection = new MySqlConnection(connectionStr);
+            MySqlConnection connection = null;
             try
             {
                 ChecMysql80();
-                //if ((connection == null) || (!IsConnected)) 
-                //    CreateConnection(); 
-                MySqlConnection tempConnection = new MySqlConnection(connectionStr);
-                aConnect = tempConnection;
-                tempConnection.Open();
-                MySqlCommand sqlCmd = new MySqlCommand(astrSQL, tempConnection);// "Select * from XXXXXXX"; 
-                //使用 ExecuteReader 方法创建 SqlDataReader 对象 
-                MySqlDataReader sdr = sqlCmd.ExecuteReader();
-                return sdr;
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
+                    MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX"; 
+                                                                                    //使用 ExecuteReader 方法创建 SqlDataReader 对象 
+                    MySqlDataReader sdr = sqlCmd.ExecuteReader();
+                    return sdr;
+                }
+                else { return null; }
             }
             catch (MySqlException ex)
             {
@@ -166,11 +235,7 @@ namespace EMS
             }
             finally
             {
-                //if (tempConnection != null)
-                //{
-                //    tempConnection.Dispose();
-                //    tempConnection = null;
-                //}
+            
             }
         }
 
@@ -178,46 +243,55 @@ namespace EMS
         static public bool ExecSQL(string astrSQL)
         {
             ChecMysql80();
+            bool bResult = false;
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
 
-            bool bResult;
-            if ((connection == null) || (!IsConnected))
-                CreateConnection();
 
-            lock (connection)
+            try
             {
-                MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);
-                try
+                if (_connectionPool != null)
                 {
-                    //MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(astrSQL, connection);
                     IsConnected = true;
                     if (sqlCmd.ExecuteNonQuery() > 0)
                         bResult = true;
                     else
                         bResult = false;
-
                 }
-                catch (MySqlException ex)
+                else
                 {
-                    frmMain.ShowDebugMSG(ex.ToString());
-                    IsConnected = false;
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    IsConnected = false;
-                    //connection.Close();
-                    //connection.Dispose();
-                    frmMain.ShowDebugMSG(astrSQL + "\n" + ex.ToString());
-                    return false;
-                }
-                finally
-                {
-                    //sqlCmd.Cancel();if
-                    sqlCmd.Dispose();
-                    //connection.Close();
-                    //return false;
+                    bResult = false;
                 }
             }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+                IsConnected = false;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                IsConnected = false;
+                frmMain.ShowDebugMSG(astrSQL + "\n" + ex.ToString());
+                return false;
+            }
+            finally
+            {
+                if(sqlCmd != null)
+                {
+                    sqlCmd.Dispose();
+                }
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
+                }
+            }     
             return bResult;
         }
 
@@ -230,8 +304,15 @@ namespace EMS
             MySqlDataReader rd = GetData(astrSQL, ref ctTemp);
             try
             {
-                if (rd.Read())
-                    iResult = rd.GetInt32(0);
+                if (rd != null)
+                {
+                    if (rd.HasRows)
+                    {
+                        if (rd.Read())
+                            iResult = rd.GetInt32(0);
+                    }
+                }
+                else { iResult = -1; }
             }
             catch (MySqlException ex)
             {
@@ -252,7 +333,7 @@ namespace EMS
                 if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    _connectionPool.ReturnConnection(ctTemp);
                 }
             }
             return iResult;
@@ -262,17 +343,27 @@ namespace EMS
         static public bool CheckRec(string astrSQL )
         {
             ChecMysql80();
-            //aiData = -1;
             bool bResult = false;
-            MySqlConnection tempConnection = new MySqlConnection(connectionStr);
-            tempConnection.Open();
-            MySqlCommand sqlCmd = new MySqlCommand(astrSQL, tempConnection);// "Select * from XXXXXXX";  
-            MySqlDataReader rd = sqlCmd.ExecuteReader();
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
+            MySqlDataReader rd = null;
+
             try
             {
-               // if (rd.Read())
-               //     aiData = rd.GetInt32(0);
-                bResult = rd.HasRows;
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";  
+                    rd = sqlCmd.ExecuteReader();
+
+                    bResult = rd.HasRows;
+                }
+                else
+                {
+                    bResult = false;
+                }
             }
             catch (MySqlException ex)
             {
@@ -290,18 +381,17 @@ namespace EMS
                         rd.Close();
                     rd.Dispose();
                 }
+
                 if (sqlCmd != null)
                 {
                     sqlCmd.Dispose();
                 }
-                if (tempConnection != null)
+
+                if (connection != null)
                 {
-                    tempConnection.Dispose();
-                    tempConnection = null;
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
                 }
-                // ctTemp.Close();
-                //tempConnection.Close();
-                //tempConnection.Dispose();
             }
             return bResult;
         }
@@ -317,15 +407,27 @@ namespace EMS
             ChecMysql80();
             aPower = -1;
             bool bResult = false;
-            MySqlConnection tempConnection = new MySqlConnection(connectionStr);
-            tempConnection.Open();
-            MySqlCommand sqlCmd = new MySqlCommand(astrSQL, tempConnection);// "Select * from XXXXXXX";  
-            MySqlDataReader rd = sqlCmd.ExecuteReader();
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
+            MySqlDataReader rd = null;
             try
             {
-                 if (rd.Read())
-                    aPower = rd.GetInt32(0);
-                bResult = rd.HasRows;
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(astrSQL, connection);
+                    rd = sqlCmd.ExecuteReader();
+
+                    if (rd.Read())
+                        aPower = rd.GetInt32(0);
+                    bResult = rd.HasRows;
+                }
+                else
+                {
+                    bResult = false;
+                }
             }
             catch (MySqlException ex)
             {
@@ -343,18 +445,17 @@ namespace EMS
                         rd.Close();
                     rd.Dispose();
                 }
+
                 if (sqlCmd != null)
                 {
                     sqlCmd.Dispose();
                 }
-                if(tempConnection!=null)
+
+                if (connection != null)
                 {
-                    tempConnection.Dispose();
-                    tempConnection = null;
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
                 }
-                
-                //tempConnection.Close();
-                //tempConnection.Dispose();
             }
             return bResult;
         }
@@ -380,24 +481,33 @@ namespace EMS
         static public void ShowData2DBGrid(DataGridView adDtaGrid, string astrSQL)
         {
             ChecMysql80();
-            //adDtaGrid.Rows.Clear(); 
-            //if (adDtaGrid.DataSource != null)
-            //    adDtaGrid.DataSource = null;
-            MySqlConnection oneConnection = new MySqlConnection(connectionStr);
-            MySqlCommand sqlCmd = new MySqlCommand(astrSQL, oneConnection);// "Select * from XXXXXXX";
-            MySqlDataAdapter sda = new MySqlDataAdapter(sqlCmd);
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
+            MySqlDataAdapter sda = null;
             DataSet dataset = new DataSet();
             try
             {
-                sda.Fill(dataset);
-                // DataSet dataset = DBConnection.GetDataSet(astrSQL);
-                if (dataset == null)
+                if (_connectionPool != null)
                 {
-                    // MessageBox.Show("没有数据");
+                    connection = _connectionPool.GetConnection();
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";
+                    sda = new MySqlDataAdapter(sqlCmd);
+                    sda.Fill(dataset);
+
+                    if (dataset == null)
+                    {
+
+                        return;
+                    }
+                    adDtaGrid.DataSource = dataset.Tables[0];
+                    adDtaGrid.Update();
+                }
+                else
+                {
                     return;
                 }
-                adDtaGrid.DataSource = dataset.Tables[0];
-                adDtaGrid.Update();
             }
             catch (MySqlException ex)
             {
@@ -409,16 +519,21 @@ namespace EMS
             }
             finally
             {
-                //adDtaGrid.DataBind(); 
-                if (oneConnection != null)
-                    oneConnection.Dispose();
                 if (sqlCmd != null)
                     sqlCmd.Dispose();
+
                 if (sda != null)
                     sda.Dispose();
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
+                }
+
                 if (dataset != null)
                     dataset.Dispose();
-                GC.Collect();
+
             }
         }
 
@@ -436,19 +551,69 @@ namespace EMS
             MySqlDataReader sdr = GetData(astrSQL, ref ctTemp);
             try
             {
-                if (sdr == null)
+                if (sdr != null)
                 {
-                    ctTemp.Dispose();
-                    return;
+                    if (sdr.HasRows)
+                    {
+                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        {
+                            for (int i = 0; i < aDataCount; i++)
+                            {
+                                aChart.Series[i].Points.AddXY(
+                                   sdr.GetDateTime(0).ToString(aTimeFormat),//
+                                   sdr.GetFloat(i + 1).ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                if (sdr != null)
+                {
+                    if (!sdr.IsClosed)
+                        sdr.Close();
+                    sdr.Dispose();
                 }
 
-                while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                if (ctTemp != null)
                 {
-                    for (int i = 0; i < aDataCount; i++)
+                    ctTemp.Close();
+                    _connectionPool.ReturnConnection(ctTemp);
+                }
+            }
+        }
+
+        //只清理和增加一个series的数据
+        static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat, int aSeriesIndex)
+        {
+            ChecMysql80();
+            //清理旧的数据 
+            aChart.Series[aSeriesIndex].Points.Clear();
+
+            //creat reader 
+            MySqlConnection ctTemp = null;
+            MySqlDataReader sdr = GetData(astrSQL, ref ctTemp);
+            try
+            {
+                if (sdr != null)
+                {
+                    if (sdr.HasRows)
                     {
-                        aChart.Series[i].Points.AddXY(
-                           sdr.GetDateTime(0).ToString(aTimeFormat),//
-                           sdr.GetFloat(i + 1).ToString());
+                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        {
+                            aChart.Series[aSeriesIndex].Points.AddXY(
+                               sdr.GetDateTime(0).ToString(aTimeFormat),//
+                               sdr.GetFloat(1).ToString());
+                        }
                     }
                 }
             }
@@ -470,51 +635,8 @@ namespace EMS
                 }
                 if (ctTemp != null)
                 {
-                    //ctTemp.Close();
-                    ctTemp.Dispose();
-                }
-            }
-        }
-
-        //只清理和增加一个series的数据
-        static public void ShowData2Chart(Chart aChart, string astrSQL, int aDataCount, string aTimeFormat, int aSeriesIndex)
-        {
-            ChecMysql80();
-            //清理旧的数据 
-            aChart.Series[aSeriesIndex].Points.Clear();
-
-            //creat reader 
-            MySqlConnection ctTemp = null;
-            MySqlDataReader sdr = GetData(astrSQL, ref ctTemp);
-            try
-            {
-                while (sdr.Read())//调用 Read 方法读取 SqlDataReader
-                {
-                    aChart.Series[aSeriesIndex].Points.AddXY(
-                       sdr.GetDateTime(0).ToString(aTimeFormat),//
-                       sdr.GetFloat(1).ToString());
-                }
-            }
-            catch (MySqlException ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-                if (sdr != null)
-                {
-                    if (!sdr.IsClosed)
-                        sdr.Close();
-                    sdr.Dispose();
-                }
-                if (ctTemp != null)
-                {
-                    //ctTemp.Close();
-                    ctTemp.Dispose();
+                    ctTemp.Close();
+                    _connectionPool.ReturnConnection(ctTemp);
                 }
             }
         }
@@ -532,30 +654,36 @@ namespace EMS
             MySqlDataReader sdr = GetData(astrSQL, ref ctTemp);
             try
             {
-                while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                if (sdr != null)
                 {
-                    aChart.Series[1].Points.AddXY(
-                          sdr.GetDateTime(0).ToString(aTimeFormat),//
-                          sdr.GetFloat(1).ToString());
-                    aChart.Series[2].Points.AddXY(
-                          sdr.GetDateTime(0).ToString(aTimeFormat),//
-                          sdr.GetFloat(2).ToString());
-                    //充电为负
-                    if (sdr.GetFloat(3) > 0)
-                        aChart.Series[3].Points.AddXY(
-                          sdr.GetDateTime(0).ToString(aTimeFormat),//
-                          sdr.GetFloat(3).ToString());
-                    else
-                        aChart.Series[3].Points.AddXY(
-                        sdr.GetDateTime(0).ToString(aTimeFormat), "0");
-                    //放电为负
-                    if (sdr.GetFloat(3) < 0)
-                        aChart.Series[4].Points.AddXY(
-                             sdr.GetDateTime(0).ToString(aTimeFormat),//
-                             Math.Abs(sdr.GetFloat(3)).ToString());
-                    else
-                        aChart.Series[4].Points.AddXY(
-                        sdr.GetDateTime(0).ToString(aTimeFormat), "0");
+                    if (sdr.HasRows)
+                    {
+                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        {
+                            aChart.Series[1].Points.AddXY(
+                                  sdr.GetDateTime(0).ToString(aTimeFormat),//
+                                  sdr.GetFloat(1).ToString());
+                            aChart.Series[2].Points.AddXY(
+                                  sdr.GetDateTime(0).ToString(aTimeFormat),//
+                                  sdr.GetFloat(2).ToString());
+                            //充电为负
+                            if (sdr.GetFloat(3) > 0)
+                                aChart.Series[3].Points.AddXY(
+                                  sdr.GetDateTime(0).ToString(aTimeFormat),//
+                                  sdr.GetFloat(3).ToString());
+                            else
+                                aChart.Series[3].Points.AddXY(
+                                sdr.GetDateTime(0).ToString(aTimeFormat), "0");
+                            //放电为负
+                            if (sdr.GetFloat(3) < 0)
+                                aChart.Series[4].Points.AddXY(
+                                     sdr.GetDateTime(0).ToString(aTimeFormat),//
+                                     Math.Abs(sdr.GetFloat(3)).ToString());
+                            else
+                                aChart.Series[4].Points.AddXY(
+                                sdr.GetDateTime(0).ToString(aTimeFormat), "0");
+                        }
+                    }
                 }
             }
             catch (MySqlException ex)
@@ -574,10 +702,11 @@ namespace EMS
                         sdr.Close();
                     sdr.Dispose();
                 }
+
                 if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    _connectionPool.ReturnConnection(ctTemp);
                 }
             }
         }

@@ -2729,6 +2729,22 @@ namespace EMS
             }
         }
 
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)dt.Second;
+            result[1] = (byte)dt.Minute;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Month;
+            result[5] = (byte)(dt.Year % 100);
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
+        }
 
         /// <summary>
         /// 设置表的时间
@@ -2762,6 +2778,22 @@ namespace EMS
             if (GetSysData(33, ref strTemp))
             {
                 AllUkva = Math.Round(float.Parse(strTemp), 3);
+                bPrepared = true;
+            }
+            Prepared = bPrepared;
+        }
+
+        //获取需量
+        public void GetPUMdemand_now()
+        {
+            bool bPrepared = false;
+            string strTemp = "";
+            if (GetSysData(68, ref strTemp))
+            {
+                PUMdemand_now = Math.Round(float.Parse(strTemp), 3);
+                //log.Debug("读取关口表当前正向有功最大需量:" + PUMdemand_now);
+                PUMdemand_now = PUMdemand_now * 0.001 * pc;
+                //log.Debug("读取关口表当前正向有功最大需量换算值:" + PUMdemand_now + " " + "pc:" + pc);
                 bPrepared = true;
             }
             Prepared = bPrepared;
@@ -2899,6 +2931,22 @@ namespace EMS
         public Elemeter2Class()
         {
             strCommandFile = "biao2.txt";
+        }
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)dt.Second;
+            result[1] = (byte)dt.Minute;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Month;
+            result[5] = (byte)(dt.Year % 100);
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
         }
 
         //设置电压变比 PT008DH，电流变比 CT008EH
@@ -3181,6 +3229,23 @@ namespace EMS
             SetSysBytes(37, aTime,false);
         }
         //
+
+        public void timing(int index)
+        {
+            DateTime dt = DateTime.Now;
+            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+
+            // 秒、分、时、日、月、年依次存储
+            result[0] = (byte)(dt.Year % 100);
+            result[1] = (byte)dt.Month;
+            result[2] = (byte)dt.Hour;
+            result[3] = (byte)dt.Day;
+            result[4] = (byte)dt.Minute;
+            result[5] = (byte)dt.Second;
+            byte[] atime = result;
+            SetSysBytes(index, atime, true);
+
+        }
 
         //设置波峰评估的时间段
         public void SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
@@ -6253,36 +6318,41 @@ namespace EMS
             //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
             try
             {
-                    while (sdr.Read())
+                if (sdr != null)
+                {
+                    if (sdr.HasRows)
                     {
-                        if (TempControl!=null)
-                            TempControl.errorOld = sdr.GetUInt32(1);
-                        if (PCSList.Count > 0)
+                        while (sdr.Read())
                         {
-                            PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
-                            PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
-                            PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
-                            PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
-                            PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
-                            PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
-                            PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
-                            PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
+                            if (TempControl!=null)
+                                TempControl.errorOld = sdr.GetUInt32(1);
+                            if (PCSList.Count > 0)
+                            {
+                                PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
+                                PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
+                                PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
+                                PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
+                                PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
+                                PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
+                                PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
+                                PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
+                            }
+                            if (BMS!=null)
+                            {
+                                BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
+                                BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
+                                BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
+                                BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
+                                BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
+                            }
+                            //OldError = (ushort)sdr.GetUInt32(15);
+                            OldEMSError[0]= (ushort)sdr.GetUInt32(15);
+                            OldEMSError[1] = (ushort)sdr.GetUInt32(16);
+                            OldEMSError[2] = (ushort)sdr.GetUInt32(17);
+                            OldEMSError[3] = (ushort)sdr.GetUInt32(18);
                         }
-                        if (BMS!=null)
-                        {
-                            BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
-                            BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
-                            BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
-                            BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
-                            BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
-                        }
-                        //OldError = (ushort)sdr.GetUInt32(15);
-                        OldEMSError[0]= (ushort)sdr.GetUInt32(15);
-                        OldEMSError[1] = (ushort)sdr.GetUInt32(16);
-                        OldEMSError[2] = (ushort)sdr.GetUInt32(17);
-                        OldEMSError[3] = (ushort)sdr.GetUInt32(18);
                     }
-                
+                }             
             }
             catch
             { }
@@ -6294,10 +6364,11 @@ namespace EMS
                         sdr.Close();
                     sdr.Dispose();
                 }
+
                 if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
                 }
             }
 
@@ -6319,139 +6390,145 @@ namespace EMS
             {
                 //0用户侧电表，1设备电表，2辅组电表，3PCS逆变器，4BMS，5空调系统，6消防，7计量电表，
                 //8水浸传感器，9一氧化碳传感器，10温湿度传感器，11烟雾传感器,12UPS,13其他
-                while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                if (sdr != null)
                 {
-                    string adata = sdr.GetString(1).Trim();
-                    eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
-                    switch (eType)
+                    if (sdr.HasRows)
                     {
-                        case 0:
-                            oneEquipment = new Elemeter1Class();
-                            Elemeter1List.Add((Elemeter1Class)oneEquipment);
-                            Elemeter1_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 1:
-                            Elemeter2 = new Elemeter2Class();
-                            oneEquipment = Elemeter2;  //父类指针指向子类对象
-                            Elemeter2_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 2:
-                            Elemeter3 = new Elemeter3Class();
-                            oneEquipment = Elemeter3;
-                            Elemeter3_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 3://pcs
-                            oneEquipment = new PCSClass(frmSet.iPCSfactory);
-                            PCSList.Add((PCSClass)oneEquipment);
-                            PCS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 4://BMSClass
-                            oneEquipment = new BMSClass();
-                            BMS = (BMSClass)oneEquipment;
-                            BMS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 5://TempControlList  8u
-                            oneEquipment = new TempControlClass();
-                            TempControl = (TempControlClass)oneEquipment;
-                            TempControl_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 8://水浸传感器
-                            oneEquipment = new WaterloggingClass();
-                            if (WaterLog1 == null)
-                            {   WaterLog1 = (WaterloggingClass)oneEquipment;
-                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        {
+                            string adata = sdr.GetString(1).Trim();
+                            eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
+                            switch (eType)
+                            {
+                                case 0:
+                                    oneEquipment = new Elemeter1Class();
+                                    Elemeter1List.Add((Elemeter1Class)oneEquipment);
+                                    Elemeter1_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 1:
+                                    Elemeter2 = new Elemeter2Class();
+                                    oneEquipment = Elemeter2;  //父类指针指向子类对象
+                                    Elemeter2_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 2:
+                                    Elemeter3 = new Elemeter3Class();
+                                    oneEquipment = Elemeter3;
+                                    Elemeter3_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 3://pcs
+                                    oneEquipment = new PCSClass(frmSet.iPCSfactory);
+                                    PCSList.Add((PCSClass)oneEquipment);
+                                    PCS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 4://BMSClass
+                                    oneEquipment = new BMSClass();
+                                    BMS = (BMSClass)oneEquipment;
+                                    BMS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 5://TempControlList  8u
+                                    oneEquipment = new TempControlClass();
+                                    TempControl = (TempControlClass)oneEquipment;
+                                    TempControl_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 8://水浸传感器
+                                    oneEquipment = new WaterloggingClass();
+                                    if (WaterLog1 == null)
+                                    {
+                                        WaterLog1 = (WaterloggingClass)oneEquipment;
+                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                    }
+                                    else
+                                    {
+                                        WaterLog2 = (WaterloggingClass)oneEquipment;
+                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                    }
+                                    break;
+                                case 9://一氧化碳传感器
+                                    co = new CoClass();
+                                    oneEquipment = co;
+                                    Co_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 10://温湿度传感器
+                                    TempHum = new TempHumClass();
+                                    oneEquipment = TempHum;
+                                    TempHum_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 11://11烟雾传感器
+                                    Smoke = new SmokeClass();
+                                    oneEquipment = Smoke;
+                                    Smoke_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 12:
+                                    UPS = new UPSClass();
+                                    oneEquipment = UPS;
+                                    UPS_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 13://液冷机
+                                    LiquidCool = new LiquidCoolClass();
+                                    oneEquipment = LiquidCool;
+                                    LiquidCool_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 14:
+                                    DSP2 = new DSP2Class(1);
+                                    oneEquipment = DSP2;
+                                    DSP2_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 15:
+                                    Elemeter2H = new Elemeter2Class();
+                                    oneEquipment = Elemeter2H;
+                                    Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 16://2.21
+                                    Elemeter1Z = new Elemeter2Class();
+                                    oneEquipment = Elemeter1Z;
+                                    Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 17://5.05
+                                    Led = new LEDClass();
+                                    oneEquipment = Led;
+                                    LED_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+                                case 18://5.05
+                                    Dehumidifier = new DehumidifierClass();
+                                    oneEquipment = Dehumidifier;
+                                    Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
+                                    break;
+
                             }
-                            else
-                            {   WaterLog2 = (WaterloggingClass)oneEquipment;
-                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+
+                            oneEquipment.Parent = this;
+                            oneEquipment.eID = sdr.GetInt32(0);
+                            oneEquipment.eType = eType;
+                            oneEquipment.eModel = sdr.GetString(2);
+                            oneEquipment.comType = sdr.GetInt32(3);
+                            oneEquipment.comName = sdr.GetString(4);
+                            oneEquipment.comRate = sdr.GetInt32(5);
+                            oneEquipment.comBits = sdr.GetInt32(6);
+                            oneEquipment.TCPType = sdr.GetString(7);
+                            oneEquipment.serverIP = sdr.GetString(8);
+                            oneEquipment.SerPort = sdr.GetInt32(9);
+                            oneEquipment.LocPort = sdr.GetInt32(10);
+                            oneEquipment.iot_code = sdr.GetString(11);
+                            oneEquipment.pc = sdr.GetInt32(12);
+                            //oneEquipment.version = oneEquipment.LoadVersionFromFile();
+                            oneEquipment.LoadCommandFromFile(); //下载comlist
+                                                                //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
+                                                                //oneEquipment.Parent = this;
+                            switch (oneEquipment.comType)
+                            {
+                                case 0:
+                                    oneEquipment.m485 = new modbus485();
+                                    oneEquipment.m485.ParentEquipment = this;
+                                    oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
+                                                           System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
+                                    break;
+                                case 1:
+                                    break;
+                                case 2:
+                                    break;
                             }
-                            break;
-                        case 9://一氧化碳传感器
-                            co = new CoClass();
-                            oneEquipment = co;
-                            Co_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 10://温湿度传感器
-                            TempHum = new TempHumClass();
-                            oneEquipment = TempHum;
-                            TempHum_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 11://11烟雾传感器
-                            Smoke = new SmokeClass();
-                            oneEquipment = Smoke;
-                            Smoke_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 12:
-                            UPS = new UPSClass();
-                            oneEquipment = UPS;
-                            UPS_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 13://液冷机
-                            LiquidCool = new LiquidCoolClass();
-                            oneEquipment = LiquidCool;
-                            LiquidCool_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 14:
-                            DSP2 = new DSP2Class(1);
-                            oneEquipment = DSP2;
-                            DSP2_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 15:
-                            Elemeter2H = new Elemeter2Class();
-                            oneEquipment = Elemeter2H;
-                            Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 16://2.21
-                            Elemeter1Z = new Elemeter2Class();
-                            oneEquipment = Elemeter1Z;
-                            Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 17://5.05
-                            Led = new LEDClass();
-                            oneEquipment = Led;
-                            LED_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-                        case 18://5.05
-                            Dehumidifier = new DehumidifierClass();
-                            oneEquipment = Dehumidifier;
-                            Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
-                            break;
-
+                        }
                     }
-
-                   oneEquipment.Parent = this;
-                    oneEquipment.eID = sdr.GetInt32(0);
-                    oneEquipment.eType = eType;
-                    oneEquipment.eModel = sdr.GetString(2);
-                    oneEquipment.comType = sdr.GetInt32(3);
-                    oneEquipment.comName = sdr.GetString(4);
-                    oneEquipment.comRate = sdr.GetInt32(5);
-                    oneEquipment.comBits = sdr.GetInt32(6);
-                    oneEquipment.TCPType = sdr.GetString(7);
-                    oneEquipment.serverIP = sdr.GetString(8);
-                    oneEquipment.SerPort = sdr.GetInt32(9);
-                    oneEquipment.LocPort = sdr.GetInt32(10);
-                    oneEquipment.iot_code = sdr.GetString(11); 
-                    oneEquipment.pc = sdr.GetInt32(12);
-                    //oneEquipment.version = oneEquipment.LoadVersionFromFile();
-                    oneEquipment.LoadCommandFromFile(); //下载comlist
-                    //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
-                    //oneEquipment.Parent = this;
-                    switch (oneEquipment.comType)
-                    {
-                        case 0:
-                            oneEquipment.m485 = new modbus485();
-                            oneEquipment.m485.ParentEquipment = this;
-                            oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate,oneEquipment.comBits,
-                                                   System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
-                            break;
-                        case 1:
-                            break;
-                        case 2:
-                            break; 
-                    }
-                   
-
                 }
                 ChechPower = (frmMain.Selffrm.AllEquipment.Elemeter1List != null);
                 if (ChechPower)
@@ -6471,10 +6548,11 @@ namespace EMS
                         sdr.Close();
                     sdr.Dispose();
                 }
+
                 if (ctTemp != null)
                 {
                     ctTemp.Close();
-                    ctTemp.Dispose();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
                 }
             }
             Report2Cloud = new CloudClass();
@@ -6597,19 +6675,17 @@ namespace EMS
         {
             try
             {
-                AutoReadDataCom1(); //传感器，UPS
-                AutoReadDataCom2();//表2、3、4，空调,液冷机
-                AutoReadDataCom3();//BMS
-                AutoReadDataCom4(); //PCS 
-                AutoRead();
-                //AutoSystime_Tick();
-                //--------运行策略timer或线程 
-                //frmMain.TacticsList.AutoCheckTactics();
-                //--------运行均衡策略线程
-                //BalaTacticsList.AutoCheckBalaTactics();
-                //8.7
-                //AutoReadEMSCom7();//读取从机EMS信息
 
+                /***************Highest*************/
+
+                //采集
+                AutoReadDataCom1(); //超限防逆控制
+                AutoReadDataCom3();//BMS关键数据采集
+                AutoReadPointPower();
+                if (ChechPower)
+                    AutoReadPointGrid();
+
+                //控制与接收
                 if (frmSet.IsMaster)
                 {
                     if (frmSet.ConnectStatus == "485")
@@ -6636,6 +6712,12 @@ namespace EMS
                     }
                 }
 
+
+                /***************Normal*************/
+                AutoReadDataCom2();//表2、3、4，空调,液冷机
+                AutoReadDataCom4(); //PCS 
+                AutoReadE1();//表1
+
             }
             catch (Exception ex)
             {
@@ -6658,7 +6740,7 @@ namespace EMS
             bool GetMsg = false;
             while (true)
             {
-
+                Thread.Sleep(1000);
                 if (frmMain.Selffrm.ems.m485.sp != null)
                 {
                     while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
@@ -6684,8 +6766,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(Read_Serial);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -6731,9 +6813,8 @@ namespace EMS
                 //3.上传当天收益到云
                 //4.下载策略
                 if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
-                {
-                    GC.Collect();// 通知托管堆强制回收垃圾   
-                                 //删除180天前的数据
+                { 
+                     //删除180天前的数据
                     frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
                     //保存当天收益到数据库
                     frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
@@ -6816,11 +6897,11 @@ namespace EMS
 
                 }
                 //检查mqttp的连接情况，每分钟检查一次
-                try
+/*                try
                 {
                     frmMain.Selffrm.AllEquipment.Report2Cloud.CheckConnect();
                 }
-                catch { }
+                catch { }*/
                 //7.25
 /*                if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
                 {
@@ -6981,8 +7062,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMSTCP);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -7002,6 +7083,7 @@ namespace EMS
         public void ControlEMS() {
             while (true)
             {
+                Thread.Sleep(1000);
                 if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                 {
                     if (!ChechPower)
@@ -7022,8 +7104,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMS);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -7036,15 +7118,137 @@ namespace EMS
             }
         }
         /******************************485 control*************************************/
+        public void ReadPointGrid()
+        {
+            while (true)
+            {
+                Thread.Sleep(1000);
+                //有关口表
+                if (ChechPower)
+                {
+                    //获取电网功率
+                    double tempGridKVA = 0;
+                    double tempPUMdemand_max = 0;
+                    double tempPUMdemand_now = 0;
+                    //电表1---关口电表，用于防逆流
+                    foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                    {
+                        Elemeter1.GetAllUkva();
+                        tempGridKVA += Elemeter1.AllUkva;
+
+                        Elemeter1.GetPUMdemand_now();
+                        tempPUMdemand_max += Elemeter1.PUMdemand_Max;
+                        tempPUMdemand_now += Elemeter1.PUMdemand_now;
+                    }
+
+                    E1_PUMdemand_Max = tempPUMdemand_max;
+                    E1_PUMdemand_now = tempPUMdemand_now;
+
+                    if (Elemeter1List[0].Prepared)
+                    {
+                        GridKVA = tempGridKVA;
+                        AddValue(GridKVA);
+                        GridKVA_window = GetAverage();
+                    }
+                    else
+                    {
+                        GridKVA = 0;
+                        clearAllUkvaWindow();
+                        GridKVA_window = 0;
+                    }
+                }
+            }
+
+        }
 
 
-        public void ReadData()
+
+        public void AutoReadPointGrid()
+        {
+            try
+            {
+                //实例化等待连接的线程
+                Thread ClientRecThread = new Thread(ReadPointGrid);
+                ClientRecThread.IsBackground = true;
+                ClientRecThread.Start();
+                ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+        }
+
+
+
+        public void ReadPointPower()
+        {
+            //获取主机pcs功率
+            while (true)
+            {
+                Thread.Sleep(1000);
+                double PCSPower = 0;
+                for (int i = 0; i < PCSList.Count; i++)
+                {
+                    PCSList[i].GetallUkva();
+                    PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
+                }
+
+
+                //获取主从整体pcs功率
+                if (frmSet.SysCount > 1)
+                {
+                    if (frmSet.ConnectStatus == "tcp")
+                    {
+                        ReadAllEmsTCP();
+                    }
+                    else if (frmSet.ConnectStatus == "485")
+                    { 
+                        ReadAllEmsRTU();
+                    }
+
+                    if (Elemeter1Z != null)
+                    {
+                        AllwaValue = Elemeter1Z.AllUkva;
+                    }
+                }
+            }
+
+        }
+
+
+
+        public void AutoReadPointPower()
+        {
+            try
+            {
+                //实例化等待连接的线程
+                Thread ClientRecThread = new Thread(ReadPointPower);
+                ClientRecThread.IsBackground = true;
+                ClientRecThread.Start();
+                ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+        }
+
+        public void ReadDataE1()
         {
             //double tempGridKVA;
             double tempPUMdemand_max;
             double tempPUMdemand_now;
             while (true)
             {
+                Thread.Sleep(2000);
+
                 //1 关口表
                 //tempGridKVA = 0;
                 tempPUMdemand_max = 0;
@@ -7097,15 +7301,15 @@ namespace EMS
 
             }
         }
-        public void AutoRead()
+        public void AutoReadE1()
         {
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadData);
+                Thread ClientRecThread = new Thread(ReadDataE1);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -7178,8 +7382,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCom1Data);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -8051,209 +8255,65 @@ namespace EMS
         //表一队列数据
         private void ReadCom1Data()
         {
-
-/*            double tempGridKVA;
-            double tempPUMdemand_max;
-            double tempPUMdemand_now;
-*/
-
             while (true)
             {
+                Thread.Sleep(1000);
                 try
                 {
                     //如果是从机
                     if (!frmSet.IsMaster)
                     {
-                        //获取pcs功率
-                        double PCSPower = 0;
-                        for (int i = 0; i < PCSList.Count; i++)
-                        {
-                            PCSList[i].GetallUkva();
-                            PCSPower += PCSList[i].allUkva;
-                        }
-                        PCSKVA = Math.Round(PCSPower, 2);
-
                         //判断是否超时控制，如果超时就停机等待
-                        if (frmSet.ConnectStatus == "tcp")
+                        if (NetControl)
                         {
-                            if (frmMain.Selffrm.ModbusTcpClient.Connected)
+                            //超时
+                            if (NetCtlTime.AddMinutes(5)<DateTime.Now)//最近一次通讯时间和现在时间间隔超过10min
                             {
-                                //连接情况
-                                if (NetConnect)
+                                //关闭PCS
+                                frmSet.PCSMOff();
+
+                                if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
                                 {
-                                    //超时未收到控制
-                                    //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
-                                    if(Clock_Watch.MeasureIntervalInSeconds() > 30)
-                                    {
-                                        //关闭PCS
-                                        frmSet.PCSMOff();
-                                        if (PCSList.Count > 0)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                            {
-                                                log.Error("主从脱钩,关闭pcs");
-                                                PCSList[0].ExcSetPCSPower(false);
-                                            }
-                                        }
-                                        //关闭空调（液冷机）
-                                        if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                            }
-                                        }
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                            }
-                                        }
-                                        NetControl = false;
-                                        NetConnect = false;
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                        //DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        //已接收控制指令
-                                        if (NetControl)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                                            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    //10s未接收到主机消息，则判断主从通讯断开
-                                    if (NetCtlTime.AddSeconds(10)<DateTime.Now)
-                                    {
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                    }
-                                }                              
-                            }
-                            else//客户端发送报文失败，重连
-                            {
-                                log.Debug("重连");
-                                //若刚开启EMS，pcs已经在工作，则必须立即停止
-                                if (PCSList.Count > 0)
-                                {
-                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)//关闭pcs
-                                    {
-                                        log.Error("主从脱钩,关闭pcs");
-                                        PCSList[0].ExcSetPCSPower(false);
-                                        frmSet.PCSMOff();
-                                    }
+                                    log.Error("主从脱钩,关闭pcs");
+                                    PCSList[0].ExcSetPCSPower(false);
                                 }
 
-                                //从机发起重连
-                                frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
-                                continue;
+                                //关闭空调（液冷机）
+                                if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
+                                    }
+                                }
+                                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                                    }
+                                }
+                                NetControl = false;
+                                DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                            }
+                            else
+                            {
+                                ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                             }
                         }
-                        else
+                        else //结束网控
                         {
-                            if (NetControl)
-                            {
-                                //超时
-                                if (NetCtlTime.AddMinutes(5)<DateTime.Now)//最近一次通讯时间和现在时间间隔超过1min
-                                {
-                                    //9.16新增注释语句
-                                    //frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                                    //关闭PCS
-                                    frmSet.PCSMOff();
-                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                    {
-                                        log.Error("主从脱钩,关闭pcs");
-                                        PCSList[0].ExcSetPCSPower(false);
-                                    }
-                                    //关闭空调（液冷机）
-                                    if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                    {
-                                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                        }
-                                    }
-                                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                    {
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                        }
-                                    }
-                                    NetControl = false;
-                                    DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
-                                }
-                                else
-                                {
-                                    ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
-                                }
-                            }
-                            else //结束网控
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
-                    else//如果是主机
+                    //如果是主机
+                    else
                     {
-                        double PCSPower = 0;
-                        for (int i = 0; i < PCSList.Count; i++)
-                        {
-                            PCSList[i].GetallUkva();
-                            PCSPower += PCSList[i].allUkva;
-                        }
-                        PCSKVA = Math.Round(PCSPower, 2);
-
-                        if (frmSet.ConnectStatus == "tcp")
-                        {
-                            //问询从机功率
-                            ReadAllEmsTCP();
-                        }
-                        else if (frmSet.ConnectStatus == "485")
-                        {
-                            ReadAllEmsRTU();
-                        }
-
-                        if (Elemeter1Z != null)
-                        {
-                            AllwaValue = Elemeter1Z.AllUkva;
-                        }
-
-
                         //没有关口表
                         if (!ChechPower)
                         {
                             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                             continue;
-                        }
-                        else
-                        {
-                            //获取电网功率
-                            double tempGridKVA = 0;
-                            //电表1---关口电表，用于防逆流
-                            foreach (Elemeter1Class Elemeter1 in Elemeter1List)
-                            {
-                                Elemeter1.GetAllUkva();
-                                tempGridKVA += Elemeter1.AllUkva;
-                            }
-
-                            if (Elemeter1List[0].Prepared)
-                            {
-                                GridKVA = tempGridKVA;
-                                AddValue(GridKVA);
-                                GridKVA_window = GetAverage();
-                            }
-                            else
-                            {
-                                GridKVA = 0;
-                                clearAllUkvaWindow();
-                                GridKVA_window = 0;
-                            }
                         }
 
                         //如果主机是单机  
@@ -8262,7 +8322,8 @@ namespace EMS
                             //2.21
                             //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
                             Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max) {
+                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                            {
                                 Client_PUMdemand_Max = Client_PUMdemand_now;
                                 WriteDoPUini();
                             }
@@ -8295,8 +8356,14 @@ namespace EMS
                                 SingleReflux();
                                 continue;
                             }
-                            AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
-                                    
+                            AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+
+                            if (Elemeter1Z != null)
+                            {
+                                AllwaValue = Elemeter1Z.AllUkva;
+                            }
+
+
                             //多机器的主机                          
                             Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now*(EMSList.Count+1);
                             if (Client_PUMdemand_now > Client_PUMdemand_Max)
@@ -8311,13 +8378,12 @@ namespace EMS
                             MutiReflux();
                         }
                     }//else
-                }//try
+                }
                 catch (Exception ex)
                 {
                     frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                 }
-            }//while
-            
+            }
         }
         //Com2 readThread2
 
@@ -8328,13 +8394,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(3);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(3);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 // ClientRecThread.Join();
                 //8.4
-                ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Priority = ThreadPriority.Normal;
             }
             catch (Exception ex)
             {
@@ -8346,6 +8412,7 @@ namespace EMS
         {
             while (true)
             {
+                Thread.Sleep(2000);
                 try
                 {
                     GetDataFromEqipment();
@@ -8486,8 +8553,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(2);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 //8.4
@@ -8508,6 +8575,7 @@ namespace EMS
         {
             while (true)
             {
+                Thread.Sleep(1000);
                 try
                 {
                     if (BMS == null)
@@ -8568,8 +8636,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(0);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+/*                ulong LpId = SetCpuID(0);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
                 // ClientRecThread.Join();
@@ -8593,7 +8661,7 @@ namespace EMS
                 try
                 {
                     PCSPower = 0;
-                    Thread.Sleep(100);
+                    Thread.Sleep(2000);
                     //PCS 
                     if (PCSList.Count > 0)
                     {

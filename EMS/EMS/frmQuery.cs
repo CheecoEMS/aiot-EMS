@@ -42,7 +42,6 @@ namespace EMS
                 oneForm.Close();
                 oneForm.Dispose();
                 oneForm = null;
-                GC.Collect();
             }
         }
 
@@ -114,7 +113,6 @@ namespace EMS
                     break;
 
             }
-            GC.Collect();
         }
 
         private void btnMain_Click(object sender, EventArgs e)

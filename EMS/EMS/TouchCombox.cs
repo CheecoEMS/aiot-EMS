@@ -45,7 +45,6 @@ namespace EMS
         public void UpDataList()
         {
             Items = ItemList.ToArray();
-            GC.Collect();
         }
 
         public void GetList()

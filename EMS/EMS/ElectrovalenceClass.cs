@@ -52,30 +52,42 @@ namespace EMS
                  + " from electrovalence ", ref ctTemp);
             try
             {
-                while (rd.Read())
+                if (rd != null)
                 {
-                    ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
-                    oneElectrovalence.section = rd.GetInt32(0);
-                    oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                    // oneElectrovalence.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                    oneElectrovalence.eName = rd.GetString(2);
-                    // oneElectrovalence.MaxPower = rd.GetInt32(3);
-                    // oneElectrovalence.price = rd.GetFloat(3);
-                    ElectrovalenceList.Add(oneElectrovalence);
+                    if (rd.HasRows)
+                    {
+                        while (rd.Read())
+                        {
+                            ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
+                            oneElectrovalence.section = rd.GetInt32(0);
+                            oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            // oneElectrovalence.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                            oneElectrovalence.eName = rd.GetString(2);
+                            // oneElectrovalence.MaxPower = rd.GetInt32(3);
+                            // oneElectrovalence.price = rd.GetFloat(3);
+                            ElectrovalenceList.Add(oneElectrovalence);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
     }

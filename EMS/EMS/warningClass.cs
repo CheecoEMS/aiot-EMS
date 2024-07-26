@@ -103,29 +103,43 @@ namespace EMS
                  + " from warning where ResetTime IS NULL", ref ctTemp);
             try
             {
-                while (rd.Read())
+                if (rd != null)
                 {
-                    WarmingClass oneWarning = new WarmingClass();
-                    oneWarning.rDate = rd.GetDateTime(1);//Convert.ToDateTime();
-                    oneWarning.WarningID = rd.GetInt32(0);
-                    oneWarning.wLevels = rd.GetInt32(2); ;
-                    oneWarning.wClass = rd.GetString(3);
-                    oneWarning.Warning = rd.GetString(4);
-                    oneWarning.memo = rd.GetString(5);
-                    oneWarning.CheckTime = rd.GetDateTime(6);
-                    oneWarning.UserID = rd.GetString(7);
-                    //oneWarning.rID = oneWarning.InsertWaring();
-                    WarningList.Add(oneWarning);
+                    if (rd.HasRows)
+                    {
+                        while (rd.Read())
+                        {
+                            WarmingClass oneWarning = new WarmingClass();
+                            oneWarning.rDate = rd.GetDateTime(1);//Convert.ToDateTime();
+                            oneWarning.WarningID = rd.GetInt32(0);
+                            oneWarning.wLevels = rd.GetInt32(2); ;
+                            oneWarning.wClass = rd.GetString(3);
+                            oneWarning.Warning = rd.GetString(4);
+                            oneWarning.memo = rd.GetString(5);
+                            oneWarning.CheckTime = rd.GetDateTime(6);
+                            oneWarning.UserID = rd.GetString(7);
+                            //oneWarning.rID = oneWarning.InsertWaring();
+                            WarningList.Add(oneWarning);
+                        }
+                    }
                 }
+
             }
-            catch { }
+            catch (Exception ex){ }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (ctTemp != null)
+                {
+                    ctTemp.Close();
+                    DBConnection._connectionPool.ReturnConnection(ctTemp);
+                }
             }
         }
 
