@@ -1108,15 +1108,6 @@ namespace Modbus
         //主机首次连接问询从机
         public int AskEmsID(ref SocketWrapper client)
         {
-            IPEndPoint localEndPoint = (IPEndPoint)ClientSocket.LocalEndPoint;
-            log.Error("Local IP address: " + localEndPoint.Address);
-            log.Error("Local port: " + localEndPoint.Port);
-
-            // Get the remote endpoint information
-            IPEndPoint remoteEndPoint = (IPEndPoint)ClientSocket.RemoteEndPoint;
-            log.Error("Remote IP address: " + remoteEndPoint.Address);
-            log.Error("Remote port: " + remoteEndPoint.Port);
-
             int result = frmMain.Selffrm.ModbusTcpServer.SendAskMSG(0, ref client, 32, 0x6003, 1);
             log.Error("1次问");
             return result;

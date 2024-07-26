@@ -6695,13 +6695,13 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.AutoControlEMS();
                         }
                     }
-                    else if (frmSet.ConnectStatus == "tcp")
+/*                    else if (frmSet.ConnectStatus == "tcp")
                     {
                         if (frmSet.SysCount > 1)
                         {
                             frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
                         }
-                    }
+                    }*/
 
                 }
                 else
@@ -7199,7 +7199,7 @@ namespace EMS
 
 
                 //获取主从整体pcs功率
-                if (frmSet.SysCount > 1)
+/*                if (frmSet.SysCount > 1)
                 {
                     if (frmSet.ConnectStatus == "tcp")
                     {
@@ -7214,7 +7214,7 @@ namespace EMS
                     {
                         AllwaValue = Elemeter1Z.AllUkva;
                     }
-                }
+                }*/
             }
 
         }
