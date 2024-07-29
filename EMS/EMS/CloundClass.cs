@@ -768,13 +768,20 @@ namespace EMS
                 var param = jsonObject["params"];
                 if (param["topic"].ToString() == "pem")
                 {
-                    string tempDate = jsonObject["time"].ToString();
-
                     if (param["iot_code"] != null)
                     {
-                        if (param["iot_code"].ToString() != frmSet.SysID)
+                        if (param["iot_code"].ToString() != frmMain.Selffrm.AllEquipment.iot_code)
                         {
                             return false;
+                        }
+                        else
+                        {
+                            string start = param["start"].ToString();
+                            string end = param["end"].ToString();
+                            //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                            string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
+                            DBConnection.UploadCloud(sqlQuery);
+                            result = true;
                         }
                     }
                     else
@@ -792,7 +799,7 @@ namespace EMS
                     result = false;
                 }
             }
-            catch
+            catch(Exception ex)
             {
                 return false;
             }
