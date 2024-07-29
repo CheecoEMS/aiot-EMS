@@ -1035,8 +1035,7 @@ namespace EMS
             string strID = "";
             try
             {
-                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
-               //string date = jsonObject["params"]["date"].ToString();
+                strID = jsonObject["id"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/limit")
                 {
@@ -1044,19 +1043,67 @@ namespace EMS
                 }
                 else
                 {
-                    frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
-                    frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
-                    frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
-                    frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
-                    //frmSet.SaveSet2File();
-                    frmSet.SetToGlobalSet();
+                    if (jsonObject["params"] != null)
+                    {
+                        var parameters = jsonObject["params"];
+                        if (parameters["requireLimit"] != null)
+                        {
+                            frmSet.MaxGridKW = (int)double.Parse(parameters["requireLimit"].ToString());
+                        }
+                        if (parameters["invertPower"] != null)
+                        {
+                            frmSet.MinGridKW = (int)double.Parse(parameters["invertPower"].ToString());
+                        }
+                        if (parameters["socUp"] != null)
+                        {
+                            frmSet.MaxSOC = (int)double.Parse(parameters["socUp"].ToString());
+                        }
+                        if (parameters["socDown"] != null)
+                        {
+                            frmSet.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
+                        }
+                        frmSet.SetToGlobalSet();
+                    }
                 }
             }
-            catch 
-            { }
-            //输出返回数据
-            return strID; 
+            catch
+            {
+                // Handle exceptions if needed
+            }
+            // Return the ID
+            return strID;
         }
+
+        /*        public string GetServerEMSLimit(string astrData)
+                {
+                    if (astrData == "")
+                        return "";
+                    JObject jsonObject = JObject.Parse(astrData);
+                    string strID = "";
+                    try
+                    {
+                        strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
+                       //string date = jsonObject["params"]["date"].ToString();
+                        string strTopic = jsonObject["method"].ToString();
+                        if (strTopic != "ems/limit")
+                        {
+                            return "";
+                        }
+                        else
+                        {
+                            frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
+                            frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
+                            frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
+                            frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
+                            //frmSet.SaveSet2File();
+                            frmSet.SetToGlobalSet();
+                        }
+                    }
+                    catch 
+                    { }
+                    //输出返回数据
+                    return strID; 
+                }*/
 
         static public byte[] Back3Data(int aAddr, short iLen)
         {
