@@ -170,6 +170,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
 
@@ -217,6 +221,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
                     MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX"; 
                                                                                     //使用 ExecuteReader 方法创建 SqlDataReader 对象 
@@ -256,6 +264,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);
@@ -356,6 +368,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";  
@@ -418,6 +434,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);
@@ -493,6 +513,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";
@@ -794,6 +818,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(sql, connection);
