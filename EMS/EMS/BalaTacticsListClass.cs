@@ -224,11 +224,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(CheckBalaTactics);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                //8.4
                 ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Start(); 
             }
             catch
             {

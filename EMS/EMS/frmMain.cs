@@ -840,9 +840,9 @@ namespace EMS
             }
 
             //make json
-            DateTime tempTimeq = DateTime.Now;
+/*            DateTime tempTimeq = DateTime.Now;
             string rDate = tempTimeq.ToString("yyyyMMddHHmmss");
-            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2CloudTest(rDate);
+            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2CloudTest(rDate);*/
         }
         static void InitializeUI_timer()
         {

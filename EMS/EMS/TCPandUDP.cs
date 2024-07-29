@@ -484,8 +484,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest502);
             MonitorThread.IsBackground = true;
-            ulong LpId = SetCpuID(3);
-            SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+            ClientRecThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 
@@ -499,8 +498,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest104);
             MonitorThread.IsBackground = true;
-            ulong LpId = SetCpuID(3);
-            SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+            ClientRecThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 
@@ -608,8 +606,7 @@ namespace Modbus
                     //开启接收线程  
                     ClientRecThread = new Thread(() => ReceiveData(cancelReceiveToken));
                     ClientRecThread.IsBackground = true;
-                    ulong LpId = SetCpuID(3);
-                    SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                    ClientRecThread.Priority = ThreadPriority.Highest;
                     ClientRecThread.Start();
                 }
                 catch (SocketException ex)
@@ -1455,10 +1452,8 @@ namespace Modbus
                 //实例化等待连接的线程
                 ClientRecThread = new Thread(() => ReceiveData(cancelReceiveToken));
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(0);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
                 ClientRecThread.Priority = ThreadPriority.Highest;
+                ClientRecThread.Start();
                 //IsMonitoring = true;
                 if (OnConectedEvent != null)
                     OnConectedEvent.Invoke();
@@ -1572,11 +1567,9 @@ namespace Modbus
                 //ConnectTCP(); 
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(CheckandReconnect);
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Start();
                 ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Start();
             }
             catch
             {
