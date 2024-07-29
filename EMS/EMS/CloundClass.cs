@@ -442,13 +442,19 @@ namespace EMS
             }
             else if (topic == UploadTopic)
             {
-                if (DataRetransmission(message))
+                Result = DataRetransmission(message);
+                lock (_lockMqtt)
                 {
-
-                }
-                else
-                { 
-                    
+                    if (Result)
+                    {
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                    }
+                    else
+                    {
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                    }
                 }
             }
             /*            else if (topic == BalaTacticTopic)
