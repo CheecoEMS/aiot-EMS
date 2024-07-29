@@ -308,17 +308,16 @@ namespace Modbus
         public delegate void OnReceiveDataEventDelegate2(Socket sender, byte[] strData, string strFromIP, int iPort);//建立事件委托
         public event OnReceiveDataEventDelegate2 OnReceiveDataEvent2;//收到数据的事件
 
-        // 定义Soket发送和接收502
+        // 定义Soket发送和接收 
         public Socket ServerSocket = null;//服务器绑定端口初始化socket对象
         public Socket ClientSocket = null;//针对104连接的客户端从机
-        //服务器端的IP与端口 
-        private IPEndPoint ServerIPE = null;
 
-        // 定义Soket发送和接收104
+        // 定义104Soket发送和接收 
         public Socket ServerSocket_104 = null;//服务器绑定端口初始化socket对象
         public Socket ClientSocket_104 = null;//针对104连接的客户端从机
+
         //服务器端的IP与端口 
-        private IPEndPoint ServerIPE_104 = null;
+        private IPEndPoint ServerIPE = null;
         public int LocalPort = 0;
 
         //Soket Sever Connnect监听线程
@@ -461,15 +460,31 @@ namespace Modbus
 
         public bool TCPServerIni(int aLocadPort)
         {
+
             try
             {
-                //实例化TcpSetver对象  
-                ServerIPE_104 = new IPEndPoint(IPAddress.Any, aLocadPort);
-                ServerSocket_104 = new Socket(ServerIPE_104.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                //绑定IP
-                ServerSocket_104.Bind(ServerIPE_104);
-                ServerSocket_104.Listen(10);
-                return true;
+                switch (aLocadPort)
+                {
+                    case 2404:
+                        //实例化TcpSetver对象  
+                        ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
+                        ServerSocket_104 = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                        //绑定IP
+                        ServerSocket_104.Bind(ServerIPE);
+                        ServerSocket_104.Listen(10);
+                        return true;
+                    case 502:
+                        //实例化TcpSetver对象  
+                        ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
+                        ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                        //绑定IP
+                        ServerSocket.Bind(ServerIPE);
+                        ServerSocket.Listen(10);
+                        return true;
+                    default:
+                        return false;
+                }
+
             }
             catch (SocketException ex)
             {
@@ -559,7 +574,7 @@ namespace Modbus
             {
                 try
                 {
-                    Socket acceptSocket = ServerSocket_104.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
+                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象           
 
                     if (OnConectedEvent != null)
                         OnConectedEvent(acceptSocket);
@@ -636,11 +651,11 @@ namespace Modbus
         //发送信息
         public bool Send(string strMessage)
         {
-            if ((ClientSocket == null) || (!ClientSocket.Connected))
+            if ((ClientSocket_104 == null) || (!ClientSocket_104.Connected))
                 return false;
             try
             {
-                ClientSocket.Send(Encoding.ASCII.GetBytes(strMessage));
+                ClientSocket_104.Send(Encoding.ASCII.GetBytes(strMessage));
                 return true;
             }
             catch

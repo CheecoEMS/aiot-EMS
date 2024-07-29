@@ -212,7 +212,7 @@ namespace IEC104
             //验证消息
             //string hexString = BitConverter.ToString(message);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -259,7 +259,7 @@ namespace IEC104
             //log.Debug("发送总召唤结束：" + hexString);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -297,7 +297,7 @@ namespace IEC104
             message[4] = 0x02;
             message[5] = 0x00;
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             return message;
 
         }
@@ -320,7 +320,7 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("U帧："+ hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             app.Isconnect = true;
         }
         /**************************获取发送序号*******************/
@@ -568,9 +568,9 @@ namespace IEC104
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref message, ref count);         //b对地电压
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref message, ref count);         //c对地电压
             if (frmSet.SysCount == 1)
-                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
+                Get_One_YC_Data(-(float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
             else
-                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
+                Get_One_YC_Data(-(float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref message, ref count);    //总无功功率
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref message, ref count);  //总功率因数
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref message, ref count);      //可充电量
@@ -583,7 +583,7 @@ namespace IEC104
             Get_One_YC_Data((float)100, ref message, ref count);    //累计放电电量
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.soc, ref message, ref count);    //累计充电电量
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.soh, ref message, ref count);    //累计放电电量
-            Get_One_YC_Data(-(float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref message, ref count);    //累计放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref message, ref count);    //累计放电电量
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.averageTemp, ref message, ref count);    //累计充电电量
             Get_One_YC_Data(PcsRun, ref message, ref count);    //累计放电电量
 
@@ -598,7 +598,7 @@ namespace IEC104
             //log.Debug("总无功功率:" + frmMain.Selffrm.AllEquipment.Elemeter2.AllNukva);
             //log.Debug("a对地电压:" + frmMain.Selffrm.AllEquipment.PCSList[0].aV);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -734,7 +734,7 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("发送遥信数据：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -772,7 +772,7 @@ namespace IEC104
             //log.Debug("发送遥调返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -888,7 +888,7 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调执行确认：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -917,7 +917,7 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调撤销确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -941,7 +941,7 @@ namespace IEC104
             isYKACK[num] = 0;
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -962,7 +962,7 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -988,7 +988,7 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调激活结束：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -1025,7 +1025,7 @@ namespace IEC104
             //log.Debug("发送遥控返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
         }
 
 
@@ -1086,7 +1086,7 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥控执行确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
@@ -1272,7 +1272,7 @@ namespace IEC104
 
             if (!IEC104Send_Event.IsSet || (dif_count == 0)) return;
             IEC104Send_Event.Wait();
-            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket) == true)
+            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104) == true)
             {
                 UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
                 temp += 2;
@@ -1336,9 +1336,9 @@ namespace IEC104
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref app.YC_rawdata, ref count);         //b对地电压
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref app.YC_rawdata, ref count);         //c对地电压
             if (frmSet.SysCount == 1)
-                Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref app.YC_rawdata, ref count);     //总有用功率
+                Get_Rawdata(-(float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref app.YC_rawdata, ref count);     //总有用功率
             else
-                Get_Rawdata((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref app.YC_rawdata, ref count);
+                Get_Rawdata(-(float)frmMain.Selffrm.AllEquipment.AllwaValue, ref app.YC_rawdata, ref count);
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref app.YC_rawdata, ref count);    //总无功功率
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref app.YC_rawdata, ref count);  //总功率因数
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref app.YC_rawdata, ref count);      //可充电量
@@ -1351,7 +1351,7 @@ namespace IEC104
             Get_Rawdata((float)100, ref app.YC_rawdata, ref count);    //最大放电功率允许值
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soc, ref app.YC_rawdata, ref count);    //SOC
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soh, ref app.YC_rawdata, ref count);    //SOH
-            Get_Rawdata(-(float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref app.YC_rawdata, ref count);    //有功功率设置
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref app.YC_rawdata, ref count);    //有功功率设置
             Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.averageTemp, ref app.YC_rawdata, ref count);    //Bms温度
             Get_Rawdata(PcsRun, ref app.YC_rawdata, ref count);    //PCS运行状态
 
@@ -1377,7 +1377,6 @@ namespace IEC104
 
             }
 
-            Array.Copy(app.YC_rawdata, app.YC_perv_rawdata, app.YC_rawdata.Length);
 
 
             //数据修正          
@@ -1385,9 +1384,10 @@ namespace IEC104
             message[7] = (byte)(dif_count);
             Array.Resize(ref message, Index);
 
+            Console.WriteLine(string.Join("-", message));
             if (!IEC104Send_Event.IsSet || (dif_count == 0)) return;
             IEC104Send_Event.Wait();
-            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket) == true)
+            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104) == true)
             {
                 UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
                 temp += 2;
@@ -1417,7 +1417,7 @@ namespace IEC104
         public void IEC104_PropertyChanged(object sender, EventArgs e)
         {
            
-            if ((frmMain.Selffrm.TCPserver.ClientSocket == null) || (!frmMain.Selffrm.TCPserver.ClientSocket.Connected))
+            if ((frmMain.Selffrm.TCPserver.ClientSocket_104 == null) || (!frmMain.Selffrm.TCPserver.ClientSocket_104.Connected))
             {
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
@@ -1436,6 +1436,7 @@ namespace IEC104
                 ReturnSoleYXData(0X1E);
 
                 Array.Copy(app.YX_rawdata, app.YX_perv_rawdata, app.YX_rawdata.Length);
+                Array.Copy(app.YC_rawdata, app.YC_perv_rawdata, app.YC_rawdata.Length);
                 app.bool_test = !app.bool_test;
 
             }
