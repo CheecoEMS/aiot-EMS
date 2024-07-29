@@ -138,11 +138,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread mqttThread = new Thread(ListenCloud);
                 mqttThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                mqttThread.Start();
-                //8.4
                 mqttThread.Priority = ThreadPriority.Highest;
+                mqttThread.Start();
             }
             catch
             {
@@ -1044,7 +1041,7 @@ namespace EMS
                 }
                 else
                 {
-                    frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
+                    frmSet.MaxGridKW = (int)double.Parse(jsonObject.ToString());//需量控制
                     frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
                     frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
                     frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限

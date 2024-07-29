@@ -580,8 +580,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest502);
             MonitorThread.IsBackground = true;
-            ulong LpId = SetCpuID(3);
-            SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+            ClientRecThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 
@@ -595,8 +594,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest104);
             MonitorThread.IsBackground = true;
-            ulong LpId = SetCpuID(3);
-            SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+            ClientRecThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 
@@ -705,8 +703,7 @@ namespace Modbus
                     //开启接收线程  
                     ClientRecThread = new Thread(() => ReceiveData(cancelReceiveToken));
                     ClientRecThread.IsBackground = true;
-                    ulong LpId = SetCpuID(3);
-                    SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                    ClientRecThread.Priority = ThreadPriority.Highest;
                     ClientRecThread.Start();
                 }
                 catch (SocketException ex)
@@ -1005,97 +1002,67 @@ namespace Modbus
         private bool GetSocketDada(int ID, ref SocketWrapper client, ref object socketLock, byte[] aMessage, ref byte[] aResponse)
         {
             bool bResult = false;
-            if (client != null )
+            try
             {
-                try
+                lock (socketLock)
                 {
-                    lock (socketLock)
+                    if (client.Send(aMessage))
                     {
-                        if (client == null)
+                        if (GetSocketResponse(ID, ref client, ref aResponse))
                         {
-                            bResult = false;
+                            bResult = true;
                         }
                         else
                         {
-/*                            int res = clientSocket.Send(aMessage);
-                            if (GetSocketResponse(ID, ref clientSocket, ref aResponse))
-                            {
-                                bResult = true;
-
-                            }
-                            else
-                            {
-                                bResult = false;
-                            }*/
+                            bResult = false;
                         }
                     }
-                }
-                catch (SocketException ex)
-                {
-                    bResult = false;
-                    log.Error("发送client捕获ex: " + ex.Message);
-                    if (ID != 0)//0是从机首次连接时，主机发送的问询报文
+                    else
                     {
+                        //发送失败
                         frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                        //DestorySocket(ref clientSocket);
-                        log.Error("剔除"+ID+"号从机");
                     }
                 }
-                return bResult;
             }
-            else { return false; }
-
+            catch (SocketException ex)
+            {
+                bResult = false;
+                log.Error("发送client捕获ex: " + ex.Message);
+                if (ID != 0)//0是从机首次连接时，主机发送的问询报文
+                {
+                    frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
+                    //DestorySocket(ref clientSocket);
+                    log.Error("剔除"+ID+"号从机");
+                }
+            }
+            return bResult;
         }
         private bool GetSocketResponse(int ID, ref SocketWrapper client, ref byte[] response)
         {
-/*            int receiveNumber = 0;
             bool bResult = false;
-            if (client != null)
+            try
             {
-                try
+                byte[] buffer = new byte[1024];
+                if (client.Receive(ref buffer))
                 {
-                    byte[] buffer = new byte[1024];
-                    receiveNumber = client.Receive(buffer);
-                    if (receiveNumber > 0)
-                    {
-                        Array.Copy(buffer, 0, response, 0, response.Length);
-                        bResult = true;
-                    }
-                    else
-                    {
-                        bResult = false;
-                    }
-
+                    Array.Copy(buffer, 0, response, 0, response.Length);
+                    bResult = true;
                 }
-                catch (SocketException ex)
+                else
                 {
                     bResult = false;
-                    if (ex.SocketErrorCode == SocketError.TimedOut)
-                    {
-                        // Log the timeout
-                        log.Error("接收超时");
-                        if (ID != 0)//0是从机首次连接时，主机发送的问询报文
-                        {
-                            frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                            //DestorySocket(ref clientSocket);
-                            log.Error("剔除"+ID+"号从机");
-                        }
-                    }
-                    else
-                    {
-                        log.Error("物联断开或从机EMS下线");
-                        if (ID != 0)//0是从机首次连接时，主机发送的问询报文
-                        {
-                            frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
-                            //DestorySocket(ref clientSocket);
-                            log.Error("剔除"+ID+"号从机");
-                        }
-                    }
                 }
-                return bResult;
             }
-            else*/
-                return false;
+            catch (Exception ex)
+            {
+                bResult = false;
+            }
+            finally
+            {
+
+            }
+            return bResult;
+
         }
 
         /*********
@@ -1493,10 +1460,8 @@ namespace Modbus
                 //实例化等待连接的线程
                 ClientRecThread = new Thread(() => ReceiveData(cancelReceiveToken));
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(0);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
                 ClientRecThread.Priority = ThreadPriority.Highest;
+                ClientRecThread.Start();
                 //IsMonitoring = true;
                 if (OnConectedEvent != null)
                     OnConectedEvent.Invoke();
@@ -1589,58 +1554,6 @@ namespace Modbus
         {
             byte[] oneByte = { 1, 1, 0 };
             SendMSG(oneByte);
-        }
-
-        public static ulong SetCpuID(int lpIdx)
-        {
-            ulong cpuLogicalProcessorId = 0;
-            if (lpIdx < 0 || lpIdx >= System.Environment.ProcessorCount)
-            {
-                lpIdx = 0;
-            }
-            cpuLogicalProcessorId |= 1UL << lpIdx;
-            return cpuLogicalProcessorId;
-        }
-
-        // 检查云的连接问题，连接失败，重新连接 
-        public void AutoConnect()
-        {
-            try
-            {
-                //ConnectTCP(); 
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(CheckandReconnect);
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Start();
-                ClientRecThread.Priority = ThreadPriority.Lowest;
-            }
-            catch
-            {
-            }
-        }
-
-        private void CheckandReconnect()
-        {
-            while (true)
-            {
-                //Thread.Sleep(ReconnectTime * 1000);
-                if (!frmMain.Selffrm.AllEquipment.NetControl && Connected)
-                {
-                    ConnectTCP();
-                }
-                /*                if (!Connected)
-                                {
-                                    // CloseCenect();
-                                    if ((ConnectTCP()) && (StartMonitor()))
-                                    { }
-                                    else if (OnReconnectFailed != null)
-                                        OnReconnectFailed.Invoke();
-                                }*/
-                // Thread.Sleep(ReconnectTime);
-            }
-
         }
 
     }

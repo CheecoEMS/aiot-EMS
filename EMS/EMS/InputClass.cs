@@ -6766,13 +6766,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(Read_Serial);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7004,12 +7000,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(Systime_Tick);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                ClientRecThread.Priority = ThreadPriority.Lowest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Lowest;
             }
             catch (Exception ex)
             {
@@ -7062,13 +7055,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMSTCP);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7104,13 +7093,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMS);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7170,11 +7155,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadPointGrid);
                 ClientRecThread.IsBackground = true;
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7199,14 +7182,14 @@ namespace EMS
 
 
                 //获取主从整体pcs功率
-/*                if (frmSet.SysCount > 1)
+                if (frmSet.SysCount > 1)
                 {
                     if (frmSet.ConnectStatus == "tcp")
                     {
                         ReadAllEmsTCP();
                     }
                     else if (frmSet.ConnectStatus == "485")
-                    { 
+                    {
                         ReadAllEmsRTU();
                     }
 
@@ -7214,7 +7197,7 @@ namespace EMS
                     {
                         AllwaValue = Elemeter1Z.AllUkva;
                     }
-                }*/
+                }
             }
 
         }
@@ -7228,11 +7211,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadPointPower);
                 ClientRecThread.IsBackground = true;
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7308,13 +7289,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadDataE1);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal ;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7333,13 +7310,9 @@ namespace EMS
                     //实例化等待连接的线程
                     Thread ClientRecThread = new Thread(ReadCom7Data);
                     ClientRecThread.IsBackground = true;
-                    ulong LpId = SetCpuID(3);
-                    SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
+                    ClientRecThread.Priority = ThreadPriority.Lowest;
                     ClientRecThread.Start();
                     ClientRecThread.Name = "";
-                    //8.4
-                    ClientRecThread.Priority = ThreadPriority.Lowest;
-                    // ClientRecThread.Join();
                 }
                 
             }
@@ -7382,12 +7355,10 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCom1Data);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
+                //8.4            
                 // ClientRecThread.Join();
             }
             catch (Exception ex)
@@ -8486,13 +8457,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(3);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                // ClientRecThread.Join();
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal;
             }
             catch (Exception ex)
             {
@@ -8645,13 +8612,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -8728,13 +8691,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
                 ClientRecThread.IsBackground = true;
-/*                ulong LpId = SetCpuID(0);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
+                ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                // ClientRecThread.Join();
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Normal;
             }
             catch (Exception ex)
             {
