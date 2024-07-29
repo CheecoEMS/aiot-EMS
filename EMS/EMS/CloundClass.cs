@@ -440,7 +440,7 @@ namespace EMS
             {
                 GetHeartbeat(message);
             }
-            else if (topic == UploadTopic)
+            else if (topic == UploadTopic  + "request")
             {
                 Result = DataRetransmission(message);
                 lock (_lockMqtt)
