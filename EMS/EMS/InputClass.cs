@@ -7358,8 +7358,6 @@ namespace EMS
                 ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4            
-                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {

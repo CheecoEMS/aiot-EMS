@@ -49,6 +49,8 @@ namespace EMS
         public string BalaTableTopic;
         public string BalaTacticTopic;
         public string HeartbeatTopic;
+        public string UploadTopic;
+
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
         public bool receivedHeartbeatResponse = false;
@@ -184,6 +186,7 @@ namespace EMS
             BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
             BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
 			HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
+            UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
         }
 
 
@@ -239,6 +242,7 @@ namespace EMS
                 ListenTopic(AIOTTableTopic + "request");
                 ListenTopic(BalaTableTopic + "request");
 				ListenTopic(HeartbeatTopic);
+                ListenTopic(UploadTopic + "request");
                 FirstRun = true;
                 SendAgain = true;
             }
@@ -368,56 +372,59 @@ namespace EMS
             string ErrorstrResponse = "{ \"jsonrpc\":\"2.0\", \"result\":false, \"id\":\"";
             string topic = e.Topic.ToString();            
             string message = System.Text.Encoding.Default.GetString(e.Message);
+            
+            JObject jsonObject = JObject.Parse(message);
             string strID = "";
+            if (jsonObject["id"] != null)
+            {
+                strID = jsonObject["id"].ToString();
+            }       
             //同时订阅两个或者以上主题时，分类收集收到的信息
 
             if (topic == TacticTopic + "request")
             {
-                strID = GetServerTactics(message, ref Result);
-                if (Result && strID!="")
+                Result = GetServerTactics(message);
+                lock (_lockMqtt)
                 {
-                    lock (_lockMqtt)
+                    if (Result)
                     {
-                        if (mqttClient != null)
-                        {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                     }
-                }
-                else
-                {
-                    lock (_lockMqtt)
+                    else
                     {
-                        if (mqttClient != null)
-                        {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                     }
-                }
+                }       
             }
             else if (topic == PriceTopic + "request")
             {
-                strID = GetServerEPrices(message);
-                if (strID != "")
+                Result = GetServerEPrices(message);
+                lock (_lockMqtt)
                 {
-                    lock (_lockMqtt)
+                    if (Result)
                     {
-                        if (mqttClient != null)
-                        {
-                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                    }                   
-                    frmMain.TacticsList.LoadJFPGFromSQL();
-                }
+                        mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+
+                        frmMain.TacticsList.LoadJFPGFromSQL();
+                    }
+                    else
+                    {
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                    }
+                }                                    
             }
             else if (topic == EMSLimitTopic + "request")
             {
-                strID = GetServerEMSLimit(message);
+                Result = GetServerEMSLimit(message);
                 lock (_lockMqtt)
                 {
                     if (mqttClient != null)
                     {
-                        mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                     }
                 }
             }
@@ -428,7 +435,7 @@ namespace EMS
                 {
                     if (mqttClient != null)
                     {
-                        mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                     }
                 }
             }
@@ -446,6 +453,23 @@ namespace EMS
             else if (topic == HeartbeatTopic)
             {
                 GetHeartbeat(message);
+            }
+            else if (topic == UploadTopic  + "request")
+            {
+                Result = DataRetransmission(message);
+                lock (_lockMqtt)
+                {
+                    if (Result)
+                    {
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                    }
+                    else
+                    {
+                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                    }
+                }
             }
             /*            else if (topic == BalaTacticTopic)
                         {
@@ -578,6 +602,33 @@ namespace EMS
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="savePath"></param>
+        /// 
+        public static void ConvertToJson(string json, string aDirection, string aSavePath)
+        {
+            try
+            {
+                if (!Directory.Exists(aDirection))
+                    Directory.CreateDirectory(aDirection);
+
+                lock (_lockTXT)
+                {
+                    JObject jsonObject = JObject.Parse(json);
+                    string strID = jsonObject["time"].ToString();
+
+                    using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
+                    {
+                        sw.WriteLine(json);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // 向用户显示出错消息
+                Console.WriteLine("The file could not be read:" + e.Message);
+            }
+        }
+
+
         public static void ConvertToJson(object aObj, string aDirection, string aSavePath)
         {
             try
@@ -602,26 +653,6 @@ namespace EMS
                 // 向用户显示出错消息
                 Console.WriteLine("The file could not be read:" + e.Message);
             }
-
-            //string str = JsonConvert.SerializeObject(obj);
-
-            ////json格式化
-            //JsonSerializer jsonSerializer = new JsonSerializer();
-            //TextReader textReader = new StringReader(str);
-            //JsonTextReader jsonTextReader = new JsonTextReader(textReader);
-            //object _object = jsonSerializer.Deserialize(jsonTextReader);
-            //if (_object != null)
-            //{
-            //    StringWriter stringWriter = new StringWriter();
-            //    JsonTextWriter jsonWriter = new JsonTextWriter(stringWriter)
-            //    {
-            //        Formatting = Formatting.Indented,
-            //        Indentation = 4,
-            //        IndentChar = ' '
-            //    };
-            //    jsonSerializer.Serialize(jsonWriter, _object);
-            //    File.WriteAllText(savePath, stringWriter.ToString());
-            //}
         }
 
 
@@ -712,9 +743,15 @@ namespace EMS
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + astrDate + ".json");
         }
 
+        //模拟未连接任何设备的EMS制造数据
         public void SaveProfit2CloudTest(string strTime)
         {
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + strTime + ".json");
+        }
+
+        public void UploadProfit2Cloud(string json, string astrDate)
+        {
+            ConvertToJson(json, strUpPath, "\\0pem" + astrDate + ".json");
         }
 
         public void SaveFault2Cloud(string astrDate)
@@ -728,6 +765,61 @@ namespace EMS
         //接收到的文件
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public bool DataRetransmission(string astrData)
+        {
+            bool result = false;
+            if (astrData == "")
+                return false;
+            JObject jsonObject = JObject.Parse(astrData);
+            string strID = "";
+            try
+            {
+                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
+                string strTopic = jsonObject["method"].ToString();
+                if (strTopic != "aiot/uploadData")
+                    return false;
+                //9.11
+                var param = jsonObject["params"];
+                if (param["topic"].ToString() == "pem")
+                {
+                    if (param["iot_code"] != null)
+                    {
+                        if (param["iot_code"].ToString() != frmMain.Selffrm.AllEquipment.iot_code)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            string start = param["start"].ToString();
+                            string end = param["end"].ToString();
+                            //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                            string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
+                            DBConnection.UploadCloud(sqlQuery);
+                            result = true;
+                        }
+                    }
+                    else
+                    {
+                        string start = param["start"].ToString();
+                        string end = param["end"].ToString();
+                        //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                        string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
+                        DBConnection.UploadCloud(sqlQuery);
+                        result = true;
+                    }
+                }
+                else
+                {
+                    result = false;
+                }
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+            return result;
+        }
+
         public void GetHeartbeat(string astrData, bool aIsFileData = false)
         {
             JObject jsonObject = null;
@@ -848,11 +940,12 @@ namespace EMS
         ///     "value":100 
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string GetServerTactics(string astrData, ref bool result)
+        public bool GetServerTactics(string astrData)
         {
+            bool result = false;
             if (astrData == "")
             {
-                return "";
+                return false;
             }
             JObject jsonObject = null;
             jsonObject = JObject.Parse(astrData);
@@ -863,14 +956,13 @@ namespace EMS
                 string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/strategy")
-                    return "";
+                    return false;
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
                 if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
                 {
-                    result = true;
-                    return strID;
+                    return false;
                 }
 
                 //清理旧数据
@@ -900,30 +992,27 @@ namespace EMS
                     //从云获取策略插入数据库中
                     strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
 
-                    if (DBConnection.ExecSQL(strData))
+                    if (!DBConnection.ExecSQL(strData))
                     {
-                        result = true;
+                        return false;
                     }
-                    else 
-                    {
-                        result = false;
-                    }
-
                 }
-                if (result)
+
+                //if (frmMain.TacticsList.LoadFromMySQL())
+                if (frmMain.TacticsList.LoadFromMySQL())
                 {
+                    frmMain.ShowShedule2Char(false);
+                    frmMain.TacticsList.ActiveIndex = -1;
+                    result  = true;
+                }
+                else
+                { 
                     result = false;
-                    if (frmMain.TacticsList.LoadFromMySQL())
-                    {
-                        frmMain.ShowShedule2Char(false);
-                        frmMain.TacticsList.ActiveIndex = -1;
-                        result = true;
-                    }
                 }
             }
             catch
             { }
-            return strID;
+            return result;
         }
 
         /// <summary>
@@ -934,15 +1023,16 @@ namespace EMS
         ///     "range":3 //  尖：1峰：2平：3谷：4
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string  GetServerEPrices(string astrData, bool aIsFileData = false)
+        public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
         {
+            bool result = false;
             JObject jsonObject = null;
             string strDataFile = "";
             if (aIsFileData)
             {
                 strDataFile = strDownPath + "\\" + astrData;
                 if (!File.Exists(strDataFile))
-                    return "";
+                    return false;
                 StreamReader file = File.OpenText(strDataFile);
                 JsonTextReader reader = new JsonTextReader(file);
                 jsonObject = (JObject)JToken.ReadFrom(reader);
@@ -950,20 +1040,18 @@ namespace EMS
             else
             {
                 if (astrData == "")
-                    return "";
+                    return false;
                 jsonObject = JObject.Parse(astrData); 
             }
-            string strID = "";
+
             try
             {
-                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string date = jsonObject["params"]["date"].ToString();
                 int iPriceCount = jsonObject["params"]["price"].Count();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "meter/price")
-                    return "";
+                    return false;
 
-                 
                 //清理旧数据
                 DBConnection.ExecSQL("delete FROM electrovalence");
                 string strData = "";
@@ -978,18 +1066,24 @@ namespace EMS
                         + isection.ToString() + "','0','"
                         + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
-                    DBConnection.ExecSQL(strData);
+                    if(DBConnection.ExecSQL(strData))
+                    {
+                        result = true;
+                    }
                 }
                 //更新策略
-                frmSet.SaveSet2File();
-                frmMain.TacticsList.LoadJFPGFromSQL();
-                if (aIsFileData)
-                    File.Delete(strDataFile);
+                if (result)
+                {
+                    frmSet.SaveSet2File();
+                    frmMain.TacticsList.LoadJFPGFromSQL();
+                    if (aIsFileData)
+                        File.Delete(strDataFile);
+                }
             }
             catch
             { }
             //输出返回数据
-            return strID;
+            return result;
         }
 
         
@@ -1041,19 +1135,19 @@ namespace EMS
         }
 
         //设置窗口的几个限制值
-        public string GetServerEMSLimit(string astrData)
+        public bool GetServerEMSLimit(string astrData)
         {
+            bool bResult = false;
             if (astrData == "")
-                return "";
+                return false;
+
             JObject jsonObject = JObject.Parse(astrData);
-            string strID = "";
             try
             {
-                strID = jsonObject["id"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/limit")
                 {
-                    return "";
+                    return false;
                 }
                 else
                 {
@@ -1076,7 +1170,20 @@ namespace EMS
                         {
                             frmSet.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
                         }
-                        frmSet.SetToGlobalSet();
+
+
+                        if (frmSet.SetToGlobalSet())
+                        {
+                            bResult = true;
+                        }
+                        else
+                        {
+                            bResult = false;
+                        }
+                    }
+                    else
+                    {
+                        bResult = false;
                     }
                 }
             }
@@ -1084,40 +1191,8 @@ namespace EMS
             {
                 // Handle exceptions if needed
             }
-            // Return the ID
-            return strID;
+            return bResult;
         }
-
-        /*        public string GetServerEMSLimit(string astrData)
-                {
-                    if (astrData == "")
-                        return "";
-                    JObject jsonObject = JObject.Parse(astrData);
-                    string strID = "";
-                    try
-                    {
-                        strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
-                       //string date = jsonObject["params"]["date"].ToString();
-                        string strTopic = jsonObject["method"].ToString();
-                        if (strTopic != "ems/limit")
-                        {
-                            return "";
-                        }
-                        else
-                        {
-                            frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
-                            frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
-                            frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
-                            frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
-                            //frmSet.SaveSet2File();
-                            frmSet.SetToGlobalSet();
-                        }
-                    }
-                    catch 
-                    { }
-                    //输出返回数据
-                    return strID; 
-                }*/
 
         static public byte[] Back3Data(int aAddr, short iLen)
         {

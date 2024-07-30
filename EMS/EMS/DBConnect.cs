@@ -8,6 +8,10 @@ using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace EMS
 {
@@ -167,6 +171,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
 
@@ -214,6 +222,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
                     MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX"; 
                                                                                     //使用 ExecuteReader 方法创建 SqlDataReader 对象 
@@ -253,6 +265,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);
@@ -353,6 +369,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";  
@@ -415,6 +435,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);
@@ -490,6 +514,10 @@ namespace EMS
                 if (_connectionPool != null)
                 {
                     connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
                     connection.Open();
 
                     sqlCmd = new MySqlCommand(astrSQL, connection);// "Select * from XXXXXXX";
@@ -779,6 +807,216 @@ namespace EMS
                  + aMemo + "')");*/
         }
 
+        static public bool UploadCloud(string sql)
+        {
+            ChecMysql80();
+            bool bResult = false;
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
+            MySqlDataReader rd = null;
+            try
+            {
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(sql, connection);
+                    rd = sqlCmd.ExecuteReader();
+
+                    if (rd != null && rd.HasRows)
+                    {
+                        var rows = new System.Collections.Generic.List<Dictionary<string, object>>();
+                        while (rd.Read())
+                        {
+                            var row = new System.Collections.Generic.Dictionary<string, object>();
+                            for (int i = 0; i < rd.FieldCount; i++)
+                            {
+                                row[rd.GetName(i)] = rd.GetValue(i);
+                            }
+                            rows.Add(row);
+                        }
+
+                        if (rows.Count > 0)
+                        {
+                            SaveJsonToFile(JsonConvert.SerializeObject(rows, Formatting.Indented));
+                            bResult = true;
+                        }
+                    }
+                }
+                else
+                {
+                    bResult = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (!rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (sqlCmd != null)
+                {
+                    sqlCmd.Dispose();
+                }
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
+                }
+            }
+            return bResult;
+        }
+
+
+/*        static public bool UploadCloud(string sql)
+        {
+            ChecMysql80();
+            bool bResult = false;
+            MySqlConnection connection = null;
+            MySqlCommand sqlCmd = null;
+            MySqlDataReader rd = null;
+            try
+            {
+                if (_connectionPool != null)
+                {
+                    connection = _connectionPool.GetConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("Failed to obtain a database connection from the pool.");
+                    }
+                    connection.Open();
+
+                    sqlCmd = new MySqlCommand(sql, connection);
+                    rd = sqlCmd.ExecuteReader();
+
+                    var row = new System.Collections.Generic.Dictionary<string, object>();
+                    for (int i = 0; i < rd.FieldCount; i++)
+                    {
+                        row[rd.GetName(i)] = rd.GetValue(i);
+                    }
+                    SaveJsonToFile(JsonConvert.SerializeObject(row, Formatting.Indented));
+                    bResult = true;
+                }
+                else
+                {
+                    bResult = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+            finally
+            {
+                if (rd != null)
+                {
+                    if (rd.IsClosed)
+                        rd.Close();
+                    rd.Dispose();
+                }
+
+                if (sqlCmd != null)
+                {
+                    sqlCmd.Dispose();
+                }
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    _connectionPool.ReturnConnection(connection);
+                }
+            }
+            return bResult;
+
+        }*/
+
+        public static void SaveJsonToFile(string jsonResult)
+        {
+            if (!string.IsNullOrEmpty(jsonResult))
+            {
+                var jsonArray = JArray.Parse(jsonResult);
+                foreach (JObject jsonObject in jsonArray)
+                {
+                    var output = new
+                    {
+                         time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
+                         iot_code = frmSet.SysID,
+                         DaliyAuxiliaryKWH = new string[]
+                         {
+                            FormatValue(jsonObject["auxkwhAll"]),
+                            FormatValue(jsonObject["auxkwh1"]),
+                            FormatValue(jsonObject["auxkwh2"]),
+                            FormatValue(jsonObject["auxkwh3"]),
+                            FormatValue(jsonObject["auxkwh4"])
+                         },
+                         DaliyE2PKWH = new string[]
+                         {
+                            FormatValue(jsonObject["inPower"]),
+                            FormatValue(jsonObject["in1kwh"]),
+                            FormatValue(jsonObject["in2kwh"]),
+                            FormatValue(jsonObject["in3kwh"]),
+                            FormatValue(jsonObject["in4kwh"])
+                         },
+                         DaliyE2OKWH = new string[]
+                         {
+                            FormatValue(jsonObject["outPower"]),
+                            FormatValue(jsonObject["out1kwh"]),
+                            FormatValue(jsonObject["out2kwh"]),
+                            FormatValue(jsonObject["out3kwh"]),
+                            FormatValue(jsonObject["out4kwh"])
+                         },
+                         DaliyPrice = new string[]
+                         {
+                            "0",
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                         },
+                         DaliyProfit = FormatValue(jsonObject["profit"])
+                    };
+                    string outputJson = JsonConvert.SerializeObject(output, Formatting.Indented);
+                    string UploadID = Guid.NewGuid().ToString();
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.UploadProfit2Cloud(outputJson, UploadID);
+                }
+            }
+            else
+            {
+                Console.WriteLine("No data to write.");
+            }
+        }
+
+        private static long ConvertToUnixTimestamp(DateTime date)
+        {
+            DateTimeOffset dateTimeOffset = new DateTimeOffset(date);
+            return dateTimeOffset.ToUnixTimeMilliseconds();
+        }
+
+        private static string FormatValue(JToken value)
+        {
+            return value.Value<double>().ToString("0.000");
+        }
 
     }
 }
