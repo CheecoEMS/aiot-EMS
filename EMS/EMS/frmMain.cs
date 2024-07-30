@@ -672,6 +672,11 @@ namespace EMS
             {
                 frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
             }
+            else
+            {
+                log.Error("Heartbeat_TimerCallback");
+                frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
+            }
         }
 
         static void InitializeCXFN_Timer()

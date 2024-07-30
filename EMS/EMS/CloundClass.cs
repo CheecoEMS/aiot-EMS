@@ -69,6 +69,7 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("CloudClass");
 
         private static readonly object _lockTXT = new object();
+        private static readonly object _lockPublishTimer = new object();
 
         public CloudClass()
         {
@@ -162,7 +163,10 @@ namespace EMS
         private void Publish_TimerCallback(Object state)
         {
             //上传数据
-            frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+            lock (_lockPublishTimer)
+            {
+                frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+            }
         }
 
 
@@ -217,7 +221,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-
+                log.Error("CreateClient fail: " + ex.Message);
             }
             return null;
         }
@@ -236,6 +240,7 @@ namespace EMS
                 ListenTopic(BalaTableTopic + "request");
 				ListenTopic(HeartbeatTopic);
                 FirstRun = true;
+                SendAgain = true;
             }
             catch {
                // mqttClient.IsConnected = false;
@@ -247,25 +252,30 @@ namespace EMS
         {
             try
             {
-                //停止定时器
-                if (Publish_Timer != null)
+                //保证定时器已经完成publish动作，释放锁_lockMqtt
+                lock (_lockPublishTimer)
                 {
-                    Publish_Timer.Change(Timeout.Infinite, Timeout.Infinite);
-                    Publish_Timer.Dispose();
-                    Publish_Timer = null;
+                    log.Error("mqttReconnect");
+                    //停止定时器
+                    if (Publish_Timer != null)
+                    {
+                        Publish_Timer.Change(Timeout.Infinite, Timeout.Infinite);
+                        Publish_Timer.Dispose();
+                        Publish_Timer = null;
+                    }
+
+                    CreateClient();
+                    ListenTopic(PriceTopic + "request");
+                    ListenTopic(TacticTopic + "request");
+                    ListenTopic(EMSLimitTopic + "request");
+                    ListenTopic(AIOTTableTopic + "request");
+                    ListenTopic(BalaTableTopic + "request");
+                    ListenTopic(HeartbeatTopic);
+
+                    // 重新启动定时器
+                    InitializePublish_Timer();
+                    SendAgain = true;
                 }
-
-                CreateClient();
-                ListenTopic(PriceTopic + "request");
-                ListenTopic(TacticTopic + "request");
-                ListenTopic(EMSLimitTopic + "request");
-                ListenTopic(AIOTTableTopic + "request");
-                ListenTopic(BalaTableTopic + "request");
-                ListenTopic(HeartbeatTopic);
-
-                // 重新启动定时器
-                InitializePublish_Timer();
-                SendAgain = true;
             }
             catch (Exception ex)
             {
@@ -303,8 +313,12 @@ namespace EMS
                     SendAgain = false;
                     HeartbeatID = Guid.NewGuid().ToString();
                     string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
-                    mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
-                        MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+                    
+                    lock (_lockMqtt)
+                    {
+                        mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
+                            MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+                    }
                 }
                 else
                 {
@@ -321,7 +335,10 @@ namespace EMS
         {
             if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
             {
-                mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content),MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
+                lock (_lockMqtt)
+                {
+                    mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
+                }
             }
         }
 
