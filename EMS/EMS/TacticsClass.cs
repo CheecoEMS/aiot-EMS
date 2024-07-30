@@ -136,7 +136,7 @@ namespace EMS
                      + " from tactics  order by startTime", ref ctTemp);
                 lock (TacticsList)
                 {
-                    if (rd.HasRows)
+                    if (rd != null && rd.HasRows)
                     {
                         while (TacticsList.Count > 0)
                         {

@@ -6695,13 +6695,13 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.AutoControlEMS();
                         }
                     }
-/*                    else if (frmSet.ConnectStatus == "tcp")
+                    else if (frmSet.ConnectStatus == "tcp")
                     {
                         if (frmSet.SysCount > 1)
                         {
                             frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
                         }
-                    }*/
+                    }
 
                 }
                 else
@@ -7182,7 +7182,7 @@ namespace EMS
 
 
                 //获取主从整体pcs功率
-                if (frmSet.SysCount > 1)
+                if (frmSet.SysCount > 1 && frmSet.IsMaster)
                 {
                     if (frmSet.ConnectStatus == "tcp")
                     {
@@ -9186,8 +9186,16 @@ namespace EMS
                 }
                 else
                 {
-                    Elemeter2.GetDataFromEqipment();
-                    Elemeter3.GetDataFromEqipment();
+                    if (Elemeter2 != null)
+                    {
+                        Elemeter2.GetDataFromEqipment();
+                    }
+
+                    if (Elemeter3 != null)
+                    {
+                        Elemeter3.GetDataFromEqipment();
+                    }
+
                     WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
                     return true;
                 }

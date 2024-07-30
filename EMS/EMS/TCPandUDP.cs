@@ -26,6 +26,7 @@ namespace Modbus
     public class SocketWrapper
     {
         private volatile Socket socket;
+        private static ILog log = LogManager.GetLogger("SocketWrapper");
 
         public SocketWrapper(Socket socket)
         {
@@ -48,11 +49,11 @@ namespace Modbus
             }
             catch (SocketException ex)
             {
-
+                log.Error("DestorySocket: " + ex.Message);
             }
             catch (Exception ex)
             {
-
+                log.Error("DestorySocket: " + ex.Message);
             }
         }
 
@@ -580,7 +581,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest502);
             MonitorThread.IsBackground = true;
-            ClientRecThread.Priority = ThreadPriority.Normal;
+            MonitorThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 
@@ -594,7 +595,7 @@ namespace Modbus
             //实例化等待连接的线程
             MonitorThread = new Thread(WaitConnectRequest104);
             MonitorThread.IsBackground = true;
-            ClientRecThread.Priority = ThreadPriority.Normal;
+            MonitorThread.Priority = ThreadPriority.Normal;
             MonitorThread.Start();
         }
 

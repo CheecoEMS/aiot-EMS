@@ -585,29 +585,7 @@ namespace EMS
 
 
                 //网络控制或者联机控制
-                if (!frmSet.IsMaster)
-                {
-                    frmMain.Selffrm.ems.ID = frmSet.i485Addr;
-                    frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
-                    frmMain.Selffrm.ems.m485 = new modbus485();
-                    frmMain.Selffrm.ems.m485.OpenEMS(frmSet.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                }
-                else
-                {
-                    //从机的列表
-                    for (int i = 0; i < frmSet.SysCount-1; i++)//主机调控
-                    {
-                        EMSEquipment oneEMSEquipment = new EMSEquipment();
-                        oneEMSEquipment.LoadCommandFromFile();
-                        oneEMSEquipment.ID = i + 2;
-                        oneEMSEquipment.Parent = Selffrm.AllEquipment;
-                        oneEMSEquipment.m485 = new modbus485();
-                        oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
-                        oneEMSEquipment.m485.Open(frmSet.DebugComName, 38400,
-                          8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                        frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
-                    }
-                }
+
                 //连接硬件：4G通讯模块
                 frmMain.Selffrm.Model4G.m485 = new modbus485();
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
@@ -631,6 +609,30 @@ namespace EMS
                 {
                     frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.MasterIp, 502);
                     //frmMain.Selffrm.ModbusTcpClient.StartMonitor();
+                }
+
+                if (!frmSet.IsMaster && frmSet.ConnectStatus == "485")
+                {
+                    frmMain.Selffrm.ems.ID = frmSet.i485Addr;
+                    frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
+                    frmMain.Selffrm.ems.m485 = new modbus485();
+                    frmMain.Selffrm.ems.m485.OpenEMS(frmSet.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+                }
+                else if(frmSet.IsMaster && frmSet.ConnectStatus == "485")
+                {
+                    //从机的列表
+                    for (int i = 0; i < frmSet.SysCount-1; i++)//主机调控
+                    {
+                        EMSEquipment oneEMSEquipment = new EMSEquipment();
+                        oneEMSEquipment.LoadCommandFromFile();
+                        oneEMSEquipment.ID = i + 2;
+                        oneEMSEquipment.Parent = Selffrm.AllEquipment;
+                        oneEMSEquipment.m485 = new modbus485();
+                        oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
+                        oneEMSEquipment.m485.Open(frmSet.DebugComName, 38400,
+                          8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+                        frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
+                    }
                 }
 
                 //开启定时器
