@@ -8356,7 +8356,7 @@ namespace EMS
                                             frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
                                         }
                                     }
-                                    NetControl = false;                                
+                                    NetControl = false;
                                 }
                                 else
                                 {

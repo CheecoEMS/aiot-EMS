@@ -99,8 +99,6 @@ namespace EMS
                 //SysIO.SetGPIOState(15, 1);//Power on LED
                 //Thread.Sleep(1000);
                 //SysIO.SetGPIOState(15, 0);//Power on LED
-/*                ulong LpId = SetCpuID(2);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 
                 Application.Run(frmMain.Selffrm);
                 //SysIO.SetGPIOState(15, 1);//Power on LED

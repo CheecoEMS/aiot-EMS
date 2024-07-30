@@ -136,7 +136,7 @@ namespace EMS
                      + " from tactics  order by startTime", ref ctTemp);
                 lock (TacticsList)
                 {
-                    if (rd.HasRows)
+                    if (rd != null && rd.HasRows)
                     {
                         while (TacticsList.Count > 0)
                         {
@@ -399,11 +399,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(CheckTactics);
                 ClientRecThread.IsBackground = true;
-               ulong LpId = SetCpuID(3);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                //8.4
                 ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Start();
             }
             catch
             {

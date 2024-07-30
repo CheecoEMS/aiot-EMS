@@ -6766,9 +6766,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(Read_Serial);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7000,9 +7004,12 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(Systime_Tick);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Lowest;
+                ulong LpId = SetCpuID(2);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Lowest;
             }
             catch (Exception ex)
             {
@@ -7055,9 +7062,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMSTCP);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7093,9 +7104,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ControlEMS);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7155,9 +7170,11 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadPointGrid);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7182,14 +7199,14 @@ namespace EMS
 
 
                 //获取主从整体pcs功率
-                if (frmSet.SysCount > 1 && frmSet.IsMaster)
+                if (frmSet.SysCount > 1)
                 {
                     if (frmSet.ConnectStatus == "tcp")
                     {
                         ReadAllEmsTCP();
                     }
                     else if (frmSet.ConnectStatus == "485")
-                    {
+                    { 
                         ReadAllEmsRTU();
                     }
 
@@ -7211,9 +7228,11 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadPointPower);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7289,9 +7308,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadDataE1);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Normal ;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -7310,9 +7333,13 @@ namespace EMS
                     //实例化等待连接的线程
                     Thread ClientRecThread = new Thread(ReadCom7Data);
                     ClientRecThread.IsBackground = true;
-                    ClientRecThread.Priority = ThreadPriority.Lowest;
+                    ulong LpId = SetCpuID(3);
+                    SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
                     ClientRecThread.Start();
                     ClientRecThread.Name = "";
+                    //8.4
+                    ClientRecThread.Priority = ThreadPriority.Lowest;
+                    // ClientRecThread.Join();
                 }
                 
             }
@@ -7355,10 +7382,12 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCom1Data);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
+/*                ulong LpId = SetCpuID(1);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                //8.4            
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
                 // ClientRecThread.Join();
             }
             catch (Exception ex)
@@ -7697,9 +7726,9 @@ namespace EMS
                 {
                     try
                     {
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        if (client != null)
+                        if (client != null && client.Connected)
                         {
                             if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempKVA))
                             {                     
@@ -7755,7 +7784,7 @@ namespace EMS
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         //byte[] buffer1 = new byte[1024];
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
                         /*                        itemp = Array.IndexOf(wTpyes, awType);
                                                 if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
@@ -7805,7 +7834,7 @@ namespace EMS
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
 
                         if (socketLock != null && client != null)
                         {
@@ -7848,7 +7877,7 @@ namespace EMS
                     if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        Socket client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6000, 0) == -1)
                         {
@@ -8232,141 +8261,49 @@ namespace EMS
                 try
                 {
                     //如果是从机
-                    //如果是从机
                     if (!frmSet.IsMaster)
                     {
-                        //获取pcs功率
-                        double PCSPower = 0;
-                        for (int i = 0; i < PCSList.Count; i++)
-                        {
-                            PCSList[i].GetallUkva();
-                            PCSPower += PCSList[i].allUkva;
-                        }
-                        PCSKVA = Math.Round(PCSPower, 2);
-
                         //判断是否超时控制，如果超时就停机等待
-                        if (frmSet.ConnectStatus == "tcp")
+                        if (NetControl)
                         {
-                            if (frmMain.Selffrm.ModbusTcpClient.Connected)
+                            //超时
+                            if (NetCtlTime.AddMinutes(5)<DateTime.Now)//最近一次通讯时间和现在时间间隔超过10min
                             {
-                                //连接情况
-                                if (NetConnect)
+                                //关闭PCS
+                                frmSet.PCSMOff();
+
+                                if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
                                 {
-                                    //超时未收到控制
-                                    //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
-                                    if (Clock_Watch.MeasureIntervalInSeconds() > 30)
-                                    {
-                                        //关闭PCS
-                                        frmSet.PCSMOff();
-                                        if (PCSList.Count > 0)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                            {
-                                                log.Error("主从脱钩,关闭pcs");
-                                                PCSList[0].ExcSetPCSPower(false);
-                                            }
-                                        }
-                                        //关闭空调（液冷机）
-                                        if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                            }
-                                        }
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                            }
-                                        }
-                                        NetControl = false;
-                                        NetConnect = false;
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                        //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        //已接收控制指令
-                                        if (NetControl)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                                            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    //10s未接收到主机消息，则判断主从通讯断开
-                                    if (NetCtlTime.AddSeconds(10)<DateTime.Now)
-                                    {
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                    }
-                                }
-                            }
-                            else//客户端发送报文失败，重连
-                            {
-                                log.Debug("重连");
-                                //若刚开启EMS，pcs已经在工作，则必须立即停止
-                                if (PCSList.Count > 0)
-                                {
-                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)//关闭pcs
-                                    {
-                                        log.Error("主从脱钩,关闭pcs");
-                                        PCSList[0].ExcSetPCSPower(false);
-                                        frmSet.PCSMOff();
-                                    }
+                                    log.Error("主从脱钩,关闭pcs");
+                                    PCSList[0].ExcSetPCSPower(false);
                                 }
 
-                                //从机发起重连
-                                frmMain.Selffrm.ModbusTcpClient.ConnectTCP();
-                                continue;
+                                //关闭空调（液冷机）
+                                if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
+                                    }
+                                }
+                                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                                {
+                                    if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                                    }
+                                }
+                                NetControl = false;
+                                DBConnection.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                            }
+                            else
+                            {
+                                ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                             }
                         }
-                        else
+                        else //结束网控
                         {
-                            if (NetControl)
-                            {
-                                //超时
-                                if (NetCtlTime.AddMinutes(5)<DateTime.Now)//最近一次通讯时间和现在时间间隔超过1min
-                                {
-                                    //9.16新增注释语句
-                                    //frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                                    //关闭PCS
-                                    frmSet.PCSMOff();
-                                    if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                    {
-                                        log.Error("主从脱钩,关闭pcs");
-                                        PCSList[0].ExcSetPCSPower(false);
-                                    }
-                                    //关闭空调（液冷机）
-                                    if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                    {
-                                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                        }
-                                    }
-                                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                    {
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                        }
-                                    }
-                                    NetControl = false;                                
-                                }
-                                else
-                                {
-                                    ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
-                                }
-                            }
-                            else //结束网控
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
                     //如果是主机
@@ -8457,9 +8394,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
+/*                ulong LpId = SetCpuID(3);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                // ClientRecThread.Join();
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Normal;
             }
             catch (Exception ex)
             {
@@ -8612,9 +8553,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
+/*                ulong LpId = SetCpuID(2);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Highest;
+                // ClientRecThread.Join();
             }
             catch (Exception ex)
             {
@@ -8691,9 +8636,13 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
+/*                ulong LpId = SetCpuID(0);
+                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));*/
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                // ClientRecThread.Join();
+                //8.4
+                ClientRecThread.Priority = ThreadPriority.Normal;
             }
             catch (Exception ex)
             {
@@ -9186,16 +9135,8 @@ namespace EMS
                 }
                 else
                 {
-                    if (Elemeter2 != null)
-                    {
-                        Elemeter2.GetDataFromEqipment();
-                    }
-
-                    if (Elemeter3 != null)
-                    {
-                        Elemeter3.GetDataFromEqipment();
-                    }
-
+                    Elemeter2.GetDataFromEqipment();
+                    Elemeter3.GetDataFromEqipment();
                     WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
                     return true;
                 }

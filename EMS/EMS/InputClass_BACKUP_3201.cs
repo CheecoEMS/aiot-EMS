@@ -8356,7 +8356,11 @@ namespace EMS
                                             frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
                                         }
                                     }
+<<<<<<< HEAD
                                     NetControl = false;                                
+=======
+                                    NetControl = false;
+>>>>>>> feature/RebuildSocket
                                 }
                                 else
                                 {

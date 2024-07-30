@@ -138,11 +138,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread mqttThread = new Thread(ListenCloud);
                 mqttThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                mqttThread.Start();
-                //8.4
                 mqttThread.Priority = ThreadPriority.Highest;
+                mqttThread.Start();
             }
             catch
             {
