@@ -828,7 +828,7 @@ namespace EMS
                     sqlCmd = new MySqlCommand(sql, connection);
                     rd = sqlCmd.ExecuteReader();
 
-                    if (rd.HasRows)
+                    if (rd != null && rd.HasRows)
                     {
                         var rows = new System.Collections.Generic.List<Dictionary<string, object>>();
                         while (rd.Read())
@@ -955,51 +955,51 @@ namespace EMS
         {
             if (!string.IsNullOrEmpty(jsonResult))
             {
-                /*                string filePath = Path.Combine(directoryPath, "profit_data.json");
-                                File.WriteAllText(filePath, jsonResult);
-                                Console.WriteLine($"Data has been written to {filePath}");*/
-                JObject jsonObject = JObject.Parse(jsonResult);
-                var output = new
+                var jsonArray = JArray.Parse(jsonResult);
+                foreach (JObject jsonObject in jsonArray)
                 {
-                    time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
-                    iot_code = frmSet.SysID,
-                    DaliyAuxiliaryKWH = new string[]
+                    var output = new
                     {
-                        FormatValue(jsonObject["auxkwhAll"]),
-                        FormatValue(jsonObject["auxkwh1"]),
-                        FormatValue(jsonObject["auxkwh2"]),
-                        FormatValue(jsonObject["auxkwh3"]),
-                        FormatValue(jsonObject["auxkwh4"])
-                    },
-                    DaliyE2PKWH = new string[]
-                    {
-                        FormatValue(jsonObject["inPower"]),
-                        FormatValue(jsonObject["in1kwh"]),
-                        FormatValue(jsonObject["in2kwh"]),
-                        FormatValue(jsonObject["in3kwh"]),
-                        FormatValue(jsonObject["in4kwh"])
-                    },
-                    DaliyE2OKWH = new string[]
-                    {
-                        FormatValue(jsonObject["outPower"]),
-                        FormatValue(jsonObject["out1kwh"]),
-                        FormatValue(jsonObject["out2kwh"]),
-                        FormatValue(jsonObject["out3kwh"]),
-                        FormatValue(jsonObject["out4kwh"])
-                    },
-                    DaliyPrice = new string[]
-                    {
-                        "0",
-                        "0",
-                        "0",
-                        "0",
-                        "0"
-                    },
-                    DaliyProfit = FormatValue(jsonObject["profit"])
-                };
-                string outputJson = JsonConvert.SerializeObject(output, Formatting.Indented);
-                string rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                frmMain.Selffrm.AllEquipment.Report2Cloud.UploadProfit2Cloud(outputJson, rDate);
+                         time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
+                         iot_code = frmSet.SysID,
+                         DaliyAuxiliaryKWH = new string[]
+                         {
+                            FormatValue(jsonObject["auxkwhAll"]),
+                            FormatValue(jsonObject["auxkwh1"]),
+                            FormatValue(jsonObject["auxkwh2"]),
+                            FormatValue(jsonObject["auxkwh3"]),
+                            FormatValue(jsonObject["auxkwh4"])
+                         },
+                         DaliyE2PKWH = new string[]
+                         {
+                            FormatValue(jsonObject["inPower"]),
+                            FormatValue(jsonObject["in1kwh"]),
+                            FormatValue(jsonObject["in2kwh"]),
+                            FormatValue(jsonObject["in3kwh"]),
+                            FormatValue(jsonObject["in4kwh"])
+                         },
+                         DaliyE2OKWH = new string[]
+                         {
+                            FormatValue(jsonObject["outPower"]),
+                            FormatValue(jsonObject["out1kwh"]),
+                            FormatValue(jsonObject["out2kwh"]),
+                            FormatValue(jsonObject["out3kwh"]),
+                            FormatValue(jsonObject["out4kwh"])
+                         },
+                         DaliyPrice = new string[]
+                         {
+                            "0",
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                         },
+                         DaliyProfit = FormatValue(jsonObject["profit"])
+                    };
+                    string outputJson = JsonConvert.SerializeObject(output, Formatting.Indented);
+                    string UploadID = Guid.NewGuid().ToString();
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.UploadProfit2Cloud(outputJson, UploadID);
+                }
             }
             else
             {
