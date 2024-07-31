@@ -4196,22 +4196,11 @@ namespace EMS
             string strData = "";
             bool bPrepared = false;
 
-            if (GetSysData(63, ref strTemp))
+            if (GetSysData(35, ref strTemp))
             {
+                double dTemp = 0;
                 bPrepared = true;
-                if (Get3strData(59, ref strTemp, ref strData))
-                    SoftwareVersion = strData;
-                if (Get3strData(60, ref strTemp, ref strData))
-                    SoftwareVersion += strData;
-                if (Get3strData(61, ref strTemp, ref strData))
-                    HardwareVersion = strData;
-                if (Get3strData(62, ref strTemp, ref strData))
-                    HardwareVersion += strData;
-            }
 
-            if (GetSysData(37, ref strTemp))
-            {
-                bPrepared = true;
                 if (Get3strData(0, ref strTemp, ref strData))
                     aV = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(1, ref strTemp, ref strData))
@@ -4240,16 +4229,10 @@ namespace EMS
                     inputA = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(13, ref strTemp, ref strData))
                     inputkva = Math.Round(float.Parse(strData), 1);
-            }
-            if (GetSysData(38, ref strTemp))
-            {
-                bPrepared = true;
-                double dTemp = 0;
-                //1
                 if (Get3strData(14, ref strTemp, ref strData))
-                { 
+                {
                     PCSTemp = Math.Round(float.Parse(strData), 1);
-                    if (PCSTemp > 150) 
+                    if (PCSTemp > 150)
                         PCSTemp = 0;
                     IGBTTemp1 = PCSTemp;
                 }
@@ -4293,16 +4276,10 @@ namespace EMS
                         PCSTemp = dTemp;
                     IGBTTemp6 = PCSTemp;
                 }
-
                 if (Get3strData(20, ref strTemp, ref strData))
-                    InTemp = Math.Round(float.Parse(strData), 1); 
+                    InTemp = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(21, ref strTemp, ref strData))
-                    OutTemp = Math.Round(float.Parse(strData), 1); 
-            }
-            //
-            if (GetSysData(58, ref strTemp))
-            {
-                bPrepared = true;
+                    OutTemp = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(22, ref strTemp, ref strData))
                     aUkva = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(23, ref strTemp, ref strData))
@@ -4311,29 +4288,181 @@ namespace EMS
                     cUkva = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(25, ref strTemp, ref strData))
                     DCInputV = Math.Round(float.Parse(strData), 3);
-            }
-
-            if (GetSysData(39, ref strTemp))
-            {
-                bPrepared = true;
-                //状态
-                //Get3strData(26, ref strTemp, ref strData);
+                if (Get3strData(26, ref strTemp, ref strData))
+                    PcsStatus = Convert.ToUInt16(strTemp);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData); 
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
                     Error[2] = Convert.ToUInt16(strData);
                 if (Get3strData(30, ref strTemp, ref strData))
                     Error[3] = Convert.ToUInt16(strData);
+                if (Get3strData(31, ref strTemp, ref strData))
+                    SoftwareVersion = strData;
+                if (Get3strData(32, ref strTemp, ref strData))
+                    SoftwareVersion += strData;
+                if (Get3strData(33, ref strTemp, ref strData))
+                    HardwareVersion = strData;
+                if (Get3strData(34, ref strTemp, ref strData))
+                    HardwareVersion += strData;
+
             }
 
-            //11.16 : PCS添加设备状态字
-            if (GetSysData(26, ref strTemp))
-            {
-                bPrepared = true;
-                PcsStatus = Convert.ToUInt16(strTemp);
-            }
+            #region 分段读
+            //if (GetSysData(63, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(59, ref strTemp, ref strData))
+            //        SoftwareVersion = strData;
+            //    if (Get3strData(60, ref strTemp, ref strData))
+            //        SoftwareVersion += strData;
+            //    if (Get3strData(61, ref strTemp, ref strData))
+            //        HardwareVersion = strData;
+            //    if (Get3strData(62, ref strTemp, ref strData))
+            //        HardwareVersion += strData;
+            //}
+
+            //if (GetSysData(37, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(0, ref strTemp, ref strData))
+            //        aV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(1, ref strTemp, ref strData))
+            //        bV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(2, ref strTemp, ref strData))
+            //        cV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(3, ref strTemp, ref strData))
+            //        aA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(4, ref strTemp, ref strData))
+            //        bA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(5, ref strTemp, ref strData))
+            //        cA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(6, ref strTemp, ref strData))
+            //        allUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(7, ref strTemp, ref strData))
+            //        allNUkvar = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(8, ref strTemp, ref strData))
+            //        allAkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(9, ref strTemp, ref strData))
+            //        hz = Math.Round(float.Parse(strData), 2);
+            //    if (Get3strData(10, ref strTemp, ref strData))
+            //        allPFactor = Math.Round(float.Parse(strData), 3);
+            //    if (Get3strData(11, ref strTemp, ref strData))
+            //        inputV = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(12, ref strTemp, ref strData))
+            //        inputA = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(13, ref strTemp, ref strData))
+            //        inputkva = Math.Round(float.Parse(strData), 1);
+            //}
+            //if (GetSysData(38, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    double dTemp = 0;
+            //    //1
+            //    if (Get3strData(14, ref strTemp, ref strData))
+            //    { 
+            //        PCSTemp = Math.Round(float.Parse(strData), 1);
+            //        if (PCSTemp > 150) 
+            //            PCSTemp = 0;
+            //        IGBTTemp1 = PCSTemp;
+            //    }
+            //    //2
+            //    if (Get3strData(15, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp2 = PCSTemp;
+            //    }
+            //    //3
+            //    if (Get3strData(16, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp3 = PCSTemp;
+            //    }
+            //    //4
+            //    if (Get3strData(17, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp4 = PCSTemp;
+            //    }
+            //    //5
+            //    if (Get3strData(18, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp5 = PCSTemp;
+            //    }
+            //    //6
+            //    if (Get3strData(19, ref strTemp, ref strData))
+            //    {
+            //        dTemp = Math.Round(float.Parse(strData), 1);
+            //        if ((dTemp > PCSTemp) && (PCSTemp < 150))
+            //            PCSTemp = dTemp;
+            //        IGBTTemp6 = PCSTemp;
+            //    }
+
+            //    if (Get3strData(20, ref strTemp, ref strData))
+            //        InTemp = Math.Round(float.Parse(strData), 1); 
+            //    if (Get3strData(21, ref strTemp, ref strData))
+            //        OutTemp = Math.Round(float.Parse(strData), 1); 
+            //}
+            ////
+            //if (GetSysData(58, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    if (Get3strData(22, ref strTemp, ref strData))
+            //        aUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(23, ref strTemp, ref strData))
+            //        bUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(24, ref strTemp, ref strData))
+            //        cUkva = Math.Round(float.Parse(strData), 1);
+            //    if (Get3strData(25, ref strTemp, ref strData))
+            //        DCInputV = Math.Round(float.Parse(strData), 3);
+            //}
+
+            //if (GetSysData(39, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    //状态
+            //    //Get3strData(26, ref strTemp, ref strData);
+            //    if (Get3strData(27, ref strTemp, ref strData))
+            //        Error[0] = Convert.ToUInt16(strData); 
+            //    if (Get3strData(28, ref strTemp, ref strData))
+            //        Error[1] = Convert.ToUInt16(strData);
+            //    if (Get3strData(29, ref strTemp, ref strData))
+            //        Error[2] = Convert.ToUInt16(strData);
+            //    if (Get3strData(30, ref strTemp, ref strData))
+            //        Error[3] = Convert.ToUInt16(strData);
+            //}
+
+            ////11.16 : PCS添加设备状态字
+            //if (GetSysData(26, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PcsStatus = Convert.ToUInt16(strTemp);
+            //}
+
+            //12.15 PCS添加启动/停机状态
+            //if (GetSysData(64, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PcsRun = Convert.ToDouble(strTemp);
+            //}
+            //if (GetSysData(65, ref strTemp))
+            //{
+            //    bPrepared = true;
+            //    PCSwaType = Convert.ToUInt16(strTemp);
+            //}
+            #endregion
+
+
 
             //12.15 PCS添加启动/停机状态
             if (GetSysData(64, ref strTemp))
