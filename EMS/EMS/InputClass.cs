@@ -8219,7 +8219,512 @@ namespace EMS
             }
             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
         }
+        private void _Anti_reflux(double _PCSKVA, double _PCSScheduleKVA) //实际功率 ，计划功率
+        {
 
+            dValue = 0;
+            //加限流和防逆--------------单机状态
+            //double dGridKW = Math.Abs(GridKVA); //当前电网功率   bug 1.26
+            double dGridKW = GridKVA;
+
+            //9.4   区分自适应需量和恒功率
+            double PowerCap = 0;  //电网功率上限
+
+            //策略模式: frmMain.Selffrm.AllEquipment.PCSTypeActive)
+
+            if (frmMain.Selffrm.AllEquipment.PCSTypeActive == "自适应需量")
+            {
+                DateTime dateTime = DateTime.Now;
+
+                //新策略时段修改充放电状态为放电，若未开发策略修改权限。则恢复策略线程权限，重新读取策略
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
+                {
+                    //计划策略切换放电
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                //强制放电5分钟后
+                if ((frmMain.Selffrm.AllEquipment.GotoSchedule == false) && DateTime.Compare(dateTime, start_Time.AddMinutes(5)) > 0)
+                {
+                    //判断操作为恢复策略还是等待
+                    //若电网平均功率低于需量的上限阈值，则恢复策略
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
+                    {
+                        //重新下发策略
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                        }
+                        lock (frmMain.TacticsList)
+                        {
+                            frmMain.TacticsList.ActiveIndex = -2;
+                        }
+                    }
+                    else
+                    {
+                        //结束放电，静置等待
+                        //客户正在拉升需量，继续等待
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            dRate = 0;
+                            _PCSScheduleKVA = 0;
+                        }
+                    }
+                }// if ((GotoSchedule == false) && DateTime.Compare(dateTime,start_Time.AddMinutes(5)) > 0)
+                if (frmMain.TacticsList.ActiveIndex >= 0 && frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    //"恢复策略：" + "当前电网功率:" + GridKVA_window + " " + "客户最大需量的x倍：" + (Client_PUMdemand_Max*frmSet.PUM)/100
+                    if (wTypeActive == "充电")
+                    {
+                        //当前需量 超过 最大需量的X倍 ：强制放电
+                        if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
+                        {
+                            //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                //"强制放电"
+                                wTypeActive = "放电";
+                                _PCSScheduleKVA = 20;
+                                dRate = 1;
+                                start_Time = DateTime.Now;
+                            }
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = false;
+                            }
+                            FineToCharge = false;
+                        }
+                        else
+                        {
+                            //判断电网功率是否超过需量上限
+                            if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
+                            {
+                                dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
+                                if (dValue > Math.Abs(_PCSKVA))
+                                {
+                                    dRate = 0;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA);
+                                        FineToCharge = true;
+                                    }
+                                    else
+                                    {
+                                        dRate = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(_PCSKVA));
+                                if (dValue >= Math.Abs(_PCSScheduleKVA))
+                                {
+                                    dRate = 1;
+                                    FineToCharge = true;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                        FineToCharge = true;
+                                    }
+                                    else { dRate = 0; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //在非静置状态下放电行为: 强制放电 + 策略放电
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        {
+                            //逆流
+                            dValue = frmSet.MinGridKW - GridKVA;
+                            //限流qiao 
+                            if (dValue >= Math.Abs(_PCSKVA))
+                            {
+                                dRate = 0;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else
+                                {
+                                    dRate = 0;
+                                }
+                            }
+                        }
+                        else//放电功率调整
+                        {
+                            dValue = (GridKVA + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+
+                        }
+                    }
+                }
+
+                /*                log.Debug("E1_PUMdemand_old: " + E1_PUMdemand_old + " " + "E1_PUMdemand_now: " + E1_PUMdemand_now + " " 
+                                        + "E1_PUMdemand_Max: " + E1_PUMdemand_Max + " " + "E2_PUMdemand_Max: " + E2_PUMdemand_Max + " "
+                                        + "E2_PUMdemand_now: " + E2_PUMdemand_now + " " + "PCSScheduleKVA: " + PCSScheduleKVA + " "
+                                        + "dRate: " + dRate + " " + "recoverSchedule: " + recoverSchedule + "PCSKVA: " + PCSKVA + " "
+                                        + "wTypeActive: " + wTypeActive + " " + "start_Time" + start_Time.ToString("yyyy-MM-d H:m:s")+ " "
+                                        + "Client_PUMdemand_Max: " + Client_PUMdemand_Max + "frmSet.PUM: " + frmSet.PUM);*/
+            }
+            else
+            {
+                PowerCap = frmSet.MaxGridKW;
+
+                if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                if ((GridKVA <= frmSet.MinGridKW) && (wTypeActive == "放电"))
+                {
+                    //逆流
+                    dValue = frmSet.MinGridKW - GridKVA;
+                    //限流qiao 
+                    if (dValue >= Math.Abs(_PCSKVA))
+                    {
+                        dRate = 0;
+                    }
+                    else
+                    {
+                        if (_PCSScheduleKVA != 0)
+                        {
+                            dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                        }
+                        else { dRate = 0; }
+                    }
+                }
+                else
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        dValue = (GridKVA_window + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                        if (dValue > 0)
+                        {
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                        }
+                        else
+                        {
+                            if (_PCSScheduleKVA != 0)
+                            {
+                                dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                            }
+                            else { dRate = 0; }
+                        }
+                    }
+                    else
+                    {
+                        dRate = 0;
+                    }
+                }
+
+            }
+            log.Debug("超限防逆最大需量：" + PowerCap + " "
+                + "超限防逆电网功率：" + dGridKW + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS单机实际功率：" + PCSKVA + " "
+                + "超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
+                + "超限防逆PCS功率：" + PCSScheduleKVA * dRate);
+
+
+            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
+
+        }
+        private void _Transfinite(double _PCSKVA, double _PCSScheduleKVA)  //实际功率 ，计划功率 
+        {
+            dValue = 0;
+            //加限流和防逆--------------单机状态
+            //double dGridKW = Math.Abs(GridKVA); //当前电网功率   bug 1.26
+            double dGridKW = GridKVA;
+
+            //9.4   区分自适应需量和恒功率
+            double PowerCap = 0;  //电网功率上限
+
+            //策略模式: frmMain.Selffrm.AllEquipment.PCSTypeActive)
+
+            if (frmMain.Selffrm.AllEquipment.PCSTypeActive == "自适应需量")
+            {
+                DateTime dateTime = DateTime.Now;
+
+                //新策略时段修改充放电状态为放电，若未开发策略修改权限。则恢复策略线程权限，重新读取策略
+                if (frmMain.Selffrm.AllEquipment.PrewTypeActive == "放电" && frmMain.Selffrm.AllEquipment.GotoSchedule == false)
+                {
+                    //计划策略切换放电
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+                //强制放电5分钟后
+                if ((frmMain.Selffrm.AllEquipment.GotoSchedule == false) && DateTime.Compare(dateTime, start_Time.AddMinutes(5)) > 0)
+                {
+                    //判断操作为恢复策略还是等待
+                    //若电网平均功率低于需量的上限阈值，则恢复策略
+                    if (GridKVA_window < (Client_PUMdemand_Max * frmSet.PUM) / 100)
+                    {
+                        //重新下发策略
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                        }
+                        lock (frmMain.TacticsList)
+                        {
+                            frmMain.TacticsList.ActiveIndex = -2;
+                        }
+                    }
+                    else
+                    {
+                        //结束放电，静置等待
+                        //客户正在拉升需量，继续等待
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            dRate = 0;
+                            _PCSScheduleKVA = 0;
+                        }
+                    }
+                }// if ((GotoSchedule == false) && DateTime.Compare(dateTime,start_Time.AddMinutes(5)) > 0)
+                if (frmMain.TacticsList.ActiveIndex >= 0 && frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    //"恢复策略：" + "当前电网功率:" + GridKVA_window + " " + "客户最大需量的x倍：" + (Client_PUMdemand_Max*frmSet.PUM)/100
+                    if (wTypeActive == "充电")
+                    {
+                        //当前需量 超过 最大需量的X倍 ：强制放电
+                        if (GridKVA_window > (Client_PUMdemand_Max * frmSet.PUM) / 100 && FineToCharge == true)
+                        {
+                            //修改成强制放电，设置充放电模式，pcs功率，开始强制放电时间，禁止策略线程更新工作状态（充放电模式，pcs功率，pcs模式）
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                //"强制放电"
+                                wTypeActive = "放电";
+                                _PCSScheduleKVA = 20;
+                                dRate = 1;
+                                start_Time = DateTime.Now;
+                            }
+                            lock (frmMain.Selffrm.AllEquipment)
+                            {
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = false;
+                            }
+                            FineToCharge = false;
+                        }
+                        else
+                        {
+                            //判断电网功率是否超过需量上限
+                            if (GridKVA >= Client_PUMdemand_Max * frmSet.PUM / 100)
+                            {
+                                dValue = GridKVA - Client_PUMdemand_Max * frmSet.PUM / 100;
+                                if (dValue > Math.Abs(_PCSKVA))
+                                {
+                                    dRate = 0;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA);
+                                        FineToCharge = true;
+                                    }
+                                    else
+                                    {
+                                        dRate = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                dValue = (Client_PUMdemand_Max * frmSet.PUM) / 100 - (GridKVA - Math.Abs(_PCSKVA));
+                                if (dValue >= Math.Abs(_PCSScheduleKVA))
+                                {
+                                    dRate = 1;
+                                    FineToCharge = true;
+                                }
+                                else
+                                {
+                                    if (Math.Abs(_PCSScheduleKVA) != 0)
+                                    {
+                                        dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                        FineToCharge = true;
+                                    }
+                                    else { dRate = 0; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //在非静置状态下放电行为: 强制放电 + 策略放电
+                if ((frmMain.TacticsList.ActiveIndex >= 0) || (frmMain.Selffrm.AllEquipment.GotoSchedule == false))
+                {
+                    if (wTypeActive == "放电")
+                    {
+                        if (GridKVA <= frmSet.MinGridKW)//逆流处理
+                        {
+                            //逆流
+                            dValue = frmSet.MinGridKW - GridKVA;
+                            //限流qiao 
+                            if (dValue >= Math.Abs(_PCSKVA))
+                            {
+                                dRate = 0;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else
+                                {
+                                    dRate = 0;
+                                }
+                            }
+                        }
+                        else//放电功率调整
+                        {
+                            dValue = (GridKVA + Math.Abs(_PCSKVA)) - frmSet.MinGridKW;
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+
+                        }
+                    }
+                }
+
+                /*                log.Debug("E1_PUMdemand_old: " + E1_PUMdemand_old + " " + "E1_PUMdemand_now: " + E1_PUMdemand_now + " " 
+                                        + "E1_PUMdemand_Max: " + E1_PUMdemand_Max + " " + "E2_PUMdemand_Max: " + E2_PUMdemand_Max + " "
+                                        + "E2_PUMdemand_now: " + E2_PUMdemand_now + " " + "PCSScheduleKVA: " + PCSScheduleKVA + " "
+                                        + "dRate: " + dRate + " " + "recoverSchedule: " + recoverSchedule + "PCSKVA: " + PCSKVA + " "
+                                        + "wTypeActive: " + wTypeActive + " " + "start_Time" + start_Time.ToString("yyyy-MM-d H:m:s")+ " "
+                                        + "Client_PUMdemand_Max: " + Client_PUMdemand_Max + "frmSet.PUM: " + frmSet.PUM);*/
+            }
+            else
+            {
+                PowerCap = frmSet.MaxGridKW;
+
+                if (!frmMain.Selffrm.AllEquipment.GotoSchedule)
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                    }
+                    lock (frmMain.TacticsList)
+                    {
+                        frmMain.TacticsList.ActiveIndex = -2;
+                    }
+                }
+
+                if ((GridKVA >= PowerCap) && (wTypeActive == "充电"))//表1用于限流和防止超限 ,PCS在不工作时也有0.1，0.2的功率值
+                { //超限
+                    dValue = dGridKW - PowerCap;
+                    //限流qiao 
+                    if (dValue >= Math.Abs(_PCSKVA))
+                    {
+                        dRate = 0;
+                    }
+                    else
+                    {
+                        if (_PCSScheduleKVA != 0)
+                        {
+                            dRate = ((Math.Abs(_PCSKVA) - dValue) / Math.Abs(_PCSScheduleKVA));
+                        }
+                        else { dRate = 0; }
+                    }
+                }
+                else
+                {
+                    if (wTypeActive == "充电")
+                    {
+                        if (dValue > 0)
+                        {
+                            dValue = PowerCap - (GridKVA_window - Math.Abs(_PCSKVA));
+                            if (dValue >= Math.Abs(_PCSScheduleKVA))
+                            {
+                                dRate = 1;
+                            }
+                            else
+                            {
+                                if (_PCSScheduleKVA != 0)
+                                {
+                                    dRate = (dValue / Math.Abs(_PCSScheduleKVA));
+                                }
+                                else { dRate = 0; }
+                            }
+                        }
+                        else
+                        {
+                            dRate = 0;
+                        }
+                    }
+                }
+            }
+            log.Debug("超限防逆最大需量：" + PowerCap + " "
+                + "超限防逆电网功率：" + dGridKW + " "
+                + "超限防逆计算差值: " + dValue + " "
+                + "超限防逆计算修正比: " + dRate + " "
+                + "超限防逆PCS充放电模式：" + wTypeActive + " "
+                + "超限防逆PCS工作状态：" + PCSTypeActive + " "
+                + "超限防逆PCS单机实际功率：" + PCSKVA + " "
+                + "超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
+                + "超限防逆PCS功率：" + PCSScheduleKVA * dRate);
+
+
+            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
+
+        }
 
         //表一队列数据
         private void ReadCom1Data()
@@ -8376,31 +8881,36 @@ namespace EMS
                             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                             continue;
                         }
-
-                        //如果主机是单机  
-                        if (frmSet.SysCount == 1)
-                        {
-                            //2.21
-                            //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                WriteDoPUini();
-                            }
-
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
-
-                            //单机防逆流
-                            SingleReflux();
-                        }
                         else
                         {
-                            //冗余判断
-                            if (EMSList.Count == 0)
+                            //获取电网功率
+                            double tempGridKVA = 0;
+                            //电表1---关口电表，用于防逆流
+                            foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                            {
+                                Elemeter1.GetAllUkva();
+                                tempGridKVA += Elemeter1.AllUkva;
+                            }
+
+                            if (Elemeter1List[0].Prepared)
+                            {
+                                GridKVA = tempGridKVA;
+                                AddValue(GridKVA);
+                                GridKVA_window = GetAverage();
+                            }
+                            else
+                            {
+                                GridKVA = 0;
+                                clearAllUkvaWindow();
+                                GridKVA_window = 0;
+                            }
+                        }
+
+                        //防超限
+                        if (wTypeActive == "充电")
+                        {
+                            //如果主机是单机  
+                            if (frmSet.SysCount == 1)
                             {
                                 //2.21
                                 //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
@@ -8410,34 +8920,107 @@ namespace EMS
                                     Client_PUMdemand_Max = Client_PUMdemand_now;
                                     WriteDoPUini();
                                 }
-                                if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
+                                //AllwaValue = ;
+                                //AllPCSScheduleKVA = PCSScheduleKVA;
+                                _Transfinite(PCSKVA, PCSScheduleKVA);//实际功率 ，计划功率
+
+                                //单机防逆流
+                            }
+                            else
+                            {
+                                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                                //在初始阶段，waValueActive还没被赋值
+
+                                if (frmSet.ConnectStatus == "tcp")
                                 {
-                                    continue;
+                                    //问询从机功率
+                                    ReadAllEmsTCP();
                                 }
-                                SingleReflux();
-                                continue;
-                            }
-                            AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                                else if (frmSet.ConnectStatus == "485")
+                                {
+                                    AllwaValue = PCSKVA * frmSet.SysCount;
+                                }
 
-                            if (Elemeter1Z != null)
-                            {
-                                AllwaValue = Elemeter1Z.AllUkva;
+                                if (Elemeter1Z != null)
+                                {
+                                    AllwaValue = Elemeter1Z.AllUkva;
+                                }
+                                //多机器的主机
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                _Transfinite(AllwaValue, AllPCSScheduleKVA);//实际功率 ，计划功率
+
                             }
 
 
-                            //多机器的主机                          
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now*(EMSList.Count+1);
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                WriteDoPUini();
-                            }
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
-                            MutiReflux();
                         }
+                        //防逆流
+                        if (wTypeActive == "放电")
+                        {
+
+                            //如果主机是单机  
+                            if (frmSet.SysCount == 1)
+                            {
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max;
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                //单机防逆流
+                                _Anti_reflux(PCSKVA, PCSScheduleKVA);
+
+                            }
+                            else
+                            {
+
+                                //AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1) ;
+                                AllPCSScheduleKVA = PCSScheduleKVA * frmSet.SysCount;
+                                //在初始阶段，waValueActive还没被赋值
+                                double PCSPower = 0;
+                                for (int i = 0; i < PCSList.Count; i++)
+                                {
+                                    PCSList[i].GetallUkva();
+                                    PCSPower += PCSList[i].allUkva;
+                                }
+                                PCSKVA = Math.Round(PCSPower, 2);
+                                if (frmSet.ConnectStatus == "tcp")
+                                {
+                                    //问询从机功率
+                                    ReadAllEmsTCP();
+                                }
+                                else if (frmSet.ConnectStatus == "485")
+                                {
+                                    AllwaValue = PCSKVA * frmSet.SysCount;
+                                }
+
+                                if (Elemeter1Z != null)
+                                {
+                                    AllwaValue = Elemeter1Z.AllUkva;
+                                }
+                                //2.21
+                                //Client_PUMdemand_Max = E1_PUMdemand_Max - E2_PUMdemand_Max*(EMSList.Count+1);
+                                Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now * (EMSList.Count + 1);
+                                if (Client_PUMdemand_now > Client_PUMdemand_Max)
+                                {
+                                    Client_PUMdemand_Max = Client_PUMdemand_now;
+                                    WriteDoPUini();
+                                }
+                                //MutiReflux();
+                            }
+                            _Anti_reflux(AllwaValue, AllPCSScheduleKVA);
+
+                        }
+
                     }//else
                 }
                 catch (Exception ex)
