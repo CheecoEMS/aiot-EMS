@@ -56,6 +56,7 @@ namespace EMS
         public bool receivedHeartbeatResponse = false;
         public bool SendAgain = true;
         public string HeartbeatID;
+        public volatile bool ConnectToCloud = false;
         private readonly object _lockMqtt = new object();
 
         private static System.Threading.Timer Publish_Timer;//数据上云定时器
@@ -165,9 +166,12 @@ namespace EMS
         private void Publish_TimerCallback(Object state)
         {
             //上传数据
-            lock (_lockPublishTimer)
+            if (ConnectToCloud)
             {
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                lock (_lockPublishTimer)
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                }
             }
         }
 
@@ -256,6 +260,7 @@ namespace EMS
         {
             try
             {
+                ConnectToCloud = false;
                 //保证定时器已经完成publish动作，释放锁_lockMqtt
                 lock (_lockPublishTimer)
                 {
@@ -289,46 +294,27 @@ namespace EMS
 
         }
 
-
-
-
-        public void CheckConnect()
-        {
-            if (connectflag == 1)
-            {
-                //mqttClient.Disconnect();
-                if (mqttClient != null)
-                {
-                    if (!mqttClient.IsConnected)
-                    {
-                        mqttReconnect();
-                    }
-                }
-
-            }
-        }
-
         public void SendHeartbeat()
         {
-            if (mqttClient != null)
+            if (SendAgain)
             {
-                if (SendAgain)
-                {
-                    SendAgain = false;
-                    HeartbeatID = Guid.NewGuid().ToString();
-                    string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
+                SendAgain = false;
+                HeartbeatID = Guid.NewGuid().ToString();
+                string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
                     
-                    lock (_lockMqtt)
+                lock (_lockMqtt)
+                {
+                    if (mqttClient != null)
                     {
                         mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
                             MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
                     }
                 }
-                else
-                {
-                    mqttReconnect();
-                }
             }
+            else
+            {
+                mqttReconnect();
+            }      
         }
         /// <summary>
         /// 给一个topic写数据
@@ -827,7 +813,10 @@ namespace EMS
             string ID = jsonObject["HeartBeatID"].ToString();
             if (ID == HeartbeatID)
             {
-                //receivedHeartbeatResponse = true;
+                if (!ConnectToCloud)
+                {
+                    ConnectToCloud = true;
+                }
                 SendAgain = true;
             }
         }
