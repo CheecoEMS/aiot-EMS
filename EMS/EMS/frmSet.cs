@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Google.Protobuf.WellKnownTypes;
 using MySqlX.XDevAPI.Common;
+using Mysqlx.Session;
 
 
 namespace EMS
@@ -30,70 +31,70 @@ namespace EMS
         public static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
-        public static string SysName;
-        public static string SysID;
-        public static int SysPower;
-        public static int SysSelfPower;
-        public static string SysAddr;
-        public static string SysInstTime;
-        public static string strMemo;
-        public static int CellCount = 240;
+        //public static string SysName;
+        //public static string SysID;
+        //public static int SysPower;
+        //public static int SysSelfPower;
+        //public static string SysAddr;
+        //public static string SysInstTime;
+        //public static string strMemo;
+        //public static int CellCount = 240;
         //
-        public static int SysInterval;
-        public static int YunInterval;
-        public static string CloundIP;
-        public static int CloundPort;
-        public static string SystemID1;
-        public static bool IsMaster;
-        public static string MasterIp; //tcp  新主从通讯
-        public static string ConnectStatus;//tcp :选择主从通讯方式
-        public static string MasterID;
-        public static int i485Addr;
-        public static int Master485Addr;
-        public static bool AutoRun;      //自动启动程序
-        public static string FreshTime;
+        //public static int SysInterval;
+        //public static int YunInterval;
+        //public static string CloundIP;
+        //public static int CloundPort;
+        //public static string SystemID1;
+        //public static bool IsMaster;
+        //public static string MasterIp; //tcp  新主从通讯
+        //public static string ConnectStatus;//tcp :选择主从通讯方式
+        //public static string MasterID;
+        //public static int i485Addr;
+        //public static int Master485Addr;
+        //public static bool AutoRun;      //自动启动程序
+        //public static string FreshTime;
         public static int FreshInterval;
-        public static string ControlIP;
-        public static int ControlPort;
-        public static bool SysAutoRun;
-        public static int SysMode;  //运行模式 ：0：手工模式 1：预设策略 2：网络控制
-        public static int PCSGridModel; //0并网；1离网
+        //public static string ControlIP;
+        //public static int ControlPort;
+        //public static bool SysAutoRun;
+        //public static int SysMode;  //运行模式 ：0：手工模式 1：预设策略 2：网络控制
+        //public static int PCSGridModel; //0并网；1离网
         public static string PCSType;
         public static int PCSwaValue;
-        public static double BMSwaValue;//7.24 添加BMS 1级告警时PCS降低的功率值
-        public static int MaxSOC;
-        public static int MinSOC;
-        public static double SetHotTemp; 
-        public static double SetCoolTemp;  
-        public static double HotTempReturn; 
-        public static double CoolTempReturn; 
-        public static double SetHumidity;
-        public static double HumiReturn;
-        public static bool TCRunWithSys;
-        public static bool TCAuto;
-        public static int TCMode;
-        public static double TCMaxTemp;
-        public static double TCMinTemp;
-        public static double TCMaxHumi;
-        public static double TCMinHumi;
-        public static string DebugComName;
-        public static int DebugRate;
-        public static int MaxGridKW;   //用于防超限
-        public static int MinGridKW;   //防止逆流
-        public static int SysCount;
-        public static int BMSVerb;  //质检院老版本为0；定制款为1
-        public static bool PCSForceRun;//强制PCS运行，如电压过低的充电和soc=100的放电
+        //public static double BMSwaValue;//7.24 添加BMS 1级告警时PCS降低的功率值
+        //public static int MaxSOC;
+        //public static int MinSOC;
+        //public static double SetHotTemp; 
+        //public static double SetCoolTemp;  
+        //public static double HotTempReturn; 
+        //public static double CoolTempReturn; 
+        //public static double SetHumidity;
+        //public static double HumiReturn;
+        //public static bool TCRunWithSys;
+        //public static bool TCAuto;
+        //public static int TCMode;
+        //public static double TCMaxTemp;
+        //public static double TCMinTemp;
+        //public static double TCMaxHumi;
+        //public static double TCMinHumi;
+        //public static string DebugComName;
+        //public static int DebugRate;
+        //public static int MaxGridKW;   //用于防超限
+        //public static int MinGridKW;   //防止逆流
+        //public static int SysCount;
+        //public static int BMSVerb;  //质检院老版本为0；定制款为1
+        //public static bool PCSForceRun;//强制PCS运行，如电压过低的充电和soc=100的放电
 
         public static string[] TimeZones = new string[4];
         public static int[] TZSetIndex = { 0, 0, 0, 0 };
         public static int[,] Prices = { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } }; //无尖峰平谷的电价
-        public static bool UseYunTactics;
+        //public static bool UseYunTactics;
         //10.21
-        public static bool UseBalaTactics;
-        public static int iPCSfactory = 0;
+        //public static bool UseBalaTactics;
+        //public static int iPCSfactory = 0;
         //10.25
-        public static int WarnGridkva;  //设置告警电网功率，在电网达到这个功率时充电状态下降低功率或者放电
-        public static int PUM;//需量控制比例
+        //public static int WarnGridkva;  //设置告警电网功率，在电网达到这个功率时充电状态下降低功率或者放电
+        //public static int PUM;//需量控制比例
 
 
         private bool bTCDataChanged = false;
@@ -101,41 +102,40 @@ namespace EMS
         public bool bSheduleChanged = false;
 
         //11.17 液冷配置
-        public static int LCModel ;      //液冷模式设置
-        public static int LCTemperSelect ; //控制温度选择
-        public static int LCWaterPump ;   //水泵档位选择
-        public static double LCSetHotTemp;   //（液冷：水温加热点）
-        public static double LCSetCoolTemp;  //（液冷：水温制冷点）
-        public static double LCHotTempReturn; //（液冷：加热回差）
-        public static double LCCoolTempReturn; // (液冷：制冷回差)
+        //public static int LCModel ;      //液冷模式设置
+        //public static int LCTemperSelect ; //控制温度选择
+        //public static int LCWaterPump ;   //水泵档位选择
+        //public static double LCSetHotTemp;   //（液冷：水温加热点）
+        //public static double LCSetCoolTemp;  //（液冷：水温制冷点）
+        //public static double LCHotTempReturn; //（液冷：加热回差）
+        //public static double LCCoolTempReturn; // (液冷：制冷回差)
 
         //11.23 空调补充点位
-        public static double FenMaxTemp ; //风机最高温度
-        public static double FenMinTemp ; //风机最低温度
-        public static int FenMode ;       //外风机工作模式
+        //public static double FenMaxTemp ; //风机最高温度
+        //public static double FenMinTemp ; //风机最低温度
+        //public static int FenMode ;       //外风机工作模式
 
         //12.4 EMS测试模式（不上传告警信息）
-        public static int EMSstatus ;
+        //public static int EMSstatus ;
 
         //1.29
-        public static int RestartCounts;//重启次数
+        //public static int RestartCounts;//重启次数
 
         //05.04 除湿机配置
-        public static double DHSetRunStatus;
-        public static double DHSetTempBoot;      //（除湿：温度启动值）dehumidity
-        public static double DHSetTempStop;      //（除湿：温度停止值）
-        public static double DHSetHumidityBoot;  //（除湿：湿度启动值）
-        public static double DHSetHumidityStop;  //（除湿：湿度停止值）
+        //public static double DHSetRunStatus;
+        //public static double DHSetTempBoot;      //（除湿：温度启动值）dehumidity
+        //public static double DHSetTempStop;      //（除湿：温度停止值）
+        //public static double DHSetHumidityBoot;  //（除湿：湿度启动值）
+        //public static double DHSetHumidityStop;  //（除湿：湿度停止值）
 
 
         //05.10 Gpio 判断
-        public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
+        //public static int GPIO_Select_Mode = 0;//Gpio 选择  0：FA  、  1：LA 2:FB
         // 05.13 添加 UBmsPcsState  0BmsPcsState 
-        public static int UBmsPcsState;
-        public static int OBmsPcsState;
+        //public static int UBmsPcsState;
+        //public static int OBmsPcsState;
 
-        public static int Open104 = 0; //是否开启104， 1：开启 0：关闭
-        //public static int Listen104 = 0;//云下发移交104北向协议控制权限 0：回收权限 1：移交权限
+        //public static int Open104 = 0; //是否开启104， 1：开启 0：关闭
 
 
         private const string strDriveDllName = "SpesTechDriverControl.dll";
@@ -179,8 +179,15 @@ namespace EMS
             {
                 if (oneForm == null)
                     oneForm = new frmSet();
-                LoadSetInf();
-                LoadFromGlobalSet();
+
+
+                //LoadSetInf();
+                //LoadFromGlobalSet();
+                frmSet.LoadCloudLimitsFromMySQL();
+                frmSet.LoadConfigFromMySQL();
+                frmSet.LoadComponentSettingsFromMySQL();
+
+
                 oneForm.ShowINIdata();
                 //DBConnection.SetDBGrid(oneForm.dbgLog);
                 //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
@@ -223,44 +230,48 @@ namespace EMS
         /***CloudLimits***/
         public static bool LoadCloudLimitsFromMySQL()
         {
-            MySqlConnection ctTemp = null;
             bool result = false;
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime ， BmsDerateRatio FROM CloudLimits ;";
-            MySqlDataReader rd = null;
 
             try
             {
-                rd = DBConnection.GetData(astrSQL, ref ctTemp);
-                if (rd != null && rd.HasRows && rd.Read())
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    cloudLimits.MaxGridKW = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
-                    cloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                    cloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
-                    cloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
-                    cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
-                    cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                    cloudLimits.PcsKva = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
-                    cloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0.0 : rd.GetDouble(7);
-                    cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
-                    cloudLimits.PumScale = rd.IsDBNull(9) ? 0.0 : rd.GetDouble(9);
-                    cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 5 : rd.GetInt32(10);
-                    cloudLimits.PumTime = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
-                    cloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                cloudLimits.MaxGridKW = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                cloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                cloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
+                                cloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                                cloudLimits.PcsKva = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                cloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                                cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 5 : rd.GetInt32(10);
+                                cloudLimits.PumTime = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
+                                cloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 50 : rd.GetInt32(12);
 
-                    result = true;
+                                result = true;
+                            }
+                        }
+                    }
                 }
-                else
-                {
-                    result = false;
-                }
-
             }
             catch (MySqlException ex)
             {
+                log.Error(ex.Message);
                 result = false;
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 result = false;
             }
             finally
@@ -272,6 +283,48 @@ namespace EMS
         }
 
 
+        public static bool Set_Cloudlimits()
+        {
+            string astrSQL = "update  cloudlimits  SET "
+                + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
+                + "', MinGridKW ='" + frmSet.cloudLimits.MinGridKW.ToString()
+                + "',MaxSOC ='" + frmSet.cloudLimits.MaxSOC.ToString()
+                + "',MinSOC ='" + frmSet.cloudLimits.MinSOC.ToString()
+                + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
+                + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
+                + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
+                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
+                + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
+                + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
+                + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
+                + "', BmsDerateRatio = '" + frmSet.cloudLimits.BmsDerateRatio.ToString()
+                + "';";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                result = false;
+                log.Error(ex.Message);
+            }
+            return result;
+        }
+
         /**config***/
         public static bool LoadConfigFromMySQL()
         {
@@ -281,58 +334,63 @@ namespace EMS
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
                                 + "EMSstatus, ErrorState2 , GPIOSelect, MasterIp, ConnectStatus FROM config; ";
-            MySqlDataReader rd = null;
-            MySqlConnection ctTemp = null;
             try
             {
-                rd = DBConnection.GetData(astrSQL, ref ctTemp);
 
-                if (rd != null && rd.HasRows && rd.Read())
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    config.SysID = rd.IsDBNull(0) ? "j0001" : rd.GetString(0);
-                    config.Open104 = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                    config.NetTick = rd.IsDBNull(2) ? 10 : rd.GetInt32(2);
-                    config.SysName = rd.IsDBNull(3) ? "浙江驰库" : rd.GetString(3);
-                    config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
-                    config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                    config.SysAddr = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
-                    config.SysInstTime = rd.IsDBNull(7) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : rd.GetString(7);
-                    config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
-                    config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                    config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                    config.IsMaster = rd.IsDBNull(11) ? true : rd.GetBoolean(11);
-                    config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
-                    config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
-                    config.AutoRun = rd.IsDBNull(14) ? false : rd.GetBoolean(14);
-                    config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
-                    config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
-                    config.DebugComName = rd.IsDBNull(17) ? "com7" : rd.GetString(17);
-                    config.DebugRate = rd.IsDBNull(18) ? 38400 : rd.GetInt32(18);
-                    config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
-                    config.UseYunTactics = rd.IsDBNull(20) ? false : rd.GetBoolean(20);
-                    config.UseBalaTactics = rd.IsDBNull(21) ? false : rd.GetBoolean(21);
-                    config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
-                    config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
-                    config.PCSForceRun = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
-                    config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
-                    config.ErrorState2 = rd.IsDBNull(26) ? false : rd.GetBoolean(26);
-                    config.GPIOSelect = rd.IsDBNull(27) ? 0 : rd.GetInt32(27);
-                    config.MasterIp = rd.IsDBNull(28) ? "192.168.186.9" : rd.GetString(28);
-                    config.ConnectStatus = rd.IsDBNull(29) ? "485" : rd.GetString(29);
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                config.SysID = rd.IsDBNull(0) ? "j0001" : rd.GetString(0);
+                                config.Open104 = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                config.NetTick = rd.IsDBNull(2) ? 10 : rd.GetInt32(2);
+                                config.SysName = rd.IsDBNull(3) ? "浙江驰库" : rd.GetString(3);
+                                config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                                config.SysAddr = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
+                                config.SysInstTime = rd.IsDBNull(7) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : rd.GetString(7);
+                                config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
+                                config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                                config.IsMaster = rd.IsDBNull(11) ? true : rd.GetBoolean(11);
+                                config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
+                                config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
+                                config.AutoRun = rd.IsDBNull(14) ? false : rd.GetBoolean(14);
+                                config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
+                                config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
+                                config.DebugComName = rd.IsDBNull(17) ? "com7" : rd.GetString(17);
+                                config.DebugRate = rd.IsDBNull(18) ? 38400 : rd.GetInt32(18);
+                                config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
+                                config.UseYunTactics = rd.IsDBNull(20) ? false : rd.GetBoolean(20);
+                                config.UseBalaTactics = rd.IsDBNull(21) ? false : rd.GetBoolean(21);
+                                config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
+                                config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
+                                config.PCSForceRun = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
+                                config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
+                                config.ErrorState2 = rd.IsDBNull(26) ? false : rd.GetBoolean(26);
+                                config.GPIOSelect = rd.IsDBNull(27) ? 0 : rd.GetInt32(27);
+                                config.MasterIp = rd.IsDBNull(28) ? "192.168.186.9" : rd.GetString(28);
+                                config.ConnectStatus = rd.IsDBNull(29) ? "485" : rd.GetString(29);
 
-                    result = true;
-                }
-                else
-                {
-                    result = false;
+                                result = true;
+                            }
+                        }
+                    }
                 }
             }
             catch (MySqlException ex)
             {
+                log.Error(ex.Message);
                 result = false;
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 result = false;
             }
             finally
@@ -343,36 +401,97 @@ namespace EMS
             return result;
         }
 
-        /*******VariCharge*********/
-        public static bool LoadVariChargeFromMySQL()
+        public static bool Set_Config()
         {
+            string astrSQL = "UPDATE config SET "
+                        + "Open104 = '" + frmSet.config.Open104.ToString()
+                        + "', NetTick = '" + frmSet.config.NetTick.ToString()
+                        + "', SysName = '" + frmSet.config.SysName
+                        + "', SysPower = '" + frmSet.config.SysPower.ToString()
+                        + "', SysSelfPower = '" + frmSet.config.SysSelfPower.ToString()
+                        + "', SysAddr = '" + frmSet.config.SysAddr
+                        + "', SysInstTime = '" + frmSet.config.SysInstTime
+                        + "', CellCount = '" + frmSet.config.CellCount.ToString()
+                        + "', SysInterval = '" + frmSet.config.SysInterval.ToString()
+                        + "', YunInterval = '" + frmSet.config.YunInterval.ToString()
+                        + "', IsMaster = '" + frmSet.config.IsMaster.ToString()
+                        + "', Master485Addr = '" + frmSet.config.Master485Addr.ToString()
+                        + "', i485Addr = '" + frmSet.config.i485Addr.ToString()
+                        + "', AutoRun = '" + frmSet.config.AutoRun.ToString()
+                        + "', SysMode = '" + frmSet.config.SysMode.ToString()
+                        + "', PCSGridModel = '" + frmSet.config.PCSGridModel.ToString()
+                        + "', DebugComName = '" + frmSet.config.DebugComName
+                        + "', DebugRate = '" + frmSet.config.DebugRate.ToString()
+                        + "', SysCount = '" + frmSet.config.SysCount.ToString()
+                        + "', iPCSfactory = '" + frmSet.config.iPCSfactory.ToString()
+                        + "', BMSVerb = '" + frmSet.config.BMSVerb.ToString()
+                        + "', PCSForceRun = '" + frmSet.config.PCSForceRun.ToString()
+                        + "', GPIOSelect = '" + frmSet.config.GPIOSelect.ToString()
+                        + "', MasterIp = '" + frmSet.config.MasterIp
+                        + "', ConnectStatus = '" + frmSet.config.ConnectStatus
+                        + "', ErrorState2 = '" + frmSet.config.ErrorState2.ToString()
+                        + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
+                        + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
+                        + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
+                        + "' WHERE SysID = '" + frmSet.config.SysID + "';";
+
             bool result = false;
-            MySqlConnection ctTemp = null;
-            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge;";
-            MySqlDataReader rd = null;
 
             try
             {
-                rd = DBConnection.GetData(astrSQL, ref ctTemp);
-
-                if (rd != null && rd.HasRows && rd.Read())
+                if (DBConnection.ExecSQL(astrSQL))
                 {
-                    variCharge.UBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(0);
-                    variCharge.OBmsPcsState = rd.IsDBNull(19) ? 1.0 : rd.GetDouble(1);
+
                     result = true;
                 }
                 else
                 {
+                    // 处理执行失败的逻辑
                     result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                log.Error(ex.Message);
+                result = false;
+            }
+            return result;
+        }
+
+        /*******VariCharge*********/
+        public static bool LoadVariChargeFromMySQL()
+        {
+            bool result = false;
+            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge;";
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                variCharge.UBmsPcsState = rd.IsDBNull(19) ? 50 : rd.GetInt32(0);
+                                variCharge.OBmsPcsState = rd.IsDBNull(19) ? 50 : rd.GetInt32(1);
+                                result = true;
+                            }
+                        }
+                    }
                 }
             }
             catch (MySqlException ex)
             {
-
+                log.Error(ex.Message);
                 result = false;
             }
             catch (Exception ex)
             {
+                log.Error(ex.Message);
                 result = false;
             }
             finally
@@ -381,6 +500,38 @@ namespace EMS
             }
 
             return result;
+        }
+
+        public static bool Set_VariCharge()
+        {
+            string astrSQL = "update  VariCharge  SET "
+                + " UBmsPcsState ='" + frmSet.variCharge.UBmsPcsState.ToString()
+                + "', OBmsPcsState ='" + frmSet.variCharge.OBmsPcsState.ToString()
+                + "';";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                log.Error (ex.Message);
+                result = false;
+            }
+            return result;
+
         }
 
         /*******Component*********/
@@ -393,57 +544,62 @@ namespace EMS
                            FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump, 
                            LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
                     FROM ComponentSettings;";
-            MySqlDataReader rd = null;
-            MySqlConnection ctTemp = null;
+
             try
             {
-                rd = DBConnection.GetData(astrSQL, ref ctTemp);
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                componentSettings.SetHotTemp = rd.IsDBNull(0) ? 1 : rd.GetDouble(0);
+                                componentSettings.SetCoolTemp = rd.IsDBNull(1) ? 1 : rd.GetDouble(1);
+                                componentSettings.CoolTempReturn = rd.IsDBNull(2) ? 1 : rd.GetDouble(2);
+                                componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
+                                componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
+                                componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
+                                componentSettings.TCRunWithSys = rd.IsDBNull(6) ? false : rd.GetBoolean(6);
+                                componentSettings.TCAuto = rd.IsDBNull(7) ? false : rd.GetBoolean(7);
+                                componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
+                                componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
+                                componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
+                                componentSettings.TCMaxHumi = rd.IsDBNull(11) ? 1 : rd.GetDouble(11);
+                                componentSettings.TCMinHumi = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
+                                componentSettings.FenMaxTemp = rd.IsDBNull(13) ? 1 : rd.GetDouble(13);
+                                componentSettings.FenMinTemp = rd.IsDBNull(14) ? 1 : rd.GetDouble(14);
+                                componentSettings.FenMode = rd.IsDBNull(15) ? 1 : rd.GetInt32(15);
+                                componentSettings.LCModel = rd.IsDBNull(16) ? 1 : rd.GetInt32(16);
+                                componentSettings.LCTemperSelect = rd.IsDBNull(17) ? 1 : rd.GetInt32(17);
+                                componentSettings.LCWaterPump = rd.IsDBNull(18) ? 1 : rd.GetInt32(18);
+                                componentSettings.LCSetHotTemp = rd.IsDBNull(19) ? 1 : rd.GetDouble(19);
+                                componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
+                                componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
+                                componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
+                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetDouble(23);
+                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetDouble(24);
+                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetDouble(25);
+                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetDouble(26);
+                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetDouble(27);
 
-                if (rd != null && rd.HasRows && rd.Read())
-                {
-                    componentSettings.SetHotTemp = rd.IsDBNull(0) ? 1 : rd.GetDouble(0);
-                    componentSettings.SetCoolTemp = rd.IsDBNull(1) ? 1 : rd.GetDouble(1);
-                    componentSettings.CoolTempReturn = rd.IsDBNull(2) ? 1 : rd.GetDouble(2);
-                    componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
-                    componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
-                    componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
-                    componentSettings.TCRunWithSys = rd.IsDBNull(6) ? false : rd.GetBoolean(6);
-                    componentSettings.TCAuto = rd.IsDBNull(7) ? false : rd.GetBoolean(7);
-                    componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
-                    componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
-                    componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
-                    componentSettings.TCMaxHumi = rd.IsDBNull(11) ? 1 : rd.GetDouble(11);
-                    componentSettings.TCMinHumi = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
-                    componentSettings.FenMaxTemp = rd.IsDBNull(13) ? 1 : rd.GetDouble(13);
-                    componentSettings.FenMinTemp = rd.IsDBNull(14) ? 1 : rd.GetDouble(14);
-                    componentSettings.FenMode = rd.IsDBNull(15) ? 1 : rd.GetInt32(15);
-                    componentSettings.LCModel = rd.IsDBNull(16) ? 1 : rd.GetInt32(16);
-                    componentSettings.LCTemperSelect = rd.IsDBNull(17) ? 1 : rd.GetInt32(17);
-                    componentSettings.LCWaterPump = rd.IsDBNull(18) ? 1 : rd.GetInt32(18);
-                    componentSettings.LCSetHotTemp = rd.IsDBNull(19) ? 1 : rd.GetDouble(19);
-                    componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
-                    componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
-                    componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
-                    componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetDouble(23);
-                    componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetDouble(24);
-                    componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetDouble(25);
-                    componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetDouble(26);
-                    componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetDouble(27);
-                    
-                    result = true;
-                }
-                else
-                {
-                    result = false;
+                                result = true;
+                            }
+                        }
+                    }
                 }
             }
             catch (MySqlException ex)
             {
                 result = false;
+                log.Error(ex.Message);
             }
             catch (Exception ex)
             {
                 result = false;
+                log.Error(ex.Message);
             }
             finally
             {
@@ -453,156 +609,66 @@ namespace EMS
             return result;
         }
 
-        /*******************************************/
 
-
-
-        //从数据库读取
-        public static void LoadFromConfig()
+        public static bool Set_ComponentSettings()
         {
-            string astrSQL = "select SysID ,Open104  from config ";
+            string astrSQL = "UPDATE ComponentSettings SET "
+                + "SetHotTemp = '" + componentSettings.SetHotTemp.ToString() + "', "
+                + "SetCoolTemp = '" + componentSettings.SetCoolTemp.ToString() + "', "
+                + "CoolTempReturn = '" + componentSettings.CoolTempReturn.ToString() + "', "
+                + "HotTempReturn = '" + componentSettings.HotTempReturn.ToString() + "', "
+                + "SetHumidity = '" + componentSettings.SetHumidity.ToString() + "', "
+                + "HumiReturn = '" + componentSettings.HumiReturn.ToString() + "', "
+                + "TCRunWithSys = '" + componentSettings.TCRunWithSys.ToString() + "', "
+                + "TCAuto = '" + componentSettings.TCAuto.ToString() + "', "
+                + "TCMode = '" + componentSettings.TCMode.ToString() + "', "
+                + "TCMaxTemp = '" + componentSettings.TCMaxTemp.ToString() + "', "
+                + "TCMinTemp = '" + componentSettings.TCMinTemp.ToString() + "', "
+                + "TCMaxHumi = '" + componentSettings.TCMaxHumi.ToString() + "', "
+                + "TCMinHumi = '" + componentSettings.TCMinHumi.ToString() + "', "
+                + "FenMaxTemp = '" + componentSettings.FenMaxTemp.ToString() + "', "
+                + "FenMinTemp = '" + componentSettings.FenMinTemp.ToString() + "', "
+                + "FenMode = '" + componentSettings.FenMode.ToString() + "', "
+                + "LCModel = '" + componentSettings.LCModel.ToString() + "', "
+                + "LCTemperSelect = '" + componentSettings.LCTemperSelect.ToString() + "', "
+                + "LCWaterPump = '" + componentSettings.LCWaterPump.ToString() + "', "
+                + "LCSetHotTemp = '" + componentSettings.LCSetHotTemp.ToString() + "', "
+                + "LCSetCoolTemp = '" + componentSettings.LCSetCoolTemp.ToString() + "', "
+                + "LCHotTempReturn = '" + componentSettings.LCHotTempReturn.ToString() + "', "
+                + "LCCoolTempReturn = '" + componentSettings.LCCoolTempReturn.ToString() + "', "
+                + "DHSetRunStatus = '" + componentSettings.DHSetRunStatus.ToString() + "', "
+                + "DHSetTempBoot = '" + componentSettings.DHSetTempBoot.ToString() + "', "
+                + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
+                + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
+                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString() + "', "
+                + "';";
 
+            bool result = false;
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                if (DBConnection.ExecSQL(astrSQL))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                    {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows)
-                            {
-                                if (rd.Read())
-                                {
-                                    //SysID = rd.GetInt32(0);
-                                    Open104 = rd.GetInt32(1);
-                                }
-                            }
-                        }
-                    }
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
                 }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                // 处理异常情况
+                log.Error(ex.Message);
+                result = false;
             }
-            finally
-            {
-
-            }
-        }
-        public static void LoadFromGlobalSet()
-        {
-            MySqlConnection ctTemp = null;
-            string astrSQL = "select MaxGridKW ,MinGridKW, MaxSOC, MinSOC,UBmsPcsState ,OBmsPcsState from GlobalSet ";
-
-            try
-            {
-
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                    {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows)
-                            {
-                                if (rd.Read())
-                                {
-                                    MaxGridKW = rd.GetInt32(0);
-                                    MinGridKW = rd.GetInt32(1);
-                                    MaxSOC = rd.GetInt32(2);
-                                    MinSOC = rd.GetInt32(3);
-                                    frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                                    frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-
-            }
-        }
-
-
-
-
-        public static bool SetToGlobalSet()
-        {
-            if (DBConnection.ExecSQL("update  globalset  SET "
-                + " MaxGridKW ='" + MaxGridKW.ToString()
-                + "', MinGridKW ='" + MinGridKW.ToString()
-                + "',MaxSOC ='" + MaxSOC.ToString()
-                + "',MinSOC ='" + MinSOC.ToString()
-                + "'"))
-            {
-                return true;
-            }
-            else { return false; }
+            return result;
 
         }
 
+        /**************************************************************************************************************************************/
 
-        public static void Get_GlobalSet_State()
-        {
-            string astrSQL = "select MaxGridKW ,MinGridKW, MaxSOC, MinSOC,UBmsPcsState ,OBmsPcsState  from GlobalSet ";
-
-            try
-            {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                    {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows)
-                            {
-                                if (rd.Read())
-                                {
-                                    MaxGridKW = rd.GetInt32(0);
-                                    MinGridKW = rd.GetInt32(1);
-                                    MaxSOC = rd.GetInt32(2);
-                                    MinSOC = rd.GetInt32(3);
-                                    frmMain.Selffrm.AllEquipment.UBmsPcsState = rd.GetInt32(4);
-                                    frmMain.Selffrm.AllEquipment.OBmsPcsState = rd.GetInt32(5);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-
-            }
-        }
-
-        public static void Set_GlobalSet_State()
-        {
-            DBConnection.ExecSQL("update  globalset  SET "
-                + " MaxGridKW ='" + MaxGridKW.ToString()
-                + "', MinGridKW ='" + MinGridKW.ToString()
-                + "',MaxSOC ='" + MaxSOC.ToString()
-                + "',MinSOC ='" + MinSOC.ToString()
-                + "',UBmsPcsState ='" + frmMain.Selffrm.AllEquipment.UBmsPcsState.ToString()
-                + "', OBmsPcsState ='" + frmMain.Selffrm.AllEquipment.OBmsPcsState.ToString()
-                + "'");
-
-        }
 
         public List<ModbusCommand> VersionList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
 
@@ -664,7 +730,7 @@ namespace EMS
         //GPIO初始化
         public static void InitGPIO()
         {
-            switch (frmSet.GPIO_Select_Mode)
+            switch (config.GPIOSelect)
             {
                 case 0:
                     frmSet.Init0_GPIO();
@@ -932,7 +998,7 @@ namespace EMS
         public static void BMS2warningGPIO(int option) 
         {
             if(option == 0)
-            switch (frmSet.GPIO_Select_Mode)
+            switch (config.GPIOSelect)
             {
                 case 0:
                     frmSet.SetGPIOState(10, 1);
@@ -945,7 +1011,7 @@ namespace EMS
                     break;
             }
             else 
-            switch (frmSet.GPIO_Select_Mode)
+            switch (config.GPIOSelect)
             {
                 case 0:
                     frmSet.SetGPIOState(10, 0);
@@ -961,7 +1027,7 @@ namespace EMS
         public static void ErrorGPIO(int option)
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(11, 1);
@@ -974,7 +1040,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(11, 0);
@@ -990,7 +1056,7 @@ namespace EMS
         public static void RunStateGPIO(int option)
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(9, 1);
@@ -1003,7 +1069,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(9, 0);
@@ -1020,7 +1086,7 @@ namespace EMS
         public static void PowerGPIO(int option)
         {
             if (option == 0)
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(15, 1);
@@ -1033,7 +1099,7 @@ namespace EMS
                         break;
                 }
             else
-                switch (frmSet.GPIO_Select_Mode)
+                switch (config.GPIOSelect)
                 {
                     case 0:
                         frmSet.SetGPIOState(15, 0);
@@ -1052,10 +1118,10 @@ namespace EMS
         //读取设置文件
         public static void LoadSetInf()
         {
-            try
+/*            try
             {
                 INIFile ConfigINI = new INIFile();
-                SysName = ConfigINI.INIRead("System Set", "SysName", "公司测试", INIPath);
+                //SysName = ConfigINI.INIRead("System Set", "SysName", "公司测试", INIPath);
                 SysID = ConfigINI.INIRead("System Set", "SysID", "CKCGP200A00001", INIPath);
                 SysPower = Convert.ToInt32(ConfigINI.INIRead("System Set", "SysPower", "200", INIPath));
                 SysSelfPower = Convert.ToInt32(ConfigINI.INIRead("System Set", "SysSelfPower", "200", INIPath));
@@ -1163,7 +1229,7 @@ namespace EMS
             {
                 frmMain.ShowDebugMSG(ex.ToString());
             }
-
+*/
 
         }
 
@@ -1171,9 +1237,9 @@ namespace EMS
         //保存数据到INI文件
         public static void SaveSet2File()
         {
-            INIFile ConfigINI = new INIFile();
+ /*           INIFile ConfigINI = new INIFile();
             //ConfigINI.INIWrite("", "key", "value", INIPath);
-            ConfigINI.INIWrite("System Set", "SysName", SysName, INIPath);
+            //ConfigINI.INIWrite("System Set", "SysName", SysName, INIPath);
             ConfigINI.INIWrite("System Set", "SysID", SysID, INIPath);
             ConfigINI.INIWrite("System Set", "SysPower", SysPower.ToString(), INIPath);
             ConfigINI.INIWrite("System Set", "SysSelfPower", SysSelfPower.ToString(), INIPath);
@@ -1284,7 +1350,7 @@ namespace EMS
             ConfigINI.INIWrite("System Set", "DHSetTempBoot", DHSetTempBoot.ToString(), INIPath);
             ConfigINI.INIWrite("System Set", "DHSetTempStop", DHSetTempStop.ToString(), INIPath);
             ConfigINI.INIWrite("System Set", "DHSetHumidityBoot", DHSetHumidityBoot.ToString(), INIPath);
-            ConfigINI.INIWrite("System Set", "DHSetHumidityStop", DHSetHumidityStop.ToString(), INIPath);
+            ConfigINI.INIWrite("System Set", "DHSetHumidityStop", DHSetHumidityStop.ToString(), INIPath);*/
         }
 
         //显示设置文件
@@ -1295,23 +1361,23 @@ namespace EMS
                 //tbSysName.Text = SysName;
                 //tbSysID.Text = SysID;
                 //tbSysAddr.Text = SysAddr;
-                tneSysPower.SetIntValue(SysPower);
-                tneSysSelfPower.SetIntValue(SysSelfPower);
-                tneCellCount.SetIntValue(CellCount);
+                tneSysPower.SetIntValue(config.SysPower);
+                tneSysSelfPower.SetIntValue(config.SysSelfPower);
+                tneCellCount.SetIntValue(config.CellCount);
 
-                DateTime dtIS = Convert.ToDateTime(SysInstTime);
+                DateTime dtIS = Convert.ToDateTime(config.SysInstTime);
                 tneISYear.SetIntValue(dtIS.Year);
                 tneISMonth.SetIntValue(dtIS.Month);
                 tneISDay.SetIntValue(dtIS.Day);
                 //rtbMemo.Text = strMemo; 
-                tneSysInterval.SetIntValue(SysInterval);
-                tneUnInterval.SetIntValue(YunInterval);
-                ttbSystemID.SetstrText(SysID);
-                tcbIsMaster.SetValue(IsMaster);
+                tneSysInterval.SetIntValue(config.SysInterval);
+                tneUnInterval.SetIntValue(config.YunInterval);
+                ttbSystemID.SetstrText(config.SysID);
+                tcbIsMaster.SetValue(config.IsMaster);
                 //tbMasterID.Text = MasterID;
-                tne485Addr.SetIntValue(i485Addr);
-                tneMaster485Addr.SetIntValue(Master485Addr);
-                tcbAutoRun.SetValue(AutoRun);
+                tne485Addr.SetIntValue(config.i485Addr);
+                tneMaster485Addr.SetIntValue(config.Master485Addr);
+                tcbAutoRun.SetValue(config.AutoRun);
                 //dtpFreshTime.Value = Convert.ToDateTime(FreshTime);
                 //tneFreshInterval.SetIntValue(FreshInterval);
                 //tcbControlIP.SetstrText(ControlIP);
@@ -1319,35 +1385,35 @@ namespace EMS
                 //cbCloundIP.Text = CloundIP;
                 //nudCloundPort.Value = CloundPort;
                 //tcbSysAutoRun.SetValue( SysAutoRun);
-                tcbSYSModel.SetSelectItemIndex(SysMode);
-                tcbPCSGridModel.SetSelectItemIndex(PCSGridModel);
+                tcbSYSModel.SetSelectItemIndex(config.SysMode);
+                tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
                 tcbPCSType.SetstrText(PCSType);
                 if (PCSwaValue > 0)
                     tcbPCSMode.SetSelectItemIndex(0);
                 else
                     tcbPCSMode.SetSelectItemIndex(1);
                 tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));
-                tneBMSwaValue.SetIntValue((int)Math.Abs(BMSwaValue));//7.24
-                tneMaxSOC.SetIntValue(MaxSOC);
-                tneMinSOC.SetIntValue(MinSOC);
-                tneSetHotTemp.SetIntValue((int)(SetHotTemp));
-                tneSetCoolTemp.SetIntValue((int)(SetCoolTemp));
-                tneCoolTempReturn.SetIntValue((int)(CoolTempReturn));
-                tneHotTempReturn.SetIntValue((int)(HotTempReturn));
+                tneBMSwaValue.SetIntValue((int)Math.Abs(cloudLimits.BmsDerateRatio));//7.24
+                tneMaxSOC.SetIntValue(cloudLimits.MaxSOC);
+                tneMinSOC.SetIntValue(cloudLimits.MinSOC);
+                tneSetHotTemp.SetIntValue((int)(componentSettings.SetHotTemp));
+                tneSetCoolTemp.SetIntValue((int)(componentSettings.SetCoolTemp));
+                tneCoolTempReturn.SetIntValue((int)(componentSettings.CoolTempReturn));
+                tneHotTempReturn.SetIntValue((int)(componentSettings.HotTempReturn));
 
-                tneSetHumidity.SetIntValue((int)(SetHumidity));
-                tneHumiReturn.SetIntValue((int)(HumiReturn));
-                tcbTCRunWithSys.SetValue(TCRunWithSys);
+                tneSetHumidity.SetIntValue((int)(componentSettings.SetHumidity));
+                tneHumiReturn.SetIntValue((int)(componentSettings.HumiReturn));
+                tcbTCRunWithSys.SetValue(componentSettings.TCRunWithSys);
                 //cbTCAuto.Checked = TCAuto;
-                tcbTCMode.SetSelectItemIndex(TCMode);
-                tneTCMaxTemp.SetIntValue((int)(TCMaxTemp));
-                tneTCMinTemp.SetIntValue((int)(TCMinTemp));
-                tneTCMaxHumidity.SetIntValue((int)(TCMaxHumi));
-                tneTCMinHumidity.SetIntValue((int)(TCMinHumi));
-                tcbDebugComName.SetstrText(DebugComName);
-                labDebugRate.Text = DebugRate.ToString();
-                tneMaxGridKWH.SetIntValue(MaxGridKW);
-                tneMinGridKWH.SetIntValue(MinGridKW);
+                tcbTCMode.SetSelectItemIndex(componentSettings.TCMode);
+                tneTCMaxTemp.SetIntValue((int)(componentSettings.TCMaxTemp));
+                tneTCMinTemp.SetIntValue((int)(componentSettings.TCMinTemp));
+                tneTCMaxHumidity.SetIntValue((int)(componentSettings.TCMaxHumi));
+                tneTCMinHumidity.SetIntValue((int)(componentSettings.TCMinHumi));
+                tcbDebugComName.SetstrText(config.DebugComName);
+                labDebugRate.Text = config.DebugRate.ToString();
+                tneMaxGridKWH.SetIntValue(cloudLimits.MaxGridKW);
+                tneMinGridKWH.SetIntValue(cloudLimits.MinGridKW);
                 DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
                 //tneFM0.SetIntValue(dtTemp.Month);
                 //tneFD0.SetIntValue(dtTemp.Day);
@@ -1375,32 +1441,32 @@ namespace EMS
                 tnePrice7.SetIntValue(Prices[1, 2]);
                 tnePrice8.SetIntValue(Prices[1, 3]);
                 tnePrice9.SetIntValue(Prices[1, 4]);
-                tneSysCount.SetIntValue(SysCount);
-                tcbUseYunTactics.SetValue(UseYunTactics);
-                tcbUseBalaTactics.SetValue(UseBalaTactics);
-                tcbiPCSfactory.SetSelectItemIndex(iPCSfactory);
+                tneSysCount.SetIntValue(config.SysCount);
+                tcbUseYunTactics.SetValue(config.UseYunTactics);
+                tcbUseBalaTactics.SetValue(config.UseBalaTactics);
+                tcbiPCSfactory.SetSelectItemIndex(config.iPCSfactory);
                 tcbPCSGridModel_OnValueChange(null);
-                tcbBMSVer.SetSelectItemIndex(BMSVerb);
-                tcbPCSForceRun.SetValue(PCSForceRun);
+                tcbBMSVer.SetSelectItemIndex(config.BMSVerb);
+                tcbPCSForceRun.SetValue(config.PCSForceRun);
                 //10.25
-                tneWarnGridkva.SetIntValue(WarnGridkva);
+                tneWarnGridkva.SetIntValue(cloudLimits.WarnMaxGridKW);
                 //11.13
-                tnePUM.SetIntValue(PUM);
+                tnePUM.SetValue(cloudLimits.PumScale);
 
                 //液冷
-                tcbLCModel.SetSelectItemIndex(LCModel);
-                tcbLCTemperSelect.SetSelectItemIndex(LCTemperSelect);
-                tcbLCWaterPump.SetSelectItemIndex(LCWaterPump);
+                tcbLCModel.SetSelectItemIndex(componentSettings.LCModel);
+                tcbLCTemperSelect.SetSelectItemIndex(componentSettings.LCTemperSelect);
+                tcbLCWaterPump.SetSelectItemIndex(componentSettings.LCWaterPump);
 
-                tneLCHotTempReturn.SetIntValue((int)(LCHotTempReturn));
-                tneLCCoolTempReturn.SetIntValue((int)LCCoolTempReturn);
-                tneLCSetHotTemp.SetIntValue((int)LCSetHotTemp);
-                tneLCSetCoolTemp.SetIntValue((int)LCSetCoolTemp);
+                tneLCHotTempReturn.SetIntValue((int)(componentSettings.LCHotTempReturn));
+                tneLCCoolTempReturn.SetIntValue((int)componentSettings.LCCoolTempReturn);
+                tneLCSetHotTemp.SetIntValue((int)componentSettings.LCSetHotTemp);
+                tneLCSetCoolTemp.SetIntValue((int)componentSettings.LCSetCoolTemp);
 
                 //11.23 空调点位添加
-                tneFenMaxTemp.SetIntValue((int)(FenMaxTemp));
-                tneFenMinTemp.SetIntValue((int)(FenMinTemp));
-                tcbFenMode.SetSelectItemIndex(FenMode);
+                tneFenMaxTemp.SetIntValue((int)(componentSettings.FenMaxTemp));
+                tneFenMinTemp.SetIntValue((int)(componentSettings.FenMinTemp));
+                tcbFenMode.SetSelectItemIndex(componentSettings.FenMode);
 
                 //log.Error("展示："+"MaxGridKW: " + MaxGridKW + "MinGridKW: " + MinGridKW);
 
@@ -1415,24 +1481,24 @@ namespace EMS
             //SysName=tbSysName.Text  ; 
             //SysID=tbSysID.Text ;   
             //SysAddr=tbSysAddr.Text ;        
-            SysPower = (int)tneSysPower.Value;
-            SysSelfPower = (int)tneSysSelfPower.Value;
+            config.SysPower = (int)tneSysPower.Value;
+            config.SysSelfPower = (int)tneSysSelfPower.Value;
 
             int MaxDay = DateTime.DaysInMonth(tneISYear.Value, tneISMonth.Value);
             if (MaxDay < tneISDay.Value)
                 tneISDay.Value = MaxDay;
-            SysInstTime = tneISYear.Value.ToString() + "-" + tneISMonth.Value.ToString() + "-" + tneISDay.Value.ToString();
+            config.SysInstTime = tneISYear.Value.ToString() + "-" + tneISMonth.Value.ToString() + "-" + tneISDay.Value.ToString();
             //strMemo= rtbMemo.Text;
-            CellCount = (int)tneCellCount.Value;
+            config.CellCount = (int)tneCellCount.Value;
             // 
-            SysInterval = (int)tneSysInterval.Value;
-            YunInterval = (int)tneUnInterval.Value;
-            SysID = ttbSystemID.strText;
-            IsMaster = tcbIsMaster.Checked;
+            config.SysInterval = (int)tneSysInterval.Value;
+            config.YunInterval = (int)tneUnInterval.Value;
+            config.SysID = ttbSystemID.strText;
+            config.IsMaster = tcbIsMaster.Checked;
             //MasterID= tbMasterID.Text ; 
-            i485Addr = (int)tne485Addr.Value;
-            Master485Addr = (int)tneMaster485Addr.Value;
-            AutoRun = tcbAutoRun.Checked;
+            config.i485Addr = (int)tne485Addr.Value;
+            config.Master485Addr = (int)tneMaster485Addr.Value;
+            config.AutoRun = tcbAutoRun.Checked;
             //FreshTime= dtpFreshTime.Value.ToString() ;
             FreshInterval = 24;// (int)tneFreshInterval.Value ;
             //ControlIP = tcbControlIP.strText;
@@ -1440,33 +1506,33 @@ namespace EMS
             //CloundIP =  cbCloundIP.Text ;
             //CloundPort = (int)nudCloundPort.Value;
             //SysAutoRun = false;// tcbSysAutoRun.Checked;
-            SysMode = tcbSYSModel.SelectItemIndex;
+            config.SysMode = tcbSYSModel.SelectItemIndex;
             PCSType = tcbPCSType.strText;
-            PCSGridModel = tcbPCSGridModel.SelectItemIndex;
+            config.PCSGridModel = tcbPCSGridModel.SelectItemIndex;
             if (tcbPCSMode.SelectItemIndex == 0)//0充电为正
                 PCSwaValue = (int)tnePCSwaValue.Value;
             else
                 PCSwaValue = -1 * (int)tnePCSwaValue.Value;
-            BMSwaValue = (double)tneBMSwaValue.Value;//7.24
-            MaxSOC = (int)tneMaxSOC.Value;
-            MinSOC = (int)tneMinSOC.Value;
-            SetHotTemp = (int)tneSetHotTemp.Value;
-            SetCoolTemp = (int)tneSetCoolTemp.Value;
-            CoolTempReturn = (int)tneCoolTempReturn.Value;
-            HotTempReturn = (int)tneHotTempReturn.Value;
-            SetHumidity = (int)tneSetHumidity.Value;
-            HumiReturn = (int)tneHumiReturn.Value;
-            TCRunWithSys = tcbTCRunWithSys.Checked;
+            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;//7.24
+            cloudLimits.MaxSOC = (int)tneMaxSOC.Value;
+            cloudLimits.MinSOC  = (int)tneMinSOC.Value;
+            componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
+            componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
+            componentSettings.CoolTempReturn = (int)tneCoolTempReturn.Value;
+            componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
+            componentSettings.SetHumidity = (int)tneSetHumidity.Value;
+            componentSettings.HumiReturn = (int)tneHumiReturn.Value;
+            componentSettings.TCRunWithSys = tcbTCRunWithSys.Checked;
             //TCAuto = tcbTCAuto;
-            TCMode = tcbTCMode.SelectItemIndex;
-            TCMaxTemp = (int)tneTCMaxTemp.Value;
-            TCMinTemp = (int)tneTCMinTemp.Value;
-            TCMaxHumi = (int)tneTCMaxHumidity.Value;
-            TCMinHumi = (int)tneTCMinHumidity.Value;
-            DebugComName = tcbDebugComName.strText;
-            DebugRate = 9600;
-            MaxGridKW = (int)tneMaxGridKWH.Value;
-            MinGridKW = (int)tneMinGridKWH.Value;
+            componentSettings.TCMode = tcbTCMode.SelectItemIndex;
+            componentSettings.TCMaxTemp = (int)tneTCMaxTemp.Value;
+            componentSettings.TCMinTemp = (int)tneTCMinTemp.Value;
+            componentSettings.TCMaxHumi = (int)tneTCMaxHumidity.Value;
+            componentSettings.TCMinHumi = (int)tneTCMinHumidity.Value;
+            config.DebugComName = tcbDebugComName.strText;
+            config.DebugRate = 9600;
+            cloudLimits.MaxGridKW = (int)tneMaxGridKWH.Value;
+            cloudLimits.MinGridKW = (int)tneMinGridKWH.Value;
             //frmMain.TacticsList.AutoTactics = (SysMode == 1);
             // 
             //TimeZones[0] = tneFM0.Value.ToString() + "-" + tneFD0.Value.ToString();
@@ -1488,36 +1554,36 @@ namespace EMS
             Prices[1, 2] = (int)tnePrice7.Value;
             Prices[1, 3] = (int)tnePrice8.Value;
             Prices[1, 4] = (int)tnePrice9.Value;
-            SysCount = (int)tneSysCount.Value;
-            UseYunTactics = tcbUseYunTactics.Checked;
-            UseBalaTactics = tcbUseBalaTactics.Checked;
-            iPCSfactory = tcbiPCSfactory.SelectItemIndex;
-            BMSVerb = tcbBMSVer.SelectItemIndex;
-            PCSForceRun = tcbPCSForceRun.Checked;
+            config.SysCount = (int)tneSysCount.Value;
+            config.UseYunTactics = tcbUseYunTactics.Checked;
+            config.UseBalaTactics = tcbUseBalaTactics.Checked;
+            config.iPCSfactory = tcbiPCSfactory.SelectItemIndex;
+            config.BMSVerb = tcbBMSVer.SelectItemIndex;
+            config.PCSForceRun = tcbPCSForceRun.Checked;
             //10.25
-            WarnGridkva = (int)tneWarnGridkva.Value;
+            cloudLimits.WarnMaxGridKW = (int)tneWarnGridkva.Value;
             //11.13
-            PUM = (int)tnePUM.Value;
+            cloudLimits.PumScale = (int)tnePUM.Value;
 
             //液冷
-            LCModel = tcbLCModel.SelectItemIndex;      //全自动
-            LCTemperSelect = tcbLCTemperSelect.SelectItemIndex; //出水温度
-            LCWaterPump = tcbLCWaterPump.SelectItemIndex;  //默认档
-            LCSetHotTemp  = (int)tneLCSetHotTemp.Value;  //20°C
-            LCSetCoolTemp = (int)tneLCSetCoolTemp.Value; //20°C
-            LCHotTempReturn = (int)tneLCHotTempReturn.Value;  //2°C
-            LCCoolTempReturn = (int)tneLCCoolTempReturn.Value; //2°C
+            componentSettings.LCModel = tcbLCModel.SelectItemIndex;      //全自动
+            componentSettings.LCTemperSelect = tcbLCTemperSelect.SelectItemIndex; //出水温度
+            componentSettings.LCWaterPump = tcbLCWaterPump.SelectItemIndex;  //默认档
+            componentSettings.LCSetHotTemp  = (int)tneLCSetHotTemp.Value;  //20°C
+            componentSettings.LCSetCoolTemp = (int)tneLCSetCoolTemp.Value; //20°C
+            componentSettings.LCHotTempReturn = (int)tneLCHotTempReturn.Value;  //2°C
+            componentSettings.LCCoolTempReturn = (int)tneLCCoolTempReturn.Value; //2°C
 
             //11.23
-            FenMaxTemp = (int)tneFenMaxTemp.Value;
-            FenMinTemp = (int)tneFenMinTemp.Value;
-            FenMode = tcbFenMode.SelectItemIndex;
+            componentSettings.FenMaxTemp = (int)tneFenMaxTemp.Value;
+            componentSettings.FenMinTemp = (int)tneFenMinTemp.Value;
+            componentSettings.FenMode = tcbFenMode.SelectItemIndex;
             //5.04 除湿
-            DHSetRunStatus = tcbDHSetRunStatus.SelectItemIndex;
-            DHSetTempBoot = (int)tneDHSetTempBoot.Value;
-            DHSetTempStop = (int)tneDHSetTempStop.Value;
-            DHSetHumidityBoot = (int)tneDHSetHumidityBoot.Value;
-            DHSetHumidityStop = (int)tneDHSetHumidityStop.Value;
+            componentSettings.DHSetRunStatus = tcbDHSetRunStatus.SelectItemIndex;
+            componentSettings.DHSetTempBoot = (int)tneDHSetTempBoot.Value;
+            componentSettings.DHSetTempStop = (int)tneDHSetTempStop.Value;
+            componentSettings.DHSetHumidityBoot = (int)tneDHSetHumidityBoot.Value;
+            componentSettings.DHSetHumidityStop = (int)tneDHSetHumidityStop.Value;
 
 
         }
@@ -1572,7 +1638,7 @@ namespace EMS
 
 
             frmMain.TacticsList.ActiveIndex = -1;
-            switch (SysMode)
+            switch (config.SysMode)
             {
                 case 0://手动模式
                     lock (frmMain.Selffrm.AllEquipment)
@@ -1806,17 +1872,18 @@ namespace EMS
             //设置pcs模式后没有执行，将恢复
             if (frmMain.TacticsList.TacticsOn)
             {
-                SysMode = 1;
+                config.SysMode = 1;
             }
             else
             {
-                SysMode = 0; 
+                config.SysMode = 0; 
             }
             //save
             //Set_GlobalSet_State();
             GetINIData();
             SaveSet2File();
-            Set_GlobalSet_State();
+            //Set_GlobalSet_State();
+            Set_Cloudlimits();
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -2409,7 +2476,8 @@ namespace EMS
         private void btnClose_Click(object sender, EventArgs e)
         {
             PowerGPIO(0);
-            Set_GlobalSet_State();
+            //Set_GlobalSet_State();
+            Set_Cloudlimits();
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
                 frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
@@ -2492,27 +2560,27 @@ namespace EMS
 
         public class CloudLimitClass
         {
-            public int MaxGridKW { get; set; }
-            public int MinGridKW { get; set; }
-            public int MaxSOC { get; set; }
-            public int MinSOC { get; set; }
-            public int WarnMaxGridKW { get; set; }
-            public int WarnMinGridKW { get; set; }
-            public int PcsKva { get; set; }
-            public double Client_PUMdemand_Max { get; set; }
-            public int EnableActiveReduce { get; set; }
-            public double PumScale { get; set; }
-            public int AllUkvaWindowSize { get; set; }
-            public int PumTime { get; set; }
-            public double BmsDerateRatio { get; set; } // double
+            public volatile int MaxGridKW;
+            public volatile int MinGridKW;
+            public volatile int MaxSOC;
+            public volatile int MinSOC;
+            public volatile int WarnMaxGridKW;
+            public volatile int WarnMinGridKW;
+            public volatile int PcsKva ;
+            public volatile int Client_PUMdemand_Max;
+            public volatile int EnableActiveReduce;
+            public volatile int PumScale;
+            public volatile int AllUkvaWindowSize;
+            public volatile int PumTime;
+            public volatile int BmsDerateRatio; // double
         }
 
 
         //运行时参数变化参数
         public class VariChargeClass
         {
-            public double UBmsPcsState { get; set; }
-            public double OBmsPcsState { get; set; }
+            public volatile int UBmsPcsState;
+            public volatile int OBmsPcsState;
         }
 
         //初始化不变更参数

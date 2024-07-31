@@ -121,7 +121,7 @@ namespace EMS
             
             AllEquipment.NetCtlTime = DateTime.Now;
             AllEquipment.Clock_Watch.RestartMeasurement();
-            frmSet.SysMode = 2;
+            frmSet.config.SysMode = 2;
             byte[] message = new byte[7];
             short[] sData01 = { 00, 00 };
             short[] data = { 00 };
@@ -147,7 +147,7 @@ namespace EMS
                     break;
                 case 0x20://读取设备ID  
                     data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
-                    message = ModbusBase.BuildCloundMSG((byte)frmSet.i485Addr, 0x20, 1, data);
+                    message = ModbusBase.BuildCloundMSG((byte)frmSet.config.i485Addr, 0x20, 1, data);
                     //string result = BitConverter.ToString(message);
 
                     frmMain.Selffrm.ModbusTcpClient.SendMSG(message);
@@ -306,12 +306,12 @@ namespace EMS
 
             //解析命令
             iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen);
-            if (SysID != frmSet.i485Addr)
+            if (SysID != frmSet.config.i485Addr)
                 return;
 
             AllEquipment.NetControl = true;
             AllEquipment.NetCtlTime = DateTime.Now;
-            frmSet.SysMode = 2;
+            frmSet.config.SysMode = 2;
             byte[] message = new byte[7];
             short[] sData01 = { 00, 00 };
             switch (CMDID)
@@ -349,12 +349,12 @@ namespace EMS
             
             //解析命令
             iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen); 
-            if (SysID != frmSet.i485Addr)
+            if (SysID != frmSet.config.i485Addr)
                 return;
 
             AllEquipment.NetControl = true;
             AllEquipment.NetCtlTime = DateTime.Now;
-            frmSet.SysMode = 2;
+            frmSet.config.SysMode = 2;
             byte[] message = new byte[7];
             short[] sData01 = { 00, 00 };
             switch (CMDID)
@@ -381,7 +381,7 @@ namespace EMS
                     break; 
                 case 0x20://读取设备SN  
                     sData01[0] = 10002; ;
-                    message = ModbusBase.BuildCloundMSG((byte)frmSet.i485Addr, 0x27, 01, sData01);
+                    message = ModbusBase.BuildCloundMSG((byte)frmSet.config.i485Addr, 0x27, 01, sData01);
                     TCPCloud.SendMSG(message); 
                     break;
                 case 0x21:
@@ -393,9 +393,9 @@ namespace EMS
                     sData01[0] = (short)1;
                     message = ModbusBase.BuildCloundMSG(1, 0x26, 01, sData01);
                     TCPCloud.SendMSG(message);
-                    frmSet.YunInterval = iLen;
+                    frmSet.config.YunInterval = iLen;
                     //设置云的读取间隔，判断两次无数据就会重新连接云（2B） 
-                    TCPCloud.ReconnectTime = frmSet.YunInterval;//AllEquipment.AskInterval;
+                    TCPCloud.ReconnectTime = frmSet.config.YunInterval;//AllEquipment.AskInterval;
                     frmSet.SaveSet2File();//保存数据 
                     break; 
                 case 0x16: 
@@ -413,7 +413,7 @@ namespace EMS
         private void spNetControl_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             //主机不接受任何网络指令
-            if (frmSet.IsMaster)
+            if (frmSet.config.IsMaster)
             {
                 spNetControl.DiscardOutBuffer();
                 spNetControl.DiscardInBuffer();
@@ -452,18 +452,23 @@ namespace EMS
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
 
                 //读取配置文件
-                frmSet.LoadSetInf();
+                //frmSet.LoadSetInf();
                 //初始化端口
                 frmSet.InitGPIO();
                 //连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
 
-                //DBConnection.CheckTables();
+                DBConnection.CheckTables();
+                frmSet.LoadCloudLimitsFromMySQL();
+                frmSet.LoadConfigFromMySQL();
+                frmSet.LoadVariChargeFromMySQL();
+                frmSet.LoadComponentSettingsFromMySQL();
+
                 //从数据库加载
-                frmSet.LoadFromGlobalSet();
+                //frmSet.LoadFromGlobalSet();
                 //从数据库中加载配置信息
-                frmSet.LoadFromConfig();
+                //frmSet.LoadFromConfig();
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
@@ -488,7 +493,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
 
                 //配置各个部件的设备码
-                string strID = frmSet.SysID;
+                string strID = frmSet.config.SysID;
                 if (strID.Length >= 7)
                     strID = strID.Substring(strID.Length - 7, 7);//截取SysID的最后7位
                 frmMain.Selffrm.AllEquipment.iot_code = "ems" + strID;
@@ -547,16 +552,17 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-                if (frmSet.IsMaster)
+                if (frmSet.config.IsMaster)
                 {
                     if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
                     {
                         //更新的月份
-                        lock (Selffrm.AllEquipment)
+                        lock (frmSet.cloudLimits)
                         {
-                            Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-                            Selffrm.AllEquipment.WriteDoPUini();
+                            frmSet.cloudLimits.Client_PUMdemand_Max = 0;
+
                         }
+                        Selffrm.AllEquipment.WriteDoPUini();
                     }
                 }
 
@@ -593,47 +599,51 @@ namespace EMS
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
                 frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                 //若配置接入104服务
-                if (frmSet.Open104 == 1)
+                if (frmSet.config.Open104 == 1)
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
                     frmMain.Selffrm.TCPserver.StartMonitor104();//监听客户端连接
                 }
 
                 //使用TCP/IP通讯方式
-                if (frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
+                if (frmSet.config.IsMaster)
                 {
-                    frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                    frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
-                    frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
-                    frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
-                }
-                else if (!frmSet.IsMaster && frmSet.ConnectStatus == "tcp")
-                {
-                    frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.MasterIp, 502);
-                    //frmMain.Selffrm.ModbusTcpClient.StartMonitor();
-                }
-
-                if (!frmSet.IsMaster && frmSet.ConnectStatus == "485")
-                {
-                    frmMain.Selffrm.ems.ID = frmSet.i485Addr;
-                    frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
-                    frmMain.Selffrm.ems.m485 = new modbus485();
-                    frmMain.Selffrm.ems.m485.OpenEMS(frmSet.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                }
-                else if (frmSet.IsMaster && frmSet.ConnectStatus == "485")
-                {
-                    //从机的列表
-                    for (int i = 0; i < frmSet.SysCount-1; i++)//主机调控
+                    if (frmSet.config.ConnectStatus == "tcp")
                     {
-                        EMSEquipment oneEMSEquipment = new EMSEquipment();
-                        oneEMSEquipment.LoadCommandFromFile();
-                        oneEMSEquipment.ID = i + 2;
-                        oneEMSEquipment.Parent = Selffrm.AllEquipment;
-                        oneEMSEquipment.m485 = new modbus485();
-                        oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
-                        oneEMSEquipment.m485.Open(frmSet.DebugComName, 38400,
-                          8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                        frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
+                        frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
+                        frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
+                        frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
+                        frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
+                    }
+                    else if (frmSet.config.ConnectStatus == "485")
+                    {
+                        //从机的列表
+                        for (int i = 0; i < frmSet.config.SysCount-1; i++)//主机调控
+                        {
+                            EMSEquipment oneEMSEquipment = new EMSEquipment();
+                            oneEMSEquipment.LoadCommandFromFile();
+                            oneEMSEquipment.ID = i + 2;
+                            oneEMSEquipment.Parent = Selffrm.AllEquipment;
+                            oneEMSEquipment.m485 = new modbus485();
+                            oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
+                            oneEMSEquipment.m485.Open(frmSet.config.DebugComName, 38400,
+                              8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+                            frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
+                        }
+                    }
+                }
+                else
+                {
+                    if (frmSet.config.ConnectStatus == "tcp")
+                    {
+                        frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.config.MasterIp, 502);
+                    }
+                    else if (frmSet.config.ConnectStatus == "485")
+                    {
+                        frmMain.Selffrm.ems.ID = frmSet.config.i485Addr;
+                        frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
+                        frmMain.Selffrm.ems.m485 = new modbus485();
+                        frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
 
@@ -687,7 +697,7 @@ namespace EMS
         }
         static void CXFN_TimerCallback(Object state)
         {
-            if (frmSet.SysCount > 1)
+            if (frmSet.config.SysCount > 1)
             {
                 frmMain.Selffrm.AllEquipment.MutiReflux_Log();
                 frmMain.Selffrm.AllEquipment.ClientControl_Log();
@@ -754,7 +764,7 @@ namespace EMS
                 {
                     try
                     {
-                        if (frmSet.IsMaster)
+                        if (frmSet.config.IsMaster)
                         {
                             if (frmMain.TacticsList != null)
                             {
@@ -782,40 +792,37 @@ namespace EMS
                 catch { log.Error("00：00更新均衡策略失败"); }
             }
 
-            //检查mqttp的连接情况，每分钟检查一次
-/*            try
-            {
-                frmMain.Selffrm.AllEquipment.Report2Cloud.CheckConnect();
-            }
-            catch { }*/
 
-            if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
+            if (frmSet.config.EMSstatus == 1)
             {
-                if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
+                if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
                 {
-                    frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true);//PCS工作前启动空调
-                }                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
-                else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
-                {
-                    if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
                     {
-                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);//PCS工作前启动空调
+                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true);//PCS工作前启动空调
+                    }                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
+                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                    {
+                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);//PCS工作前启动空调
+                        }
                     }
                 }
-            }
 
-            //液冷控制
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                //液冷控制
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                 {
-                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
-                }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
-                else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
-                {
-                    if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                     {
-                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
+                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                    }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
+                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                    {
+                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
+                        }
                     }
                 }
             }
@@ -839,7 +846,7 @@ namespace EMS
         static void Cloud_timerCallback(Object state)
         {
             // 定时器触发时要执行的代码  
-            if (frmSet.EMSstatus == 1)
+            if (frmSet.config.EMSstatus == 1)
             {
                 DateTime tempTime = DateTime.Now;
                 //采集数据保存在数据库中
@@ -875,11 +882,11 @@ namespace EMS
                     {
                         strCap = "策略";
                     }
-                    else if (frmSet.PCSGridModel == 1)
+                    else if (frmSet.config.PCSGridModel == 1)
                     {
                         strCap = "离网";
                     }
-                    else if (frmSet.SysMode == 2)
+                    else if (frmSet.config.SysMode == 2)
                     {
                         strCap = "网控";
                     }

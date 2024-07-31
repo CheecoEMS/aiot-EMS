@@ -179,7 +179,7 @@ namespace EMS
             TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
             EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
             //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
-            string strID = frmSet.SysID;
+            string strID = frmSet.config.SysID;
             if (strID.Length >= 7)
                 strID = strID.Substring(strID.Length - 7, 7);
             AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
@@ -864,7 +864,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if (!frmSet.UseBalaTactics)
+                if (!frmSet.config.UseBalaTactics)
                     return strID;
 
                 //清理旧数据
@@ -960,7 +960,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
+                if ((!frmSet.config.UseYunTactics)|| (!frmSet.config.IsMaster))
                 {
                     return false;
                 }
@@ -1118,7 +1118,7 @@ namespace EMS
                 else
                 {
                     //从机器不执行网络命令(不开放离网模式)
-                    if ((frmSet.IsMaster)&&(ipcsSet!=4))
+                    if ((frmSet.config.IsMaster)&&(ipcsSet!=4))
                         frmControl.SetControl(iMode, PCSClass.PCSTypes[ipcsSet], ipcsSets[icharge], ipcsSetValue,iOn, true);
                 } 
                 /*
@@ -1156,23 +1156,23 @@ namespace EMS
                         var parameters = jsonObject["params"];
                         if (parameters["requireLimit"] != null)
                         {
-                            frmSet.MaxGridKW = (int)double.Parse(parameters["requireLimit"].ToString());
+                            frmSet.cloudLimits.MaxGridKW = (int)double.Parse(parameters["requireLimit"].ToString());
                         }
                         if (parameters["invertPower"] != null)
                         {
-                            frmSet.MinGridKW = (int)double.Parse(parameters["invertPower"].ToString());
+                            frmSet.cloudLimits.MinGridKW = (int)double.Parse(parameters["invertPower"].ToString());
                         }
                         if (parameters["socUp"] != null)
                         {
-                            frmSet.MaxSOC = (int)double.Parse(parameters["socUp"].ToString());
+                            frmSet.cloudLimits.MaxSOC = (int)double.Parse(parameters["socUp"].ToString());
                         }
                         if (parameters["socDown"] != null)
                         {
-                            frmSet.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
+                            frmSet.cloudLimits.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
                         }
 
 
-                        if (frmSet.SetToGlobalSet())
+                        if (frmSet.Set_Cloudlimits())
                         {
                             bResult = true;
                         }
@@ -1199,7 +1199,7 @@ namespace EMS
             byte[] returnMsg = null;
             ushort aMsg;
             int index = 3;
-            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.i485Addr, 3, (ushort)iLen);
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.config.i485Addr, 3, (ushort)iLen);
             for (int i = aAddr; i <= aAddr+iLen; ++i)
             {
                 aMsg = 0;
@@ -1293,26 +1293,26 @@ namespace EMS
             switch (aAddr)
             {
                 case 0x6001://计划功率
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
                     double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
                     if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
                     else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
                     else//待机
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 2);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 2);
                 case 0x6004: //PCSType 恒压横流恒功率、AC恒压
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
                 case 0x6005: //EMS运行状态 ： 0正常，1故障，2停机
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
                 case 0x6006: //BMS是否告警
                     if (frmMain.Selffrm.AllEquipment.BMS.Error[1] + frmMain.Selffrm.AllEquipment.BMS.Error[2] + frmMain.Selffrm.AllEquipment.BMS.Error[3] > 0)
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
                     else
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
             }    
             return null;
         }

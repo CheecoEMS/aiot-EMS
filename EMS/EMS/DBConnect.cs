@@ -223,7 +223,6 @@ namespace EMS
             ChecMysql80();
             bool bResult = false;
 
-
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionStr))
@@ -608,7 +607,7 @@ namespace EMS
                     var output = new
                     {
                          time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
-                         iot_code = frmSet.SysID,
+                         iot_code = frmSet.config.SysID,
                          DaliyAuxiliaryKWH = new string[]
                          {
                             FormatValue(jsonObject["auxkwhAll"]),
@@ -1699,12 +1698,12 @@ namespace EMS
                         new Column { Name = "WarnMaxGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率上限" },
                         new Column { Name = "WarnMinGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率下限" },
                         new Column { Name = "PcsKva", Type = "int", IsNullable = true, Comment = "触发需量抬升的放电功率" },
-                        new Column { Name = "Client_PUMdemand_Max", Type = "double", IsNullable = true, Comment = "最大需量比例" },
+                        new Column { Name = "Client_PUMdemand_Max", Type = "int", IsNullable = true, Comment = "最大需量比例" },
                         new Column { Name = "EnableActiveReduce", Type = "int", IsNullable = true, Comment = "开启主动降容：1(开) 0(关)" },
-                        new Column { Name = "PumScale", Type = "double", IsNullable = true, Comment = "需量比例" },
+                        new Column { Name = "PumScale", Type = "int", IsNullable = true, Comment = "需量比例" },
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },
                         new Column { Name = "PumTime", Type = "int", IsNullable = true, Comment = "强制放电时间" },
-                        new Column { Name = "BmsDerateRatio", Type = "double", IsNullable = true, Comment = "BMS触发1级告警致功率降额比" }
+                        new Column { Name = "BmsDerateRatio", Type = "int", IsNullable = true, Comment = "BMS触发1级告警致功率降额比" }
                     }
                 },
                 {
@@ -1915,8 +1914,8 @@ namespace EMS
                 {
                     "VariCharge", new List<Column>
                     {
-                        new Column { Name = "UBmsPcsState", Type = "double", IsNullable = true, Key = "" , Comment = "充电限制"},
-                        new Column { Name = "OBmsPcsState", Type = "double", IsNullable = true, Key = "" , Comment = "放电限制"},
+                        new Column { Name = "UBmsPcsState", Type = "int", IsNullable = true, Key = "" , Comment = "充电限制"},
+                        new Column { Name = "OBmsPcsState", Type = "int", IsNullable = true, Key = "" , Comment = "放电限制"},
                     }
 
                 }
