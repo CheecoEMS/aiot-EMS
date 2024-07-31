@@ -25,6 +25,7 @@ using static Mysqlx.Expect.Open.Types.Condition.Types;
 using static System.Collections.Specialized.BitVector32;
 using System.Net.Sockets;
 using Org.BouncyCastle.Crypto;
+using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
@@ -6311,65 +6312,60 @@ namespace EMS
         ////从文件中读取故障信息
         public void LoadErrorState()
         {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader sdr = DBConnection.GetData("select id, TCError,PCSError1,PCSError2,PCSError3,PCSError4,PCSError5,"
+            string astrSQL = "select id, TCError,PCSError1,PCSError2,PCSError3,PCSError4,PCSError5,"
                 + "PCSError6,PCSError7,PCSError8,BMSError1,BMSError2,BMSError3,BMSError4,BMSError5,EMSError1,EMSError2,EMSError3,EMSError4 "
-                + "  from errorstate order by id desc limit 1", ref ctTemp);
-            //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
+                + "  from errorstate order by id desc limit 1";
             try
             {
-                if (sdr != null)
+
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (sdr.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (sdr.Read())
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            if (TempControl!=null)
-                                TempControl.errorOld = sdr.GetUInt32(1);
-                            if (PCSList.Count > 0)
+                            if (rd != null && rd.HasRows)
                             {
-                                PCSList[0].OldError[0] = (ushort)sdr.GetUInt32(2);
-                                PCSList[0].OldError[1] = (ushort)sdr.GetUInt32(3);
-                                PCSList[0].OldError[2] = (ushort)sdr.GetUInt32(4);
-                                PCSList[0].OldError[3] = (ushort)sdr.GetUInt32(5);
-                                PCSList[0].OldError[4] = (ushort)sdr.GetUInt32(6);
-                                PCSList[0].OldError[5] = (ushort)sdr.GetUInt32(7);
-                                PCSList[0].OldError[6] = (ushort)sdr.GetUInt32(8);
-                                PCSList[0].OldError[7] = (ushort)sdr.GetUInt32(9);
+                                while (rd.Read())
+                                {
+                                    if (TempControl!=null)
+                                        TempControl.errorOld = rd.GetUInt32(1);
+                                    if (PCSList.Count > 0)
+                                    {
+                                        PCSList[0].OldError[0] = (ushort)rd.GetUInt32(2);
+                                        PCSList[0].OldError[1] = (ushort)rd.GetUInt32(3);
+                                        PCSList[0].OldError[2] = (ushort)rd.GetUInt32(4);
+                                        PCSList[0].OldError[3] = (ushort)rd.GetUInt32(5);
+                                        PCSList[0].OldError[4] = (ushort)rd.GetUInt32(6);
+                                        PCSList[0].OldError[5] = (ushort)rd.GetUInt32(7);
+                                        PCSList[0].OldError[6] = (ushort)rd.GetUInt32(8);
+                                        PCSList[0].OldError[7] = (ushort)rd.GetUInt32(9);
+                                    }
+                                    if (BMS!=null)
+                                    {
+                                        BMS.OldError[0] = (ushort)rd.GetUInt32(10);
+                                        BMS.OldError[1] = (ushort)rd.GetUInt32(11);
+                                        BMS.OldError[2] = (ushort)rd.GetUInt32(12);
+                                        BMS.OldError[3] = (ushort)rd.GetUInt32(13);
+                                        BMS.OldError[4] = (ushort)rd.GetUInt32(14);
+                                    }
+                                    //OldError = (ushort)sdr.GetUInt32(15);
+                                    OldEMSError[0]= (ushort)rd.GetUInt32(15);
+                                    OldEMSError[1] = (ushort)rd.GetUInt32(16);
+                                    OldEMSError[2] = (ushort)rd.GetUInt32(17);
+                                    OldEMSError[3] = (ushort)rd.GetUInt32(18);
+                                }
                             }
-                            if (BMS!=null)
-                            {
-                                BMS.OldError[0] = (ushort)sdr.GetUInt32(10);
-                                BMS.OldError[1] = (ushort)sdr.GetUInt32(11);
-                                BMS.OldError[2] = (ushort)sdr.GetUInt32(12);
-                                BMS.OldError[3] = (ushort)sdr.GetUInt32(13);
-                                BMS.OldError[4] = (ushort)sdr.GetUInt32(14);
-                            }
-                            //OldError = (ushort)sdr.GetUInt32(15);
-                            OldEMSError[0]= (ushort)sdr.GetUInt32(15);
-                            OldEMSError[1] = (ushort)sdr.GetUInt32(16);
-                            OldEMSError[2] = (ushort)sdr.GetUInt32(17);
-                            OldEMSError[3] = (ushort)sdr.GetUInt32(18);
                         }
                     }
-                }             
+                }        
             }
             catch
             { }
             finally
             {
-                if (sdr != null)
-                {
-                    if (!sdr.IsClosed)
-                        sdr.Close();
-                    sdr.Dispose();
-                }
 
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
             }
 
         }
@@ -6382,150 +6378,153 @@ namespace EMS
             int eType = 0;
             BaseEquipmentClass oneEquipment = null; //oneEquipment当作指针用
             //creat reader 
-            MySqlConnection ctTemp = null;
-            MySqlDataReader sdr = DBConnection.GetData("select eID,eType,eModel,comType,comName,comRate,comBits,"
-                + "TCPType,serverIP,SerPort,LocPort,eName,pc from equipment", ref ctTemp);
-            //string[] eTpyeList = { "用户侧电表", "设备电表", "辅组电表","PCS逆变器", "BMS", "空调系统","消防","其他", "计量电表","" };
+            string astrSQL = "select eID,eType,eModel,comType,comName,comRate,comBits,"
+                + "TCPType,serverIP,SerPort,LocPort,eName,pc from equipment";
             try
             {
-                //0用户侧电表，1设备电表，2辅组电表，3PCS逆变器，4BMS，5空调系统，6消防，7计量电表，
-                //8水浸传感器，9一氧化碳传感器，10温湿度传感器，11烟雾传感器,12UPS,13其他
-                if (sdr != null)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (sdr.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (sdr.Read())//调用 Read 方法读取 SqlDataReader
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            string adata = sdr.GetString(1).Trim();
-                            eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
-                            switch (eType)
+                            if (rd != null && rd.HasRows)
                             {
-                                case 0:
-                                    oneEquipment = new Elemeter1Class();
-                                    Elemeter1List.Add((Elemeter1Class)oneEquipment);
-                                    Elemeter1_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 1:
-                                    Elemeter2 = new Elemeter2Class();
-                                    oneEquipment = Elemeter2;  //父类指针指向子类对象
-                                    Elemeter2_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 2:
-                                    Elemeter3 = new Elemeter3Class();
-                                    oneEquipment = Elemeter3;
-                                    Elemeter3_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 3://pcs
-                                    oneEquipment = new PCSClass(frmSet.iPCSfactory);
-                                    PCSList.Add((PCSClass)oneEquipment);
-                                    PCS_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 4://BMSClass
-                                    oneEquipment = new BMSClass();
-                                    BMS = (BMSClass)oneEquipment;
-                                    BMS_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 5://TempControlList  8u
-                                    oneEquipment = new TempControlClass();
-                                    TempControl = (TempControlClass)oneEquipment;
-                                    TempControl_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 8://水浸传感器
-                                    oneEquipment = new WaterloggingClass();
-                                    if (WaterLog1 == null)
+                                while (rd.Read())//调用 Read 方法读取 SqlDataReader
+                                {
+                                    string adata = rd.GetString(1).Trim();
+                                    eType = Array.IndexOf(AllEquipmentClass.EquipNameList, adata);// sdr.GetDateTime(0).ToString(aTimeFormat),
+                                    switch (eType)
                                     {
-                                        WaterLog1 = (WaterloggingClass)oneEquipment;
-                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                        case 0:
+                                            oneEquipment = new Elemeter1Class();
+                                            Elemeter1List.Add((Elemeter1Class)oneEquipment);
+                                            Elemeter1_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 1:
+                                            Elemeter2 = new Elemeter2Class();
+                                            oneEquipment = Elemeter2;  //父类指针指向子类对象
+                                            Elemeter2_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 2:
+                                            Elemeter3 = new Elemeter3Class();
+                                            oneEquipment = Elemeter3;
+                                            Elemeter3_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 3://pcs
+                                            oneEquipment = new PCSClass(frmSet.iPCSfactory);
+                                            PCSList.Add((PCSClass)oneEquipment);
+                                            PCS_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 4://BMSClass
+                                            oneEquipment = new BMSClass();
+                                            BMS = (BMSClass)oneEquipment;
+                                            BMS_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 5://TempControlList  8u
+                                            oneEquipment = new TempControlClass();
+                                            TempControl = (TempControlClass)oneEquipment;
+                                            TempControl_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 8://水浸传感器
+                                            oneEquipment = new WaterloggingClass();
+                                            if (WaterLog1 == null)
+                                            {
+                                                WaterLog1 = (WaterloggingClass)oneEquipment;
+                                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                            }
+                                            else
+                                            {
+                                                WaterLog2 = (WaterloggingClass)oneEquipment;
+                                                Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                            }
+                                            break;
+                                        case 9://一氧化碳传感器
+                                            co = new CoClass();
+                                            oneEquipment = co;
+                                            Co_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 10://温湿度传感器
+                                            TempHum = new TempHumClass();
+                                            oneEquipment = TempHum;
+                                            TempHum_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 11://11烟雾传感器
+                                            Smoke = new SmokeClass();
+                                            oneEquipment = Smoke;
+                                            Smoke_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 12:
+                                            UPS = new UPSClass();
+                                            oneEquipment = UPS;
+                                            UPS_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 13://液冷机
+                                            LiquidCool = new LiquidCoolClass();
+                                            oneEquipment = LiquidCool;
+                                            LiquidCool_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 14:
+                                            DSP2 = new DSP2Class(1);
+                                            oneEquipment = DSP2;
+                                            DSP2_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 15:
+                                            Elemeter2H = new Elemeter2Class();
+                                            oneEquipment = Elemeter2H;
+                                            Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 16://2.21
+                                            Elemeter1Z = new Elemeter2Class();
+                                            oneEquipment = Elemeter1Z;
+                                            Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 17://5.05
+                                            Led = new LEDClass();
+                                            oneEquipment = Led;
+                                            LED_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+                                        case 18://5.05
+                                            Dehumidifier = new DehumidifierClass();
+                                            oneEquipment = Dehumidifier;
+                                            Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
+                                            break;
+
                                     }
-                                    else
+
+                                    oneEquipment.Parent = this;
+                                    oneEquipment.eID = rd.GetInt32(0);
+                                    oneEquipment.eType = eType;
+                                    oneEquipment.eModel = rd.GetString(2);
+                                    oneEquipment.comType = rd.GetInt32(3);
+                                    oneEquipment.comName = rd.GetString(4);
+                                    oneEquipment.comRate = rd.GetInt32(5);
+                                    oneEquipment.comBits = rd.GetInt32(6);
+                                    oneEquipment.TCPType = rd.GetString(7);
+                                    oneEquipment.serverIP = rd.GetString(8);
+                                    oneEquipment.SerPort = rd.GetInt32(9);
+                                    oneEquipment.LocPort = rd.GetInt32(10);
+                                    oneEquipment.iot_code = rd.GetString(11);
+                                    oneEquipment.pc = rd.GetInt32(12);
+                                    //oneEquipment.version = oneEquipment.LoadVersionFromFile();
+                                    oneEquipment.LoadCommandFromFile(); //下载comlist
+                                                                        //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
+                                                                        //oneEquipment.Parent = this;
+                                    switch (oneEquipment.comType)
                                     {
-                                        WaterLog2 = (WaterloggingClass)oneEquipment;
-                                        Waterlogging_Version = oneEquipment.LoadVersionFromFile();
+                                        case 0:
+                                            oneEquipment.m485 = new modbus485();
+                                            oneEquipment.m485.ParentEquipment = this;
+                                            oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
+                                                                   System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
+                                            break;
+                                        case 1:
+                                            break;
+                                        case 2:
+                                            break;
                                     }
-                                    break;
-                                case 9://一氧化碳传感器
-                                    co = new CoClass();
-                                    oneEquipment = co;
-                                    Co_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 10://温湿度传感器
-                                    TempHum = new TempHumClass();
-                                    oneEquipment = TempHum;
-                                    TempHum_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 11://11烟雾传感器
-                                    Smoke = new SmokeClass();
-                                    oneEquipment = Smoke;
-                                    Smoke_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 12:
-                                    UPS = new UPSClass();
-                                    oneEquipment = UPS;
-                                    UPS_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 13://液冷机
-                                    LiquidCool = new LiquidCoolClass();
-                                    oneEquipment = LiquidCool;
-                                    LiquidCool_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 14:
-                                    DSP2 = new DSP2Class(1);
-                                    oneEquipment = DSP2;
-                                    DSP2_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 15:
-                                    Elemeter2H = new Elemeter2Class();
-                                    oneEquipment = Elemeter2H;
-                                    Elemeter2H_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 16://2.21
-                                    Elemeter1Z = new Elemeter2Class();
-                                    oneEquipment = Elemeter1Z;
-                                    Elemeter1Z_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 17://5.05
-                                    Led = new LEDClass();
-                                    oneEquipment = Led;
-                                    LED_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-                                case 18://5.05
-                                    Dehumidifier = new DehumidifierClass();
-                                    oneEquipment = Dehumidifier;
-                                    Dehumidifier_Version = oneEquipment.LoadVersionFromFile();
-                                    break;
-
-                            }
-
-                            oneEquipment.Parent = this;
-                            oneEquipment.eID = sdr.GetInt32(0);
-                            oneEquipment.eType = eType;
-                            oneEquipment.eModel = sdr.GetString(2);
-                            oneEquipment.comType = sdr.GetInt32(3);
-                            oneEquipment.comName = sdr.GetString(4);
-                            oneEquipment.comRate = sdr.GetInt32(5);
-                            oneEquipment.comBits = sdr.GetInt32(6);
-                            oneEquipment.TCPType = sdr.GetString(7);
-                            oneEquipment.serverIP = sdr.GetString(8);
-                            oneEquipment.SerPort = sdr.GetInt32(9);
-                            oneEquipment.LocPort = sdr.GetInt32(10);
-                            oneEquipment.iot_code = sdr.GetString(11);
-                            oneEquipment.pc = sdr.GetInt32(12);
-                            //oneEquipment.version = oneEquipment.LoadVersionFromFile();
-                            oneEquipment.LoadCommandFromFile(); //下载comlist
-                                                                //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
-                                                                //oneEquipment.Parent = this;
-                            switch (oneEquipment.comType)
-                            {
-                                case 0:
-                                    oneEquipment.m485 = new modbus485();
-                                    oneEquipment.m485.ParentEquipment = this;
-                                    oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
-                                                           System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
-                                    break;
-                                case 1:
-                                    break;
-                                case 2:
-                                    break;
+                                }
                             }
                         }
                     }
@@ -6542,18 +6541,7 @@ namespace EMS
             }
             finally
             {
-                if (sdr != null)
-                {
-                    if (!sdr.IsClosed)
-                        sdr.Close();
-                    sdr.Dispose();
-                }
 
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
             }
             Report2Cloud = new CloudClass();
             Report2Cloud.Parent = this;

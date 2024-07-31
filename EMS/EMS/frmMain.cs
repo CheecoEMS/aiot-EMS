@@ -458,6 +458,8 @@ namespace EMS
                 //连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
+
+                //DBConnection.CheckTables();
                 //从数据库加载
                 frmSet.LoadFromGlobalSet();
                 //从数据库中加载配置信息
@@ -484,17 +486,17 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.DoPU = strSysPath + "DoPU.ini";//记录客户负载最大需量
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
-               
+
                 //配置各个部件的设备码
-                string strID= frmSet.SysID;
+                string strID = frmSet.SysID;
                 if (strID.Length >= 7)
                     strID = strID.Substring(strID.Length - 7, 7);//截取SysID的最后7位
                 frmMain.Selffrm.AllEquipment.iot_code = "ems" + strID;
                 frmMain.Selffrm.AllEquipment.Fire.iot_code ="fire"+ strID;
                 frmMain.Selffrm.AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
-                
+
                 frmMain.Selffrm.AllEquipment.Report2Cloud.IniClound();//配置topic
-                 //连接mqtt
+                                                                      //连接mqtt
                 frmMain.Selffrm.AllEquipment.Report2Cloud.mqttConnect();
                 frmMain.Selffrm.AllEquipment.LoadErrorState();//读取数据库中的故障信息  
                 frmFlash.AddPostion(10);
@@ -618,7 +620,7 @@ namespace EMS
                     frmMain.Selffrm.ems.m485 = new modbus485();
                     frmMain.Selffrm.ems.m485.OpenEMS(frmSet.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                 }
-                else if(frmSet.IsMaster && frmSet.ConnectStatus == "485")
+                else if (frmSet.IsMaster && frmSet.ConnectStatus == "485")
                 {
                     //从机的列表
                     for (int i = 0; i < frmSet.SysCount-1; i++)//主机调控

@@ -1,5 +1,6 @@
 ﻿using log4net;
 using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -47,32 +48,11 @@ namespace EMS
         {
             Parent = aParent;
         }
-        ////获取当前策略的位置
-        //public int GetTacticsIndex(DateTime aTime)
-        //{
-        //    int iResult = -1;
-        //    DateTime aStartTime;
-        //    DateTime aEndTime;
-        //    string strDate = aTime.ToString("yyyy-M-d");
-        //    for (int i = 0; i < TacticsList.Count; i++)
-        //    {
-        //        aStartTime= Convert.ToDateTime(TacticsList[i].startTime.ToString(strDate + " H:m:s"));
-        //        aEndTime = Convert.ToDateTime(TacticsList[i].endTime.ToString(strDate + " H:m:s"));
-        //        if ((aTime>= aStartTime) &&(aTime<= aEndTime))
-        //        {
-        //            iResult = i;
-        //            break;
-        //        }
-        //    } 
-        //    return iResult; 
-        //}
-
 
         public void LoadJFPGFromSQL()
         {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select startTime, eName "
-                 + " from electrovalence ", ref ctTemp);
+            string astrSQL = "select startTime, eName  from electrovalence ";
+
             try
             {
                 byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -83,44 +63,40 @@ namespace EMS
                 int i = 0;
                 DateTime dtTemp;
 
-                if (rd != null)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (rd.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (rd.Read())
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                            dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                            tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
-                            tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
-                            i++;
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (rd.Read())
+                                {
+                                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
+                                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
+                                    i++;
+                                }
+                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
+                                }
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                            }
                         }
-                        byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
-                        byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
-                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                        {
-                            frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
-                        }
-                        if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                            frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
                     }
                 }
             }
             catch { }
             finally
             {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
 
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
             }
         }
 
@@ -128,75 +104,70 @@ namespace EMS
         public bool LoadFromMySQL()
         {
             bool Result = false;
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = null;
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue"
+                    + " from tactics  order by startTime";
             try
             {
-                rd = DBConnection.GetData("select startTime,endTime, tType, PCSType, waValue"
-                     + " from tactics  order by startTime", ref ctTemp);
-                lock (TacticsList)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (rd != null && rd.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (TacticsList.Count > 0)
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            TacticsList.RemoveAt(0);
-                        }
-                        while (rd.Read())
-                        {
-                            TacticsClass oneTactics = new TacticsClass();
-                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                            oneTactics.tType = rd.GetString(2);
-                            oneTactics.PCSType = rd.GetString(3);
-                            if (oneTactics.PCSType == "恒流")
-                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
-                            if (oneTactics.PCSType == "恒压")
+                            if (rd != null && rd.HasRows)
                             {
-                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
-                                if (oneTactics.waValue < 0)
-                                    oneTactics.waValue = 0;
+                                lock (TacticsList)
+                                {
+                                    while (TacticsList.Count > 0)
+                                    {
+                                        TacticsList.RemoveAt(0);
+                                    }
+                                    while (rd.Read())
+                                    {
+                                        TacticsClass oneTactics = new TacticsClass();
+                                        oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                                        oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                        oneTactics.tType = rd.GetString(2);
+                                        oneTactics.PCSType = rd.GetString(3);
+                                        if (oneTactics.PCSType == "恒流")
+                                            oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                                        if (oneTactics.PCSType == "恒压")
+                                        {
+                                            oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                            if (oneTactics.waValue < 0)
+                                                oneTactics.waValue = 0;
+                                        }
+
+                                        //9.5 源码注释
+                                        //oneTactics.PCSType = "恒功率";
+
+
+                                        //限额
+                                        oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                                        if (oneTactics.waValue > 110)
+                                            oneTactics.waValue = 110;
+                                        //修正充放电的正负功率
+                                        if (oneTactics.tType == "放电")
+                                            oneTactics.waValue = -rd.GetInt32(4);
+                                        else
+                                            oneTactics.waValue = rd.GetInt32(4);
+
+                                        TacticsList.Add(oneTactics);
+                                    }
+                                }
+                                Result = true;
                             }
-
-                            //9.5 源码注释
-                            //oneTactics.PCSType = "恒功率";
-
-
-                            //限额
-                            oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                            if (oneTactics.waValue > 110)
-                                oneTactics.waValue = 110;
-                            //修正充放电的正负功率
-                            if (oneTactics.tType == "放电")
-                                oneTactics.waValue = -rd.GetInt32(4);
-                            else
-                                oneTactics.waValue = rd.GetInt32(4);
-
-                            TacticsList.Add(oneTactics);
                         }
-                        Result = true;
-
-                    }//if (rd.HasRows)
+                    }
                 }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error(ex.Message);
             }
             finally
             {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
-
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
 
             }
             return Result;
@@ -666,22 +637,29 @@ namespace EMS
             // string strDate = DateTime.Now.ToString("yyyy-MM-dd ");
             MySqlConnection ctTemp = null;
 
-            MySqlDataReader rd = DBConnection.GetData("select rTime, AllUkva, Gridkva, Subkw from elemeter2 "
-            + " where rTime>='" + DateTime.Now.ToString("yyyy-MM-dd 00:00:00")
-             + "'and rTime<='" + DateTime.Now.ToString("yyyy-MM-dd 23:59:59")
-                 + "'  order by rTime", ref ctTemp);
+            string astrSQL = "select rTime, AllUkva, Gridkva, Subkw from elemeter2 "
+             + " where rTime>='" + DateTime.Now.ToString("yyyy-MM-dd 00:00:00")
+              + "'and rTime<='" + DateTime.Now.ToString("yyyy-MM-dd 23:59:59")
+                  + "'  order by rTime";
             try
             {
                 DateTime dtTemp;
 
-                if (rd != null)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (rd.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (rd.Read())
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            dtTemp = Convert.ToDateTime(rd.GetString(0));
-                            AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (rd.Read())
+                                {
+                                    dtTemp = Convert.ToDateTime(rd.GetString(0));
+                                    AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                                }
+                            }
                         }
                     }
                 }
@@ -692,18 +670,7 @@ namespace EMS
             }
             finally
             {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
 
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
             }
         }
 
