@@ -91,58 +91,5 @@ namespace EMS
         }
 
 
-        public void LoadFromMySQL()
-        {
-            while (WarningList.Count > 0)
-            {
-                // WarningList[0].Dispose();                
-                WarningList.RemoveAt(0);
-            }
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select WaringID, rTime,wLevels, wClass, Warning,memo,CheckTime,UserID,ResetTime "
-                 + " from warning where ResetTime IS NULL", ref ctTemp);
-            try
-            {
-                if (rd != null)
-                {
-                    if (rd.HasRows)
-                    {
-                        while (rd.Read())
-                        {
-                            WarmingClass oneWarning = new WarmingClass();
-                            oneWarning.rDate = rd.GetDateTime(1);//Convert.ToDateTime();
-                            oneWarning.WarningID = rd.GetInt32(0);
-                            oneWarning.wLevels = rd.GetInt32(2); ;
-                            oneWarning.wClass = rd.GetString(3);
-                            oneWarning.Warning = rd.GetString(4);
-                            oneWarning.memo = rd.GetString(5);
-                            oneWarning.CheckTime = rd.GetDateTime(6);
-                            oneWarning.UserID = rd.GetString(7);
-                            //oneWarning.rID = oneWarning.InsertWaring();
-                            WarningList.Add(oneWarning);
-                        }
-                    }
-                }
-
-            }
-            catch (Exception ex){ }
-            finally
-            {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
-
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    DBConnection._connectionPool.ReturnConnection(ctTemp);
-                }
-            }
-        }
-
-
     }
 }

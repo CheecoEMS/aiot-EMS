@@ -56,6 +56,7 @@ namespace EMS
         public bool receivedHeartbeatResponse = false;
         public bool SendAgain = true;
         public string HeartbeatID;
+        public volatile bool ConnectToCloud = false;
         private readonly object _lockMqtt = new object();
 
         private static System.Threading.Timer Publish_Timer;//数据上云定时器
@@ -165,9 +166,12 @@ namespace EMS
         private void Publish_TimerCallback(Object state)
         {
             //上传数据
-            lock (_lockPublishTimer)
+            if (ConnectToCloud)
             {
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                lock (_lockPublishTimer)
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                }
             }
         }
 
@@ -179,7 +183,7 @@ namespace EMS
             TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
             EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
             //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
-            string strID = frmSet.SysID;
+            string strID = frmSet.config.SysID;
             if (strID.Length >= 7)
                 strID = strID.Substring(strID.Length - 7, 7);
             AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
@@ -256,6 +260,7 @@ namespace EMS
         {
             try
             {
+                ConnectToCloud = false;
                 //保证定时器已经完成publish动作，释放锁_lockMqtt
                 lock (_lockPublishTimer)
                 {
@@ -289,46 +294,27 @@ namespace EMS
 
         }
 
-
-
-
-        public void CheckConnect()
-        {
-            if (connectflag == 1)
-            {
-                //mqttClient.Disconnect();
-                if (mqttClient != null)
-                {
-                    if (!mqttClient.IsConnected)
-                    {
-                        mqttReconnect();
-                    }
-                }
-
-            }
-        }
-
         public void SendHeartbeat()
         {
-            if (mqttClient != null)
+            if (SendAgain)
             {
-                if (SendAgain)
-                {
-                    SendAgain = false;
-                    HeartbeatID = Guid.NewGuid().ToString();
-                    string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
+                SendAgain = false;
+                HeartbeatID = Guid.NewGuid().ToString();
+                string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
                     
-                    lock (_lockMqtt)
+                lock (_lockMqtt)
+                {
+                    if (mqttClient != null)
                     {
                         mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
                             MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
                     }
                 }
-                else
-                {
-                    mqttReconnect();
-                }
             }
+            else
+            {
+                mqttReconnect();
+            }      
         }
         /// <summary>
         /// 给一个topic写数据
@@ -833,7 +819,10 @@ namespace EMS
             string ID = jsonObject["HeartBeatID"].ToString();
             if (ID == HeartbeatID)
             {
-                //receivedHeartbeatResponse = true;
+                if (!ConnectToCloud)
+                {
+                    ConnectToCloud = true;
+                }
                 SendAgain = true;
             }
         }
@@ -870,7 +859,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if (!frmSet.UseBalaTactics)
+                if (!frmSet.config.UseBalaTactics)
                     return strID;
 
                 //清理旧数据
@@ -966,7 +955,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
+                if ((!frmSet.config.UseYunTactics)|| (!frmSet.config.IsMaster))
                 {
                     return false;
                 }
@@ -1124,7 +1113,7 @@ namespace EMS
                 else
                 {
                     //从机器不执行网络命令(不开放离网模式)
-                    if ((frmSet.IsMaster)&&(ipcsSet!=4))
+                    if ((frmSet.config.IsMaster)&&(ipcsSet!=4))
                         frmControl.SetControl(iMode, PCSClass.PCSTypes[ipcsSet], ipcsSets[icharge], ipcsSetValue,iOn, true);
                 } 
                 /*
@@ -1162,23 +1151,71 @@ namespace EMS
                         var parameters = jsonObject["params"];
                         if (parameters["requireLimit"] != null)
                         {
-                            frmSet.MaxGridKW = (int)double.Parse(parameters["requireLimit"].ToString());
+                            frmSet.cloudLimits.MaxGridKW = int.Parse(parameters["requireLimit"].ToString());
                         }
                         if (parameters["invertPower"] != null)
                         {
-                            frmSet.MinGridKW = (int)double.Parse(parameters["invertPower"].ToString());
+                            frmSet.cloudLimits.MinGridKW = int.Parse(parameters["invertPower"].ToString());
                         }
                         if (parameters["socUp"] != null)
                         {
-                            frmSet.MaxSOC = (int)double.Parse(parameters["socUp"].ToString());
+                            frmSet.cloudLimits.MaxSOC = int.Parse(parameters["socUp"].ToString());
                         }
                         if (parameters["socDown"] != null)
                         {
-                            frmSet.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
+                            frmSet.cloudLimits.MinSOC = int.Parse(parameters["socDown"].ToString());
+                        }
+                        if (parameters["WarnMaxGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMaxGridKW = int.Parse(parameters["WarnMaxGridKW"].ToString());
+                        }
+                        if (parameters["WarnMinGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMinGridKW = int.Parse(parameters["WarnMinGridKW"].ToString());
+                        }
+                        if (parameters["PcsKva"] != null)
+                        {
+                            frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
+                        }
+                        if (parameters["Client_PUMdemand_Max"] != null)
+                        {
+                            frmSet.cloudLimits.Client_PUMdemand_Max = int.Parse(parameters["Client_PUMdemand_Max"].ToString());
+                        }
+                        if (parameters["EnableActiveReduce"] != null)
+                        {
+                            frmSet.cloudLimits.EnableActiveReduce = int.Parse(parameters["EnableActiveReduce"].ToString());
+                        }
+                        if (parameters["PumScale"] != null)
+                        {
+                            frmSet.cloudLimits.PumScale = int.Parse(parameters["PumScale"].ToString());
+                        }
+                        if (parameters["AllUkvaWindowSize"] != null)
+                        {
+                            frmSet.cloudLimits.AllUkvaWindowSize = int.Parse(parameters["AllUkvaWindowSize"].ToString());
+                        }
+                        if (parameters["PumTime"] != null)
+                        {
+                            frmSet.cloudLimits.PumTime = int.Parse(parameters["PumTime"].ToString());
+                        }
+                        if (parameters["BmsDerateRatio"] != null)
+                        {
+                            frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
+                        }
+                        if (parameters["FrigOpenLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOpenLower = int.Parse(parameters["FrigOpenLower"].ToString());
+                        }
+                        if (parameters["FrigOffLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffLower = int.Parse(parameters["FrigOffLower"].ToString());
+                        }
+                        if (parameters["FrigOffUpper"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
                         }
 
 
-                        if (frmSet.SetToGlobalSet())
+                        if (frmSet.Set_Cloudlimits())
                         {
                             bResult = true;
                         }
@@ -1205,7 +1242,7 @@ namespace EMS
             byte[] returnMsg = null;
             ushort aMsg;
             int index = 3;
-            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.i485Addr, 3, (ushort)iLen);
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.config.i485Addr, 3, (ushort)iLen);
             for (int i = aAddr; i <= aAddr+iLen; ++i)
             {
                 aMsg = 0;
@@ -1299,26 +1336,26 @@ namespace EMS
             switch (aAddr)
             {
                 case 0x6001://计划功率
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
                     double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
                     if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
                     else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
                     else//待机
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 2);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 2);
                 case 0x6004: //PCSType 恒压横流恒功率、AC恒压
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
                 case 0x6005: //EMS运行状态 ： 0正常，1故障，2停机
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
                 case 0x6006: //BMS是否告警
                     if (frmMain.Selffrm.AllEquipment.BMS.Error[1] + frmMain.Selffrm.AllEquipment.BMS.Error[2] + frmMain.Selffrm.AllEquipment.BMS.Error[3] > 0)
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
                     else
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
             }    
             return null;
         }
