@@ -1704,7 +1704,7 @@ namespace EMS
         static  public  void DeleOldData(string astrData)
         {
             //删除清理数据库
-            string[] strSQL = {"delete   from cellstemp where rTime<'"+astrData+"'",
+            string[] strSQL = {"delete from cellstemp where rTime<'"+astrData+"'",
             "delete from battery where rTime<'"+astrData+"'",
             "delete from cellsv where rTime<'"+astrData+"'",
             "delete from electrovalence where rTime<'"+astrData+"'",
@@ -1720,7 +1720,9 @@ namespace EMS
             "delete from profit where rTime<'"+astrData+"'",
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
-            "delete from warningwhere rTime<'"+astrData+"'"};
+            "delete from warningwhere rTime<'"+astrData+"'",
+            "delete from chargeinform rTime<'"+astrData+"'"
+            };
             foreach (string astrSQl in strSQL)
                 DBConnection.ExecSQL(astrSQl);
         }

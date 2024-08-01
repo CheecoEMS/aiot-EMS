@@ -1371,7 +1371,7 @@ namespace EMS
                         new Column { Name = "cellIDMinV", Type = "double", IsNullable = true, Key = "", Comment = "单体最低电压ID" },
                         new Column { Name = "cellMinV", Type = "double", IsNullable = true, Key = "", Comment = "单体最低电压" },
                         new Column { Name = "BMSa", Type = "double", IsNullable = true, Key = "", Comment = "电流" },
-                        new Column { Name = "Time", Type = "datetime", IsNullable = true, Key = "", Comment = "发生时间" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "发生时间" },
                         new Column { Name = "Warning", Type = "varchar(255)", IsNullable = true, Key = "", Comment = "告警信息" },
                     }
                 },
@@ -1698,7 +1698,7 @@ namespace EMS
                         new Column { Name = "WarnMaxGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率上限" },
                         new Column { Name = "WarnMinGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率下限" },
                         new Column { Name = "PcsKva", Type = "int", IsNullable = true, Comment = "触发需量抬升的放电功率" },
-                        new Column { Name = "Client_PUMdemand_Max", Type = "int", IsNullable = true, Comment = "最大需量比例" },
+                        new Column { Name = "Client_PUMdemand_Max", Type = "int", IsNullable = true, Comment = "客户本月最大需量" },
                         new Column { Name = "EnableActiveReduce", Type = "int", IsNullable = true, Comment = "开启主动降容：1(开) 0(关)" },
                         new Column { Name = "PumScale", Type = "int", IsNullable = true, Comment = "需量比例" },
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },

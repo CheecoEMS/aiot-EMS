@@ -1145,21 +1145,56 @@ namespace EMS
                         var parameters = jsonObject["params"];
                         if (parameters["requireLimit"] != null)
                         {
-                            frmSet.cloudLimits.MaxGridKW = (int)double.Parse(parameters["requireLimit"].ToString());
+                            frmSet.cloudLimits.MaxGridKW = int.Parse(parameters["requireLimit"].ToString());
                         }
                         if (parameters["invertPower"] != null)
                         {
-                            frmSet.cloudLimits.MinGridKW = (int)double.Parse(parameters["invertPower"].ToString());
+                            frmSet.cloudLimits.MinGridKW = int.Parse(parameters["invertPower"].ToString());
                         }
                         if (parameters["socUp"] != null)
                         {
-                            frmSet.cloudLimits.MaxSOC = (int)double.Parse(parameters["socUp"].ToString());
+                            frmSet.cloudLimits.MaxSOC = int.Parse(parameters["socUp"].ToString());
                         }
                         if (parameters["socDown"] != null)
                         {
-                            frmSet.cloudLimits.MinSOC = (int)double.Parse(parameters["socDown"].ToString());
+                            frmSet.cloudLimits.MinSOC = int.Parse(parameters["socDown"].ToString());
                         }
-
+                        if (parameters["WarnMaxGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMaxGridKW = int.Parse(parameters["WarnMaxGridKW"].ToString());
+                        }
+                        if (parameters["WarnMinGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMinGridKW = int.Parse(parameters["WarnMinGridKW"].ToString());
+                        }
+                        if (parameters["PcsKva"] != null)
+                        {
+                            frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
+                        }
+                        if (parameters["Client_PUMdemand_Max"] != null)
+                        {
+                            frmSet.cloudLimits.Client_PUMdemand_Max = int.Parse(parameters["Client_PUMdemand_Max"].ToString());
+                        }
+                        if (parameters["EnableActiveReduce"] != null)
+                        {
+                            frmSet.cloudLimits.EnableActiveReduce = int.Parse(parameters["EnableActiveReduce"].ToString());
+                        }
+                        if (parameters["PumScale"] != null)
+                        {
+                            frmSet.cloudLimits.PumScale = int.Parse(parameters["PumScale"].ToString());
+                        }
+                        if (parameters["AllUkvaWindowSize"] != null)
+                        {
+                            frmSet.cloudLimits.AllUkvaWindowSize = int.Parse(parameters["AllUkvaWindowSize"].ToString());
+                        }
+                        if (parameters["PumTime"] != null)
+                        {
+                            frmSet.cloudLimits.PumTime = int.Parse(parameters["PumTime"].ToString());
+                        }
+                        if (parameters["BmsDerateRatio"] != null)
+                        {
+                            frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
+                        }
 
                         if (frmSet.Set_Cloudlimits())
                         {

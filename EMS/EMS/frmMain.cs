@@ -552,7 +552,7 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-                if (frmSet.config.IsMaster)
+/*                if (frmSet.config.IsMaster)
                 {
                     if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
                     {
@@ -564,7 +564,7 @@ namespace EMS
                         }
                         Selffrm.AllEquipment.WriteDoPUini();
                     }
-                }
+                }*/
 
                 //校准电表日期
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
