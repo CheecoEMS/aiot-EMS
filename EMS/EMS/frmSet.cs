@@ -116,7 +116,7 @@ namespace EMS
         public static int RestartCounts;//重启次数
 
         //05.04 除湿机配置
-        public static double DHSetRunStatus;
+        public static int DHSetRunStatus;
         public static double DHSetTempBoot;      //（除湿：温度启动值）dehumidity
         public static double DHSetTempStop;      //（除湿：温度停止值）
         public static double DHSetHumidityBoot;  //（除湿：湿度启动值）
@@ -968,6 +968,12 @@ namespace EMS
                 RestartCounts = Convert.ToInt32(ConfigINI.INIRead("System Set", "RestartCounts", "0", INIPath));
 
                 GPIO_Select_Mode = Convert.ToInt32(ConfigINI.INIRead("System Set", "GPIOSelect", "0", INIPath));
+                //5.05 除湿器
+                DHSetRunStatus = Convert.ToInt32(ConfigINI.INIRead("System Set", "DHSetRunStatus", "0", INIPath));
+                DHSetTempBoot = Convert.ToInt32(ConfigINI.INIRead("System Set", "DHSetTempBoot", "0", INIPath));
+                DHSetTempStop = Convert.ToInt32(ConfigINI.INIRead("System Set", "DHSetTempStop", "0", INIPath));
+                DHSetHumidityBoot = Convert.ToInt32(ConfigINI.INIRead("System Set", "DHSetHumidityBoot", "0", INIPath));
+                DHSetHumidityStop = Convert.ToInt32(ConfigINI.INIRead("System Set", "DHSetHumidityStop", "0", INIPath));
             }
             catch (Exception ex)
             {
@@ -1211,7 +1217,12 @@ namespace EMS
                 tneFenMaxTemp.SetIntValue((int)(FenMaxTemp));
                 tneFenMinTemp.SetIntValue((int)(FenMinTemp));
                 tcbFenMode.SetSelectItemIndex(FenMode);
-
+                //除湿机
+                tneDHSetHumidityStop.SetIntValue((int)(DHSetHumidityStop));
+                tneDHSetHumidityBoot.SetIntValue((int)(DHSetHumidityBoot));
+                tneDHSetTempBoot.SetIntValue((int)(DHSetTempBoot));
+                tneDHSetTempStop.SetIntValue((int)(DHSetTempStop));
+                tcbDHSetRunStatus.SetSelectItemIndex(DHSetRunStatus);
                 //log.Error("展示："+"MaxGridKW: " + MaxGridKW + "MinGridKW: " + MinGridKW);
 
             }
