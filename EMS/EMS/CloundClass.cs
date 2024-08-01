@@ -1195,6 +1195,19 @@ namespace EMS
                         {
                             frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
                         }
+                        if (parameters["FrigOpenLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOpenLower = int.Parse(parameters["FrigOpenLower"].ToString());
+                        }
+                        if (parameters["FrigOffLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffLower = int.Parse(parameters["FrigOffLower"].ToString());
+                        }
+                        if (parameters["FrigOffUpper"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
+                        }
+
 
                         if (frmSet.Set_Cloudlimits())
                         {

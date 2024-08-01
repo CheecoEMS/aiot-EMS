@@ -797,11 +797,11 @@ namespace EMS
             {
                 if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
                 {
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
                     {
                         frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true);//PCS工作前启动空调
                     }                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
-                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp <  frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp >  frmSet.cloudLimits.FrigOffLower))
                     {
                         if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
                         {
@@ -813,11 +813,11 @@ namespace EMS
                 //液冷控制
                 if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                 {
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > 30 && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                     {
                         frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
                     }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
-                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < 25) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > 10))
+                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower))
                     {
                         if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
                         {

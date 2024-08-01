@@ -231,7 +231,8 @@ namespace EMS
         public static bool LoadCloudLimitsFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime ， BmsDerateRatio FROM CloudLimits ;";
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
+                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper FROM CloudLimits;";
 
             try
             {
@@ -250,13 +251,16 @@ namespace EMS
                                 cloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
                                 cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
                                 cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                                cloudLimits.PcsKva = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                cloudLimits.PcsKva = rd.IsDBNull(6) ? 10 : rd.GetInt32(6);
                                 cloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
                                 cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
                                 cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                                cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 5 : rd.GetInt32(10);
-                                cloudLimits.PumTime = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
+                                cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 4 : rd.GetInt32(10);
+                                cloudLimits.PumTime = rd.IsDBNull(11) ? 5 : rd.GetInt32(11);
                                 cloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 50 : rd.GetInt32(12);
+                                cloudLimits.FrigOpenLower = rd.IsDBNull(13) ? 30 : rd.GetInt32(13);
+                                cloudLimits.FrigOffLower = rd.IsDBNull(14) ? 10 : rd.GetInt32(14);
+                                cloudLimits.FrigOffUpper = rd.IsDBNull(15) ? 25 : rd.GetInt32(15);
 
                                 result = true;
                             }
@@ -299,6 +303,9 @@ namespace EMS
                 + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
                 + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
                 + "', BmsDerateRatio = '" + frmSet.cloudLimits.BmsDerateRatio.ToString()
+                + "', FrigOpenLower = '" + frmSet.cloudLimits.FrigOpenLower.ToString()
+                + "', FrigOffLower = '" + frmSet.cloudLimits.FrigOffLower.ToString()
+                + "', FrigOffUpper = '" + frmSet.cloudLimits.FrigOffUpper.ToString()
                 + "';";
 
             bool result = false;
@@ -333,7 +340,7 @@ namespace EMS
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, ErrorState2 , GPIOSelect, MasterIp, ConnectStatus FROM config; ";
+                                + "EMSstatus, ErrorState2, GPIOSelect, MasterIp, ConnectStatus FROM config; ";
             try
             {
 
@@ -2575,6 +2582,9 @@ namespace EMS
             public volatile int AllUkvaWindowSize;
             public volatile int PumTime;
             public volatile int BmsDerateRatio; // double
+            public volatile int FrigOpenLower;
+            public volatile int FrigOffLower;
+            public volatile int FrigOffUpper;
         }
 
 
