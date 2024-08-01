@@ -306,8 +306,15 @@ namespace EMS
                 {
                     if (mqttClient != null)
                     {
-                        mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
-                            MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+                        try
+                        {
+                            mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
+                                MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+                        }
+                        catch (MqttClientException ex)
+                        { 
+                            log.Error("SendHeartbeat: " + ex.Message);
+                        }
                     }
                 }
             }
@@ -327,7 +334,14 @@ namespace EMS
             {
                 lock (_lockMqtt)
                 {
-                    mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
+                    try
+                    {
+                        mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
+                    }
+                    catch (MqttClientException ex)
+                    {
+                        log.Error("Write2Topic: " + ex.Message);
+                    }
                 }
             }
         }
@@ -374,13 +388,27 @@ namespace EMS
                 {
                     if (Result)
                     {
-                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                     else
                     {
-                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                 }       
             }
@@ -391,26 +419,58 @@ namespace EMS
                 {
                     if (Result)
                     {
-                        mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-
-                        frmMain.TacticsList.LoadJFPGFromSQL();
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                     else
                     {
-                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
-                }                                    
+                }
             }
             else if (topic == EMSLimitTopic + "request")
             {
                 Result = GetServerEMSLimit(message);
                 lock (_lockMqtt)
                 {
-                    if (mqttClient != null)
+                    if (Result)
                     {
-                        mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                 }
             }
@@ -421,7 +481,14 @@ namespace EMS
                 {
                     if (mqttClient != null)
                     {
-                        mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                 }
             }
@@ -432,7 +499,15 @@ namespace EMS
                 {
                     if (mqttClient != null)
                     {
-                        mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+
                     }
                 }
             }
@@ -447,13 +522,27 @@ namespace EMS
                 {
                     if (Result)
                     {
-                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                     else
                     {
-                        mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                            MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
                     }
                 }
             }
