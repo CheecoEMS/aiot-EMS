@@ -1704,9 +1704,9 @@ namespace EMS
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },
                         new Column { Name = "PumTime", Type = "int", IsNullable = true, Comment = "强制放电时间" },
                         new Column { Name = "BmsDerateRatio", Type = "int", IsNullable = true, Comment = "BMS触发1级告警致功率降额比" },
-                        new Column { Name = "FrigOpenLower;", Type = "int", IsNullable = true, Comment = "制冷设备开启下限" },
-                        new Column { Name = "FrigOffLower;", Type = "int", IsNullable = true, Comment = "制冷设备关闭启下限" },
-                        new Column { Name = "FrigOffUpper;", Type = "int", IsNullable = true, Comment = "制冷设备关闭启上限" }
+                        new Column { Name = "FrigOpenLower", Type = "int", IsNullable = true, Comment = "制冷设备开启下限" },
+                        new Column { Name = "FrigOffLower", Type = "int", IsNullable = true, Comment = "制冷设备关闭启下限" },
+                        new Column { Name = "FrigOffUpper", Type = "int", IsNullable = true, Comment = "制冷设备关闭启上限" }
                     }
                 },
                 {
