@@ -1887,12 +1887,12 @@ namespace EMS
             {
                 config.SysMode = 0; 
             }
-            //save
-            //Set_GlobalSet_State();
+         
             GetINIData();
-            SaveSet2File();
-            //Set_GlobalSet_State();
+            //保存修改数据
             Set_Cloudlimits();
+            Set_Config();
+            Set_ComponentSettings();
 
             CloseForm();
             frmMain.ShowMainForm();
