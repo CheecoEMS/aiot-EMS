@@ -3350,7 +3350,7 @@ namespace EMS
         public int PCS = 1;//0:英博；1：晶石
         public static string[] PCSStates = { "待机", "停机", "充电", "放电" };
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "AC恒压", "自适应需量" };
-        public static string[] PCSNetState = { "停机","待机", "运行", "总故障状态", "总警告状态" , "1远程/0就地状态","急停输入状态","并网","离网","过载降容"};
+        public static string[] PCSNetState = { "停机", "待机", "运行", "总故障状态", "总警告状态", "1远程/0就地状态", "急停输入状态", "并网", "离网", "过载降容" };
         public int State = 0;
         public double aV { get; set; }
         public double bV { get; set; }
@@ -3392,7 +3392,7 @@ namespace EMS
         public double InTemp { get; set; }           //入口温度
         public double OutTemp { get; set; }             //出口温度
         public ushort[] Error { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        public int[] Error_2  = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        public int[] Error_2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public ushort[] OldError = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -3403,7 +3403,7 @@ namespace EMS
         public ushort PCSwaType = 0;
 
         public double IGBTTemp1 { get; set; }
-        public double IGBTTemp2{ get; set; }
+        public double IGBTTemp2 { get; set; }
         public double IGBTTemp3 { get; set; }
         public double IGBTTemp4 { get; set; }
         public double IGBTTemp5 { get; set; }
@@ -3426,7 +3426,7 @@ namespace EMS
         //public double DSP2bNUkvar { get; set; }
         //public double DSP2cNUkvar { get; set; }
         public double DSP2allNUkvar { get; set; }
-       // public double DSP2aAkva { get; set; }              //A视在功率   
+        // public double DSP2aAkva { get; set; }              //A视在功率   
         //public double DSP2bAkva { get; set; }
         //public double DSP2cAkva { get; set; }
         public double DSP2allAkva { get; set; }             //总视在功率
@@ -3460,6 +3460,8 @@ namespace EMS
         public string SoftwareVersion { get; set; }
         public string HardwareVersion { get; set; }
 
+        //public double[] Send_Period   = new double[100];
+        //public int  Send_Period_Count= 0;
 
 
         public PCSClass(int aPCS)
@@ -4196,6 +4198,8 @@ namespace EMS
             string strData = "";
             bool bPrepared = false;
 
+            //DateTime startTime = DateTime.Now;
+
             if (GetSysData(35, ref strTemp))
             {
                 double dTemp = 0;
@@ -4289,7 +4293,7 @@ namespace EMS
                 if (Get3strData(25, ref strTemp, ref strData))
                     DCInputV = Math.Round(float.Parse(strData), 3);
                 if (Get3strData(26, ref strTemp, ref strData))
-                    PcsStatus = Convert.ToUInt16(strTemp);
+                    PcsStatus = Convert.ToUInt16(strData);
                 if (Get3strData(27, ref strTemp, ref strData))
                     Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
@@ -4475,7 +4479,17 @@ namespace EMS
                 bPrepared = true;
                 PCSwaType = Convert.ToUInt16(strTemp);
             }
-            
+
+            //DateTime endTime = DateTime.Now;  // 获取当前时间
+            //TimeSpan runTime = endTime - startTime;  // 计算运行时间
+            //log.Error("运行时间"+ runTime.TotalSeconds+"   当前次数："+ Send_Period_Count);
+            //Send_Period_Count++;
+            //Send_Period[Send_Period_Count] = runTime.TotalSeconds;
+            //if (Send_Period_Count >= 99)
+            //{
+            //    Send_Period_Count = 0;
+            //}
+            // Console.WriteLine("运行时间为: " + runTime.TotalSeconds + " 秒");
             //判断PCS的通讯状态
             Prepared = bPrepared;
             if (!Prepared)
@@ -8838,6 +8852,9 @@ namespace EMS
             {
                 try
                 {
+                    //DateTime startTime = DateTime.Now;
+
+
                     PCSPower = 0;
                     Thread.Sleep(2000);
                     //PCS 
@@ -8877,7 +8894,9 @@ namespace EMS
                     FireFBGPIO();
                     //急停
                     EmergencyStopFBGPIO();
-
+                    //DateTime EndTime = DateTime.Now;
+                    //TimeSpan runTime = EndTime - startTime;  // 计算运行时间
+                    //log.Error("线程运行时间为: " + runTime.TotalSeconds + " 秒");
                 }
                 catch (Exception ex)
                 {
