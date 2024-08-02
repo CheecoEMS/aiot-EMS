@@ -1407,15 +1407,15 @@ namespace EMS
                 //cbCloundIP.Text = CloundIP;
                 //nudCloundPort.Value = CloundPort;
                 //tcbSysAutoRun.SetValue( SysAutoRun);
-/*                tcbSYSModel.SetSelectItemIndex(config.SysMode);
-                tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
-                tcbPCSType.SetstrText(PCSType);
-                if (PCSwaValue > 0)
-                    tcbPCSMode.SetSelectItemIndex(0);
-                else
-                    tcbPCSMode.SetSelectItemIndex(1);
-                tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));
-                tneBMSwaValue.SetIntValue((int)Math.Abs(cloudLimits.BmsDerateRatio));//7.24*/
+                /*                tcbSYSModel.SetSelectItemIndex(config.SysMode);
+                                tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
+                                tcbPCSType.SetstrText(PCSType);
+                                if (PCSwaValue > 0)
+                                    tcbPCSMode.SetSelectItemIndex(0);
+                                else
+                                    tcbPCSMode.SetSelectItemIndex(1);
+                                tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));*/
+                tneBMSwaValue.SetIntValue(Math.Abs(cloudLimits.BmsDerateRatio));//7.24
                 tneMaxSOC.SetIntValue(cloudLimits.MaxSOC);
                 tneMinSOC.SetIntValue(cloudLimits.MinSOC);
                 tneSetHotTemp.SetIntValue((int)(componentSettings.SetHotTemp));
@@ -2695,7 +2695,8 @@ namespace EMS
             try
             {
                 GetINIData();
-                frmSet.SaveSet2File();
+                //frmSet.SaveSet2File();
+                Set_Cloudlimits();
 
                 //8.3
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
