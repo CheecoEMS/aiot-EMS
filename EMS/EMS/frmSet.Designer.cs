@@ -200,17 +200,6 @@ namespace EMS
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tpLog = new System.Windows.Forms.TabPage();
-            this.panel5 = new System.Windows.Forms.Panel();
-            this.btnUpL = new System.Windows.Forms.Button();
-            this.btnDownL = new System.Windows.Forms.Button();
-            this.btnClean = new System.Windows.Forms.Button();
-            this.btnSave2File = new System.Windows.Forms.Button();
-            this.dbgLog = new System.Windows.Forms.DataGridView();
-            this.dataGridViewTextBoxColumn11 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn12 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn13 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn14 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn15 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tbCTL = new System.Windows.Forms.TabPage();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnBMSRead = new System.Windows.Forms.Button();
@@ -361,9 +350,6 @@ namespace EMS
             this.panel6.SuspendLayout();
             this.panel4.SuspendLayout();
             this.panel3.SuspendLayout();
-            this.tpLog.SuspendLayout();
-            this.panel5.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).BeginInit();
             this.tbCTL.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -441,7 +427,7 @@ namespace EMS
             this.btnLog.Name = "btnLog";
             this.btnLog.Size = new System.Drawing.Size(88, 44);
             this.btnLog.TabIndex = 17;
-            this.btnLog.Text = "Log数据";
+            this.btnLog.Text = "云设置";
             this.btnLog.UseVisualStyleBackColor = false;
             this.btnLog.Visible = false;
             this.btnLog.Click += new System.EventHandler(this.btnLog_Click);
@@ -2681,8 +2667,6 @@ namespace EMS
             // tpLog
             // 
             this.tpLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
-            this.tpLog.Controls.Add(this.panel5);
-            this.tpLog.Controls.Add(this.dbgLog);
             this.tpLog.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tpLog.Location = new System.Drawing.Point(4, 4);
             this.tpLog.Name = "tpLog";
@@ -2690,147 +2674,6 @@ namespace EMS
             this.tpLog.Size = new System.Drawing.Size(845, 643);
             this.tpLog.TabIndex = 6;
             this.tpLog.Text = "Log数据";
-            // 
-            // panel5
-            // 
-            this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel5.Controls.Add(this.btnUpL);
-            this.panel5.Controls.Add(this.btnDownL);
-            this.panel5.Controls.Add(this.btnClean);
-            this.panel5.Controls.Add(this.btnSave2File);
-            this.panel5.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.panel5.Location = new System.Drawing.Point(5, 8);
-            this.panel5.Margin = new System.Windows.Forms.Padding(2);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(836, 52);
-            this.panel5.TabIndex = 13;
-            // 
-            // btnUpL
-            // 
-            this.btnUpL.BackColor = System.Drawing.Color.Transparent;
-            this.btnUpL.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnUpL.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnUpL.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnUpL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnUpL.ForeColor = System.Drawing.Color.White;
-            this.btnUpL.Location = new System.Drawing.Point(688, 3);
-            this.btnUpL.Margin = new System.Windows.Forms.Padding(1);
-            this.btnUpL.Name = "btnUpL";
-            this.btnUpL.Size = new System.Drawing.Size(53, 44);
-            this.btnUpL.TabIndex = 18;
-            this.btnUpL.Text = "^";
-            this.btnUpL.UseVisualStyleBackColor = false;
-            this.btnUpL.Click += new System.EventHandler(this.btnUpL_Click);
-            // 
-            // btnDownL
-            // 
-            this.btnDownL.BackColor = System.Drawing.Color.Transparent;
-            this.btnDownL.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnDownL.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnDownL.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnDownL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDownL.ForeColor = System.Drawing.Color.White;
-            this.btnDownL.Location = new System.Drawing.Point(743, 3);
-            this.btnDownL.Margin = new System.Windows.Forms.Padding(1);
-            this.btnDownL.Name = "btnDownL";
-            this.btnDownL.Size = new System.Drawing.Size(53, 44);
-            this.btnDownL.TabIndex = 17;
-            this.btnDownL.Text = "v";
-            this.btnDownL.UseVisualStyleBackColor = false;
-            this.btnDownL.Click += new System.EventHandler(this.btnDownL_Click);
-            // 
-            // btnClean
-            // 
-            this.btnClean.BackColor = System.Drawing.Color.Transparent;
-            this.btnClean.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnClean.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnClean.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnClean.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClean.ForeColor = System.Drawing.Color.White;
-            this.btnClean.Location = new System.Drawing.Point(113, 3);
-            this.btnClean.Margin = new System.Windows.Forms.Padding(1);
-            this.btnClean.Name = "btnClean";
-            this.btnClean.Size = new System.Drawing.Size(88, 44);
-            this.btnClean.TabIndex = 13;
-            this.btnClean.Text = "清理记录";
-            this.btnClean.UseVisualStyleBackColor = false;
-            this.btnClean.Click += new System.EventHandler(this.btnClean_Click_1);
-            // 
-            // btnSave2File
-            // 
-            this.btnSave2File.BackColor = System.Drawing.Color.Transparent;
-            this.btnSave2File.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnSave2File.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnSave2File.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnSave2File.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSave2File.ForeColor = System.Drawing.Color.White;
-            this.btnSave2File.Location = new System.Drawing.Point(22, 3);
-            this.btnSave2File.Margin = new System.Windows.Forms.Padding(1);
-            this.btnSave2File.Name = "btnSave2File";
-            this.btnSave2File.Size = new System.Drawing.Size(88, 44);
-            this.btnSave2File.TabIndex = 12;
-            this.btnSave2File.Text = "导出";
-            this.btnSave2File.UseVisualStyleBackColor = false;
-            this.btnSave2File.Click += new System.EventHandler(this.btnSave2File_Click_1);
-            // 
-            // dbgLog
-            // 
-            this.dbgLog.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dbgLog.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.dataGridViewTextBoxColumn11,
-            this.dataGridViewTextBoxColumn12,
-            this.dataGridViewTextBoxColumn13,
-            this.dataGridViewTextBoxColumn14,
-            this.dataGridViewTextBoxColumn15});
-            this.dbgLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.dbgLog.Location = new System.Drawing.Point(3, 64);
-            this.dbgLog.Margin = new System.Windows.Forms.Padding(2);
-            this.dbgLog.Name = "dbgLog";
-            this.dbgLog.RowHeadersWidth = 62;
-            this.dbgLog.RowTemplate.Height = 30;
-            this.dbgLog.Size = new System.Drawing.Size(839, 576);
-            this.dbgLog.TabIndex = 12;
-            // 
-            // dataGridViewTextBoxColumn11
-            // 
-            this.dataGridViewTextBoxColumn11.DataPropertyName = "ID";
-            this.dataGridViewTextBoxColumn11.HeaderText = "ID";
-            this.dataGridViewTextBoxColumn11.MinimumWidth = 8;
-            this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
-            this.dataGridViewTextBoxColumn11.Width = 150;
-            // 
-            // dataGridViewTextBoxColumn12
-            // 
-            this.dataGridViewTextBoxColumn12.DataPropertyName = "eTime";
-            this.dataGridViewTextBoxColumn12.HeaderText = "时  间";
-            this.dataGridViewTextBoxColumn12.MinimumWidth = 8;
-            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
-            this.dataGridViewTextBoxColumn12.Width = 150;
-            // 
-            // dataGridViewTextBoxColumn13
-            // 
-            this.dataGridViewTextBoxColumn13.DataPropertyName = "Event";
-            this.dataGridViewTextBoxColumn13.HeaderText = "事件";
-            this.dataGridViewTextBoxColumn13.MinimumWidth = 8;
-            this.dataGridViewTextBoxColumn13.Name = "dataGridViewTextBoxColumn13";
-            this.dataGridViewTextBoxColumn13.Width = 150;
-            // 
-            // dataGridViewTextBoxColumn14
-            // 
-            this.dataGridViewTextBoxColumn14.DataPropertyName = "memo";
-            this.dataGridViewTextBoxColumn14.HeaderText = "说明";
-            this.dataGridViewTextBoxColumn14.MinimumWidth = 8;
-            this.dataGridViewTextBoxColumn14.Name = "dataGridViewTextBoxColumn14";
-            this.dataGridViewTextBoxColumn14.Width = 150;
-            // 
-            // dataGridViewTextBoxColumn15
-            // 
-            this.dataGridViewTextBoxColumn15.DataPropertyName = "eClass";
-            this.dataGridViewTextBoxColumn15.HeaderText = "操作者";
-            this.dataGridViewTextBoxColumn15.MinimumWidth = 8;
-            this.dataGridViewTextBoxColumn15.Name = "dataGridViewTextBoxColumn15";
-            this.dataGridViewTextBoxColumn15.Width = 150;
             // 
             // tbCTL
             // 
@@ -4648,9 +4491,6 @@ namespace EMS
             this.panel4.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
-            this.tpLog.ResumeLayout(false);
-            this.panel5.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).EndInit();
             this.tbCTL.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
@@ -4695,18 +4535,12 @@ namespace EMS
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.TabPage tpLog;
-        private System.Windows.Forms.DataGridView dbgLog;
         private System.Windows.Forms.DataGridViewTextBoxColumn ID;
         private System.Windows.Forms.DataGridViewTextBoxColumn UName;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column8;
         private System.Windows.Forms.DataGridViewTextBoxColumn UPower;
         private System.Windows.Forms.DataGridViewTextBoxColumn AddTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn Memo;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn13;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn14;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn15;
         private System.Windows.Forms.TabPage tbCTL;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Panel panel6;
@@ -4830,9 +4664,6 @@ namespace EMS
         private TouchNumberEdit tneSysCount;
         private System.Windows.Forms.Label label5;
         private TouchText ttbSystemID;
-        private System.Windows.Forms.Panel panel5;
-        private System.Windows.Forms.Button btnClean;
-        private System.Windows.Forms.Button btnSave2File;
         private System.Windows.Forms.Panel panel10;
         private System.Windows.Forms.Button btnAdd4;
         private System.Windows.Forms.Button btnDel4;
@@ -4863,8 +4694,6 @@ namespace EMS
         private System.Windows.Forms.Button btnDownT;
         private System.Windows.Forms.Button btnUpU;
         private System.Windows.Forms.Button btnDownU;
-        private System.Windows.Forms.Button btnUpL;
-        private System.Windows.Forms.Button btnDownL;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ProgressBar pbTimer;
         private TCheckBox tcbUseYunTactics;

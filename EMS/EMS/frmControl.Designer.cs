@@ -429,7 +429,7 @@ namespace EMS
             this.groupBox2.Controls.Add(this.btnPCSRun);
             this.groupBox2.Controls.Add(this.gb);
             this.groupBox2.ForeColor = System.Drawing.Color.White;
-            this.groupBox2.Location = new System.Drawing.Point(3, 45);
+            this.groupBox2.Location = new System.Drawing.Point(6, 14);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(818, 160);
             this.groupBox2.TabIndex = 26;

@@ -1946,7 +1946,7 @@ namespace EMS
             frmMain.Selffrm.AllEquipment.PCSCleanError();
         }
 
-        private void btnClean_Click_1(object sender, EventArgs e)
+/*        private void btnClean_Click_1(object sender, EventArgs e)
         {
             if (dbgLog.SelectedRows.Count <= 0)
                 return;
@@ -1955,13 +1955,13 @@ namespace EMS
 
             DBConnection.ExecSQL("delete from log");
             DBConnection.ShowData2DBGrid(dbgLog, "select * from log");
-        }
+        }*/
 
-        private void btnSave2File_Click_1(object sender, EventArgs e)
+/*        private void btnSave2File_Click_1(object sender, EventArgs e)
         {
             //到处到文件
             DBConnection.SaveGrid2File(dbgLog);
-        }
+        }*/
 
         private void btnAdd1_Click(object sender, EventArgs e)
         {
@@ -2205,8 +2205,8 @@ namespace EMS
         private void btnLog_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgLog);
-            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");
+/*            DBConnection.SetDBGrid(oneForm.dbgLog);
+            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");*/
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2361,7 +2361,7 @@ namespace EMS
             SetDbgridDown(dbgUsers);
         }
 
-        private void btnUpL_Click(object sender, EventArgs e)
+/*        private void btnUpL_Click(object sender, EventArgs e)
         {
             SetDbgridUp(dbgLog);
         }
@@ -2369,7 +2369,7 @@ namespace EMS
         private void btnDownL_Click(object sender, EventArgs e)
         {
             SetDbgridDown(dbgLog);
-        }
+        }*/
 
         private void btnSet_Click(object sender, EventArgs e)
         {
