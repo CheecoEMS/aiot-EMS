@@ -413,7 +413,7 @@ namespace EMS
         private void spNetControl_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             //主机不接受任何网络指令
-            if (frmSet.config.IsMaster)
+            if (frmSet.config.IsMaster == 1)
             {
                 spNetControl.DiscardOutBuffer();
                 spNetControl.DiscardInBuffer();
@@ -606,7 +606,7 @@ namespace EMS
                 }
 
                 //使用TCP/IP通讯方式
-                if (frmSet.config.IsMaster)
+                if (frmSet.config.IsMaster == 1)
                 {
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
@@ -764,7 +764,7 @@ namespace EMS
                 {
                     try
                     {
-                        if (frmSet.config.IsMaster)
+                        if (frmSet.config.IsMaster == 1)
                         {
                             if (frmMain.TacticsList != null)
                             {

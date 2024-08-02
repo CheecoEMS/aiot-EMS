@@ -3590,7 +3590,7 @@ namespace EMS
                 {
                     if (aData * Parent.waValueActive == 0)//qiao
                         SetSysData(47, 0, false);
-                   if(!frmSet.config.PCSForceRun)
+                   if(frmSet.config.PCSForceRun == 0)
                    {
                         if ((aData < 0) && (Parent.BMS.MaxChargeA == 0))
                             aData = 0;
@@ -3664,7 +3664,7 @@ namespace EMS
                 //设置PCS 
                 int iPCSTypes = Array.IndexOf(PCSTypes, aPCSWorkType);
                 //如果不是强制开机，判断BMS属性是否满足PCS运行条件
-                if (! frmSet.config.PCSForceRun)
+                if (frmSet.config.PCSForceRun == 0)
                 {
                     //1-DC恒压 2 - DC恒流3 - DC恒功率4 - AC恒压5 - AC恒流6 - AC恒功率 
                     if ((aData < 0) && (Parent.BMS.MaxChargeA == 0)) //BMS最大充电电流为0，不能充
@@ -5475,7 +5475,7 @@ namespace EMS
                         SetSysData(22, 0, false);//设置强制自动模式 803 强制模式
                                                  //设置强制自动模式
                         SetSysData(23, Convert.ToInt16(frmSet.componentSettings.TCMode), false);
-                        if (frmSet.componentSettings.TCRunWithSys)
+                        if (frmSet.componentSettings.TCRunWithSys == 1)
                             SetSysData(24, 0, false);//来电运行 自动
                         else
                             SetSysData(24, 1, false);//来电运行 禁止
@@ -6685,7 +6685,7 @@ namespace EMS
                     AutoReadPointGrid();
 
                 //控制与接收
-                if (frmSet.config.IsMaster)
+                if (frmSet.config.IsMaster == 1)
                 {
                     if (frmSet.config.ConnectStatus == "485")
                     {
@@ -6957,7 +6957,7 @@ namespace EMS
 
 
                 //获取主从整体pcs功率
-                if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster)
+                if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster == 1)
                 {
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
@@ -7448,7 +7448,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
+                if ((frmSet.config.IsMaster == 0)||(frmSet.config.PCSGridModel==1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7499,7 +7499,7 @@ namespace EMS
 
             if (SlaveStart)
             {
-                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
+                if ((frmSet.config.IsMaster == 0)||(frmSet.config.PCSGridModel==1))
                     return;
 
                 for (int i = 0; i < 10; ++i)
@@ -7577,7 +7577,7 @@ namespace EMS
         {
             if (SlaveStart)
             {
-                if ((!frmSet.config.IsMaster)||(frmSet.config.PCSGridModel==1))
+                if ((frmSet.config.IsMaster == 0)||(frmSet.config.PCSGridModel==1))
                     return;
                 foreach (EMSEquipment oneEMSE in EMSList)
                 {
@@ -7598,7 +7598,7 @@ namespace EMS
 
         public void SetAllPCSSheduleKVA(double aPCSScheduleKVA)
         {
-            if ((!frmSet.config.IsMaster) ||(frmSet.config.PCSGridModel == 1))
+            if ((frmSet.config.IsMaster == 0) ||(frmSet.config.PCSGridModel == 1))
                 return;
             foreach (EMSEquipment oneEMSE in EMSList)
             {
@@ -7614,7 +7614,7 @@ namespace EMS
         //8.6
         public void SetAllPCSOn(bool aOn)
         {
-            if ((!frmSet.config.IsMaster)|| (frmSet.config.PCSGridModel == 1))
+            if ((frmSet.config.IsMaster == 0)|| (frmSet.config.PCSGridModel == 1))
                 return;
             foreach (EMSEquipment oneEMSE in EMSList)
             {
@@ -7940,7 +7940,7 @@ namespace EMS
                 {
                     //如果是从机
                     //如果是从机
-                    if (!frmSet.config.IsMaster)
+                    if (frmSet.config.IsMaster == 0)
                     {
                         //判断是否超时控制，如果超时就停机等待
                         if (frmSet.config.ConnectStatus == "tcp")

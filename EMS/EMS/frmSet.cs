@@ -364,22 +364,22 @@ namespace EMS
                                 config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
                                 config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
                                 config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                                config.IsMaster = rd.IsDBNull(11) ? true : rd.GetBoolean(11);
+                                config.IsMaster = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
                                 config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
                                 config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
-                                config.AutoRun = rd.IsDBNull(14) ? false : rd.GetBoolean(14);
+                                config.AutoRun = rd.IsDBNull(14) ? 1 : rd.GetInt32(14);
                                 config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
                                 config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
                                 config.DebugComName = rd.IsDBNull(17) ? "com7" : rd.GetString(17);
                                 config.DebugRate = rd.IsDBNull(18) ? 38400 : rd.GetInt32(18);
                                 config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
-                                config.UseYunTactics = rd.IsDBNull(20) ? false : rd.GetBoolean(20);
-                                config.UseBalaTactics = rd.IsDBNull(21) ? false : rd.GetBoolean(21);
+                                config.UseYunTactics = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
+                                config.UseBalaTactics = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
                                 config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
                                 config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
-                                config.PCSForceRun = rd.IsDBNull(24) ? false : rd.GetBoolean(24);
+                                config.PCSForceRun = rd.IsDBNull(24) ? 0 : rd.GetInt32(24);
                                 config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
-                                config.ErrorState2 = rd.IsDBNull(26) ? false : rd.GetBoolean(26);
+                                config.ErrorState2 = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
                                 config.GPIOSelect = rd.IsDBNull(27) ? 0 : rd.GetInt32(27);
                                 config.MasterIp = rd.IsDBNull(28) ? "192.168.186.9" : rd.GetString(28);
                                 config.ConnectStatus = rd.IsDBNull(29) ? "485" : rd.GetString(29);
@@ -569,8 +569,8 @@ namespace EMS
                                 componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
                                 componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
                                 componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
-                                componentSettings.TCRunWithSys = rd.IsDBNull(6) ? false : rd.GetBoolean(6);
-                                componentSettings.TCAuto = rd.IsDBNull(7) ? false : rd.GetBoolean(7);
+                                componentSettings.TCRunWithSys = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                componentSettings.TCAuto = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
                                 componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
                                 componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
                                 componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
@@ -1366,6 +1366,21 @@ namespace EMS
             ConfigINI.INIWrite("System Set", "DHSetHumidityStop", DHSetHumidityStop.ToString(), INIPath);*/
         }
 
+        public bool PutTchCheck(int input)
+        {
+            bool result ;
+            if (input == 1)
+            {
+                result =  true;
+            }
+            else
+            {
+                result = false;
+            }
+            return result;
+        }
+
+
         //显示设置文件
         public void ShowINIdata()
         {
@@ -1386,11 +1401,11 @@ namespace EMS
                 tneSysInterval.SetIntValue(config.SysInterval);
                 tneUnInterval.SetIntValue(config.YunInterval);
                 ttbSystemID.SetstrText(config.SysID);
-                tcbIsMaster.SetValue(config.IsMaster);
+                tcbIsMaster.SetValue(PutTchCheck(config.IsMaster));
                 //tbMasterID.Text = MasterID;
                 tne485Addr.SetIntValue(config.i485Addr);
                 tneMaster485Addr.SetIntValue(config.Master485Addr);
-                tcbAutoRun.SetValue(config.AutoRun);
+                tcbAutoRun.SetValue(PutTchCheck(config.AutoRun));
                 //dtpFreshTime.Value = Convert.ToDateTime(FreshTime);
                 //tneFreshInterval.SetIntValue(FreshInterval);
                 //tcbControlIP.SetstrText(ControlIP);
@@ -1416,7 +1431,7 @@ namespace EMS
 
                 tneSetHumidity.SetIntValue((int)(componentSettings.SetHumidity));
                 tneHumiReturn.SetIntValue((int)(componentSettings.HumiReturn));
-                tcbTCRunWithSys.SetValue(componentSettings.TCRunWithSys);
+                tcbTCRunWithSys.SetValue(PutTchCheck(componentSettings.TCRunWithSys));
                 //cbTCAuto.Checked = TCAuto;
                 tcbTCMode.SetSelectItemIndex(componentSettings.TCMode);
                 tneTCMaxTemp.SetIntValue((int)(componentSettings.TCMaxTemp));
@@ -1455,12 +1470,12 @@ namespace EMS
                 tnePrice8.SetIntValue(Prices[1, 3]);
                 tnePrice9.SetIntValue(Prices[1, 4]);
                 tneSysCount.SetIntValue(config.SysCount);
-                tcbUseYunTactics.SetValue(config.UseYunTactics);
-                tcbUseBalaTactics.SetValue(config.UseBalaTactics);
+                tcbUseYunTactics.SetValue(PutTchCheck(config.UseYunTactics));
+                tcbUseBalaTactics.SetValue(PutTchCheck(config.UseBalaTactics));
                 tcbiPCSfactory.SetSelectItemIndex(config.iPCSfactory);
                 tcbPCSGridModel_OnValueChange(null);
                 tcbBMSVer.SetSelectItemIndex(config.BMSVerb);
-                tcbPCSForceRun.SetValue(config.PCSForceRun);
+                tcbPCSForceRun.SetValue(PutTchCheck(config.PCSForceRun));
                 //10.25
                 tneWarnGridkva.SetIntValue(cloudLimits.WarnMaxGridKW);
                 //11.13
@@ -1493,7 +1508,19 @@ namespace EMS
 
         }
 
+        //获取checkbox数据
+        public int GetTcbCheck(bool input)
+        {
+            if (input)
+            {
+                return 1;
+            }
+            else
+            { return 0; }
+        }
+
         //采集窗口数据
+
         public void GetINIData()
         {
             //SysName=tbSysName.Text  ; 
@@ -1512,11 +1539,11 @@ namespace EMS
             config.SysInterval = (int)tneSysInterval.Value;
             config.YunInterval = (int)tneUnInterval.Value;
             config.SysID = ttbSystemID.strText;
-            config.IsMaster = tcbIsMaster.Checked;
+            config.IsMaster = GetTcbCheck(tcbIsMaster.Checked);
             //MasterID= tbMasterID.Text ; 
             config.i485Addr = (int)tne485Addr.Value;
             config.Master485Addr = (int)tneMaster485Addr.Value;
-            config.AutoRun = tcbAutoRun.Checked;
+            config.AutoRun = GetTcbCheck(tcbAutoRun.Checked);
             //FreshTime= dtpFreshTime.Value.ToString() ;
             FreshInterval = 24;// (int)tneFreshInterval.Value ;
             //ControlIP = tcbControlIP.strText;
@@ -1540,7 +1567,7 @@ namespace EMS
             componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
             componentSettings.SetHumidity = (int)tneSetHumidity.Value;
             componentSettings.HumiReturn = (int)tneHumiReturn.Value;
-            componentSettings.TCRunWithSys = tcbTCRunWithSys.Checked;
+            componentSettings.TCRunWithSys = GetTcbCheck(tcbTCRunWithSys.Checked);
             //TCAuto = tcbTCAuto;
             componentSettings.TCMode = tcbTCMode.SelectItemIndex;
             componentSettings.TCMaxTemp = (int)tneTCMaxTemp.Value;
@@ -1573,11 +1600,11 @@ namespace EMS
             Prices[1, 3] = (int)tnePrice8.Value;
             Prices[1, 4] = (int)tnePrice9.Value;
             config.SysCount = (int)tneSysCount.Value;
-            config.UseYunTactics = tcbUseYunTactics.Checked;
-            config.UseBalaTactics = tcbUseBalaTactics.Checked;
+            config.UseYunTactics = GetTcbCheck(tcbUseYunTactics.Checked);
+            config.UseBalaTactics = GetTcbCheck(tcbUseBalaTactics.Checked);
             config.iPCSfactory = tcbiPCSfactory.SelectItemIndex;
             config.BMSVerb = tcbBMSVer.SelectItemIndex;
-            config.PCSForceRun = tcbPCSForceRun.Checked;
+            config.PCSForceRun = GetTcbCheck(tcbPCSForceRun.Checked);
             //10.25
             cloudLimits.WarnMaxGridKW = (int)tneWarnGridkva.Value;
             //11.13
@@ -1898,12 +1925,12 @@ namespace EMS
             {
                 config.SysMode = 0; 
             }
-            //save
-            //Set_GlobalSet_State();
+         
             GetINIData();
-            SaveSet2File();
-            //Set_GlobalSet_State();
+            //保存修改数据
             Set_Cloudlimits();
+            Set_Config();
+            Set_ComponentSettings();
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -2620,21 +2647,21 @@ namespace EMS
             public int CellCount { get; set; } // int
             public int SysInterval { get; set; } // int
             public int YunInterval { get; set; } // int
-            public bool IsMaster { get; set; } // bool
+            public int IsMaster { get; set; } // bool
             public int Master485Addr { get; set; } // int
             public int i485Addr { get; set; } // int
-            public bool AutoRun { get; set; } // bool
+            public int AutoRun { get; set; } // bool
             public int SysMode { get; set; } // int
             public int PCSGridModel { get; set; } // int
             public string DebugComName { get; set; } // varchar(255)
             public int DebugRate { get; set; } // int
             public int SysCount { get; set; } // int
-            public bool UseYunTactics { get; set; } // bool
-            public bool UseBalaTactics { get; set; } // bool
+            public int UseYunTactics { get; set; } // bool
+            public int UseBalaTactics { get; set; } // bool
             public int iPCSfactory { get; set; } // int
             public int BMSVerb { get; set; } // int
-            public bool PCSForceRun { get; set; } // bool
-            public bool ErrorState2 { get; set; } // bool
+            public int PCSForceRun { get; set; } // bool
+            public int ErrorState2 { get; set; } // bool
             public int EMSstatus { get; set; } // bool
             public int GPIOSelect { get; set; }
             public string MasterIp { get; set; }
@@ -2651,8 +2678,8 @@ namespace EMS
             public double HotTempReturn { get; set; }
             public double SetHumidity { get; set; }
             public double HumiReturn { get; set; }
-            public bool TCRunWithSys { get; set; }
-            public bool TCAuto { get; set; }
+            public int TCRunWithSys { get; set; }
+            public int TCAuto { get; set; }
             public int TCMode { get; set; }
             public double TCMaxTemp { get; set; }
             public double TCMinTemp { get; set; }

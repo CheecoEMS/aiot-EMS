@@ -376,7 +376,7 @@ namespace EMS
                     }
                     break;
                 case 7://EMS
-                    if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster)
+                    if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster == 1)
                     {
                         if (frmMain.Selffrm.AllEquipment.EMSList[0] != null)
                         { 
