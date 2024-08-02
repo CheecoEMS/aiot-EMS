@@ -2673,7 +2673,7 @@ namespace EMS
             this.tpLog.Padding = new System.Windows.Forms.Padding(3);
             this.tpLog.Size = new System.Drawing.Size(845, 643);
             this.tpLog.TabIndex = 6;
-            this.tpLog.Text = "Log数据";
+            this.tpLog.Text = "云设置";
             // 
             // tbCTL
             // 
