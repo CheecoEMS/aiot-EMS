@@ -586,11 +586,11 @@ namespace EMS
                                 componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
                                 componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
                                 componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
-                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetDouble(23);
-                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetDouble(24);
-                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetDouble(25);
-                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetDouble(26);
-                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetDouble(27);
+                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetInt32(23);
+                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetInt32(24);
+                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
+                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetInt32(26);
+                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetInt32(27);
 
                                 result = true;
                             }
@@ -1489,6 +1489,13 @@ namespace EMS
                 tneFenMaxTemp.SetIntValue((int)(componentSettings.FenMaxTemp));
                 tneFenMinTemp.SetIntValue((int)(componentSettings.FenMinTemp));
                 tcbFenMode.SetSelectItemIndex(componentSettings.FenMode);
+
+                //除湿机
+                tneDHSetHumidityStop.SetIntValue(componentSettings.DHSetHumidityStop);
+                tneDHSetHumidityBoot.SetIntValue(componentSettings.DHSetHumidityBoot);
+                tneDHSetTempBoot.SetIntValue(componentSettings.DHSetTempBoot);
+                tneDHSetTempStop.SetIntValue(componentSettings.DHSetTempStop);
+                tcbDHSetRunStatus.SetSelectItemIndex(componentSettings.DHSetRunStatus);
 
             }
             catch { }
@@ -2691,11 +2698,11 @@ namespace EMS
 
 
             //除湿机
-            public double DHSetRunStatus { get; set; }
-            public double DHSetTempBoot { get; set; }      //（除湿：温度启动值）dehumidity
-            public double DHSetTempStop { get; set; }      //（除湿：温度停止值）
-            public double DHSetHumidityBoot { get; set; }  //（除湿：湿度启动值）
-            public double DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
+            public int DHSetRunStatus { get; set; }
+            public int DHSetTempBoot { get; set; }      //（除湿：温度启动值）dehumidity
+            public int DHSetTempStop { get; set; }      //（除湿：温度停止值）
+            public int DHSetHumidityBoot { get; set; }  //（除湿：湿度启动值）
+            public int DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
         }
     }
 }
