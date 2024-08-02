@@ -647,7 +647,7 @@ namespace EMS
                 + "DHSetTempBoot = '" + componentSettings.DHSetTempBoot.ToString() + "', "
                 + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
                 + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
-                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString() + "', "
+                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString()
                 + "';";
 
             bool result = false;
@@ -1407,7 +1407,7 @@ namespace EMS
                 //cbCloundIP.Text = CloundIP;
                 //nudCloundPort.Value = CloundPort;
                 //tcbSysAutoRun.SetValue( SysAutoRun);
-                tcbSYSModel.SetSelectItemIndex(config.SysMode);
+/*                tcbSYSModel.SetSelectItemIndex(config.SysMode);
                 tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
                 tcbPCSType.SetstrText(PCSType);
                 if (PCSwaValue > 0)
@@ -1415,7 +1415,7 @@ namespace EMS
                 else
                     tcbPCSMode.SetSelectItemIndex(1);
                 tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));
-                tneBMSwaValue.SetIntValue((int)Math.Abs(cloudLimits.BmsDerateRatio));//7.24
+                tneBMSwaValue.SetIntValue((int)Math.Abs(cloudLimits.BmsDerateRatio));//7.24*/
                 tneMaxSOC.SetIntValue(cloudLimits.MaxSOC);
                 tneMinSOC.SetIntValue(cloudLimits.MinSOC);
                 tneSetHotTemp.SetIntValue((int)(componentSettings.SetHotTemp));
@@ -1538,14 +1538,14 @@ namespace EMS
             //CloundIP =  cbCloundIP.Text ;
             //CloundPort = (int)nudCloundPort.Value;
             //SysAutoRun = false;// tcbSysAutoRun.Checked;
-            config.SysMode = tcbSYSModel.SelectItemIndex;
+/*            config.SysMode = tcbSYSModel.SelectItemIndex;
             PCSType = tcbPCSType.strText;
             config.PCSGridModel = tcbPCSGridModel.SelectItemIndex;
             if (tcbPCSMode.SelectItemIndex == 0)//0充电为正
                 PCSwaValue = (int)tnePCSwaValue.Value;
             else
                 PCSwaValue = -1 * (int)tnePCSwaValue.Value;
-            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;//7.24
+            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;//7.24*/
             cloudLimits.MaxSOC = (int)tneMaxSOC.Value;
             cloudLimits.MinSOC  = (int)tneMinSOC.Value;
             componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
@@ -2443,7 +2443,7 @@ namespace EMS
 
         private void tcbPCSGridModel_OnValueChange(object sender)
         {
-            switch (tcbPCSGridModel.SelectItemIndex)
+/*            switch (tcbPCSGridModel.SelectItemIndex)
             {
                 case 0://并网
                     tcbPCSType.SetSelectItemIndex(3);
@@ -2461,7 +2461,7 @@ namespace EMS
                     labPCSwaValue.Visible = false;
                     lablPCSwaValue2.Visible = false;
                     break;
-            }
+            }*/
         }
 
         private void btnBMSErrorClean_Click(object sender, EventArgs e)
@@ -2550,7 +2550,8 @@ namespace EMS
         {
             try 
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
+                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
             }
             catch { }
         }
@@ -2559,7 +2560,10 @@ namespace EMS
         {
             try
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);
+                if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);
+                }
             }
             catch { }
         }

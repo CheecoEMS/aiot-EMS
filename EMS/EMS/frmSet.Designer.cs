@@ -126,6 +126,7 @@ namespace EMS
             this.label65 = new System.Windows.Forms.Label();
             this.tbShedule = new System.Windows.Forms.TabPage();
             this.panel12 = new System.Windows.Forms.Panel();
+            this.btnFlash3 = new System.Windows.Forms.Button();
             this.tcbUseBalaTactics = new EMS.TCheckBox(this.components);
             this.tcbUseYunTactics = new EMS.TCheckBox(this.components);
             this.btnUpT = new System.Windows.Forms.Button();
@@ -211,28 +212,6 @@ namespace EMS
             this.dataGridViewTextBoxColumn14 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn15 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tbCTL = new System.Windows.Forms.TabPage();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.btnBMSRun = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.tneBMSwaValue = new EMS.TouchNumberEdit(this.components);
-            this.btnBMSErrorClean = new System.Windows.Forms.Button();
-            this.btnBMSClose = new System.Windows.Forms.Button();
-            this.btnBMSOn = new System.Windows.Forms.Button();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.btnPCSErrorClean = new System.Windows.Forms.Button();
-            this.tcbSYSModel = new EMS.TouchCombox(this.components);
-            this.btnPCSOff = new System.Windows.Forms.Button();
-            this.label20 = new System.Windows.Forms.Label();
-            this.btnPCSRun = new System.Windows.Forms.Button();
-            this.gb = new System.Windows.Forms.GroupBox();
-            this.tcbPCSMode = new EMS.TouchCombox(this.components);
-            this.tnePCSwaValue = new EMS.TouchNumberEdit(this.components);
-            this.label24 = new System.Windows.Forms.Label();
-            this.tcbPCSType = new EMS.TouchCombox(this.components);
-            this.lablPCSwaValue2 = new System.Windows.Forms.Label();
-            this.label36 = new System.Windows.Forms.Label();
-            this.labPCSwaValue = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tcbFenMode = new EMS.TouchCombox(this.components);
             this.label63 = new System.Windows.Forms.Label();
@@ -318,7 +297,6 @@ namespace EMS
             this.label76 = new System.Windows.Forms.Label();
             this.label79 = new System.Windows.Forms.Label();
             this.label80 = new System.Windows.Forms.Label();
-            this.btnLCErrorClear = new System.Windows.Forms.Button();
             this.label84 = new System.Windows.Forms.Label();
             this.label85 = new System.Windows.Forms.Label();
             this.panel9 = new System.Windows.Forms.Panel();
@@ -333,7 +311,6 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
-            this.btnFlash3 = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -362,9 +339,6 @@ namespace EMS
             this.panel5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).BeginInit();
             this.tbCTL.SuspendLayout();
-            this.groupBox6.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.gb.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tpLC.SuspendLayout();
             this.groupBox7.SuspendLayout();
@@ -1702,6 +1676,23 @@ namespace EMS
             this.panel12.Size = new System.Drawing.Size(832, 52);
             this.panel12.TabIndex = 16;
             // 
+            // btnFlash3
+            // 
+            this.btnFlash3.BackColor = System.Drawing.Color.Transparent;
+            this.btnFlash3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnFlash3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnFlash3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnFlash3.ForeColor = System.Drawing.Color.White;
+            this.btnFlash3.Location = new System.Drawing.Point(276, 1);
+            this.btnFlash3.Margin = new System.Windows.Forms.Padding(1);
+            this.btnFlash3.Name = "btnFlash3";
+            this.btnFlash3.Size = new System.Drawing.Size(88, 44);
+            this.btnFlash3.TabIndex = 21;
+            this.btnFlash3.Text = "刷新";
+            this.btnFlash3.UseVisualStyleBackColor = false;
+            this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
+            // 
             // tcbUseBalaTactics
             // 
             this.tcbUseBalaTactics.BackColor = System.Drawing.Color.Transparent;
@@ -2817,8 +2808,6 @@ namespace EMS
             // tbCTL
             // 
             this.tbCTL.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
-            this.tbCTL.Controls.Add(this.groupBox6);
-            this.tbCTL.Controls.Add(this.groupBox2);
             this.tbCTL.Controls.Add(this.groupBox1);
             this.tbCTL.Location = new System.Drawing.Point(4, 4);
             this.tbCTL.Name = "tbCTL";
@@ -2826,327 +2815,6 @@ namespace EMS
             this.tbCTL.Size = new System.Drawing.Size(845, 643);
             this.tbCTL.TabIndex = 7;
             this.tbCTL.Text = "控制模式";
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Controls.Add(this.btnBMSRun);
-            this.groupBox6.Controls.Add(this.label2);
-            this.groupBox6.Controls.Add(this.label16);
-            this.groupBox6.Controls.Add(this.tneBMSwaValue);
-            this.groupBox6.Controls.Add(this.btnBMSErrorClean);
-            this.groupBox6.Controls.Add(this.btnBMSClose);
-            this.groupBox6.Controls.Add(this.btnBMSOn);
-            this.groupBox6.ForeColor = System.Drawing.Color.White;
-            this.groupBox6.Location = new System.Drawing.Point(9, 183);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(815, 73);
-            this.groupBox6.TabIndex = 24;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "BMS设置";
-            // 
-            // btnBMSRun
-            // 
-            this.btnBMSRun.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSRun.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBMSRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBMSRun.ForeColor = System.Drawing.Color.White;
-            this.btnBMSRun.Location = new System.Drawing.Point(426, 19);
-            this.btnBMSRun.Name = "btnBMSRun";
-            this.btnBMSRun.Size = new System.Drawing.Size(88, 44);
-            this.btnBMSRun.TabIndex = 58;
-            this.btnBMSRun.Text = "应用";
-            this.btnBMSRun.UseVisualStyleBackColor = true;
-            this.btnBMSRun.Click += new System.EventHandler(this.btnBMSRun_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label2.Location = new System.Drawing.Point(306, 41);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 19);
-            this.label2.TabIndex = 57;
-            this.label2.Text = "A/V/Kw";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label16.Location = new System.Drawing.Point(41, 41);
-            this.label16.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(114, 19);
-            this.label16.TabIndex = 56;
-            this.label16.Text = "1级限制功率";
-            // 
-            // tneBMSwaValue
-            // 
-            this.tneBMSwaValue.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMSwaValue.CanEdit = true;
-            this.tneBMSwaValue.DefaultValue = 0;
-            this.tneBMSwaValue.FoceInZone = false;
-            this.tneBMSwaValue.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMSwaValue.ForeColor = System.Drawing.Color.White;
-            this.tneBMSwaValue.Location = new System.Drawing.Point(160, 28);
-            this.tneBMSwaValue.Maximum = 840;
-            this.tneBMSwaValue.Minimum = 0;
-            this.tneBMSwaValue.Name = "tneBMSwaValue";
-            this.tneBMSwaValue.Size = new System.Drawing.Size(124, 32);
-            this.tneBMSwaValue.strText = "";
-            this.tneBMSwaValue.TabIndex = 55;
-            this.tneBMSwaValue.Value = 0;
-            this.tneBMSwaValue.ValueStep = 1;
-            // 
-            // btnBMSErrorClean
-            // 
-            this.btnBMSErrorClean.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSErrorClean.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSErrorClean.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBMSErrorClean.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBMSErrorClean.ForeColor = System.Drawing.Color.White;
-            this.btnBMSErrorClean.Location = new System.Drawing.Point(708, 19);
-            this.btnBMSErrorClean.Name = "btnBMSErrorClean";
-            this.btnBMSErrorClean.Size = new System.Drawing.Size(88, 44);
-            this.btnBMSErrorClean.TabIndex = 29;
-            this.btnBMSErrorClean.Text = "故障复位";
-            this.btnBMSErrorClean.UseVisualStyleBackColor = true;
-            this.btnBMSErrorClean.Click += new System.EventHandler(this.btnBMSErrorClean_Click);
-            // 
-            // btnBMSClose
-            // 
-            this.btnBMSClose.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSClose.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBMSClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBMSClose.ForeColor = System.Drawing.Color.White;
-            this.btnBMSClose.Location = new System.Drawing.Point(614, 19);
-            this.btnBMSClose.Name = "btnBMSClose";
-            this.btnBMSClose.Size = new System.Drawing.Size(88, 44);
-            this.btnBMSClose.TabIndex = 28;
-            this.btnBMSClose.Text = "关闭";
-            this.btnBMSClose.UseVisualStyleBackColor = true;
-            this.btnBMSClose.Click += new System.EventHandler(this.btnBMSClose_Click);
-            // 
-            // btnBMSOn
-            // 
-            this.btnBMSOn.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSOn.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSOn.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBMSOn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBMSOn.ForeColor = System.Drawing.Color.White;
-            this.btnBMSOn.Location = new System.Drawing.Point(520, 19);
-            this.btnBMSOn.Name = "btnBMSOn";
-            this.btnBMSOn.Size = new System.Drawing.Size(88, 44);
-            this.btnBMSOn.TabIndex = 27;
-            this.btnBMSOn.Text = "打开预充";
-            this.btnBMSOn.UseVisualStyleBackColor = true;
-            this.btnBMSOn.Click += new System.EventHandler(this.btnBMSOn_Click);
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.btnPCSErrorClean);
-            this.groupBox2.Controls.Add(this.tcbSYSModel);
-            this.groupBox2.Controls.Add(this.btnPCSOff);
-            this.groupBox2.Controls.Add(this.label20);
-            this.groupBox2.Controls.Add(this.btnPCSRun);
-            this.groupBox2.Controls.Add(this.gb);
-            this.groupBox2.ForeColor = System.Drawing.Color.White;
-            this.groupBox2.Location = new System.Drawing.Point(9, 7);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(818, 160);
-            this.groupBox2.TabIndex = 23;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "PCS";
-            // 
-            // btnPCSErrorClean
-            // 
-            this.btnPCSErrorClean.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSErrorClean.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSErrorClean.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnPCSErrorClean.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPCSErrorClean.ForeColor = System.Drawing.Color.White;
-            this.btnPCSErrorClean.Location = new System.Drawing.Point(708, 23);
-            this.btnPCSErrorClean.Name = "btnPCSErrorClean";
-            this.btnPCSErrorClean.Size = new System.Drawing.Size(88, 44);
-            this.btnPCSErrorClean.TabIndex = 26;
-            this.btnPCSErrorClean.Text = "故障复位";
-            this.btnPCSErrorClean.UseVisualStyleBackColor = true;
-            this.btnPCSErrorClean.Click += new System.EventHandler(this.btnPCSErrorClean_Click);
-            // 
-            // tcbSYSModel
-            // 
-            this.tcbSYSModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbSYSModel.CenterShow = true;
-            this.tcbSYSModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbSYSModel.ForeColor = System.Drawing.Color.White;
-            this.tcbSYSModel.Items = new string[] {
-        "手工模式",
-        "预设策略",
-        "网络控制"};
-            this.tcbSYSModel.Location = new System.Drawing.Point(145, 29);
-            this.tcbSYSModel.Name = "tcbSYSModel";
-            this.tcbSYSModel.SelectItemIndex = 0;
-            this.tcbSYSModel.Size = new System.Drawing.Size(176, 32);
-            this.tcbSYSModel.strText = "手工模式";
-            this.tcbSYSModel.TabIndex = 23;
-            this.tcbSYSModel.Value = 0;
-            // 
-            // btnPCSOff
-            // 
-            this.btnPCSOff.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSOff.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSOff.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnPCSOff.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPCSOff.ForeColor = System.Drawing.Color.White;
-            this.btnPCSOff.Location = new System.Drawing.Point(614, 23);
-            this.btnPCSOff.Name = "btnPCSOff";
-            this.btnPCSOff.Size = new System.Drawing.Size(88, 44);
-            this.btnPCSOff.TabIndex = 22;
-            this.btnPCSOff.Text = "关闭";
-            this.btnPCSOff.UseVisualStyleBackColor = true;
-            this.btnPCSOff.Click += new System.EventHandler(this.btnPCSOff_Click);
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(66, 35);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(74, 21);
-            this.label20.TabIndex = 0;
-            this.label20.Text = "运行模式";
-            // 
-            // btnPCSRun
-            // 
-            this.btnPCSRun.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSRun.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnPCSRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnPCSRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPCSRun.ForeColor = System.Drawing.Color.White;
-            this.btnPCSRun.Location = new System.Drawing.Point(520, 23);
-            this.btnPCSRun.Name = "btnPCSRun";
-            this.btnPCSRun.Size = new System.Drawing.Size(88, 44);
-            this.btnPCSRun.TabIndex = 10;
-            this.btnPCSRun.Text = "应用";
-            this.btnPCSRun.UseVisualStyleBackColor = true;
-            this.btnPCSRun.Click += new System.EventHandler(this.btnPCSRun_Click);
-            // 
-            // gb
-            // 
-            this.gb.Controls.Add(this.tcbPCSMode);
-            this.gb.Controls.Add(this.tnePCSwaValue);
-            this.gb.Controls.Add(this.label24);
-            this.gb.Controls.Add(this.tcbPCSType);
-            this.gb.Controls.Add(this.lablPCSwaValue2);
-            this.gb.Controls.Add(this.label36);
-            this.gb.Controls.Add(this.labPCSwaValue);
-            this.gb.ForeColor = System.Drawing.Color.White;
-            this.gb.Location = new System.Drawing.Point(23, 66);
-            this.gb.Name = "gb";
-            this.gb.Size = new System.Drawing.Size(775, 80);
-            this.gb.TabIndex = 21;
-            this.gb.TabStop = false;
-            this.gb.Text = "手动模式";
-            // 
-            // tcbPCSMode
-            // 
-            this.tcbPCSMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbPCSMode.CenterShow = true;
-            this.tcbPCSMode.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbPCSMode.ForeColor = System.Drawing.Color.White;
-            this.tcbPCSMode.Items = new string[] {
-        "充电",
-        "放电"};
-            this.tcbPCSMode.Location = new System.Drawing.Point(346, 33);
-            this.tcbPCSMode.Name = "tcbPCSMode";
-            this.tcbPCSMode.SelectItemIndex = 0;
-            this.tcbPCSMode.Size = new System.Drawing.Size(117, 32);
-            this.tcbPCSMode.strText = "充电";
-            this.tcbPCSMode.TabIndex = 53;
-            this.tcbPCSMode.Value = 0;
-            this.tcbPCSMode.OnValueChange += new EMS.TouchCombox.OnValueChangEventDelegate(this.tcbPCSMode_OnValueChange_1);
-            // 
-            // tnePCSwaValue
-            // 
-            this.tnePCSwaValue.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePCSwaValue.CanEdit = true;
-            this.tnePCSwaValue.DefaultValue = 0;
-            this.tnePCSwaValue.FoceInZone = false;
-            this.tnePCSwaValue.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePCSwaValue.ForeColor = System.Drawing.Color.White;
-            this.tnePCSwaValue.Location = new System.Drawing.Point(571, 34);
-            this.tnePCSwaValue.Maximum = 840;
-            this.tnePCSwaValue.Minimum = 0;
-            this.tnePCSwaValue.Name = "tnePCSwaValue";
-            this.tnePCSwaValue.Size = new System.Drawing.Size(124, 32);
-            this.tnePCSwaValue.strText = "";
-            this.tnePCSwaValue.TabIndex = 51;
-            this.tnePCSwaValue.Value = 0;
-            this.tnePCSwaValue.ValueStep = 1;
-            // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label24.Location = new System.Drawing.Point(275, 43);
-            this.label24.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(66, 19);
-            this.label24.TabIndex = 52;
-            this.label24.Text = "充放电";
-            // 
-            // tcbPCSType
-            // 
-            this.tcbPCSType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbPCSType.CenterShow = true;
-            this.tcbPCSType.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbPCSType.ForeColor = System.Drawing.Color.White;
-            this.tcbPCSType.Items = new string[] {
-        "待机",
-        "恒流",
-        "恒压",
-        "恒功率",
-        "AC恒压",
-        "自适应需量"};
-            this.tcbPCSType.Location = new System.Drawing.Point(122, 34);
-            this.tcbPCSType.Name = "tcbPCSType";
-            this.tcbPCSType.SelectItemIndex = 0;
-            this.tcbPCSType.Size = new System.Drawing.Size(139, 32);
-            this.tcbPCSType.strText = "待机";
-            this.tcbPCSType.TabIndex = 50;
-            this.tcbPCSType.Value = 0;
-            // 
-            // lablPCSwaValue2
-            // 
-            this.lablPCSwaValue2.AutoSize = true;
-            this.lablPCSwaValue2.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lablPCSwaValue2.Location = new System.Drawing.Point(701, 43);
-            this.lablPCSwaValue2.Name = "lablPCSwaValue2";
-            this.lablPCSwaValue2.Size = new System.Drawing.Size(69, 19);
-            this.lablPCSwaValue2.TabIndex = 49;
-            this.lablPCSwaValue2.Text = "A/V/Kw";
-            // 
-            // label36
-            // 
-            this.label36.AutoSize = true;
-            this.label36.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label36.Location = new System.Drawing.Point(40, 43);
-            this.label36.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(77, 19);
-            this.label36.TabIndex = 46;
-            this.label36.Text = "PCS设置";
-            // 
-            // labPCSwaValue
-            // 
-            this.labPCSwaValue.AutoSize = true;
-            this.labPCSwaValue.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labPCSwaValue.Location = new System.Drawing.Point(468, 43);
-            this.labPCSwaValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labPCSwaValue.Name = "labPCSwaValue";
-            this.labPCSwaValue.Size = new System.Drawing.Size(96, 19);
-            this.labPCSwaValue.TabIndex = 45;
-            this.labPCSwaValue.Text = "PCS设置值";
             // 
             // groupBox1
             // 
@@ -4039,7 +3707,6 @@ namespace EMS
             this.groupBox5.Controls.Add(this.label76);
             this.groupBox5.Controls.Add(this.label79);
             this.groupBox5.Controls.Add(this.label80);
-            this.groupBox5.Controls.Add(this.btnLCErrorClear);
             this.groupBox5.Controls.Add(this.label84);
             this.groupBox5.Controls.Add(this.label85);
             this.groupBox5.ForeColor = System.Drawing.Color.White;
@@ -4057,7 +3724,7 @@ namespace EMS
             this.btnLCRead.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnLCRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLCRead.ForeColor = System.Drawing.Color.White;
-            this.btnLCRead.Location = new System.Drawing.Point(724, 226);
+            this.btnLCRead.Location = new System.Drawing.Point(724, 174);
             this.btnLCRead.Name = "btnLCRead";
             this.btnLCRead.Size = new System.Drawing.Size(88, 44);
             this.btnLCRead.TabIndex = 92;
@@ -4072,7 +3739,7 @@ namespace EMS
             this.btnLCOpen.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnLCOpen.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLCOpen.ForeColor = System.Drawing.Color.White;
-            this.btnLCOpen.Location = new System.Drawing.Point(724, 176);
+            this.btnLCOpen.Location = new System.Drawing.Point(724, 124);
             this.btnLCOpen.Name = "btnLCOpen";
             this.btnLCOpen.Size = new System.Drawing.Size(88, 44);
             this.btnLCOpen.TabIndex = 91;
@@ -4087,7 +3754,7 @@ namespace EMS
             this.btnLCClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnLCClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLCClose.ForeColor = System.Drawing.Color.White;
-            this.btnLCClose.Location = new System.Drawing.Point(724, 130);
+            this.btnLCClose.Location = new System.Drawing.Point(724, 78);
             this.btnLCClose.Name = "btnLCClose";
             this.btnLCClose.Size = new System.Drawing.Size(88, 44);
             this.btnLCClose.TabIndex = 90;
@@ -4321,20 +3988,6 @@ namespace EMS
             this.label80.TabIndex = 49;
             this.label80.Text = "0.1℃";
             // 
-            // btnLCErrorClear
-            // 
-            this.btnLCErrorClear.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnLCErrorClear.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnLCErrorClear.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnLCErrorClear.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLCErrorClear.ForeColor = System.Drawing.Color.White;
-            this.btnLCErrorClear.Location = new System.Drawing.Point(724, 80);
-            this.btnLCErrorClear.Name = "btnLCErrorClear";
-            this.btnLCErrorClear.Size = new System.Drawing.Size(88, 44);
-            this.btnLCErrorClear.TabIndex = 25;
-            this.btnLCErrorClear.Text = "故障复位";
-            this.btnLCErrorClear.UseVisualStyleBackColor = true;
-            // 
             // label84
             // 
             this.label84.AutoSize = true;
@@ -4552,23 +4205,6 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
-            // btnFlash3
-            // 
-            this.btnFlash3.BackColor = System.Drawing.Color.Transparent;
-            this.btnFlash3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnFlash3.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnFlash3.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnFlash3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnFlash3.ForeColor = System.Drawing.Color.White;
-            this.btnFlash3.Location = new System.Drawing.Point(276, 1);
-            this.btnFlash3.Margin = new System.Windows.Forms.Padding(1);
-            this.btnFlash3.Name = "btnFlash3";
-            this.btnFlash3.Size = new System.Drawing.Size(88, 44);
-            this.btnFlash3.TabIndex = 21;
-            this.btnFlash3.Text = "刷新";
-            this.btnFlash3.UseVisualStyleBackColor = false;
-            this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
-            // 
             // frmSet
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -4620,12 +4256,6 @@ namespace EMS
             this.panel5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).EndInit();
             this.tbCTL.ResumeLayout(false);
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.gb.ResumeLayout(false);
-            this.gb.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tpLC.ResumeLayout(false);
@@ -4680,8 +4310,6 @@ namespace EMS
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn14;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn15;
         private System.Windows.Forms.TabPage tbCTL;
-        private System.Windows.Forms.Button btnPCSRun;
-        private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Panel panel4;
@@ -4690,13 +4318,9 @@ namespace EMS
         private System.Windows.Forms.Button btnTempRun;
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Label label30;
-        private System.Windows.Forms.GroupBox gb;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Label label33;
-        private System.Windows.Forms.Label lablPCSwaValue2;
-        private System.Windows.Forms.Label label36;
-        private System.Windows.Forms.Label labPCSwaValue;
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Label label40;
         private System.Windows.Forms.Label label39;
@@ -4712,8 +4336,6 @@ namespace EMS
         private System.Windows.Forms.Label label42;
         private System.Windows.Forms.Label label43;
         private System.Windows.Forms.Label label44;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Button btnPCSOff;
         private System.Windows.Forms.Panel panel7;
         private System.Windows.Forms.Label label49;
         private System.Windows.Forms.Label labDebugRate;
@@ -4775,9 +4397,6 @@ namespace EMS
         private TouchNumberEdit tneSetCoolTemp;
         private TouchNumberEdit tneCoolTempReturn;
         private TouchNumberEdit tneSetHumidity;
-        private TouchCombox tcbSYSModel;
-        private TouchNumberEdit tnePCSwaValue;
-        private TouchCombox tcbPCSType;
         private TCheckBox tcbTCRunWithSys;
         private TouchCombox tcbDebugComName;
         private System.Windows.Forms.Panel panel2;
@@ -4797,9 +4416,6 @@ namespace EMS
         private TouchNumberEdit tneSysPower;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label82;
-        private TouchCombox tcbPCSMode;
-        private System.Windows.Forms.Label label24;
-        private System.Windows.Forms.Button btnPCSErrorClean;
         private System.Windows.Forms.GroupBox groupBox3;
         private TouchNumberEdit tneMaxGridKWH;
         private TouchNumberEdit tneMinGridKWH;
@@ -4815,10 +4431,6 @@ namespace EMS
         private TCheckBox tcbAutoRun;
         private TouchNumberEdit tneSysCount;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.Button btnBMSErrorClean;
-        private System.Windows.Forms.Button btnBMSClose;
-        private System.Windows.Forms.Button btnBMSOn;
         private TouchText ttbSystemID;
         private System.Windows.Forms.Panel panel5;
         private System.Windows.Forms.Button btnClean;
@@ -4883,10 +4495,6 @@ namespace EMS
         private TCheckBox tcbPCSForceRun;
         private System.Windows.Forms.Button btnUpdata;
         private System.Windows.Forms.Button btnATAppy;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label16;
-        private TouchNumberEdit tneBMSwaValue;
-        private System.Windows.Forms.Button btnBMSRun;
         private TCheckBox tcbUseBalaTactics;
         private System.Windows.Forms.Label label26;
         private TouchNumberEdit tneWarnGridkva;
@@ -4908,7 +4516,6 @@ namespace EMS
         private System.Windows.Forms.Label label76;
         private System.Windows.Forms.Label label79;
         private System.Windows.Forms.Label label80;
-        private System.Windows.Forms.Button btnLCErrorClear;
         private System.Windows.Forms.Label label84;
         private System.Windows.Forms.Label label85;
         private TouchCombox tcbLCTemperSelect;
