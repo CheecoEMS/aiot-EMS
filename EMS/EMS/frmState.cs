@@ -376,29 +376,9 @@ namespace EMS
                     }
                     break;
                 case 7://EMS
-                    if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster == 1)
-                    {
-                        if (frmMain.Selffrm.AllEquipment.EMSList[0] != null)
-                        { 
-                            tbShedulePCSKVA1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].ShedulePCSKVA.ToString();
-                            tbwaValueActive1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].waValueActive.ToString();
-                            tbWorkType1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].WorkType.ToString();
-                            tbPCSType1.Text =  frmMain.Selffrm.AllEquipment.EMSList[0].PCSType.ToString();
-                            tbrunState1.Text =  frmMain.Selffrm.AllEquipment.EMSList[0].runState.ToString();
-                            tbBMSErrorSate1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].BMSErrorSate.ToString();
-                        }
-                    }
-                    else
-                    {
-                        tbShedulePCSKVA1.Text = (0).ToString();
-                        tbwaValueActive1.Text =(0).ToString();
-                        tbWorkType1.Text = (0).ToString();
-                        tbPCSType1.Text =  (0).ToString();
-                        tbrunState1.Text =  (0).ToString();
-                        tbBMSErrorSate1.Text = (0).ToString();
-                    }
+
                     break;
-                    }
+            }
         }
 
         private void ShowDate2Form()

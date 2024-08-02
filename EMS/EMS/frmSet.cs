@@ -586,11 +586,11 @@ namespace EMS
                                 componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
                                 componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
                                 componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
-                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetDouble(23);
-                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetDouble(24);
-                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetDouble(25);
-                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetDouble(26);
-                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetDouble(27);
+                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetInt32(23);
+                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetInt32(24);
+                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
+                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetInt32(26);
+                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetInt32(27);
 
                                 result = true;
                             }
@@ -647,7 +647,7 @@ namespace EMS
                 + "DHSetTempBoot = '" + componentSettings.DHSetTempBoot.ToString() + "', "
                 + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
                 + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
-                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString() + "', "
+                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString()
                 + "';";
 
             bool result = false;
@@ -1407,15 +1407,15 @@ namespace EMS
                 //cbCloundIP.Text = CloundIP;
                 //nudCloundPort.Value = CloundPort;
                 //tcbSysAutoRun.SetValue( SysAutoRun);
-                tcbSYSModel.SetSelectItemIndex(config.SysMode);
-                tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
-                tcbPCSType.SetstrText(PCSType);
-                if (PCSwaValue > 0)
-                    tcbPCSMode.SetSelectItemIndex(0);
-                else
-                    tcbPCSMode.SetSelectItemIndex(1);
-                tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));
-                tneBMSwaValue.SetIntValue((int)Math.Abs(cloudLimits.BmsDerateRatio));//7.24
+                /*                tcbSYSModel.SetSelectItemIndex(config.SysMode);
+                                tcbPCSGridModel.SetSelectItemIndex(config.PCSGridModel);
+                                tcbPCSType.SetstrText(PCSType);
+                                if (PCSwaValue > 0)
+                                    tcbPCSMode.SetSelectItemIndex(0);
+                                else
+                                    tcbPCSMode.SetSelectItemIndex(1);
+                                tnePCSwaValue.SetIntValue(Math.Abs(PCSwaValue));*/
+                tneBMSwaValue.SetIntValue(Math.Abs(cloudLimits.BmsDerateRatio));//7.24
                 tneMaxSOC.SetIntValue(cloudLimits.MaxSOC);
                 tneMinSOC.SetIntValue(cloudLimits.MinSOC);
                 tneSetHotTemp.SetIntValue((int)(componentSettings.SetHotTemp));
@@ -1436,7 +1436,7 @@ namespace EMS
                 labDebugRate.Text = config.DebugRate.ToString();
                 tneMaxGridKWH.SetIntValue(cloudLimits.MaxGridKW);
                 tneMinGridKWH.SetIntValue(cloudLimits.MinGridKW);
-                DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
+                //DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
                 //tneFM0.SetIntValue(dtTemp.Month);
                 //tneFD0.SetIntValue(dtTemp.Day);
                 //tneTZIndex0.SetIntValue(TZSetIndex[0]);
@@ -1490,7 +1490,12 @@ namespace EMS
                 tneFenMinTemp.SetIntValue((int)(componentSettings.FenMinTemp));
                 tcbFenMode.SetSelectItemIndex(componentSettings.FenMode);
 
-                //log.Error("展示："+"MaxGridKW: " + MaxGridKW + "MinGridKW: " + MinGridKW);
+                //除湿机
+                tneDHSetHumidityStop.SetIntValue(componentSettings.DHSetHumidityStop);
+                tneDHSetHumidityBoot.SetIntValue(componentSettings.DHSetHumidityBoot);
+                tneDHSetTempBoot.SetIntValue(componentSettings.DHSetTempBoot);
+                tneDHSetTempStop.SetIntValue(componentSettings.DHSetTempStop);
+                tcbDHSetRunStatus.SetSelectItemIndex(componentSettings.DHSetRunStatus);
 
             }
             catch { }
@@ -1540,14 +1545,14 @@ namespace EMS
             //CloundIP =  cbCloundIP.Text ;
             //CloundPort = (int)nudCloundPort.Value;
             //SysAutoRun = false;// tcbSysAutoRun.Checked;
-            config.SysMode = tcbSYSModel.SelectItemIndex;
+/*            config.SysMode = tcbSYSModel.SelectItemIndex;
             PCSType = tcbPCSType.strText;
             config.PCSGridModel = tcbPCSGridModel.SelectItemIndex;
             if (tcbPCSMode.SelectItemIndex == 0)//0充电为正
                 PCSwaValue = (int)tnePCSwaValue.Value;
             else
                 PCSwaValue = -1 * (int)tnePCSwaValue.Value;
-            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;//7.24
+            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;//7.24*/
             cloudLimits.MaxSOC = (int)tneMaxSOC.Value;
             cloudLimits.MinSOC  = (int)tneMinSOC.Value;
             componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
@@ -1872,20 +1877,6 @@ namespace EMS
             }
         }
 
-        private void btnBMSRun_Click(object sender, EventArgs e)
-        {
-            //ShowProgressBar();
-            try
-            {
-                //保存当前数据
-                GetINIData();
-                SaveSet2File();
-            }
-            catch
-            {
-            }
-        }
-
         private void btnPCSOff_Click(object sender, EventArgs e)
         {
             //关闭PCS
@@ -1955,19 +1946,7 @@ namespace EMS
             frmMain.Selffrm.AllEquipment.PCSCleanError();
         }
 
-        private void btnBMSOn_Click(object sender, EventArgs e)
-        {
-            //开始预充
-            frmMain.Selffrm.AllEquipment.BMS.PowerOn(true);
-        }
-
-        private void btnBMSClose_Click(object sender, EventArgs e)
-        {
-            //开始预充
-            frmMain.Selffrm.AllEquipment.BMS.PowerOn(false);
-        }
-
-        private void btnClean_Click_1(object sender, EventArgs e)
+/*        private void btnClean_Click_1(object sender, EventArgs e)
         {
             if (dbgLog.SelectedRows.Count <= 0)
                 return;
@@ -1976,13 +1955,13 @@ namespace EMS
 
             DBConnection.ExecSQL("delete from log");
             DBConnection.ShowData2DBGrid(dbgLog, "select * from log");
-        }
+        }*/
 
-        private void btnSave2File_Click_1(object sender, EventArgs e)
+/*        private void btnSave2File_Click_1(object sender, EventArgs e)
         {
             //到处到文件
             DBConnection.SaveGrid2File(dbgLog);
-        }
+        }*/
 
         private void btnAdd1_Click(object sender, EventArgs e)
         {
@@ -2226,8 +2205,8 @@ namespace EMS
         private void btnLog_Click(object sender, EventArgs e)
         {
 
-            DBConnection.SetDBGrid(oneForm.dbgLog);
-            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");
+/*            DBConnection.SetDBGrid(oneForm.dbgLog);
+            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");*/
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2382,7 +2361,7 @@ namespace EMS
             SetDbgridDown(dbgUsers);
         }
 
-        private void btnUpL_Click(object sender, EventArgs e)
+/*        private void btnUpL_Click(object sender, EventArgs e)
         {
             SetDbgridUp(dbgLog);
         }
@@ -2390,7 +2369,7 @@ namespace EMS
         private void btnDownL_Click(object sender, EventArgs e)
         {
             SetDbgridDown(dbgLog);
-        }
+        }*/
 
         private void btnSet_Click(object sender, EventArgs e)
         {
@@ -2445,7 +2424,7 @@ namespace EMS
 
         private void tcbPCSGridModel_OnValueChange(object sender)
         {
-            switch (tcbPCSGridModel.SelectItemIndex)
+/*            switch (tcbPCSGridModel.SelectItemIndex)
             {
                 case 0://并网
                     tcbPCSType.SetSelectItemIndex(3);
@@ -2463,12 +2442,7 @@ namespace EMS
                     labPCSwaValue.Visible = false;
                     lablPCSwaValue2.Visible = false;
                     break;
-            }
-        }
-
-        private void btnBMSErrorClean_Click(object sender, EventArgs e)
-        {
-            //frmMain.Selffrm.AllEquipment.BMS.
+            }*/
         }
 
         private void btnCleanDataBase_Click(object sender, EventArgs e)
@@ -2552,7 +2526,8 @@ namespace EMS
         {
             try 
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
+                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
             }
             catch { }
         }
@@ -2561,7 +2536,10 @@ namespace EMS
         {
             try
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);
+                if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);
+                }
             }
             catch { }
         }
@@ -2689,11 +2667,59 @@ namespace EMS
 
 
             //除湿机
-            public double DHSetRunStatus { get; set; }
-            public double DHSetTempBoot { get; set; }      //（除湿：温度启动值）dehumidity
-            public double DHSetTempStop { get; set; }      //（除湿：温度停止值）
-            public double DHSetHumidityBoot { get; set; }  //（除湿：湿度启动值）
-            public double DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
+            public int DHSetRunStatus { get; set; }
+            public int DHSetTempBoot { get; set; }      //（除湿：温度启动值）dehumidity
+            public int DHSetTempStop { get; set; }      //（除湿：温度停止值）
+            public int DHSetHumidityBoot { get; set; }  //（除湿：湿度启动值）
+            public int DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
         }
+
+
+        /***********************************
+         * 
+         *  UI  BMS
+         * 
+         * *******************************/ 
+
+        private void btnBMSRead_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                frmMain.Selffrm.AllEquipment.BMS.GetCellErrUPVInfo();
+            }
+            catch { }
+        }
+
+        private void btnBMSRun_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                GetINIData();
+                //frmSet.SaveSet2File();
+                Set_Cloudlimits();
+
+                //8.3
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV1(tneBMScellUPV1.Value);// BMS1级单体过压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV2(tneBMScellPV2.Value);//BMS2级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV2(tneBMScellUPV2.Value);// BMS2级单体过压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV3(tneBMScellPV3.Value);//BMS3级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV3(tneBMScellUPV3.Value);// BMS3级单体过压恢复阈值*/
+            }
+            catch { }
+        }
+
+        private void btnBMSOn_Click(object sender, EventArgs e)
+        {
+            //开始预充
+            frmMain.Selffrm.AllEquipment.BMS.PowerOn(true);
+        }
+
+        private void btnBMSClose_Click(object sender, EventArgs e)
+        {
+            //关闭预充
+            frmMain.Selffrm.AllEquipment.BMS.PowerOn(false);
+        }
+
     }
 }
