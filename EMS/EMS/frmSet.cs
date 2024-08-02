@@ -1877,20 +1877,6 @@ namespace EMS
             }
         }
 
-        private void btnBMSRun_Click(object sender, EventArgs e)
-        {
-            //ShowProgressBar();
-            try
-            {
-                //保存当前数据
-                GetINIData();
-                SaveSet2File();
-            }
-            catch
-            {
-            }
-        }
-
         private void btnPCSOff_Click(object sender, EventArgs e)
         {
             //关闭PCS
@@ -1958,18 +1944,6 @@ namespace EMS
         private void btnPCSErrorClean_Click(object sender, EventArgs e)
         {
             frmMain.Selffrm.AllEquipment.PCSCleanError();
-        }
-
-        private void btnBMSOn_Click(object sender, EventArgs e)
-        {
-            //开始预充
-            frmMain.Selffrm.AllEquipment.BMS.PowerOn(true);
-        }
-
-        private void btnBMSClose_Click(object sender, EventArgs e)
-        {
-            //开始预充
-            frmMain.Selffrm.AllEquipment.BMS.PowerOn(false);
         }
 
         private void btnClean_Click_1(object sender, EventArgs e)
@@ -2471,11 +2445,6 @@ namespace EMS
             }*/
         }
 
-        private void btnBMSErrorClean_Click(object sender, EventArgs e)
-        {
-            //frmMain.Selffrm.AllEquipment.BMS.
-        }
-
         private void btnCleanDataBase_Click(object sender, EventArgs e)
         {
             DialogResult aDlgResult = MessageBox.Show("确定要清理数据库吗？", "询问", MessageBoxButtons.YesNo);
@@ -2704,5 +2673,52 @@ namespace EMS
             public int DHSetHumidityBoot { get; set; }  //（除湿：湿度启动值）
             public int DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
         }
+
+
+        /***********************************
+         * 
+         *  UI  BMS
+         * 
+         * *******************************/ 
+
+        private void btnBMSRead_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                frmMain.Selffrm.AllEquipment.BMS.GetCellErrUPVInfo();
+            }
+            catch { }
+        }
+
+        private void btnBMSRun_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                GetINIData();
+                frmSet.SaveSet2File();
+
+                //8.3
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV1(tneBMScellUPV1.Value);// BMS1级单体过压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV2(tneBMScellPV2.Value);//BMS2级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV2(tneBMScellUPV2.Value);// BMS2级单体过压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV3(tneBMScellPV3.Value);//BMS3级单体过压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV3(tneBMScellUPV3.Value);// BMS3级单体过压恢复阈值*/
+            }
+            catch { }
+        }
+
+        private void btnBMSOn_Click(object sender, EventArgs e)
+        {
+            //开始预充
+            frmMain.Selffrm.AllEquipment.BMS.PowerOn(true);
+        }
+
+        private void btnBMSClose_Click(object sender, EventArgs e)
+        {
+            //关闭预充
+            frmMain.Selffrm.AllEquipment.BMS.PowerOn(false);
+        }
+
     }
 }

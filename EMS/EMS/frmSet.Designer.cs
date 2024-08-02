@@ -212,6 +212,32 @@ namespace EMS
             this.dataGridViewTextBoxColumn14 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn15 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tbCTL = new System.Windows.Forms.TabPage();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.btnBMSRead = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV3 = new EMS.TouchNumberEdit(this.components);
+            this.tneBMScellPV3 = new EMS.TouchNumberEdit(this.components);
+            this.label20 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label36 = new System.Windows.Forms.Label();
+            this.label64 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV2 = new EMS.TouchNumberEdit(this.components);
+            this.tneBMScellPV2 = new EMS.TouchNumberEdit(this.components);
+            this.label77 = new System.Windows.Forms.Label();
+            this.label92 = new System.Windows.Forms.Label();
+            this.label93 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV1 = new EMS.TouchNumberEdit(this.components);
+            this.label94 = new System.Windows.Forms.Label();
+            this.label95 = new System.Windows.Forms.Label();
+            this.tneBMScellPV1 = new EMS.TouchNumberEdit(this.components);
+            this.label96 = new System.Windows.Forms.Label();
+            this.btnBMSRun = new System.Windows.Forms.Button();
+            this.label97 = new System.Windows.Forms.Label();
+            this.label98 = new System.Windows.Forms.Label();
+            this.tneBMSwaValue = new EMS.TouchNumberEdit(this.components);
+            this.btnBMSClose = new System.Windows.Forms.Button();
+            this.btnBMSOn = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tcbFenMode = new EMS.TouchCombox(this.components);
             this.label63 = new System.Windows.Forms.Label();
@@ -339,6 +365,7 @@ namespace EMS
             this.panel5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).BeginInit();
             this.tbCTL.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tpLC.SuspendLayout();
             this.groupBox7.SuspendLayout();
@@ -2808,6 +2835,7 @@ namespace EMS
             // tbCTL
             // 
             this.tbCTL.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.tbCTL.Controls.Add(this.groupBox6);
             this.tbCTL.Controls.Add(this.groupBox1);
             this.tbCTL.Location = new System.Drawing.Point(4, 4);
             this.tbCTL.Name = "tbCTL";
@@ -2815,6 +2843,374 @@ namespace EMS
             this.tbCTL.Size = new System.Drawing.Size(845, 643);
             this.tbCTL.TabIndex = 7;
             this.tbCTL.Text = "控制模式";
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.btnBMSRead);
+            this.groupBox6.Controls.Add(this.label2);
+            this.groupBox6.Controls.Add(this.label16);
+            this.groupBox6.Controls.Add(this.tneBMScellUPV3);
+            this.groupBox6.Controls.Add(this.tneBMScellPV3);
+            this.groupBox6.Controls.Add(this.label20);
+            this.groupBox6.Controls.Add(this.label24);
+            this.groupBox6.Controls.Add(this.label36);
+            this.groupBox6.Controls.Add(this.label64);
+            this.groupBox6.Controls.Add(this.tneBMScellUPV2);
+            this.groupBox6.Controls.Add(this.tneBMScellPV2);
+            this.groupBox6.Controls.Add(this.label77);
+            this.groupBox6.Controls.Add(this.label92);
+            this.groupBox6.Controls.Add(this.label93);
+            this.groupBox6.Controls.Add(this.tneBMScellUPV1);
+            this.groupBox6.Controls.Add(this.label94);
+            this.groupBox6.Controls.Add(this.label95);
+            this.groupBox6.Controls.Add(this.tneBMScellPV1);
+            this.groupBox6.Controls.Add(this.label96);
+            this.groupBox6.Controls.Add(this.btnBMSRun);
+            this.groupBox6.Controls.Add(this.label97);
+            this.groupBox6.Controls.Add(this.label98);
+            this.groupBox6.Controls.Add(this.tneBMSwaValue);
+            this.groupBox6.Controls.Add(this.btnBMSClose);
+            this.groupBox6.Controls.Add(this.btnBMSOn);
+            this.groupBox6.ForeColor = System.Drawing.Color.White;
+            this.groupBox6.Location = new System.Drawing.Point(12, 8);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(815, 174);
+            this.groupBox6.TabIndex = 28;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "BMS设置";
+            // 
+            // btnBMSRead
+            // 
+            this.btnBMSRead.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSRead.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSRead.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnBMSRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBMSRead.ForeColor = System.Drawing.Color.White;
+            this.btnBMSRead.Location = new System.Drawing.Point(438, 19);
+            this.btnBMSRead.Name = "btnBMSRead";
+            this.btnBMSRead.Size = new System.Drawing.Size(88, 44);
+            this.btnBMSRead.TabIndex = 74;
+            this.btnBMSRead.Text = "读取";
+            this.btnBMSRead.UseVisualStyleBackColor = true;
+            this.btnBMSRead.Click += new System.EventHandler(this.btnBMSRead_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label2.Location = new System.Drawing.Point(773, 139);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(29, 19);
+            this.label2.TabIndex = 73;
+            this.label2.Text = "mv";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label16.Location = new System.Drawing.Point(773, 87);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(29, 19);
+            this.label16.TabIndex = 72;
+            this.label16.Text = "mv";
+            // 
+            // tneBMScellUPV3
+            // 
+            this.tneBMScellUPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV3.CanEdit = true;
+            this.tneBMScellUPV3.DefaultValue = 0;
+            this.tneBMScellUPV3.FoceInZone = false;
+            this.tneBMScellUPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV3.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV3.Location = new System.Drawing.Point(630, 126);
+            this.tneBMScellUPV3.Maximum = 4000;
+            this.tneBMScellUPV3.Minimum = 0;
+            this.tneBMScellUPV3.Name = "tneBMScellUPV3";
+            this.tneBMScellUPV3.Size = new System.Drawing.Size(137, 32);
+            this.tneBMScellUPV3.strText = "";
+            this.tneBMScellUPV3.TabIndex = 71;
+            this.tneBMScellUPV3.Value = 0;
+            this.tneBMScellUPV3.ValueStep = 1;
+            // 
+            // tneBMScellPV3
+            // 
+            this.tneBMScellPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV3.CanEdit = true;
+            this.tneBMScellPV3.DefaultValue = 0;
+            this.tneBMScellPV3.FoceInZone = false;
+            this.tneBMScellPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV3.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV3.Location = new System.Drawing.Point(630, 74);
+            this.tneBMScellPV3.Maximum = 4000;
+            this.tneBMScellPV3.Minimum = 0;
+            this.tneBMScellPV3.Name = "tneBMScellPV3";
+            this.tneBMScellPV3.Size = new System.Drawing.Size(137, 32);
+            this.tneBMScellPV3.strText = "";
+            this.tneBMScellPV3.TabIndex = 70;
+            this.tneBMScellPV3.Value = 0;
+            this.tneBMScellPV3.ValueStep = 1;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label20.Location = new System.Drawing.Point(539, 139);
+            this.label20.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(86, 19);
+            this.label20.TabIndex = 69;
+            this.label20.Text = "3级P恢复";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label24.Location = new System.Drawing.Point(539, 87);
+            this.label24.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(86, 19);
+            this.label24.TabIndex = 68;
+            this.label24.Text = "3级P告警";
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label36.Location = new System.Drawing.Point(505, 139);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(29, 19);
+            this.label36.TabIndex = 67;
+            this.label36.Text = "mv";
+            // 
+            // label64
+            // 
+            this.label64.AutoSize = true;
+            this.label64.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label64.Location = new System.Drawing.Point(505, 87);
+            this.label64.Name = "label64";
+            this.label64.Size = new System.Drawing.Size(29, 19);
+            this.label64.TabIndex = 66;
+            this.label64.Text = "mv";
+            // 
+            // tneBMScellUPV2
+            // 
+            this.tneBMScellUPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV2.CanEdit = true;
+            this.tneBMScellUPV2.DefaultValue = 0;
+            this.tneBMScellUPV2.FoceInZone = false;
+            this.tneBMScellUPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV2.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV2.Location = new System.Drawing.Point(365, 126);
+            this.tneBMScellUPV2.Maximum = 4000;
+            this.tneBMScellUPV2.Minimum = 0;
+            this.tneBMScellUPV2.Name = "tneBMScellUPV2";
+            this.tneBMScellUPV2.Size = new System.Drawing.Size(134, 32);
+            this.tneBMScellUPV2.strText = "";
+            this.tneBMScellUPV2.TabIndex = 65;
+            this.tneBMScellUPV2.Value = 0;
+            this.tneBMScellUPV2.ValueStep = 1;
+            // 
+            // tneBMScellPV2
+            // 
+            this.tneBMScellPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV2.CanEdit = true;
+            this.tneBMScellPV2.DefaultValue = 0;
+            this.tneBMScellPV2.FoceInZone = false;
+            this.tneBMScellPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV2.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV2.Location = new System.Drawing.Point(365, 74);
+            this.tneBMScellPV2.Maximum = 4000;
+            this.tneBMScellPV2.Minimum = 0;
+            this.tneBMScellPV2.Name = "tneBMScellPV2";
+            this.tneBMScellPV2.Size = new System.Drawing.Size(134, 32);
+            this.tneBMScellPV2.strText = "";
+            this.tneBMScellPV2.TabIndex = 64;
+            this.tneBMScellPV2.Value = 0;
+            this.tneBMScellPV2.ValueStep = 1;
+            // 
+            // label77
+            // 
+            this.label77.AutoSize = true;
+            this.label77.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label77.Location = new System.Drawing.Point(274, 139);
+            this.label77.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label77.Name = "label77";
+            this.label77.Size = new System.Drawing.Size(86, 19);
+            this.label77.TabIndex = 63;
+            this.label77.Text = "2级P恢复";
+            // 
+            // label92
+            // 
+            this.label92.AutoSize = true;
+            this.label92.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label92.Location = new System.Drawing.Point(274, 87);
+            this.label92.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label92.Name = "label92";
+            this.label92.Size = new System.Drawing.Size(86, 19);
+            this.label92.TabIndex = 62;
+            this.label92.Text = "2级P告警";
+            // 
+            // label93
+            // 
+            this.label93.AutoSize = true;
+            this.label93.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label93.Location = new System.Drawing.Point(240, 139);
+            this.label93.Name = "label93";
+            this.label93.Size = new System.Drawing.Size(29, 19);
+            this.label93.TabIndex = 61;
+            this.label93.Text = "mv";
+            // 
+            // tneBMScellUPV1
+            // 
+            this.tneBMScellUPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV1.CanEdit = true;
+            this.tneBMScellUPV1.DefaultValue = 0;
+            this.tneBMScellUPV1.FoceInZone = false;
+            this.tneBMScellUPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV1.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV1.Location = new System.Drawing.Point(96, 126);
+            this.tneBMScellUPV1.Maximum = 4000;
+            this.tneBMScellUPV1.Minimum = 0;
+            this.tneBMScellUPV1.Name = "tneBMScellUPV1";
+            this.tneBMScellUPV1.Size = new System.Drawing.Size(138, 32);
+            this.tneBMScellUPV1.strText = "";
+            this.tneBMScellUPV1.TabIndex = 60;
+            this.tneBMScellUPV1.Value = 0;
+            this.tneBMScellUPV1.ValueStep = 1;
+            // 
+            // label94
+            // 
+            this.label94.AutoSize = true;
+            this.label94.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label94.Location = new System.Drawing.Point(5, 139);
+            this.label94.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label94.Name = "label94";
+            this.label94.Size = new System.Drawing.Size(86, 19);
+            this.label94.TabIndex = 59;
+            this.label94.Text = "1级P恢复";
+            // 
+            // label95
+            // 
+            this.label95.AutoSize = true;
+            this.label95.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label95.Location = new System.Drawing.Point(240, 87);
+            this.label95.Name = "label95";
+            this.label95.Size = new System.Drawing.Size(29, 19);
+            this.label95.TabIndex = 58;
+            this.label95.Text = "mv";
+            // 
+            // tneBMScellPV1
+            // 
+            this.tneBMScellPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV1.CanEdit = true;
+            this.tneBMScellPV1.DefaultValue = 0;
+            this.tneBMScellPV1.FoceInZone = false;
+            this.tneBMScellPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV1.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV1.Location = new System.Drawing.Point(96, 74);
+            this.tneBMScellPV1.Maximum = 4000;
+            this.tneBMScellPV1.Minimum = 0;
+            this.tneBMScellPV1.Name = "tneBMScellPV1";
+            this.tneBMScellPV1.Size = new System.Drawing.Size(138, 32);
+            this.tneBMScellPV1.strText = "";
+            this.tneBMScellPV1.TabIndex = 57;
+            this.tneBMScellPV1.Value = 0;
+            this.tneBMScellPV1.ValueStep = 1;
+            // 
+            // label96
+            // 
+            this.label96.AutoSize = true;
+            this.label96.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label96.Location = new System.Drawing.Point(5, 87);
+            this.label96.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label96.Name = "label96";
+            this.label96.Size = new System.Drawing.Size(86, 19);
+            this.label96.TabIndex = 56;
+            this.label96.Text = "1级P告警";
+            // 
+            // btnBMSRun
+            // 
+            this.btnBMSRun.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSRun.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnBMSRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBMSRun.ForeColor = System.Drawing.Color.White;
+            this.btnBMSRun.Location = new System.Drawing.Point(528, 19);
+            this.btnBMSRun.Name = "btnBMSRun";
+            this.btnBMSRun.Size = new System.Drawing.Size(88, 44);
+            this.btnBMSRun.TabIndex = 55;
+            this.btnBMSRun.Text = "应用";
+            this.btnBMSRun.UseVisualStyleBackColor = true;
+            this.btnBMSRun.Click += new System.EventHandler(this.btnBMSRun_Click);
+            // 
+            // label97
+            // 
+            this.label97.AutoSize = true;
+            this.label97.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label97.Location = new System.Drawing.Point(268, 34);
+            this.label97.Name = "label97";
+            this.label97.Size = new System.Drawing.Size(19, 19);
+            this.label97.TabIndex = 54;
+            this.label97.Text = "%";
+            // 
+            // label98
+            // 
+            this.label98.AutoSize = true;
+            this.label98.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label98.Location = new System.Drawing.Point(19, 34);
+            this.label98.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label98.Name = "label98";
+            this.label98.Size = new System.Drawing.Size(114, 19);
+            this.label98.TabIndex = 53;
+            this.label98.Text = "1级限制功率";
+            // 
+            // tneBMSwaValue
+            // 
+            this.tneBMSwaValue.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMSwaValue.CanEdit = true;
+            this.tneBMSwaValue.DefaultValue = 0;
+            this.tneBMSwaValue.FoceInZone = false;
+            this.tneBMSwaValue.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMSwaValue.ForeColor = System.Drawing.Color.White;
+            this.tneBMSwaValue.Location = new System.Drawing.Point(138, 31);
+            this.tneBMSwaValue.Maximum = 840;
+            this.tneBMSwaValue.Minimum = 0;
+            this.tneBMSwaValue.Name = "tneBMSwaValue";
+            this.tneBMSwaValue.Size = new System.Drawing.Size(124, 32);
+            this.tneBMSwaValue.strText = "";
+            this.tneBMSwaValue.TabIndex = 52;
+            this.tneBMSwaValue.Value = 0;
+            this.tneBMSwaValue.ValueStep = 1;
+            // 
+            // btnBMSClose
+            // 
+            this.btnBMSClose.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSClose.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnBMSClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBMSClose.ForeColor = System.Drawing.Color.White;
+            this.btnBMSClose.Location = new System.Drawing.Point(708, 21);
+            this.btnBMSClose.Name = "btnBMSClose";
+            this.btnBMSClose.Size = new System.Drawing.Size(88, 44);
+            this.btnBMSClose.TabIndex = 28;
+            this.btnBMSClose.Text = "关闭";
+            this.btnBMSClose.UseVisualStyleBackColor = true;
+            this.btnBMSClose.Click += new System.EventHandler(this.btnBMSClose_Click);
+            // 
+            // btnBMSOn
+            // 
+            this.btnBMSOn.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSOn.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnBMSOn.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnBMSOn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBMSOn.ForeColor = System.Drawing.Color.White;
+            this.btnBMSOn.Location = new System.Drawing.Point(618, 19);
+            this.btnBMSOn.Name = "btnBMSOn";
+            this.btnBMSOn.Size = new System.Drawing.Size(88, 44);
+            this.btnBMSOn.TabIndex = 27;
+            this.btnBMSOn.Text = "打开预充";
+            this.btnBMSOn.UseVisualStyleBackColor = true;
+            this.btnBMSOn.Click += new System.EventHandler(this.btnBMSOn_Click);
             // 
             // groupBox1
             // 
@@ -4256,6 +4652,8 @@ namespace EMS
             this.panel5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dbgLog)).EndInit();
             this.tbCTL.ResumeLayout(false);
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tpLC.ResumeLayout(false);
@@ -4551,5 +4949,31 @@ namespace EMS
         private System.Windows.Forms.Button btnLCRead;
         private System.Windows.Forms.Button btnDHRead;
         private System.Windows.Forms.Button btnFlash3;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.Button btnBMSRead;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label16;
+        private TouchNumberEdit tneBMScellUPV3;
+        private TouchNumberEdit tneBMScellPV3;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.Label label64;
+        private TouchNumberEdit tneBMScellUPV2;
+        private TouchNumberEdit tneBMScellPV2;
+        private System.Windows.Forms.Label label77;
+        private System.Windows.Forms.Label label92;
+        private System.Windows.Forms.Label label93;
+        private TouchNumberEdit tneBMScellUPV1;
+        private System.Windows.Forms.Label label94;
+        private System.Windows.Forms.Label label95;
+        private TouchNumberEdit tneBMScellPV1;
+        private System.Windows.Forms.Label label96;
+        private System.Windows.Forms.Button btnBMSRun;
+        private System.Windows.Forms.Label label97;
+        private System.Windows.Forms.Label label98;
+        private TouchNumberEdit tneBMSwaValue;
+        private System.Windows.Forms.Button btnBMSClose;
+        private System.Windows.Forms.Button btnBMSOn;
     }
 }

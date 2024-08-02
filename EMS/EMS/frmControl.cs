@@ -167,6 +167,9 @@ namespace EMS
 
         private void btnMain_Click(object sender, EventArgs e)
         {
+            //保存修改数据
+            frmSet.Set_Config();
+
             CloseForm();
             frmMain.ShowMainForm();
            // ShowINIData();
@@ -183,11 +186,11 @@ namespace EMS
                 frmSet.PCSwaValue = (int)tnePCSwaValue.Value;
             else
                 frmSet.PCSwaValue = -1 * (int)tnePCSwaValue.Value;
-            frmSet.cloudLimits.BmsDerateRatio = tneBMSwaValue.Value;//7.24 添加BMS 1级告警时PCS降低的功率比例
-            frmSet.componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
+            //frmSet.cloudLimits.BmsDerateRatio = tneBMSwaValue.Value;//7.24 添加BMS 1级告警时PCS降低的功率比例
+/*            frmSet.componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
             frmSet.componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
             frmSet.componentSettings.CoolTempReturn = (int)tneCoolTempReturn.Value;
-            frmSet.componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
+            frmSet.componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;*/
             
             //12.4
             frmSet.config.EMSstatus = tcbEMSstatus.SelectItemIndex; //0:测试模式 1：运行模式
@@ -218,11 +221,11 @@ namespace EMS
             else
                 tcbPCSMode.SetSelectItemIndex(1);
             tnePCSwaValue.SetIntValue(Math.Abs(frmSet.PCSwaValue));
-            tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
-            tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
+            //tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
+/*            tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
             tneSetCoolTemp.SetIntValue((int)(frmSet.componentSettings.SetCoolTemp));
             tneCoolTempReturn.SetIntValue((int)(frmSet.componentSettings.CoolTempReturn));
-            tneHotTempReturn.SetIntValue((int)(frmSet.componentSettings.HotTempReturn));
+            tneHotTempReturn.SetIntValue((int)(frmSet.componentSettings.HotTempReturn));*/
 
             //12.4
             tcbEMSstatus.SetSelectItemIndex(frmSet.config.EMSstatus);
@@ -323,12 +326,12 @@ namespace EMS
                 frmSet.SaveSet2File();
 
                 //8.3
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV1(tneBMScellUPV1.Value);// BMS1级单体过压恢复阈值
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV2(tneBMScellPV2.Value);//BMS2级单体过压报警阈值
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV2(tneBMScellUPV2.Value);// BMS2级单体过压恢复阈值
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsPV3(tneBMScellPV3.Value);//BMS3级单体过压报警阈值
-                frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV3(tneBMScellUPV3.Value);// BMS3级单体过压恢复阈值*/
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV1(tneBMScellUPV1.Value);// BMS1级单体过压恢复阈值
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsPV2(tneBMScellPV2.Value);//BMS2级单体过压报警阈值
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV2(tneBMScellUPV2.Value);// BMS2级单体过压恢复阈值
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsPV3(tneBMScellPV3.Value);//BMS3级单体过压报警阈值
+                //frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV3(tneBMScellUPV3.Value);// BMS3级单体过压恢复阈值*/
             }
             catch { }
         }
