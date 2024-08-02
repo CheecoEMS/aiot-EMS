@@ -1436,7 +1436,7 @@ namespace EMS
                 labDebugRate.Text = config.DebugRate.ToString();
                 tneMaxGridKWH.SetIntValue(cloudLimits.MaxGridKW);
                 tneMinGridKWH.SetIntValue(cloudLimits.MinGridKW);
-                DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
+                //DateTime dtTemp = Convert.ToDateTime("2022-" + TimeZones[0] + " 0:0:1");
                 //tneFM0.SetIntValue(dtTemp.Month);
                 //tneFD0.SetIntValue(dtTemp.Day);
                 //tneTZIndex0.SetIntValue(TZSetIndex[0]);

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 //351200 
 
@@ -441,11 +442,9 @@ namespace EMS
 
         static public frmMain LoadForm()
         {
-            //int[] a = { 0, 1 };
-            //frmMain.Selffrm = new frmMain();
             try
             { 
-                //配置Config配置文件地址，获取配置文件中的设定
+/*                //配置Config配置文件地址，获取配置文件中的设定
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
@@ -552,7 +551,7 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-/*                if (frmSet.config.IsMaster)
+*//*                if (frmSet.config.IsMaster)
                 {
                     if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
                     {
@@ -564,7 +563,7 @@ namespace EMS
                         }
                         Selffrm.AllEquipment.WriteDoPUini();
                     }
-                }*/
+                }*//*
 
                 //校准电表日期
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
@@ -658,7 +657,7 @@ namespace EMS
 
                 frmFlash.AddPostion(10);
                 //开启任务多线程
-                frmMain.Selffrm.AllEquipment.AutoReadData();
+                frmMain.Selffrm.AllEquipment.AutoReadData();*/
 
             }
             catch (Exception err)

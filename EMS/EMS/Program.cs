@@ -9,6 +9,15 @@ namespace EMS
 {
     static class Program
     {
+        // Import the Add function from the DLL
+        [DllImport("PInvoke.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Add(int a, int b);
+
+        // Import the GetGreeting function from the DLL
+        [DllImport("PInvoke.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr GetGreeting();
+
+
         [DllImport("kernel32.dll")]
         static extern UIntPtr SetThreadAffinityMask(IntPtr hThread, UIntPtr dwThreadAffinityMask);
 
@@ -42,6 +51,16 @@ namespace EMS
         [STAThread]
         static void Main()
         {
+            // Call the Add function
+            int result = Add(3, 4);
+            Console.WriteLine("Add(3, 4) = " + result);
+
+            // Call the GetGreeting function
+            IntPtr pStr = GetGreeting();
+            string greeting = Marshal.PtrToStringAnsi(pStr);
+            Console.WriteLine("GetGreeting() = " + greeting);
+
+
             if (! CheckAppExists()) 
             { 
                 frmFlash.ShowFlashForm();
