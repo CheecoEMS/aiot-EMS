@@ -942,7 +942,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if (!frmSet.config.UseBalaTactics)
+                if (frmSet.config.UseBalaTactics == 0)
                     return strID;
 
                 //清理旧数据
@@ -1038,7 +1038,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if ((!frmSet.config.UseYunTactics)|| (!frmSet.config.IsMaster))
+                if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
                 {
                     return false;
                 }
@@ -1196,7 +1196,7 @@ namespace EMS
                 else
                 {
                     //从机器不执行网络命令(不开放离网模式)
-                    if ((frmSet.config.IsMaster)&&(ipcsSet!=4))
+                    if ((frmSet.config.IsMaster == 0)&&(ipcsSet!=4))
                         frmControl.SetControl(iMode, PCSClass.PCSTypes[ipcsSet], ipcsSets[icharge], ipcsSetValue,iOn, true);
                 } 
                 /*

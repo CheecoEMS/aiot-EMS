@@ -139,7 +139,7 @@ namespace EMS
                 Thread.Sleep(sleepCount);
                 if (BalaTacticsList.Count == 0)
                     continue;
-                else if (!frmSet.config.UseBalaTactics)
+                else if (frmSet.config.UseBalaTactics == 0)
                 {
                     Thread.Sleep(60000);
                     continue;
