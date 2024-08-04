@@ -1952,7 +1952,13 @@ namespace EMS
         {
             strCommandFile = "LiquidCool.txt";
         }
-
+        public void init_LiquidCool() //初始化
+        {
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+            }
+        }
         //导入配置
         public bool ExecCommand()
         {
@@ -2099,9 +2105,9 @@ namespace EMS
                 if (Get3strData(11, ref strData, ref strTemp))
                     environmentTemp = Math.Round(float.Parse(strTemp), 1);//环境温度
                 if (Get3strData(12, ref strData, ref strTemp))
-                    InwaterPressure = Math.Round(float.Parse(strTemp), 1)/10;  //进水压力
+                    InwaterPressure = Math.Round(float.Parse(strTemp), 1)*10;  //进水压力
                 if (Get3strData(13, ref strData, ref strTemp))
-                    OutwaterPressure = Math.Round(float.Parse(strTemp), 1)/10;        //出水压力
+                    OutwaterPressure = Math.Round(float.Parse(strTemp), 1)*10;        //出水压力
             }
             //读取故障
             if (GetSysData(26, ref strTemp))
@@ -7933,6 +7939,8 @@ namespace EMS
         //表一队列数据
         private void ReadCom1Data()
         {
+            frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+
             while (true)
             {
                 Thread.Sleep(1000);
@@ -8140,6 +8148,7 @@ namespace EMS
                 ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
+                frmMain.Selffrm.AllEquipment.LCIni();
             }
             catch (Exception ex)
             {
@@ -8348,6 +8357,10 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
+                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复
+                                        {
+                                        frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                                        }
                                     }
                                 }
                             }
