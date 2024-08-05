@@ -1094,44 +1094,47 @@ namespace EMS
 
         override public void GetDataFromEqipment()
         {
-            string strData = "";
-            bool bPrepared = false;
-            bool tempError = false;
-            string strTemp = "";
-
-            if (GetSysData(12, ref strData))
+            if (frmMain.Selffrm.AllEquipment.Dehumidifier != null)
             {
-                bPrepared = true;
-                if (Get3strData(0, ref strData, ref strTemp))
+                string strData = "";
+                bool bPrepared = false;
+                bool tempError = false;
+                string strTemp = "";
+
+                if (GetSysData(12, ref strData))
                 {
-                    TempData = Convert.ToInt32(strTemp)/10.0;            //温度
+                    bPrepared = true;
+                    if (Get3strData(0, ref strData, ref strTemp))
+                    {
+                        TempData = Convert.ToInt32(strTemp)/10.0;            //温度
+                    }
+                    if (Get3strData(1, ref strData, ref strTemp))
+                    {
+                        HumidityData = Convert.ToInt32(strTemp)/10.0;            //湿度
+                    }
+                    if (Get3strData(2, ref strData, ref strTemp))
+                    {
+                        WorkStatus = Convert.ToInt32(strTemp);            //工作状态   
+                    }
+                    if (Get3strData(3, ref strData, ref strTemp))
+                    {
+                        TempData_Boot = Convert.ToInt32(strTemp);            //温度启动值
+                    }
+                    if (Get3strData(4, ref strData, ref strTemp))
+                    {
+                        TempData_Stop = Convert.ToInt32(strTemp);            //温度停止值
+                    }
+                    if (Get3strData(5, ref strData, ref strTemp))
+                    {
+                        HumidityData_Boot = Convert.ToInt32(strTemp);        //湿度启动值
+                    }
+                    if (Get3strData(6, ref strData, ref strTemp))
+                    {
+                        HumidityData_Stop = Convert.ToInt32(strTemp);        //湿度停止值
+                    }
                 }
-                if (Get3strData(1, ref strData, ref strTemp))
-                {
-                    HumidityData = Convert.ToInt32(strTemp)/10.0;            //湿度
-                }
-                if (Get3strData(2, ref strData, ref strTemp))
-                {
-                    WorkStatus = Convert.ToInt32(strTemp);            //工作状态   
-                }
-                if (Get3strData(3, ref strData, ref strTemp))
-                {
-                    TempData_Boot = Convert.ToInt32(strTemp);            //温度启动值
-                }
-                if (Get3strData(4, ref strData, ref strTemp))
-                {
-                    TempData_Stop = Convert.ToInt32(strTemp);            //温度停止值
-                }
-                if (Get3strData(5, ref strData, ref strTemp))
-                {
-                    HumidityData_Boot = Convert.ToInt32(strTemp);        //湿度启动值
-                }
-                if (Get3strData(6, ref strData, ref strTemp))
-                {
-                    HumidityData_Stop = Convert.ToInt32(strTemp);        //湿度停止值
-                }
+                Prepared = bPrepared;
             }
-            Prepared = bPrepared;
         }
         public bool SetSysData()
         {
@@ -2016,74 +2019,77 @@ namespace EMS
 
         public void GetSetDataFromEquipment()
         {
-            string strData = "";
-            string strTemp = "";
-            bool bPrepared = false;
-            //读取设备信息
-            if (GetSysData(36, ref strData))
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
             {
-                bPrepared = true;
-                if (Get3strData(28, ref strData, ref strTemp))
+                string strData = "";
+                string strTemp = "";
+                bool bPrepared = false;
+                //读取设备信息
+                if (GetSysData(36, ref strData))
                 {
-                    state = Convert.ToInt32(strTemp);
-                }
-                if (Get3strData(29, ref strData, ref strTemp))
-                {
-                    LCModel = Convert.ToInt32(strTemp);
-                }
-                if (Get3strData(30, ref strData, ref strTemp))
-                {
-                    TemperSelect =  Convert.ToInt32(strTemp);
-                }
-
-            }
-            //读取设备信息
-            if (GetSysData(37, ref strData))
-            {
-                bPrepared = true;
-                if (Get3strData(31, ref strData, ref strTemp))
-                {
-                    CoolTemp = Math.Round(float.Parse(strTemp), 1);
-                }
-                if (Get3strData(32, ref strData, ref strTemp))
-                {
-                    HotTemp = Math.Round(float.Parse(strTemp), 1);
-                }
-                if (Get3strData(33, ref strData, ref strTemp))
-                {
-                    CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
-                }
-                if (Get3strData(34, ref strData, ref strTemp))
-                {
-                    HotTempReturn = Math.Round(float.Parse(strTemp), 1);
-                }
-                if (Get3strData(35, ref strData, ref strTemp))
-                {
-                    WaterPump =  Convert.ToInt32(strTemp);
-                }
-
-            }
-
-            Prepared = bPrepared;
-            if (!Prepared)
-            {
-                if (count < 10)
-                {
-                    count++;
-                }
-                if (count > 8)
-                {
-                    lock (Parent.EMSError)
+                    bPrepared = true;
+                    if (Get3strData(28, ref strData, ref strTemp))
                     {
-                        Parent.EMSError[0] &= 0xDFFF;
-                        Parent.EMSError[0] |= 0x2000;
+                        state = Convert.ToInt32(strTemp);
+                    }
+                    if (Get3strData(29, ref strData, ref strTemp))
+                    {
+                        LCModel = Convert.ToInt32(strTemp);
+                    }
+                    if (Get3strData(30, ref strData, ref strTemp))
+                    {
+                        TemperSelect =  Convert.ToInt32(strTemp);
+                    }
+
+                }
+                //读取设备信息
+                if (GetSysData(37, ref strData))
+                {
+                    bPrepared = true;
+                    if (Get3strData(31, ref strData, ref strTemp))
+                    {
+                        CoolTemp = Math.Round(float.Parse(strTemp), 1);
+                    }
+                    if (Get3strData(32, ref strData, ref strTemp))
+                    {
+                        HotTemp = Math.Round(float.Parse(strTemp), 1);
+                    }
+                    if (Get3strData(33, ref strData, ref strTemp))
+                    {
+                        CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
+                    }
+                    if (Get3strData(34, ref strData, ref strTemp))
+                    {
+                        HotTempReturn = Math.Round(float.Parse(strTemp), 1);
+                    }
+                    if (Get3strData(35, ref strData, ref strTemp))
+                    {
+                        WaterPump =  Convert.ToInt32(strTemp);
+                    }
+
+                }
+
+                Prepared = bPrepared;
+                if (!Prepared)
+                {
+                    if (count < 10)
+                    {
+                        count++;
+                    }
+                    if (count > 8)
+                    {
+                        lock (Parent.EMSError)
+                        {
+                            Parent.EMSError[0] &= 0xDFFF;
+                            Parent.EMSError[0] |= 0x2000;
+                        }
                     }
                 }
-            }
-            else
-            {
-                Parent.EMSError[0] &= 0xDFFF;
-                count = 0;
+                else
+                {
+                    Parent.EMSError[0] &= 0xDFFF;
+                    count = 0;
+                }
             }
         }
 
