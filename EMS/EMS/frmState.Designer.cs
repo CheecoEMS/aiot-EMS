@@ -31,12 +31,12 @@ namespace EMS
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmState));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tmInterva = new System.Windows.Forms.Timer(this.components);
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnControl = new System.Windows.Forms.Button();
@@ -137,10 +137,16 @@ namespace EMS
             this.label46 = new System.Windows.Forms.Label();
             this.label42 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.tneSetHotTemp = new EMS.TouchNumberEdit(this.components);
             this.label74 = new System.Windows.Forms.Label();
+            this.tneSetCoolTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneHotTempReturn = new EMS.TouchNumberEdit(this.components);
+            this.tneTCMaxTemp = new EMS.TouchNumberEdit(this.components);
             this.label40 = new System.Windows.Forms.Label();
+            this.tneTCMinTemp = new EMS.TouchNumberEdit(this.components);
             this.label45 = new System.Windows.Forms.Label();
             this.label44 = new System.Windows.Forms.Label();
+            this.tneCoolTempReturn = new EMS.TouchNumberEdit(this.components);
             this.label41 = new System.Windows.Forms.Label();
             this.label43 = new System.Windows.Forms.Label();
             this.label73 = new System.Windows.Forms.Label();
@@ -418,12 +424,6 @@ namespace EMS
             this.label161 = new System.Windows.Forms.Label();
             this.label160 = new System.Windows.Forms.Label();
             this.label159 = new System.Windows.Forms.Label();
-            this.tneSetHotTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneSetCoolTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneHotTempReturn = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMaxTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMinTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneCoolTempReturn = new EMS.TouchNumberEdit(this.components);
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel6.SuspendLayout();
@@ -1696,6 +1696,25 @@ namespace EMS
             this.label7.TabIndex = 99;
             this.label7.Text = "℃";
             // 
+            // tneSetHotTemp
+            // 
+            this.tneSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSetHotTemp.CanEdit = false;
+            this.tneSetHotTemp.DefaultValue = 0;
+            this.tneSetHotTemp.Enabled = false;
+            this.tneSetHotTemp.FoceInZone = false;
+            this.tneSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSetHotTemp.ForeColor = System.Drawing.Color.White;
+            this.tneSetHotTemp.Location = new System.Drawing.Point(131, 135);
+            this.tneSetHotTemp.Maximum = 35;
+            this.tneSetHotTemp.Minimum = -40;
+            this.tneSetHotTemp.Name = "tneSetHotTemp";
+            this.tneSetHotTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneSetHotTemp.strText = "";
+            this.tneSetHotTemp.TabIndex = 97;
+            this.tneSetHotTemp.Value = 0;
+            this.tneSetHotTemp.ValueStep = 1;
+            // 
             // label74
             // 
             this.label74.AutoSize = true;
@@ -1705,6 +1724,63 @@ namespace EMS
             this.label74.TabIndex = 89;
             this.label74.Text = "制热温度设置";
             // 
+            // tneSetCoolTemp
+            // 
+            this.tneSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSetCoolTemp.CanEdit = false;
+            this.tneSetCoolTemp.DefaultValue = 0;
+            this.tneSetCoolTemp.Enabled = false;
+            this.tneSetCoolTemp.FoceInZone = false;
+            this.tneSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSetCoolTemp.ForeColor = System.Drawing.Color.White;
+            this.tneSetCoolTemp.Location = new System.Drawing.Point(131, 23);
+            this.tneSetCoolTemp.Maximum = 50;
+            this.tneSetCoolTemp.Minimum = 7;
+            this.tneSetCoolTemp.Name = "tneSetCoolTemp";
+            this.tneSetCoolTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneSetCoolTemp.strText = "";
+            this.tneSetCoolTemp.TabIndex = 96;
+            this.tneSetCoolTemp.Value = 0;
+            this.tneSetCoolTemp.ValueStep = 1;
+            // 
+            // tneHotTempReturn
+            // 
+            this.tneHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneHotTempReturn.CanEdit = false;
+            this.tneHotTempReturn.DefaultValue = 0;
+            this.tneHotTempReturn.Enabled = false;
+            this.tneHotTempReturn.FoceInZone = false;
+            this.tneHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneHotTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneHotTempReturn.Location = new System.Drawing.Point(131, 191);
+            this.tneHotTempReturn.Maximum = 15;
+            this.tneHotTempReturn.Minimum = 1;
+            this.tneHotTempReturn.Name = "tneHotTempReturn";
+            this.tneHotTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneHotTempReturn.strText = "";
+            this.tneHotTempReturn.TabIndex = 98;
+            this.tneHotTempReturn.Value = 0;
+            this.tneHotTempReturn.ValueStep = 1;
+            // 
+            // tneTCMaxTemp
+            // 
+            this.tneTCMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMaxTemp.CanEdit = false;
+            this.tneTCMaxTemp.DefaultValue = 0;
+            this.tneTCMaxTemp.Enabled = false;
+            this.tneTCMaxTemp.FoceInZone = false;
+            this.tneTCMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMaxTemp.ForeColor = System.Drawing.Color.White;
+            this.tneTCMaxTemp.Location = new System.Drawing.Point(131, 247);
+            this.tneTCMaxTemp.Maximum = 55;
+            this.tneTCMaxTemp.Minimum = 0;
+            this.tneTCMaxTemp.Name = "tneTCMaxTemp";
+            this.tneTCMaxTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMaxTemp.strText = "";
+            this.tneTCMaxTemp.TabIndex = 94;
+            this.tneTCMaxTemp.Value = 0;
+            this.tneTCMaxTemp.ValueStep = 1;
+            // 
             // label40
             // 
             this.label40.AutoSize = true;
@@ -1713,6 +1789,25 @@ namespace EMS
             this.label40.Size = new System.Drawing.Size(26, 21);
             this.label40.TabIndex = 84;
             this.label40.Text = "℃";
+            // 
+            // tneTCMinTemp
+            // 
+            this.tneTCMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMinTemp.CanEdit = false;
+            this.tneTCMinTemp.DefaultValue = 0;
+            this.tneTCMinTemp.Enabled = false;
+            this.tneTCMinTemp.FoceInZone = false;
+            this.tneTCMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMinTemp.ForeColor = System.Drawing.Color.White;
+            this.tneTCMinTemp.Location = new System.Drawing.Point(131, 303);
+            this.tneTCMinTemp.Maximum = 20;
+            this.tneTCMinTemp.Minimum = -30;
+            this.tneTCMinTemp.Name = "tneTCMinTemp";
+            this.tneTCMinTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMinTemp.strText = "";
+            this.tneTCMinTemp.TabIndex = 93;
+            this.tneTCMinTemp.Value = 0;
+            this.tneTCMinTemp.ValueStep = 1;
             // 
             // label45
             // 
@@ -1731,6 +1826,25 @@ namespace EMS
             this.label44.Size = new System.Drawing.Size(90, 21);
             this.label44.TabIndex = 86;
             this.label44.Text = "高温告警点";
+            // 
+            // tneCoolTempReturn
+            // 
+            this.tneCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneCoolTempReturn.CanEdit = false;
+            this.tneCoolTempReturn.DefaultValue = 0;
+            this.tneCoolTempReturn.Enabled = false;
+            this.tneCoolTempReturn.FoceInZone = false;
+            this.tneCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneCoolTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneCoolTempReturn.Location = new System.Drawing.Point(131, 79);
+            this.tneCoolTempReturn.Maximum = 15;
+            this.tneCoolTempReturn.Minimum = 1;
+            this.tneCoolTempReturn.Name = "tneCoolTempReturn";
+            this.tneCoolTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneCoolTempReturn.strText = "";
+            this.tneCoolTempReturn.TabIndex = 95;
+            this.tneCoolTempReturn.Value = 0;
+            this.tneCoolTempReturn.ValueStep = 1;
             // 
             // label41
             // 
@@ -3626,34 +3740,34 @@ namespace EMS
             // 
             // ctFreshChart
             // 
-            chartArea1.Name = "ChartArea1";
-            this.ctFreshChart.ChartAreas.Add(chartArea1);
+            chartArea2.Name = "ChartArea1";
+            this.ctFreshChart.ChartAreas.Add(chartArea2);
             this.ctFreshChart.Cursor = System.Windows.Forms.Cursors.Default;
-            legend1.Name = "Legend1";
-            this.ctFreshChart.Legends.Add(legend1);
+            legend2.Name = "Legend1";
+            this.ctFreshChart.Legends.Add(legend2);
             this.ctFreshChart.Location = new System.Drawing.Point(443, 147);
             this.ctFreshChart.Margin = new System.Windows.Forms.Padding(2);
             this.ctFreshChart.Name = "ctFreshChart";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series1.Legend = "Legend1";
-            series1.Name = "总功率";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series2.Legend = "Legend1";
-            series2.Name = "电网输入功率";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series3.Legend = "Legend1";
-            series3.Name = "充电功率";
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
-            series4.Legend = "Legend1";
-            series4.Name = "放电功率";
-            this.ctFreshChart.Series.Add(series1);
-            this.ctFreshChart.Series.Add(series2);
-            this.ctFreshChart.Series.Add(series3);
-            this.ctFreshChart.Series.Add(series4);
+            series5.ChartArea = "ChartArea1";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series5.Legend = "Legend1";
+            series5.Name = "总功率";
+            series6.ChartArea = "ChartArea1";
+            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series6.Legend = "Legend1";
+            series6.Name = "电网输入功率";
+            series7.ChartArea = "ChartArea1";
+            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series7.Legend = "Legend1";
+            series7.Name = "充电功率";
+            series8.ChartArea = "ChartArea1";
+            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
+            series8.Legend = "Legend1";
+            series8.Name = "放电功率";
+            this.ctFreshChart.Series.Add(series5);
+            this.ctFreshChart.Series.Add(series6);
+            this.ctFreshChart.Series.Add(series7);
+            this.ctFreshChart.Series.Add(series8);
             this.ctFreshChart.Size = new System.Drawing.Size(184, 128);
             this.ctFreshChart.TabIndex = 7;
             this.ctFreshChart.Text = "chart2";
@@ -3995,7 +4109,7 @@ namespace EMS
             this.tbHumidityData_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.tbHumidityData_Stop.Name = "tbHumidityData_Stop";
             this.tbHumidityData_Stop.ReadOnly = true;
-            this.tbHumidityData_Stop.Size = new System.Drawing.Size(102, 29);
+            this.tbHumidityData_Stop.Size = new System.Drawing.Size(84, 29);
             this.tbHumidityData_Stop.TabIndex = 108;
             // 
             // label175
@@ -4016,7 +4130,7 @@ namespace EMS
             this.tbHumidityData_Boot.Margin = new System.Windows.Forms.Padding(2);
             this.tbHumidityData_Boot.Name = "tbHumidityData_Boot";
             this.tbHumidityData_Boot.ReadOnly = true;
-            this.tbHumidityData_Boot.Size = new System.Drawing.Size(102, 29);
+            this.tbHumidityData_Boot.Size = new System.Drawing.Size(84, 29);
             this.tbHumidityData_Boot.TabIndex = 106;
             // 
             // label176
@@ -4037,7 +4151,7 @@ namespace EMS
             this.tbTempData_Stop.Margin = new System.Windows.Forms.Padding(2);
             this.tbTempData_Stop.Name = "tbTempData_Stop";
             this.tbTempData_Stop.ReadOnly = true;
-            this.tbTempData_Stop.Size = new System.Drawing.Size(102, 29);
+            this.tbTempData_Stop.Size = new System.Drawing.Size(84, 29);
             this.tbTempData_Stop.TabIndex = 104;
             // 
             // label177
@@ -4058,7 +4172,7 @@ namespace EMS
             this.tbTempData_Boot.Margin = new System.Windows.Forms.Padding(2);
             this.tbTempData_Boot.Name = "tbTempData_Boot";
             this.tbTempData_Boot.ReadOnly = true;
-            this.tbTempData_Boot.Size = new System.Drawing.Size(102, 29);
+            this.tbTempData_Boot.Size = new System.Drawing.Size(84, 29);
             this.tbTempData_Boot.TabIndex = 102;
             // 
             // label178
@@ -4079,10 +4193,8 @@ namespace EMS
             this.tbWorkStatus.Margin = new System.Windows.Forms.Padding(2);
             this.tbWorkStatus.Name = "tbWorkStatus";
             this.tbWorkStatus.ReadOnly = true;
-            this.tbWorkStatus.Size = new System.Drawing.Size(102, 29);
+            this.tbWorkStatus.Size = new System.Drawing.Size(84, 29);
             this.tbWorkStatus.TabIndex = 100;
-            this.tbWorkStatus.Text = "自动+未启动\r\n自动+未启动\r\n自动+已启动\r\n自动+已启动\r\n自动+未启动\r\n自动+未启动\r\n自动+已启动\r\n自动+已启动\r\n手动+未启动\r\n手动+未启动\r\n手" +
-    "动+已启动\r\n手动+已启动\r\n手动+未启动\r\n手动+未启动\r\n手动+已启动\r\n手动+已启动";
             // 
             // label179
             // 
@@ -4102,7 +4214,7 @@ namespace EMS
             this.tbTempData.Margin = new System.Windows.Forms.Padding(2);
             this.tbTempData.Name = "tbTempData";
             this.tbTempData.ReadOnly = true;
-            this.tbTempData.Size = new System.Drawing.Size(102, 29);
+            this.tbTempData.Size = new System.Drawing.Size(84, 29);
             this.tbTempData.TabIndex = 98;
             // 
             // label180
@@ -4123,7 +4235,7 @@ namespace EMS
             this.tbHumidityData.Margin = new System.Windows.Forms.Padding(2);
             this.tbHumidityData.Name = "tbHumidityData";
             this.tbHumidityData.ReadOnly = true;
-            this.tbHumidityData.Size = new System.Drawing.Size(102, 29);
+            this.tbHumidityData.Size = new System.Drawing.Size(84, 29);
             this.tbHumidityData.TabIndex = 95;
             // 
             // label181
@@ -5010,120 +5122,6 @@ namespace EMS
             this.label159.Size = new System.Drawing.Size(51, 21);
             this.label159.TabIndex = 44;
             this.label159.Text = "从机1";
-            // 
-            // tneSetHotTemp
-            // 
-            this.tneSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSetHotTemp.CanEdit = false;
-            this.tneSetHotTemp.DefaultValue = 0;
-            this.tneSetHotTemp.Enabled = false;
-            this.tneSetHotTemp.FoceInZone = false;
-            this.tneSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSetHotTemp.ForeColor = System.Drawing.Color.White;
-            this.tneSetHotTemp.Location = new System.Drawing.Point(131, 135);
-            this.tneSetHotTemp.Maximum = 35;
-            this.tneSetHotTemp.Minimum = -40;
-            this.tneSetHotTemp.Name = "tneSetHotTemp";
-            this.tneSetHotTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneSetHotTemp.strText = "";
-            this.tneSetHotTemp.TabIndex = 97;
-            this.tneSetHotTemp.Value = 0;
-            this.tneSetHotTemp.ValueStep = 1;
-            // 
-            // tneSetCoolTemp
-            // 
-            this.tneSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSetCoolTemp.CanEdit = false;
-            this.tneSetCoolTemp.DefaultValue = 0;
-            this.tneSetCoolTemp.Enabled = false;
-            this.tneSetCoolTemp.FoceInZone = false;
-            this.tneSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSetCoolTemp.ForeColor = System.Drawing.Color.White;
-            this.tneSetCoolTemp.Location = new System.Drawing.Point(131, 23);
-            this.tneSetCoolTemp.Maximum = 50;
-            this.tneSetCoolTemp.Minimum = 7;
-            this.tneSetCoolTemp.Name = "tneSetCoolTemp";
-            this.tneSetCoolTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneSetCoolTemp.strText = "";
-            this.tneSetCoolTemp.TabIndex = 96;
-            this.tneSetCoolTemp.Value = 0;
-            this.tneSetCoolTemp.ValueStep = 1;
-            // 
-            // tneHotTempReturn
-            // 
-            this.tneHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneHotTempReturn.CanEdit = false;
-            this.tneHotTempReturn.DefaultValue = 0;
-            this.tneHotTempReturn.Enabled = false;
-            this.tneHotTempReturn.FoceInZone = false;
-            this.tneHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneHotTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneHotTempReturn.Location = new System.Drawing.Point(131, 191);
-            this.tneHotTempReturn.Maximum = 15;
-            this.tneHotTempReturn.Minimum = 1;
-            this.tneHotTempReturn.Name = "tneHotTempReturn";
-            this.tneHotTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneHotTempReturn.strText = "";
-            this.tneHotTempReturn.TabIndex = 98;
-            this.tneHotTempReturn.Value = 0;
-            this.tneHotTempReturn.ValueStep = 1;
-            // 
-            // tneTCMaxTemp
-            // 
-            this.tneTCMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMaxTemp.CanEdit = false;
-            this.tneTCMaxTemp.DefaultValue = 0;
-            this.tneTCMaxTemp.Enabled = false;
-            this.tneTCMaxTemp.FoceInZone = false;
-            this.tneTCMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMaxTemp.ForeColor = System.Drawing.Color.White;
-            this.tneTCMaxTemp.Location = new System.Drawing.Point(131, 247);
-            this.tneTCMaxTemp.Maximum = 55;
-            this.tneTCMaxTemp.Minimum = 0;
-            this.tneTCMaxTemp.Name = "tneTCMaxTemp";
-            this.tneTCMaxTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMaxTemp.strText = "";
-            this.tneTCMaxTemp.TabIndex = 94;
-            this.tneTCMaxTemp.Value = 0;
-            this.tneTCMaxTemp.ValueStep = 1;
-            // 
-            // tneTCMinTemp
-            // 
-            this.tneTCMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMinTemp.CanEdit = false;
-            this.tneTCMinTemp.DefaultValue = 0;
-            this.tneTCMinTemp.Enabled = false;
-            this.tneTCMinTemp.FoceInZone = false;
-            this.tneTCMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMinTemp.ForeColor = System.Drawing.Color.White;
-            this.tneTCMinTemp.Location = new System.Drawing.Point(131, 303);
-            this.tneTCMinTemp.Maximum = 20;
-            this.tneTCMinTemp.Minimum = -30;
-            this.tneTCMinTemp.Name = "tneTCMinTemp";
-            this.tneTCMinTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMinTemp.strText = "";
-            this.tneTCMinTemp.TabIndex = 93;
-            this.tneTCMinTemp.Value = 0;
-            this.tneTCMinTemp.ValueStep = 1;
-            // 
-            // tneCoolTempReturn
-            // 
-            this.tneCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneCoolTempReturn.CanEdit = false;
-            this.tneCoolTempReturn.DefaultValue = 0;
-            this.tneCoolTempReturn.Enabled = false;
-            this.tneCoolTempReturn.FoceInZone = false;
-            this.tneCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneCoolTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneCoolTempReturn.Location = new System.Drawing.Point(131, 79);
-            this.tneCoolTempReturn.Maximum = 15;
-            this.tneCoolTempReturn.Minimum = 1;
-            this.tneCoolTempReturn.Name = "tneCoolTempReturn";
-            this.tneCoolTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneCoolTempReturn.strText = "";
-            this.tneCoolTempReturn.TabIndex = 95;
-            this.tneCoolTempReturn.Value = 0;
-            this.tneCoolTempReturn.ValueStep = 1;
             // 
             // frmState
             // 
