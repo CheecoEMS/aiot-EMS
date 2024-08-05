@@ -8442,10 +8442,10 @@ namespace EMS
                     }
 
                     //PCS的DSP2 11.27
-                    //if (DSP2 != null)
-                    //{
-                    //DSP2.GetDataFromEqipment();
-                    //}
+                    if (DSP2 != null)
+                    {
+                        DSP2.GetDataFromEqipment();
+                    }
                     
                     //消防
                     FireFBGPIO();

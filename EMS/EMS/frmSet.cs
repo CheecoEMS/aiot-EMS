@@ -386,6 +386,7 @@ namespace EMS
 
                                 result = true;
                             }
+                            config.OldSysID = config.SysID;
                         }
                     }
                 }
@@ -411,7 +412,8 @@ namespace EMS
         public static bool Set_Config()
         {
             string astrSQL = "UPDATE config SET "
-                        + "Open104 = '" + frmSet.config.Open104.ToString()
+                        + "SysID = '" + frmSet.config.SysID.ToString()
+                        + "',Open104 = '" + frmSet.config.Open104.ToString()
                         + "', NetTick = '" + frmSet.config.NetTick.ToString()
                         + "', SysName = '" + frmSet.config.SysName
                         + "', SysPower = '" + frmSet.config.SysPower.ToString()
@@ -440,7 +442,7 @@ namespace EMS
                         + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
                         + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
                         + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
-                        + "' WHERE SysID = '" + frmSet.config.SysID + "';";
+                        + "' WHERE SysID = '" + frmSet.config.OldSysID + "';";
 
             bool result = false;
 
@@ -448,7 +450,7 @@ namespace EMS
             {
                 if (DBConnection.ExecSQL(astrSQL))
                 {
-
+                    config.OldSysID = config.SysID;
                     result = true;
                 }
                 else
@@ -2604,6 +2606,7 @@ namespace EMS
         public class ConfigClass
         {
             public string SysID { get; set; } // varchar(255) PRIMARY KEY
+            public string OldSysID { get; set; }
             public int Open104 { get; set; } // int 是否开启104服务 0关1开
             public int NetTick { get; set; } // int 判断超时的时间间隔
             public string SysName { get; set; } // varchar(255)
