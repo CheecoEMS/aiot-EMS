@@ -825,6 +825,14 @@ namespace EMS
                         }
                     }
                 }
+
+                //LED控制
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+                }
+
+
             }
         }
 

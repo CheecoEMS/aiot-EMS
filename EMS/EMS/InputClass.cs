@@ -7945,8 +7945,10 @@ namespace EMS
         //表一队列数据
         private void ReadCom1Data()
         {
-            frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
-
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+            }
             while (true)
             {
                 Thread.Sleep(1000);
@@ -8442,9 +8444,9 @@ namespace EMS
                     //PCS的DSP2 11.27
                     //if (DSP2 != null)
                     //{
-                        //DSP2.GetDataFromEqipment();
+                    //DSP2.GetDataFromEqipment();
                     //}
-
+                    
                     //消防
                     FireFBGPIO();
                     //急停

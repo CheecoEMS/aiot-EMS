@@ -368,11 +368,11 @@ namespace EMS
                     { 
                         tbTempData.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.TempData.ToString();
                         tbHumidityData.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData.ToString();
-                        tbWorkStatus.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.WorkStatus.ToString();
                         tbTempData_Boot.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Boot.ToString();
                         tbTempData_Stop.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.TempData_Stop.ToString();
                         tbHumidityData_Boot.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Boot.ToString();
                         tbHumidityData_Stop.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.HumidityData_Stop.ToString();
+                        tbWorkStatus.Text = frmMain.Selffrm.AllEquipment.Dehumidifier.WorkStatus.ToString();
                     }
                     break;
                 case 7://EMS
@@ -634,6 +634,11 @@ namespace EMS
  
 
         private void label146_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tbWorkStatus_TextChanged(object sender, EventArgs e)
         {
 
         }

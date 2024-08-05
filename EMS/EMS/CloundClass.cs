@@ -818,7 +818,7 @@ namespace EMS
             Parent.time = tempTime;
             ConvertToJson(Parent, strUpPath, "\\0ems" + strTime + ".json");
         }
-
+        
         public void SaveProfit2Cloud(string astrDate)
         {
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + astrDate + ".json");
