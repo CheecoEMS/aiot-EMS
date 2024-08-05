@@ -7945,10 +7945,7 @@ namespace EMS
         //表一队列数据
         private void ReadCom1Data()
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
-            }
+
             while (true)
             {
                 Thread.Sleep(1000);
@@ -8150,13 +8147,16 @@ namespace EMS
         {
             try
             {
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                }
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
                 ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
                 ClientRecThread.Name = "";
-                frmMain.Selffrm.AllEquipment.LCIni();
             }
             catch (Exception ex)
             {

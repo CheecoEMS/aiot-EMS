@@ -638,9 +638,6 @@ namespace EMS
 
         }
 
-        private void tbWorkStatus_TextChanged(object sender, EventArgs e)
-        {
 
-        }
     }
 }
