@@ -654,6 +654,8 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
+                InitializeLed_Timer();
+
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
                 frmFlash.AddPostion(10);
@@ -707,9 +709,6 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.SingleReflux_Log();
             }
         }
-
-
-
         static void InitializePublic_Timer()
         {
             //每120秒，是否满足隔日数据上传和需量更新和温度控制
@@ -826,17 +825,11 @@ namespace EMS
                     }
                 }
 
-                //LED控制
-                if (frmMain.Selffrm.AllEquipment.Led != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
-                }
+
 
 
             }
         }
-
-
         static void InitializeTacitc_Timer()
         {
             //每30秒 判断策略时段  
@@ -978,7 +971,18 @@ namespace EMS
             });
         }
 
-
+        static void InitializeLed_Timer()
+        {
+            Heartbeat_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
+        }
+        static void LedLoop_timerCallback(Object state)
+        {
+            //LED控制
+            if (frmMain.Selffrm.AllEquipment.Led != null)
+            {
+                frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+            }
+        }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
