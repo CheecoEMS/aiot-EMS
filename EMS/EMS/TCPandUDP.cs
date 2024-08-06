@@ -27,6 +27,7 @@ namespace Modbus
     {
         private volatile Socket socket;
         private static ILog log = LogManager.GetLogger("SocketWrapper");
+        private readonly object socketLock = new object();
 
         public SocketWrapper(Socket socket)
         {
@@ -59,47 +60,53 @@ namespace Modbus
 
         public bool Send(byte[] data)
         {
-            try
+            lock (socketLock)
             {
-                int res = 0;
-                if (socket != null)
+                try
                 {
-                    res = socket.Send(data);
-                    return res > 0;
+                    int res = 0;
+                    if (socket != null)
+                    {
+                        res = socket.Send(data);
+                        return res > 0;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+
                 }
-                else
+                catch (SocketException ex)
                 {
+                    DestorySocket(socket);
                     return false;
                 }
-                
-            }
-            catch (SocketException ex)
-            {
-                DestorySocket(socket);
-                return false;
             }
 
         }
 
         public bool Receive(ref byte[] buffer)
         {
-            try
+            lock (socketLock)
             {
-                int receiveNumber = 0;
-                if (socket != null)
+                try
                 {
-                    receiveNumber = socket.Receive(buffer);
-                    return receiveNumber > 0;
+                    int receiveNumber = 0;
+                    if (socket != null)
+                    {
+                        receiveNumber = socket.Receive(buffer);
+                        return receiveNumber > 0;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
-                else
+                catch (SocketException ex)
                 {
+                    DestorySocket(socket);
                     return false;
                 }
-            }
-            catch (SocketException ex)
-            {
-                DestorySocket(socket);
-                return false;
             }
         }
 
