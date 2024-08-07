@@ -611,7 +611,7 @@ namespace EMS
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
                         frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                        frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
+                        //frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
                         frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                         frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                     }

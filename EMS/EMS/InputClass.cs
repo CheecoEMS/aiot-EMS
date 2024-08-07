@@ -26,6 +26,8 @@ using static System.Collections.Specialized.BitVector32;
 using System.Net.Sockets;
 using Org.BouncyCastle.Crypto;
 using MySqlX.XDevAPI.Common;
+using System.Collections.Concurrent;
+using System.Drawing.Imaging;
 
 namespace EMS
 {
@@ -7393,7 +7395,50 @@ namespace EMS
         }
 
         //502
+
         public void ReadAllEmsTCP()
+        {
+            try
+            {
+                double TempWaValue = PCSKVA;
+                foreach (var aClient in TCPServerClass.clientMap)
+                {
+                    ushort tempKVA = 0;
+                    ushort tempType = 0;
+
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
+
+                    if (client != null)
+                    {
+                        if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6002, 1, ref tempKVA))
+                        {
+                            continue;
+                        }
+                        if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6003, 1, ref tempType))
+                        {
+                            continue;
+                        }
+                        if (tempType == 0)
+                        {
+                            TempWaValue -= tempKVA;
+                        }
+                        else if (tempType == 1)
+                        {
+                            TempWaValue += tempKVA;
+                        }
+                    }
+                }
+
+                AllwaValue = TempWaValue;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+            }
+        }
+
+/*        public void ReadAllEmsTCP()
         {
             double TempWaValue = PCSKVA;
             for (int i = 0; i < 10; ++i)
@@ -7406,19 +7451,18 @@ namespace EMS
                 //问询第"+ ID +"台机"
                 ushort tempKVA = 0;
                 ushort tempType = 0;
-                if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                if (TCPServerClass.clientMap.ContainsKey(ID))
                 {
                     try
                     {
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, TCPServerClass.clientMap);
                         if (client != null)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempKVA))
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6002, 1, ref tempKVA))
                             {                     
                                 continue;
                             }
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6003, 1, ref tempType))
+                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6003, 1, ref tempType))
                             {
                                 continue;
                             }
@@ -7444,7 +7488,7 @@ namespace EMS
                 }
             }
             AllwaValue = TempWaValue;
-        }
+        }*/
 
         public void SetAllPCSKVATCP(string awType, string aPCSType, double aPCSValueRate)
         {
@@ -7464,11 +7508,11 @@ namespace EMS
                     {
                         continue;
                     }
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                    if (TCPServerClass.clientMap.ContainsKey(ID))
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         //byte[] buffer1 = new byte[1024];
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, TCPServerClass.clientMap);
 
                         /*                        itemp = Array.IndexOf(wTpyes, awType);
                                                 if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
@@ -7482,11 +7526,10 @@ namespace EMS
                                                     continue;
                                                 }*/
 
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        if (socketLock != null && client != null)
+                        if (client != null)
                         {
                             double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6002, (ushort)dtemp) == -1)
                             {
                                 continue;
                             }
@@ -7515,15 +7558,14 @@ namespace EMS
                     {
                         continue;
                     }
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                    if (TCPServerClass.clientMap.ContainsKey(ID))
                     {
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, TCPServerClass.clientMap);
 
-                        if (socketLock != null && client != null)
+                        if (client != null)
                         {
                             itemp = Array.IndexOf(wTpyes, awType);
-                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
+                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6003, (ushort)itemp) == -1)
                             {
                                 continue;
                             }
@@ -7558,12 +7600,11 @@ namespace EMS
                         continue;
                     }
                     //log.Error("发送第"+ ID +"台机关机");
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
+                    if (TCPServerClass.clientMap.ContainsKey(ID))
                     {
                         //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6000, 0) == -1)
+                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, TCPServerClass.clientMap);
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6000, 0) == -1)
                         {
                             continue;
                         }

@@ -19,7 +19,7 @@ using DotNetty.Transport.Channels.Pool;
 using System.IO;
 using Org.BouncyCastle.Bcpg;
 using MySqlX.XDevAPI.Common;
-
+using System.Collections.Concurrent;
 
 namespace Modbus
 {
@@ -137,7 +137,7 @@ namespace Modbus
 
         private static ILog log = LogManager.GetLogger("ClientManager");
 
-        public bool FindClient(int ID, SocketWrapper clientWrapper, ref Dictionary<int, (SocketWrapper, object)> clientMap)
+        public bool FindClient(int ID, SocketWrapper clientWrapper, ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
             for (int i = 0; i < 10; ++i)
             {
@@ -146,7 +146,7 @@ namespace Modbus
                     log.Error("更新clientSocket");
                     if (clientMap.ContainsKey(ID))
                     {
-                        clientMap[ID] = (clientWrapper, clientMap[ID].Item2);
+                        clientMap[ID] = clientWrapper;
                     }
                     return true;
                 }
@@ -154,9 +154,10 @@ namespace Modbus
             return false;
         }
 
-        public void AddClient(int ID, SocketWrapper clientWrapper, ref object socketLock, ref Dictionary<int, (SocketWrapper, object)> clientMap)
+        public void AddClient(int ID, SocketWrapper clientWrapper, ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
-            clientMap.Add(ID, (clientWrapper, socketLock));
+            clientMap[ID] = clientWrapper;
+
             for (int i = 0; i < 10; ++i)
             {
                 if (IDss[i] == -1)
@@ -171,11 +172,11 @@ namespace Modbus
                 log.Error("设备：" + IDss[i]);
             }
         }
-        public void RemoveClient(int ID, ref Dictionary<int, (SocketWrapper, object)> clientMap)
+        public void RemoveClient(int ID,  ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
             if (clientMap.ContainsKey(ID))
             {
-                clientMap.Remove(ID);
+                clientMap.TryRemove(ID, out _);
             }
 
             for (int i = 0; i < 10; ++i)
@@ -188,13 +189,13 @@ namespace Modbus
             }
         }
 
-        public SocketWrapper GetClient(int ID, ref Dictionary<int, (SocketWrapper, object)> clientMap)
+        public SocketWrapper GetClient(int ID, ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
             if (clientMap != null)
             {
                 if (clientMap.ContainsKey(ID))
                 {
-                    SocketWrapper clientWrapper = clientMap[ID].Item1;
+                    clientMap.TryGetValue(ID, out SocketWrapper clientWrapper);
                     return clientWrapper;
                 }
                 else
@@ -204,41 +205,6 @@ namespace Modbus
             }
             else { return null; }
         }
-
-        public object GetsocketLock(int ID, ref Dictionary<int, (SocketWrapper, object)> clientMap)
-        {
-            if (clientMap != null)
-            {
-                if (clientMap.ContainsKey(ID))
-                {
-                    object socketLock = clientMap[ID].Item2;
-                    return socketLock;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else { return null; }
-        }
-
-/*        public byte[] GetBuffer(int ID, ref Dictionary<int, (Socket, byte[])> clientMap)
-        {
-            if (clientMap != null)
-            {
-                if (clientMap.ContainsKey(ID))
-                {
-                    byte[] buffer = clientMap[ID].Item2;
-                    return buffer;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else { return null; }
-        }*/
-
     }
 
     //UDP Class
@@ -430,7 +396,8 @@ namespace Modbus
 
         //tcp
         public ClientManager clientManager = null;
-        public Dictionary<int, (SocketWrapper, object)> clientMap = null;//保存502端口接入的所有从机
+        //public Dictionary<int, (SocketWrapper, object)> clientMap = null;
+        public static ConcurrentDictionary<int, SocketWrapper> clientMap = new ConcurrentDictionary<int, SocketWrapper>();//保存502端口接入的所有从机
 
         private CancellationTokenSource cts;//104：主机是否开启监听线程的token的source
 
@@ -517,7 +484,7 @@ namespace Modbus
         //tcp:从机超时不回消息，则剔除
         public void DestroyClient(int ID)
         {
-            clientManager.RemoveClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+            clientManager.RemoveClient(ID, clientMap);
         }
 
         // 销毁Socket对象 
@@ -668,11 +635,11 @@ namespace Modbus
                     if (virtualID != -1)
                     {
                         log.Error("加入新的virtualID:" + virtualID);
-                        if (frmMain.Selffrm.ModbusTcpServer.clientManager != null && frmMain.Selffrm.ModbusTcpServer.clientMap != null)
+                        if (frmMain.Selffrm.ModbusTcpServer.clientManager != null && clientMap != null)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.clientManager.FindClient(virtualID, socketWrapper, ref frmMain.Selffrm.ModbusTcpServer.clientMap))
+                            if (!frmMain.Selffrm.ModbusTcpServer.clientManager.FindClient(virtualID, socketWrapper, clientMap))
                             {
-                                frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, socketWrapper, ref socketLock, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                                frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, socketWrapper, clientMap);
                                 log.Error("新加入完成");
                             }                              
                         }
@@ -865,12 +832,12 @@ namespace Modbus
         /// <param name="aRegLength"></param>
         /// <param name="aResult"></param>
         /// <returns></returns>
-        public bool GetUShort(int ID, ref SocketWrapper client, ref object socketLock, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort aResult)
+        public bool GetUShort(int ID, ref SocketWrapper client, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort aResult)
         {
             if (client != null)
             {
                 ushort[] ResultData = null;//=new byte[100];
-                if (Send3MSG(ID, ref client, ref socketLock, CommandType, aRegStart, aRegLength, ref ResultData))
+                if (Send3MSG(ID, ref client, CommandType, aRegStart, aRegLength, ref ResultData))
                 {
                     if (ResultData.Length > 0)
                         aResult = (UInt16)ResultData[0];
@@ -882,12 +849,12 @@ namespace Modbus
             else
                 return false;
         }
-        public bool Send3MSG(int ID, ref SocketWrapper client, ref object socketLock, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort[] values)
+        public bool Send3MSG(int ID, ref SocketWrapper client, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort[] values)
         {
             if (client != null)
             {
                 byte[] response = null;
-                if (!Read3Response(ID, ref client, ref socketLock, CommandType, aRegStart, aRegLength, ref response))
+                if (!Read3Response(ID, ref client, CommandType, aRegStart, aRegLength, ref response))
                 {
                     return false;
                 }
@@ -907,7 +874,7 @@ namespace Modbus
                 return false;
         }
 
-        private bool Read3Response(int ID, ref SocketWrapper client, ref object socketLock, byte CommandType, ushort aRegAddr, ushort aRegLength, ref byte[] aResponse)
+        private bool Read3Response(int ID, ref SocketWrapper client, byte CommandType, ushort aRegAddr, ushort aRegLength, ref byte[] aResponse)
         {
             byte[] message = ModbusBase.BuildMSG3((byte)ID, CommandType, aRegAddr, aRegLength);
 
@@ -915,7 +882,7 @@ namespace Modbus
 
             if (client != null)
             {
-                if (!GetSocketDada(ID, ref client, ref socketLock, message, ref response))
+                if (!GetSocketDada(ID, ref client, message, ref response))
                     return false;
 
                 //Evaluate message:
@@ -944,13 +911,13 @@ namespace Modbus
         /// <param name="aRegStart"></param>
         /// <param name="aData"></param>
         /// <returns></returns>
-        public int Send6MSG(int ID, ref SocketWrapper client, ref object socketLock, byte CommandType, ushort aRegStart, ushort aData)
+        public int Send6MSG(int ID, ref SocketWrapper client, byte CommandType, ushort aRegStart, ushort aData)
         {
             if (client != null)
             {
                 int result = 0;
                 byte[] response = null;
-                if (!Read6Response(ID, ref client, ref socketLock,  CommandType, aRegStart, aData, ref response))
+                if (!Read6Response(ID, ref client,  CommandType, aRegStart, aData, ref response))
                 {
                     return -1;
 
@@ -975,7 +942,7 @@ namespace Modbus
 
         }
 
-        private bool Read6Response(int ID, ref SocketWrapper client, ref object socketLock, byte CommandType, ushort aRegAddr, ushort aData, ref byte[] aResponse)
+        private bool Read6Response(int ID, ref SocketWrapper client, byte CommandType, ushort aRegAddr, ushort aData, ref byte[] aResponse)
         {
             byte aAddress = 0xFF;
             byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
@@ -983,7 +950,7 @@ namespace Modbus
             byte[] response = new byte[8];
 
             //Send modbus message to Serial Port:
-            if (!GetSocketDada(ID, ref client, ref socketLock, message, ref response))
+            if (!GetSocketDada(ID, ref client, message, ref response))
                 return false;
 
             //Evaluate message:
@@ -999,7 +966,7 @@ namespace Modbus
         }
 
         /// <summary>
-        /// 带socketLock的socket收发函数
+        /// socket收发函数
         /// </summary>
         /// <param name="ID"></param>
         /// <param name="clientSocket"></param>
@@ -1007,30 +974,27 @@ namespace Modbus
         /// <param name="aMessage"></param>
         /// <param name="aResponse"></param>
         /// <returns></returns>
-        private bool GetSocketDada(int ID, ref SocketWrapper client, ref object socketLock, byte[] aMessage, ref byte[] aResponse)
+        private bool GetSocketDada(int ID, ref SocketWrapper client, byte[] aMessage, ref byte[] aResponse)
         {
             bool bResult = false;
             try
             {
-                lock (socketLock)
+                if (client.Send(aMessage))
                 {
-                    if (client.Send(aMessage))
+                    if (GetSocketResponse(ID, ref client, ref aResponse))
                     {
-                        if (GetSocketResponse(ID, ref client, ref aResponse))
-                        {
-                            bResult = true;
-                        }
-                        else
-                        {
-                            bResult = false;
-                        }
+                        bResult = true;
                     }
                     else
                     {
-                        //发送失败
-                        frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
+                        bResult = false;
                     }
                 }
+                else
+                {
+                    //发送失败
+                    frmMain.Selffrm.ModbusTcpServer.DestroyClient(ID);
+                }               
             }
             catch (SocketException ex)
             {
