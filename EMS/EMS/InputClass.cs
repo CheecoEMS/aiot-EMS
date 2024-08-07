@@ -26,6 +26,9 @@ using static System.Collections.Specialized.BitVector32;
 using System.Net.Sockets;
 using Org.BouncyCastle.Crypto;
 using MySqlX.XDevAPI.Common;
+using System.Collections.Concurrent;
+using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace EMS
 {
@@ -7393,57 +7396,96 @@ namespace EMS
         }
 
         //502
-        public void ReadAllEmsTCP()
+        public async Task ReadAllEmsTCPAsync()
         {
-            double TempWaValue = PCSKVA;
-            for (int i = 0; i < 10; ++i)
+            try
             {
-                int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
-                if (ID == -1)
+                double TempWaValue = PCSKVA;
+
+                // 使用List<Task>来存储所有异步任务  
+                List<Task> tasks = new List<Task>();
+
+                foreach (var aClient in TCPServerClass.clientMap)
                 {
-                    continue;
-                }
-                //问询第"+ ID +"台机"
-                ushort tempKVA = 0;
-                ushort tempType = 0;
-                if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
-                {
-                    try
+                    ushort tempKVA = 0;
+                    ushort tempType = 0;
+
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
+
+                    // 为每个客户端启动一个异步任务  
+                    tasks.Add(Task.Run(() =>
                     {
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
                         if (client != null)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6002, 1, ref tempKVA))
-                            {                     
-                                continue;
-                            }
-                            if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, ref socketLock, 3, 0x6003, 1, ref tempType))
+                            if (frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6002, 1, ref tempKVA))
                             {
-                                continue;
-                            }
-                            if (tempType == 0)
-                            {
-                                TempWaValue -= tempKVA;
-                            }
-                            else if (tempType == 1)
-                            {
-                                TempWaValue += tempKVA;
+                                if (frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6003, 1, ref tempType))
+                                {
+
+                                }
                             }
                         }
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        log.Error("捕获入参ex: " + ex.Message);
-                    }
-
-                    //读取多个寄存器值
-                    //string result = "";
-                    //frmMain.Selffrm.ModbusTcpServer.GetString(ID, client, ref buffer, 3, 0x5001, 18, ref result, true);
-
+                    }));
                 }
+
+                // 等待所有任务完成  
+                await Task.WhenAll(tasks);
+
+                // 注意：由于TempWaValue是局部变量，并且我们在并发任务中没有更新它，  
+                // 所以AllwaValue将不会被设置为我们期望的值。  
+                // 您需要设计一种机制来在并发任务完成后汇总结果。  
+
+                // 示例：假设我们有一个方法来汇总结果  
+                // AllwaValue = SummarizeResults();  
+
             }
-            AllwaValue = TempWaValue;
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+            }
+        }
+
+        public void ReadAllEmsTCP()
+        {
+            try
+            {
+                double TempWaValue = PCSKVA;
+                foreach (var aClient in TCPServerClass.clientMap)
+                {
+                    ushort tempKVA = 0;
+                    ushort tempType = 0;
+
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
+
+                    if (client != null)
+                    {
+                        if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6002, 1, ref tempKVA))
+                        {
+                            continue;
+                        }
+                        if (!frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6003, 1, ref tempType))
+                        {
+                            continue;
+                        }
+                        if (tempType == 0)
+                        {
+                            TempWaValue -= tempKVA;
+                        }
+                        else if (tempType == 1)
+                        {
+                            TempWaValue += tempKVA;
+                        }
+                    }
+                }
+
+                AllwaValue = TempWaValue;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+            }
         }
 
         public void SetAllPCSKVATCP(string awType, string aPCSType, double aPCSValueRate)
@@ -7457,45 +7499,22 @@ namespace EMS
                 if ((frmSet.config.IsMaster == 0)||(frmSet.config.PCSGridModel==1))
                     return;
 
-                for (int i = 0; i < 10; ++i)
+                foreach (var aClient in TCPServerClass.clientMap)
                 {
-                    int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
-                    if (ID == -1)
-                    {
-                        continue;
-                    }
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
-                    {
-                        //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        //byte[] buffer1 = new byte[1024];
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
 
-                        /*                        itemp = Array.IndexOf(wTpyes, awType);
-                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer1, 6, 0x6003, (ushort)itemp) == -1)
-                                                {
-                                                    continue;
-                                                }
-                                                byte[] buffer2 = new byte[1024];
-                                                itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                                                if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, ref client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
-                                                {
-                                                    continue;
-                                                }*/
-
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        if (socketLock != null && client != null)
+                    if (client != null)
+                    {
+                        double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6002, (ushort)dtemp) == -1)
                         {
-                            double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6002, (ushort)dtemp) == -1)
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
                 }
             }
         }
-
 
         public void SetAllPCSCommandTCP(string awType, string aPCSType, double aPCSValueRate)
         {
@@ -7508,62 +7527,30 @@ namespace EMS
                 if ((frmSet.config.IsMaster == 0)||(frmSet.config.PCSGridModel==1))
                     return;
 
-                for (int i = 0; i < 10; ++i)
+                foreach (var aClient in TCPServerClass.clientMap)
                 {
-                    int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
-                    if (ID == -1)
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
+                    if (client != null)
                     {
-                        continue;
-                    }
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
-                    {
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-
-                        if (socketLock != null && client != null)
-                        {
-                            itemp = Array.IndexOf(wTpyes, awType);
-                            if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6003, (ushort)itemp) == -1)
-                            {
-                                continue;
-                            }
-                        }
-/*                        byte[] buffer2 = new byte[1024];
-                        itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-                        log.Error("发送第二条");
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer2, 6, 0x6004, (ushort)itemp) == -1)
+                        itemp = Array.IndexOf(wTpyes, awType);
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6003, (ushort)itemp) == -1)
                         {
                             continue;
                         }
-                        log.Error("发送第二条成功返回");
-                        byte[] buffer3 = new byte[1024];
-                        double dtemp = (frmMain.Selffrm.AllEquipment.PCSScheduleKVA * aPCSValueRate);
-                        log.Error("发送第"+ ID +"台机:"+"计划功率："+ PCSScheduleKVA+"发送功率：" + dtemp);
-                        if (frmMain.Selffrm.ModbusTcpServer.SendAskMSG(ID, client, ref buffer3, 6, 0x6002, (ushort)dtemp) == -1)
-                        {
-                            continue;
-                        }
-                        log.Error("发送第三条成功返回");*/
                     }
                 }
             }
             else
             {
-                //待补充关机命令下发
-                for (int i = 0; i < 10; ++i)
+                foreach (var aClient in TCPServerClass.clientMap)
                 {
-                    int ID = frmMain.Selffrm.ModbusTcpServer.clientManager.IDss[i];
-                    if (ID == -1)
+                    SocketWrapper client = aClient.Value;
+                    int ID = aClient.Key;
+
+                    if (client != null)
                     {
-                        continue;
-                    }
-                    //log.Error("发送第"+ ID +"台机关机");
-                    if (frmMain.Selffrm.ModbusTcpServer.clientMap.ContainsKey(ID))
-                    {
-                        //byte[] buffer = frmMain.Selffrm.ModbusTcpServer.clientManager.GetBuffer(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        SocketWrapper client = frmMain.Selffrm.ModbusTcpServer.clientManager.GetClient(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        object socketLock = frmMain.Selffrm.ModbusTcpServer.clientManager.GetsocketLock(ID, ref frmMain.Selffrm.ModbusTcpServer.clientMap);
-                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, ref socketLock, 6, 0x6000, 0) == -1)
+                        if (frmMain.Selffrm.ModbusTcpServer.Send6MSG(ID, ref client, 6, 0x6000, 0) == -1)
                         {
                             continue;
                         }
@@ -7571,12 +7558,6 @@ namespace EMS
                 }
             }
         }
-
-
-
-
-
-
 
         //主从模式下，主机控制从机
         public void SetAllPCSCommand(string awType,string  aPCSType, double aPCSValueRate, bool bAllParam)
