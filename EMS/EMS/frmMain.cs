@@ -598,6 +598,7 @@ namespace EMS
                 frmMain.Selffrm.Model4G.m485 = new modbus485();
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
                 frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+
                 //若配置接入104服务
                 if (frmSet.config.Open104 == 1)
                 {

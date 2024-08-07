@@ -128,82 +128,23 @@ namespace Modbus
 
     public class ClientManager
     {
-        //public int count = 1;
-        //public IdManager IDmap;
-        //public Dictionary<int, Socket> clientMap ;
-        public List<int> IDs = new List<int>();
-        public int[] IDss = new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-
-
         private static ILog log = LogManager.GetLogger("ClientManager");
 
-        public bool FindClient(int ID, SocketWrapper clientWrapper, ConcurrentDictionary<int, SocketWrapper> clientMap)
+
+        public void AddClientOverwrite(int ID, SocketWrapper clientWrapper, ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
-            for (int i = 0; i < 10; ++i)
-            {
-                if (IDss[i] == ID)
-                {
-                    log.Error("更新clientSocket");
-                    if (clientMap.ContainsKey(ID))
-                    {
-                        clientMap[ID] = clientWrapper;
-                    }
-                    return true;
-                }
-            }
-            return false;
+            // 使用 AddOrUpdate 方法尝试添加或更新键值对  
+            // 如果键不存在，则添加新键值对  
+            // 如果键已存在，则使用提供的值（这里是 clientWrapper）更新旧值  
+            // 这里的 addValueFactory 实际上并未使用，因为我们直接传递了 clientWrapper  
+            clientMap.AddOrUpdate(ID, clientWrapper, (key, existingVal) => clientWrapper);
         }
 
-        public void AddClient(int ID, SocketWrapper clientWrapper, ConcurrentDictionary<int, SocketWrapper> clientMap)
+        public bool RemoveClient(int ID,  ConcurrentDictionary<int, SocketWrapper> clientMap)
         {
-            clientMap[ID] = clientWrapper;
-
-            for (int i = 0; i < 10; ++i)
-            {
-                if (IDss[i] == -1)
-                {
-                    IDss[i] = ID;
-                    break;
-                }
-            }
-
-            for (int i = 0; i < 10; ++i)
-            {
-                log.Error("设备：" + IDss[i]);
-            }
-        }
-        public void RemoveClient(int ID,  ConcurrentDictionary<int, SocketWrapper> clientMap)
-        {
-            if (clientMap.ContainsKey(ID))
-            {
-                clientMap.TryRemove(ID, out _);
-            }
-
-            for (int i = 0; i < 10; ++i)
-            {
-                if (IDss[i] == ID)
-                {
-                    IDss[i] = -1;
-                    break;
-                }
-            }
-        }
-
-        public SocketWrapper GetClient(int ID, ConcurrentDictionary<int, SocketWrapper> clientMap)
-        {
-            if (clientMap != null)
-            {
-                if (clientMap.ContainsKey(ID))
-                {
-                    clientMap.TryGetValue(ID, out SocketWrapper clientWrapper);
-                    return clientWrapper;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else { return null; }
+            // 直接尝试从字典中移除具有指定 ID 的项  
+            // 如果成功，则返回 true；如果 ID 不存在，则返回 false  
+            return clientMap.TryRemove(ID, out _);
         }
     }
 
@@ -635,13 +576,10 @@ namespace Modbus
                     if (virtualID != -1)
                     {
                         log.Error("加入新的virtualID:" + virtualID);
+
                         if (frmMain.Selffrm.ModbusTcpServer.clientManager != null && clientMap != null)
                         {
-                            if (!frmMain.Selffrm.ModbusTcpServer.clientManager.FindClient(virtualID, socketWrapper, clientMap))
-                            {
-                                frmMain.Selffrm.ModbusTcpServer.clientManager.AddClient(virtualID, socketWrapper, clientMap);
-                                log.Error("新加入完成");
-                            }                              
+                            frmMain.Selffrm.ModbusTcpServer.clientManager.AddClientOverwrite(virtualID, socketWrapper, clientMap);
                         }
                     }
                 }
