@@ -198,8 +198,8 @@ namespace EMS
         {
             INIFile ConfigINI = new INIFile();
             string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
-            string INIPath = strSysPath + "Config.ini";
-            String iotcode = ConfigINI.INIRead("System Set", "SysID", "202300001", INIPath).Trim();
+
+            String iotcode = frmSet.config.SysID;
             EMQX_CLIENT_ID = iotcode;
 
             try
