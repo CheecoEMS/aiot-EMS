@@ -318,10 +318,13 @@ namespace Modbus
         //tcp
         public delegate void OnReceiveDataEventDelegate2(Socket sender, byte[] strData, string strFromIP, int iPort);//建立事件委托
         public event OnReceiveDataEventDelegate2 OnReceiveDataEvent2;//收到数据的事件
-
+       
         // 定义Soket发送和接收 
         public Socket ServerSocket = null;//服务器绑定端口初始化socket对象
-        public Socket ClientSocket = null;//针对104连接的客户端从机
+        public Socket ClientSocket = null;//
+        // 定义104-Soket发送和接收 
+        public Socket ServerSocket_104 = null;//服务器绑定端口初始化socket对象
+        public Socket ClientSocket_104 = null;//针对104连接的客户端从机
 
         //服务器端的IP与端口 
         private IPEndPoint ServerIPE = null;
@@ -468,13 +471,28 @@ namespace Modbus
         {
             try
             {
-                //实例化TcpSetver对象  
-                ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
-                ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                //绑定IP
-                ServerSocket.Bind(ServerIPE);
-                ServerSocket.Listen(10);
-                return true;
+                switch (aLocadPort)
+                {
+                    case 2404:
+                        //实例化TcpSetver对象  
+                        ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
+                        ServerSocket_104 = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                        //绑定IP
+                        ServerSocket_104.Bind(ServerIPE);
+                        ServerSocket_104.Listen(10);
+                        return true;
+                    case 502:
+                        //实例化TcpSetver对象  
+                        ServerIPE = new IPEndPoint(IPAddress.Any, aLocadPort);
+                        ServerSocket = new Socket(ServerIPE.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                        //绑定IP
+                        ServerSocket.Bind(ServerIPE);
+                        ServerSocket.Listen(10);
+                        return true;
+                    default:
+                        return false;
+                }
+
             }
             catch (SocketException ex)
             {
@@ -601,12 +619,12 @@ namespace Modbus
             {    
                 try
                 {
-                    Socket acceptSocket = ServerSocket.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
+                    Socket acceptSocket = ServerSocket_104.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
                     //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s
                     CheckClientSocketExist();                
                     if (OnConectedEvent != null)
                         OnConectedEvent(acceptSocket);
-                    ClientSocket = acceptSocket;
+                    ClientSocket_104 = acceptSocket;
 
                     CheckCtsExist();
                     // 初始化CancellationTokenSource  
@@ -697,27 +715,27 @@ namespace Modbus
         //线程监听函数
         private void ReceiveData(CancellationToken cancelReceiveToken)
         {
-            if ((ClientSocket == null) || (cts == null) || cancelReceiveToken == null)
+            if ((ClientSocket_104 == null) || (cts == null) || cancelReceiveToken == null)
                 return;
 
             while (!cancelReceiveToken.IsCancellationRequested)
             {
                 try
                 {
-                    int receiveNumber = ClientSocket.Receive(RecData);
+                    int receiveNumber = ClientSocket_104.Receive(RecData);
                     if (receiveNumber > 0)
                     {
                         byte[] recdata = RecData.Take(receiveNumber).ToArray();
 
                         if (OnReceiveDataEvent2 != null)
-                            OnReceiveDataEvent2(ClientSocket, recdata, ClientSocket.ToString(), LocalPort);
+                            OnReceiveDataEvent2(ClientSocket_104, recdata, ClientSocket_104.ToString(), LocalPort);
                     }
                 }
                 catch (SocketException ex)
                 {
                     log.Error("Server ReceiveData is false: " + ex.Message);
                     if (OnDisconectEvent != null)
-                        OnDisconectEvent(ClientSocket);
+                        OnDisconectEvent(ClientSocket_104);
 
                     CancleCTS(ref cts);//通知接受线程终止 
                 }
@@ -728,7 +746,7 @@ namespace Modbus
                 }
             }
             //释放socket资源
-            DestorySocket(ref ClientSocket);
+            DestorySocket(ref ClientSocket_104);
             //释放cts资源
             DisposeCTS(ref cts);
         }

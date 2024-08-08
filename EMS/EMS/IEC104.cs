@@ -139,7 +139,7 @@ namespace IEC104
             //验证消息
             //string hexString = BitConverter.ToString(message);
             
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
             //return message;
         }
@@ -180,7 +180,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
             return message;
 
@@ -213,7 +213,7 @@ namespace IEC104
             message[4] = 0x02;
             message[5] = 0x00;
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
             return message;
 
@@ -237,7 +237,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
 
         }
@@ -473,7 +473,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(send_message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
             //return message;
         }
@@ -628,7 +628,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message , ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message , ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
             return message;
         }
@@ -661,7 +661,7 @@ namespace IEC104
 
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
 
           
         }
@@ -736,7 +736,7 @@ namespace IEC104
                 //string hexString = BitConverter.ToString(msg);
 
 
-                frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+                frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
                 isYDACK[num] = 0;
             
         }
@@ -759,7 +759,7 @@ namespace IEC104
             //send msg
             //string hexString = BitConverter.ToString(msg);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
         }
 
 
@@ -779,7 +779,7 @@ namespace IEC104
             isYKACK[num] = 0;
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
         }
 
         /*********************遥控激活结束******************************/
@@ -796,7 +796,7 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
         }
 
         /*********************遥调激活结束******************************/
@@ -816,7 +816,7 @@ namespace IEC104
             //string hexString = BitConverter.ToString(msg);
 
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
         }
         
 
@@ -847,7 +847,7 @@ namespace IEC104
 
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg , ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg , ref frmMain.Selffrm.TCPserver.ClientSocket_104);
          }
 
 
@@ -926,7 +926,7 @@ namespace IEC104
             //send msg
             //string hexString = BitConverter.ToString(msg);
             //"发送遥控执行确认：" + hexString
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg, ref frmMain.Selffrm.TCPserver.ClientSocket_104);
             isYKACK[num] = 0;
 
 
