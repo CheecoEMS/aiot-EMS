@@ -280,6 +280,7 @@ namespace EMS
                     ListenTopic(AIOTTableTopic + "request");
                     ListenTopic(BalaTableTopic + "request");
                     ListenTopic(HeartbeatTopic);
+                    ListenTopic(UploadTopic + "request");
 
                     // 重新启动定时器
                     InitializePublish_Timer();
