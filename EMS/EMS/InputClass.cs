@@ -7396,56 +7396,6 @@ namespace EMS
         }
 
         //502
-        public async Task ReadAllEmsTCPAsync()
-        {
-            try
-            {
-                double TempWaValue = PCSKVA;
-
-                // 使用List<Task>来存储所有异步任务  
-                List<Task> tasks = new List<Task>();
-
-                foreach (var aClient in TCPServerClass.clientMap)
-                {
-                    ushort tempKVA = 0;
-                    ushort tempType = 0;
-
-                    SocketWrapper client = aClient.Value;
-                    int ID = aClient.Key;
-
-                    // 为每个客户端启动一个异步任务  
-                    tasks.Add(Task.Run(() =>
-                    {
-                        if (client != null)
-                        {
-                            if (frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6002, 1, ref tempKVA))
-                            {
-                                if (frmMain.Selffrm.ModbusTcpServer.GetUShort(ID, ref client, 3, 0x6003, 1, ref tempType))
-                                {
-
-                                }
-                            }
-                        }
-                    }));
-                }
-
-                // 等待所有任务完成  
-                await Task.WhenAll(tasks);
-
-                // 注意：由于TempWaValue是局部变量，并且我们在并发任务中没有更新它，  
-                // 所以AllwaValue将不会被设置为我们期望的值。  
-                // 您需要设计一种机制来在并发任务完成后汇总结果。  
-
-                // 示例：假设我们有一个方法来汇总结果  
-                // AllwaValue = SummarizeResults();  
-
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message);
-            }
-        }
-
         public void ReadAllEmsTCP()
         {
             try
