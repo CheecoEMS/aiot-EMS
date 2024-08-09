@@ -187,7 +187,7 @@ namespace EMS
         }
 
         //处理接收到的104报文协议
-        private void OnReceive104CMD2(System.Net.Sockets.Socket sender, byte[] msg, string strFromIP, int iPort)
+        private void OnReceive104CMD2(byte[] msg)
         {
             //do+委托
             string hexString = BitConverter.ToString(msg);
@@ -612,7 +612,6 @@ namespace EMS
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
                         frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                        //frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
                         frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                         frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                     }
