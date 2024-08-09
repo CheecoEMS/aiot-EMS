@@ -883,7 +883,7 @@ namespace Modbus
             byte aAddress = 0xFF;
             byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
 
-            byte[] response = new byte[8];
+            byte[] response = new byte[7];
 
             //Send modbus message to Serial Port:
             if (!GetASKDada(ID, ref client, message, ref response))
