@@ -100,7 +100,7 @@ namespace EMS
 
 
         //tcp
-        private void OnReceiveModbusTcpClientCMD(object sender, byte[] aByteData)
+        private void OnReceiveModbusTcpClientCMD(byte[] aByteData)
         {
             //验证消息
             //string hexString = BitConverter.ToString(aByteData);
@@ -603,7 +603,7 @@ namespace EMS
                 if (frmSet.config.Open104 == 1)
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
-                    frmMain.Selffrm.TCPserver.StartMonitor104();//监听客户端连接
+                    frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
                 }
 
                 //使用TCP/IP通讯方式
