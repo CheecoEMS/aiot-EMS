@@ -191,7 +191,7 @@ namespace EMS
         }
 
         //处理接收到的104报文协议
-        private void OnReceive104CMD2(System.Net.Sockets.Socket sender, byte[] msg, string strFromIP, int iPort)
+        private void OnReceive104CMD2(byte[] msg)
         {
             //do+委托
             string hexString = BitConverter.ToString(msg);
@@ -602,6 +602,7 @@ namespace EMS
                 frmMain.Selffrm.Model4G.m485 = new modbus485();
                 frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
                 frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+
                 //若配置接入104服务
                 if (frmSet.config.Open104 == 1)
                 {
@@ -615,7 +616,6 @@ namespace EMS
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
                         frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                        frmMain.Selffrm.ModbusTcpServer.clientMap = new Dictionary<int, (SocketWrapper, object)>();
                         frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
                         frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
                     }
