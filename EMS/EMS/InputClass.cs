@@ -1053,13 +1053,13 @@ namespace EMS
     //5.05 新增除湿机
     public class DehumidifierClass : BaseEquipmentClass
     {
-        public double TempData;                  //温度-40---80，浮点型
-        public double HumidityData;              //湿度0-100RH，浮点型
-        public double WorkStatus;                //工作状态           
-        public double TempData_Boot;             //温度启动值 LCSetHotTemp
-        public double TempData_Stop;             //温度停止值	
-        public double HumidityData_Boot;         //湿度启动值
-        public double HumidityData_Stop;         //湿度停止值 
+        public double TempData { get; set; }                  //温度-40---80，浮点型
+        public double HumidityData { get; set; }             //湿度0-100RH，浮点型
+        public double WorkStatus { get; set; }                //工作状态           
+        public double TempData_Boot { get; set; }            //温度启动值 LCSetHotTemp
+        public double TempData_Stop { get; set; }             //温度停止值	
+        public double HumidityData_Boot { get; set; }        //湿度启动值
+        public double HumidityData_Stop { get; set; }        //湿度停止值 
         public DehumidifierClass()
         {
             strCommandFile = "Dehumidifier.txt";
@@ -1110,11 +1110,11 @@ namespace EMS
                     bPrepared = true;
                     if (Get3strData(0, ref strData, ref strTemp))
                     {
-                        TempData = Convert.ToInt32(strTemp);            //温度
+                        TempData = Convert.ToInt32(strTemp)/10.0;            //温度
                     }
                     if (Get3strData(1, ref strData, ref strTemp))
                     {
-                        HumidityData = Convert.ToInt32(strTemp);            //湿度
+                        HumidityData = Convert.ToInt32(strTemp)/10.0;            //湿度
                     }
                     if (Get3strData(2, ref strData, ref strTemp))
                     {
@@ -1959,7 +1959,13 @@ namespace EMS
         {
             strCommandFile = "LiquidCool.txt";
         }
-
+        public void init_LiquidCool() //初始化
+        {
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+            }
+        }
         //导入配置
         public bool ExecCommand()
         {
@@ -2109,9 +2115,9 @@ namespace EMS
                 if (Get3strData(11, ref strData, ref strTemp))
                     environmentTemp = Math.Round(float.Parse(strTemp), 1);//环境温度
                 if (Get3strData(12, ref strData, ref strTemp))
-                    InwaterPressure = Math.Round(float.Parse(strTemp), 1);  //进水压力
+                    InwaterPressure = Math.Round(float.Parse(strTemp), 1)*10;  //进水压力
                 if (Get3strData(13, ref strData, ref strTemp))
-                    OutwaterPressure = Convert.ToInt32(strTemp);        //出水压力
+                    OutwaterPressure = Math.Round(float.Parse(strTemp), 1)*10;        //出水压力
             }
             //读取故障
             if (GetSysData(26, ref strTemp))
@@ -7877,6 +7883,7 @@ namespace EMS
         //表一队列数据
         private void ReadCom1Data()
         {
+
             while (true)
             {
                 Thread.Sleep(1000);
@@ -8078,6 +8085,10 @@ namespace EMS
         {
             try
             {
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                }
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
@@ -8292,6 +8303,10 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
+                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复
+                                        {
+                                        frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                                        }
                                     }
                                 }
                             }
@@ -8365,11 +8380,11 @@ namespace EMS
                     }
 
                     //PCS的DSP2 11.27
-                    //if (DSP2 != null)
-                    //{
-                        //DSP2.GetDataFromEqipment();
-                    //}
-
+                    if (DSP2 != null)
+                    {
+                        DSP2.GetDataFromEqipment();
+                    }
+                    
                     //消防
                     FireFBGPIO();
                     //急停

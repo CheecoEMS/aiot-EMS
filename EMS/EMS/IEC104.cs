@@ -959,12 +959,33 @@ namespace IEC104
             {
                 // u 帧
                 ProcessFormatU(data);
-               
+
             }
             else if ((data[2] & 0x01) == 0x01)
             {
+
                 // s 帧
                 //iEC104.txcheck = ((data[4]>>1)|(data[5]<<7));
+
+
+                if (data.Length > 6)
+                {
+                    byte[] _data = new byte[data.Length - 6];
+                    for (int i = 0; i < data.Length / 6; i++)
+                    {
+                        if ((data[6 * i + 2] & 0x01) == 0x01)
+                        {
+                            Array.Copy(data, 6 * (i + 1), _data, 0, data.Length - 6 * (i + 1));
+                        }
+                        else { break; }
+                    }
+                    if ((_data[2] & 0x01) != 0x01)
+                    {
+                        Array.Resize(ref _data, _data[1] + 1);
+                        Console.WriteLine("************** S+I ***************** S+I **************** S+I *************");
+                        ProcessFormatI(_data);
+                    }
+                }
             }
             else
             {

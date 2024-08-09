@@ -305,6 +305,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BalaTacticsListClass.cs" />
+    <Compile Include="pid.cs" />
     <Compile Include="CloundClass.cs" />
     <Compile Include="DBConnect.cs" />
     <Compile Include="ElectrovalenceClass.cs" />

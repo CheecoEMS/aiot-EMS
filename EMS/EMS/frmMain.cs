@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 //351200 
 
@@ -83,6 +84,9 @@ namespace EMS
         //对接主从通讯
         public TCPServerClass ModbusTcpServer = new TCPServerClass();
         public TCPClientClass ModbusTcpClient = new TCPClientClass();
+
+
+        static public PID pid = new PID();
 
         public frmMain()
         { 
@@ -639,6 +643,8 @@ namespace EMS
                         frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
+                double[] pidd = new double[3] { 1, 2, 3 };
+                pid.PID_init(1, pidd, 10, 10);
 
                 //开启定时器
                 InitializeCloud_timer();
@@ -647,6 +653,8 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
+                InitializeLed_Timer();
+
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
                 frmFlash.AddPostion(10);
@@ -700,9 +708,6 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.SingleReflux_Log();
             }
         }
-
-
-
         static void InitializePublic_Timer()
         {
             //每120秒，是否满足隔日数据上传和需量更新和温度控制
@@ -822,10 +827,12 @@ namespace EMS
                         }
                     }
                 }
+
+
+
+
             }
         }
-
-
         static void InitializeTacitc_Timer()
         {
             //每30秒 判断策略时段  
@@ -967,7 +974,23 @@ namespace EMS
             });
         }
 
+        static void InitializeLed_Timer()
+        {
 
+            Heartbeat_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
+        }
+        static void LedLoop_timerCallback(Object state)
+        {
+
+
+            //pid.PID_calc(,);
+
+            //LED控制
+            if (frmMain.Selffrm.AllEquipment.Led != null)
+            {
+                frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+            }
+        }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {

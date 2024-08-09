@@ -198,8 +198,8 @@ namespace EMS
         {
             INIFile ConfigINI = new INIFile();
             string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
-            string INIPath = strSysPath + "Config.ini";
-            String iotcode = ConfigINI.INIRead("System Set", "SysID", "202300001", INIPath).Trim();
+
+            String iotcode = frmSet.config.SysID;
             EMQX_CLIENT_ID = iotcode;
 
             try
@@ -799,8 +799,14 @@ namespace EMS
             if (Parent.LiquidCool != null)
             {
                 Parent.LiquidCool.time = tempTime;
-                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" +  "0air" + strTime + ".json");
+                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" + "0liq" + strTime + ".json");
                 //log.
+            }
+            //除湿机
+            if (Parent.Dehumidifier != null)
+            {
+                Parent.Dehumidifier.time = tempTime;
+                ConvertToJson(Parent.Dehumidifier, strUpPath, "\\" + "0csj" + strTime + ".json");
             }
             //消防
             if (Parent.Fire != null)
@@ -812,7 +818,7 @@ namespace EMS
             Parent.time = tempTime;
             ConvertToJson(Parent, strUpPath, "\\0ems" + strTime + ".json");
         }
-
+        
         public void SaveProfit2Cloud(string astrDate)
         {
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + astrDate + ".json");
