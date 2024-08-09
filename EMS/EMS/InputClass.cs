@@ -29,6 +29,7 @@ using MySqlX.XDevAPI.Common;
 using System.Collections.Concurrent;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
+using MySqlX.XDevAPI;
 
 namespace EMS
 {
@@ -5912,7 +5913,9 @@ namespace EMS
 
         public int  ConversionRate = 1; //实际转换率
 
-        public string rDate = "";
+        public string rDate = ""; //日期
+        public string mDate = ""; //月份
+
         public double[] SAuxiliaryKWH = { 0, 0, 0, 0, 0 };   //记录当天开始辅助用电量
         public double[] SE2PKWH = { 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）
         public double[] SE2OKWH = { 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
@@ -5968,6 +5971,10 @@ namespace EMS
         public double E1_PUMdemand_now { get; set; } = 0;   //关口表: 实时数据当前正向有功需量
         public double E2_PUMdemand_now { get; set; } = 0;   //并网柜电表: 实时数据当前正向有功需量
         public double Client_PUMdemand_now { get; set; } = 0;   //客户: 实时数据当前正向有功需量
+
+        public double E1_PUMdemand_Max_old { get; set; } = 0; //总上个月当前正向有功最大需量
+        public double Client_PUMdemand_Max_old { get; set; } = 0; //客户上个月当前正向有功最大器量
+
 
         public DateTime start_Time = DateTime.Now;
         public bool recoverSchedule = true;
@@ -8043,9 +8050,9 @@ namespace EMS
                             if (Client_PUMdemand_now > Client_PUMdemand_Max)
                             {
                                 Client_PUMdemand_Max = Client_PUMdemand_now;
-                                
                                 //记录客户当月最大需量
-                                frmSet.Set_Cloudlimits();
+                                frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
+                                frmSet.Set_HistoryData();
                             }
 
                             //限制客户当月最大需量低于100时，不进行充放
@@ -8574,7 +8581,8 @@ namespace EMS
                             frmSet.variCharge.UBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
 
@@ -8642,7 +8650,7 @@ namespace EMS
                             frmSet.variCharge.OBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
                     }
                 }
             }
@@ -8660,7 +8668,8 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
+                        
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
@@ -8669,7 +8678,8 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
+                        
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
             }
@@ -8869,22 +8879,6 @@ namespace EMS
                     break;
             }
         }*/
-
-        //2.21
-        public void WriteDoPUini()
-        {
-            INIFile ConfigINI = new INIFile();
-            DateTime dateTime = DateTime.Now;
-            //"Recode Date"=配置节点名称，"rDate"=键名，arDate=返回键值，DofD=路径
-            
-            //记录客户负载最大值
-            ConfigINI.INIWrite("Recode Date", "Client_PUMdemand_Max" , frmSet.cloudLimits.Client_PUMdemand_Max.ToString(), DoPU);
-            //记录时间
-            ConfigINI.INIWrite("Recode Date", "rDate", dateTime.ToString("yyyy-MM-d H:m:s"), DoPU);
-            //记录当月
-            ConfigINI.INIWrite("Recode Date", "NowMonth", dateTime.ToString("yyyy-MM"), DoPU);
-
-        }
 
 
         /// <summary>

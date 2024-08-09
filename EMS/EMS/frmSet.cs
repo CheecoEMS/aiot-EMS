@@ -25,10 +25,13 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("frmSet");
 
         public static frmSet oneForm = null;
+
         public static CloudLimitClass cloudLimits = new CloudLimitClass();
         public static ConfigClass config = new ConfigClass();
         public static VariChargeClass variCharge = new VariChargeClass();
         public static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
+        public static HistoryDataClass historyDatas = new HistoryDataClass();
+
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
         //public static string SysName;
@@ -226,12 +229,90 @@ namespace EMS
 
         /********************************************/
 
+        /******HistoryData*************/
+        public static bool LoadHistoryDataFromMySQL()
+        {
+            bool result = false;
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax FROM CloudLimits;";
+
+            try 
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                historyDatas.E1PUMdemandMaxOld = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                historyDatas.ClientPUMdemandMax = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
+
+                                result = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            finally
+            {
+
+
+            }
+            return result;
+
+        }
+
+        public static bool Set_HistoryData()
+        {
+            string astrSQL = "update  HistoricalData  SET "
+                + " E1PUMdemandMaxOld ='" + frmSet.historyDatas.E1PUMdemandMaxOld.ToString()
+                + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
+                + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
+                + "';";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                result = false;
+                log.Error(ex.Message);
+            }
+            return result;
+        }
+
 
         /***CloudLimits***/
         public static bool LoadCloudLimitsFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
                 + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper FROM CloudLimits;";
 
             try
@@ -252,7 +333,7 @@ namespace EMS
                                 cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
                                 cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
                                 cloudLimits.PcsKva = rd.IsDBNull(6) ? 10 : rd.GetInt32(6);
-                                cloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                cloudLimits.Pre_Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
                                 cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
                                 cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
                                 cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 4 : rd.GetInt32(10);
@@ -297,7 +378,7 @@ namespace EMS
                 + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
                 + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
                 + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
-                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', Pre_Client_PUMdemand_Max = '" + frmSet.cloudLimits.Pre_Client_PUMdemand_Max.ToString()
                 + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
                 + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
                 + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
@@ -1759,8 +1840,8 @@ namespace EMS
             "delete from profit where rTime<'"+astrData+"'",
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
-            "delete from warningwhere rTime<'"+astrData+"'",
-            "delete from chargeinform rTime<'"+astrData+"'"
+            "delete from warningwhere rTime<'"+astrData+"'"
+            //,"delete from chargeinform rTime<'"+astrData+"'"
             };
             foreach (string astrSQl in strSQL)
                 DBConnection.ExecSQL(astrSQl);
@@ -2571,6 +2652,13 @@ namespace EMS
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
 
+        /************************* DB Class *********************************/
+        public class HistoryDataClass
+        {
+            public volatile int E1PUMdemandMaxOld;
+            public volatile int ClientPUMdemandMaxOld;
+            public volatile int ClientPUMdemandMax;
+        }
 
         public class CloudLimitClass
         {
@@ -2581,7 +2669,7 @@ namespace EMS
             public volatile int WarnMaxGridKW;
             public volatile int WarnMinGridKW;
             public volatile int PcsKva ;
-            public volatile int Client_PUMdemand_Max;
+            public volatile int Pre_Client_PUMdemand_Max;
             public volatile int EnableActiveReduce;
             public volatile int PumScale;
             public volatile int AllUkvaWindowSize;
