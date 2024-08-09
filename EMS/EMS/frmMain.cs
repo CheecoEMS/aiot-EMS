@@ -552,19 +552,10 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-/*                if (frmSet.config.IsMaster)
+                if (frmSet.config.IsMaster == 1)
                 {
-                    if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
-                    {
-                        //更新的月份
-                        lock (frmSet.cloudLimits)
-                        {
-                            frmSet.cloudLimits.Client_PUMdemand_Max = 0;
-
-                        }
-                        Selffrm.AllEquipment.WriteDoPUini();
-                    }
-                }*/
+                    frmSet.LoadHistoryDataFromMySQL();
+                }
 
                 //校准电表日期
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)

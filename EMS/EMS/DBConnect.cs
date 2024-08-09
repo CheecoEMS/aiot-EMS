@@ -1921,6 +1921,13 @@ namespace EMS
                         new Column { Name = "OBmsPcsState", Type = "int", IsNullable = true, Key = "" , Comment = "放电限制"},
                     }
 
+                },
+                {
+                    "HistoricalData", new List<Column>
+                    {
+                        new Column { Name = "E1PUMdemandOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
+                        new Column { Name = "ClientPUMdemandOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
+                    }
                 }
                 // Add more tables as needed
             };

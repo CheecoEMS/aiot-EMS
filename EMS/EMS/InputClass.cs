@@ -8574,7 +8574,8 @@ namespace EMS
                             frmSet.variCharge.UBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
 
@@ -8642,7 +8643,7 @@ namespace EMS
                             frmSet.variCharge.OBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
                     }
                 }
             }
@@ -8660,7 +8661,8 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
+                        
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
                 else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
@@ -8669,7 +8671,8 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
+                        
+                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
             }

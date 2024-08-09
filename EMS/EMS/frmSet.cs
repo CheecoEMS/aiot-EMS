@@ -25,10 +25,13 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("frmSet");
 
         public static frmSet oneForm = null;
+
         public static CloudLimitClass cloudLimits = new CloudLimitClass();
         public static ConfigClass config = new ConfigClass();
         public static VariChargeClass variCharge = new VariChargeClass();
         public static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
+        public static HistoryDataClass historyDatas = new HistoryDataClass();
+
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
         //public static string SysName;
@@ -225,6 +228,82 @@ namespace EMS
         }
 
         /********************************************/
+
+        /******HistoryData*************/
+        public static bool LoadHistoryDataFromMySQL()
+        {
+            bool result = false;
+            string astrSQL = "SELECT E1PUMdemandOld, ClientPUMdemandOld FROM CloudLimits;";
+
+            try 
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                historyDatas.E1PUMdemandOld = rd.IsDBNull(14) ? 0 : rd.GetInt32(0);
+                                historyDatas.ClientPUMdemandOld = rd.IsDBNull(15) ? 0 : rd.GetInt32(1);
+
+                                result = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            finally
+            {
+
+
+            }
+            return result;
+
+        }
+
+        public static bool Set_HistoryData()
+        {
+            string astrSQL = "update  HistoricalData  SET "
+                + " E1PUMdemandOld ='" + frmSet.historyDatas.E1PUMdemandOld.ToString()
+                + "', ClientPUMdemandOld ='" + frmSet.historyDatas.ClientPUMdemandOld.ToString()
+                + "';";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                result = false;
+                log.Error(ex.Message);
+            }
+            return result;
+        }
 
 
         /***CloudLimits***/
@@ -1759,8 +1838,8 @@ namespace EMS
             "delete from profit where rTime<'"+astrData+"'",
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
-            "delete from warningwhere rTime<'"+astrData+"'",
-            "delete from chargeinform rTime<'"+astrData+"'"
+            "delete from warningwhere rTime<'"+astrData+"'"
+            //,"delete from chargeinform rTime<'"+astrData+"'"
             };
             foreach (string astrSQl in strSQL)
                 DBConnection.ExecSQL(astrSQl);
@@ -2571,6 +2650,12 @@ namespace EMS
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
 
+        /************************* DB Class *********************************/
+        public class HistoryDataClass
+        {
+            public volatile int E1PUMdemandOld;
+            public volatile int ClientPUMdemandOld;
+        }
 
         public class CloudLimitClass
         {

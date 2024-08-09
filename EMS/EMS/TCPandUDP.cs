@@ -414,8 +414,8 @@ namespace Modbus
         // 定义104-Soket发送和接收 
         private Socket ServerSocket_2404 = null;//服务器绑定端口初始化socket对象
 
-        private volatile SocketWrapper socketWrapper104 = null; //针对104
-        private volatile SocketCTS socketCTS = null;
+        private volatile SocketWrapper socketWrapper_2404 = null; //针对104
+        private volatile SocketCTS socketCTS_2404 = null;
 
 
         //服务器端的IP与端口 
@@ -440,16 +440,16 @@ namespace Modbus
 
         private void CheckBackground()
         {
-            if (socketCTS != null)
+            if (socketCTS_2404 != null)
             {
-                socketCTS.CloseCTS(); // 请求取消当前的接收数据操作  
+                socketCTS_2404.CloseCTS(); // 请求取消当前的接收数据操作  
                 WaitThreadEnd(Receive2404Thread);// 等待接收线程终止
             }
 
-            if (socketWrapper104 != null)
+            if (socketWrapper_2404 != null)
             {
-                socketWrapper104.CloseSocket();
-                socketWrapper104 = null;
+                socketWrapper_2404.CloseSocket();
+                socketWrapper_2404 = null;
             }
         }
 
@@ -580,17 +580,17 @@ namespace Modbus
                     CheckBackground();//检查是否存在资源未释放
 
                     Socket acceptSocket = ServerSocket_2404.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
-                    //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
-                                                  
-                    socketWrapper104 = new SocketWrapper(acceptSocket);
+                                                                     //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
+
+                    socketWrapper_2404 = new SocketWrapper(acceptSocket);
 
                     CancellationTokenSource aCts = new CancellationTokenSource();
-                    SocketCTS socketCTS = new SocketCTS(aCts);
+                    socketCTS_2404 = new SocketCTS(aCts);
 
-                    if (socketWrapper104 != null)
+                    if (socketWrapper_2404 != null)
                     {
                         // 初始化
-                        CancellationToken cancelReceiveToken = socketCTS.GetCTSToken();
+                        CancellationToken cancelReceiveToken = socketCTS_2404.GetCTSToken();
                         if (cancelReceiveToken != CancellationToken.None)
                         {
                             StartReceive2404(cancelReceiveToken);
@@ -635,27 +635,27 @@ namespace Modbus
         {
             try
             {
-                if (socketWrapper104 != null)
+                if (socketWrapper_2404 != null)
                 {
-                    if (socketWrapper104.Send(msg))
+                    if (socketWrapper_2404.Send(msg))
                     {
                         return true;
                     }
                     else
                     {
-                        socketCTS.CloseCTS();
+                        socketCTS_2404.CloseCTS();
                         return false;
                     }
                 }
                 else
                 {
-                    socketCTS.CloseCTS();
+                    socketCTS_2404.CloseCTS();
                     return false;
                 }          
             }
             catch (Exception ex)
             {
-                socketCTS.CloseCTS();
+                socketCTS_2404.CloseCTS();
                 log.Error("SendMsg_byte: " + ex.Message);
                 return false;
             }
@@ -668,7 +668,7 @@ namespace Modbus
             {
                 try
                 {
-                    byte[] recdata = socketWrapper104.Receive();
+                    byte[] recdata = socketWrapper_2404.Receive();
                     if (recdata != null)
                     {
                         if (OnReceiveDataEvent2 != null)
@@ -678,16 +678,16 @@ namespace Modbus
                 catch (SocketException ex)
                 {
                     log.Error("Server ReceiveData is false: " + ex.Message);
-                    socketCTS.CloseCTS();//通知接受线程终止 
+                    socketCTS_2404.CloseCTS();//通知接受线程终止 
                 }
                 catch (Exception ex)
                 {
-                    socketCTS.CloseCTS(); ;//通知接受线程终止
+                    socketCTS_2404.CloseCTS(); ;//通知接受线程终止
                     log.Error("Server ReceiveData is false: " + ex.Message);
                 }
             }
             //释放cts资源（唯一）
-            socketCTS.RecycleCTS();
+            socketCTS_2404.RecycleCTS();
         }
 
 
@@ -1135,7 +1135,7 @@ namespace Modbus
                 socketWrapper = new SocketWrapper(aSocket);
 
                 CancellationTokenSource aCts = new CancellationTokenSource();
-                SocketCTS socketCTS = new SocketCTS(aCts);
+                socketCTS = new SocketCTS(aCts);
 
                 if (socketWrapper != null)
                 {
