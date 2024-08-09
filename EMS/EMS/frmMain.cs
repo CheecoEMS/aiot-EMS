@@ -104,7 +104,7 @@ namespace EMS
 
 
         //tcp
-        private void OnReceiveModbusTcpClientCMD(object sender, byte[] aByteData)
+        private void OnReceiveModbusTcpClientCMD(byte[] aByteData)
         {
             //验证消息
             //string hexString = BitConverter.ToString(aByteData);
@@ -468,11 +468,16 @@ namespace EMS
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
-
-                //从数据库加载
-                //frmSet.LoadFromGlobalSet();
-                //从数据库中加载配置信息
-                //frmSet.LoadFromConfig();
+                //获取历史需量
+                if (frmSet.config.IsMaster == 1)
+                {
+                    if (frmSet.LoadHistoryDataFromMySQL())
+                    {
+                        frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max_old = frmSet.historyDatas.E1PUMdemandMaxOld;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max_old = frmSet.historyDatas.ClientPUMdemandMaxOld;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = frmSet.historyDatas.ClientPUMdemandMax;
+                    }
+                }
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
@@ -547,6 +552,7 @@ namespace EMS
                 catch
                 { }
                 frmFlash.AddPostion(10);
+
                 if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
                 {
                     frmMain.Selffrm.AllEquipment.SaveDataInoneDay(Selffrm.AllEquipment.rDate);
@@ -556,19 +562,6 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
-/*                if (frmSet.config.IsMaster)
-                {
-                    if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
-                    {
-                        //更新的月份
-                        lock (frmSet.cloudLimits)
-                        {
-                            frmSet.cloudLimits.Client_PUMdemand_Max = 0;
-
-                        }
-                        Selffrm.AllEquipment.WriteDoPUini();
-                    }
-                }*/
 
                 //校准电表日期
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
@@ -607,7 +600,7 @@ namespace EMS
                 if (frmSet.config.Open104 == 1)
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
-                    frmMain.Selffrm.TCPserver.StartMonitor104();//监听客户端连接
+                    frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
                 }
 
                 //使用TCP/IP通讯方式
@@ -722,19 +715,23 @@ namespace EMS
         }
         static void Public_TimerCallback(Object state)
         {
-            /*            if (!frmMain.Selffrm.AllEquipment.ReadDoPUini())
-                        {
-                            //更新的月份
-                            frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-                            frmMain.Selffrm.AllEquipment.WriteDoPUini();
-                        }*/
+            //如果月份更新：
+            if(frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+            {
+                frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
+                frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
+                frmSet.historyDatas.ClientPUMdemandMax = 0;
+                frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+
+                frmSet.LoadHistoryDataFromMySQL();
+                frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
+            }
 
             //如果日期更新：
             //1.清理数据库的旧数据
             //2.保存当天收益到数据库
             //3.上传当天收益到云
             //4.下载策略
-
 
             if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
             {

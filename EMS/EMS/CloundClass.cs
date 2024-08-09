@@ -1266,9 +1266,9 @@ namespace EMS
                         {
                             frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
                         }
-                        if (parameters["Client_PUMdemand_Max"] != null)
+                        if (parameters["Pre_Client_PUMdemand_Max"] != null)
                         {
-                            frmSet.cloudLimits.Client_PUMdemand_Max = int.Parse(parameters["Client_PUMdemand_Max"].ToString());
+                            frmSet.cloudLimits.Pre_Client_PUMdemand_Max = int.Parse(parameters["Pre_Client_PUMdemand_Max"].ToString());
                         }
                         if (parameters["EnableActiveReduce"] != null)
                         {
