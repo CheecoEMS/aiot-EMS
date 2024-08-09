@@ -577,11 +577,13 @@ namespace Modbus
             {    
                 try
                 {
-                    CheckBackground();//检查是否存在资源未释放
+                   
 
                     Socket acceptSocket = ServerSocket_2404.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
                                                                      //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
 
+                    CheckBackground();//检查是否存在资源未释放
+                    
                     socketWrapper_2404 = new SocketWrapper(acceptSocket);
 
                     CancellationTokenSource aCts = new CancellationTokenSource();

@@ -233,7 +233,7 @@ namespace EMS
         public static bool LoadHistoryDataFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT E1PUMdemandOld, ClientPUMdemandOld FROM CloudLimits;";
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax FROM CloudLimits;";
 
             try 
             {
@@ -246,8 +246,9 @@ namespace EMS
                         {
                             if (rd != null && rd.HasRows && rd.Read())
                             {
-                                historyDatas.E1PUMdemandOld = rd.IsDBNull(14) ? 0 : rd.GetInt32(0);
-                                historyDatas.ClientPUMdemandOld = rd.IsDBNull(15) ? 0 : rd.GetInt32(1);
+                                historyDatas.E1PUMdemandMaxOld = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                historyDatas.ClientPUMdemandMax = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
 
                                 result = true;
                             }
@@ -277,8 +278,9 @@ namespace EMS
         public static bool Set_HistoryData()
         {
             string astrSQL = "update  HistoricalData  SET "
-                + " E1PUMdemandOld ='" + frmSet.historyDatas.E1PUMdemandOld.ToString()
-                + "', ClientPUMdemandOld ='" + frmSet.historyDatas.ClientPUMdemandOld.ToString()
+                + " E1PUMdemandMaxOld ='" + frmSet.historyDatas.E1PUMdemandMaxOld.ToString()
+                + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
+                + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
                 + "';";
 
             bool result = false;
@@ -310,7 +312,7 @@ namespace EMS
         public static bool LoadCloudLimitsFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
+            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
                 + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper FROM CloudLimits;";
 
             try
@@ -331,7 +333,7 @@ namespace EMS
                                 cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
                                 cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
                                 cloudLimits.PcsKva = rd.IsDBNull(6) ? 10 : rd.GetInt32(6);
-                                cloudLimits.Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                cloudLimits.Pre_Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
                                 cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
                                 cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
                                 cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 4 : rd.GetInt32(10);
@@ -376,7 +378,7 @@ namespace EMS
                 + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
                 + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
                 + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
-                + "', Client_PUMdemand_Max = '" + frmSet.cloudLimits.Client_PUMdemand_Max.ToString()
+                + "', Pre_Client_PUMdemand_Max = '" + frmSet.cloudLimits.Pre_Client_PUMdemand_Max.ToString()
                 + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
                 + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
                 + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
@@ -2653,8 +2655,9 @@ namespace EMS
         /************************* DB Class *********************************/
         public class HistoryDataClass
         {
-            public volatile int E1PUMdemandOld;
-            public volatile int ClientPUMdemandOld;
+            public volatile int E1PUMdemandMaxOld;
+            public volatile int ClientPUMdemandMaxOld;
+            public volatile int ClientPUMdemandMax;
         }
 
         public class CloudLimitClass
@@ -2666,7 +2669,7 @@ namespace EMS
             public volatile int WarnMaxGridKW;
             public volatile int WarnMinGridKW;
             public volatile int PcsKva ;
-            public volatile int Client_PUMdemand_Max;
+            public volatile int Pre_Client_PUMdemand_Max;
             public volatile int EnableActiveReduce;
             public volatile int PumScale;
             public volatile int AllUkvaWindowSize;

@@ -1698,7 +1698,7 @@ namespace EMS
                         new Column { Name = "WarnMaxGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率上限" },
                         new Column { Name = "WarnMinGridKW", Type = "int", IsNullable = true, Comment = "限制电网功率下限" },
                         new Column { Name = "PcsKva", Type = "int", IsNullable = true, Comment = "触发需量抬升的放电功率" },
-                        new Column { Name = "Client_PUMdemand_Max", Type = "int", IsNullable = true, Comment = "客户本月最大需量" },
+                        new Column { Name = "Pre_Client_PUMdemand_Max", Type = "int", IsNullable = true, Comment = "设置客户本月预计最大需量" },
                         new Column { Name = "EnableActiveReduce", Type = "int", IsNullable = true, Comment = "开启主动降容：1(开) 0(关)" },
                         new Column { Name = "PumScale", Type = "int", IsNullable = true, Comment = "需量比例" },
                         new Column { Name = "AllUkvaWindowSize", Type = "int", IsNullable = true, Comment = "电网功率队列大小" },
@@ -1925,8 +1925,9 @@ namespace EMS
                 {
                     "HistoricalData", new List<Column>
                     {
-                        new Column { Name = "E1PUMdemandOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
-                        new Column { Name = "ClientPUMdemandOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
+                        new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
+                        new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
+                        new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
                     }
                 }
                 // Add more tables as needed
