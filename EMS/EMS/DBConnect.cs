@@ -607,7 +607,7 @@ namespace EMS
                     var output = new
                     {
                          time = ConvertToUnixTimestamp(jsonObject["rTime"].Value<DateTime>()),
-                         iot_code = frmSet.config.SysID,
+                         iot_code = frmMain.Selffrm.AllEquipment.iot_code,
                          DaliyAuxiliaryKWH = new string[]
                          {
                             FormatValue(jsonObject["auxkwhAll"]),
