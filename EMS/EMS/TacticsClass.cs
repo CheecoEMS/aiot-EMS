@@ -24,19 +24,10 @@ namespace EMS
     //全部策列，策略类
     public class TacticsListClass
     {
-        //SetThreadAffinityMask: Set hThread run on logical processer(LP:) dwThreadAffinityMask
-        [DllImport("kernel32.dll")]
-        static extern UIntPtr SetThreadAffinityMask(IntPtr hThread, UIntPtr dwThreadAffinityMask);
-
-        //Get the handler of current thread
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentThread();
-
-
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "时段内均充均放" };
         public static string[] tTypes = { "待机", "充电", "放电" };
         //策略列表
-        List<TacticsClass> TacticsList = new List<TacticsClass>();
+        public volatile List<TacticsClass> TacticsList = new List<TacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
