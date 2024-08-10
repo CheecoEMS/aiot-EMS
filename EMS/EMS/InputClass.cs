@@ -6044,7 +6044,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Release1.0";
+        public string EMSVersion { get; set; } = "EMS240815Release1.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -8654,6 +8654,9 @@ namespace EMS
                         var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
                         var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
                         frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
                     }
                 }
                 else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
@@ -8666,6 +8669,9 @@ namespace EMS
 
                         //记录单体电压 温度 电流
                         //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
                     }
                 }
             }
@@ -8733,9 +8739,15 @@ namespace EMS
                 CheckBMSWrror(Errors);
                 if (( Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
-                    frmSet.variCharge.UBmsPcsState = 100;
-                    frmSet.variCharge.OBmsPcsState = 100;
-                    frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
+                    if (frmSet.variCharge.UBmsPcsState != 100 || frmSet.variCharge.OBmsPcsState != 100)
+                    {
+                        frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
+                        frmSet.variCharge.UBmsPcsState = 100;
+                        frmSet.variCharge.OBmsPcsState = 100;
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
+                    }
                 }
             }
             catch (Exception ex)
@@ -8743,36 +8755,6 @@ namespace EMS
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
-
-
-        //2.21
-        public bool ReadDoPUini() 
-        {
-            INIFile ConfigINI = new INIFile();
-            try
-            {
-                //记录当天开始充电电量（positive 正向）
-                //检查最大需量是否是本月的
-                string NowMonth = ConfigINI.INIRead("Recode Date", "NowMonth", "0", DoPU);
-                if (DateTime.Now.ToString("yyyy-MM") == NowMonth)
-                {
-                    Client_PUMdemand_Max = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "Client_PUMdemand_Max", "0", DoPU));
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());    
-                return false;
-            }
-            finally
-            {
-                // ConfigINI.
-
-            }
-        }
-
 
 
         /// <summary>

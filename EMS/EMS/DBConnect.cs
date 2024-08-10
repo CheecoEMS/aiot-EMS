@@ -1389,25 +1389,24 @@ namespace EMS
                         new Column { Name = "CellCount", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "SysInterval", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "YunInterval", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "IsMaster", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "Master485Addr", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "IsMaster", Type = "int", IsNullable = true, Key = ""  , Comment = "是否是主机"},
+                        new Column { Name = "Master485Addr", Type = "int", IsNullable = true, Key = "" , Comment = "主机设备地址" },
                         new Column { Name = "i485Addr", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "AutoRun", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "SysMode", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "PCSGridModel", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "DebugComName", Type = "varchar(255)", IsNullable = true, Key = "" },
                         new Column { Name = "DebugRate", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "UseYunTactics", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = ""  , Comment = "储能电站总台数"},
+                        new Column { Name = "UseYunTactics", Type = "int", IsNullable = true, Key = ""  , Comment = "是否接收云策略"},
                         new Column { Name = "UseBalaTactics", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = ""  , Comment = "BMS版本"},
                         new Column { Name = "PCSForceRun", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" }
+                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = ""  , Comment = "EMS工作状态"},                     
+                        new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = ""  , Comment = "IO口配置"},
+                        new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主机IP地址" },
+                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" }
                     }
                 },
                 {
@@ -1928,6 +1927,7 @@ namespace EMS
                         new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
+                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "记录三级告警标志位" }
                     }
                 }
                 // Add more tables as needed

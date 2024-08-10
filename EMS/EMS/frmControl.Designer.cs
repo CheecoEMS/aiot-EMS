@@ -45,30 +45,30 @@ namespace EMS
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnTimeCalibration = new System.Windows.Forms.Button();
+            this.tcbtest = new EMS.TouchCombox(this.components);
             this.btnPostProfit = new System.Windows.Forms.Button();
             this.btnConnectChoose = new System.Windows.Forms.Button();
+            this.tcbConnectStatus = new EMS.TouchCombox(this.components);
             this.btnEMSRun = new System.Windows.Forms.Button();
+            this.tcbEMSstatus = new EMS.TouchCombox(this.components);
             this.btnTest = new System.Windows.Forms.Button();
             this.btnBalaClear = new System.Windows.Forms.Button();
             this.btnBalaStart = new System.Windows.Forms.Button();
             this.btnCleanError = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btnPCSErrorClean = new System.Windows.Forms.Button();
+            this.tcbSYSModel = new EMS.TouchCombox(this.components);
             this.btnPCSOff = new System.Windows.Forms.Button();
             this.label20 = new System.Windows.Forms.Label();
             this.btnPCSRun = new System.Windows.Forms.Button();
             this.gb = new System.Windows.Forms.GroupBox();
+            this.tcbPCSMode = new EMS.TouchCombox(this.components);
+            this.tnePCSwaValue = new EMS.TouchNumberEdit(this.components);
             this.label24 = new System.Windows.Forms.Label();
+            this.tcbPCSType = new EMS.TouchCombox(this.components);
             this.lablPCSwaValue2 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.labPCSwaValue = new System.Windows.Forms.Label();
-            this.tcbtest = new EMS.TouchCombox(this.components);
-            this.tcbConnectStatus = new EMS.TouchCombox(this.components);
-            this.tcbEMSstatus = new EMS.TouchCombox(this.components);
-            this.tcbSYSModel = new EMS.TouchCombox(this.components);
-            this.tcbPCSMode = new EMS.TouchCombox(this.components);
-            this.tnePCSwaValue = new EMS.TouchNumberEdit(this.components);
-            this.tcbPCSType = new EMS.TouchCombox(this.components);
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -314,6 +314,24 @@ namespace EMS
             this.btnTimeCalibration.UseVisualStyleBackColor = true;
             this.btnTimeCalibration.Click += new System.EventHandler(this.btnTimeCalibration_Click);
             // 
+            // tcbtest
+            // 
+            this.tcbtest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbtest.CenterShow = true;
+            this.tcbtest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbtest.ForeColor = System.Drawing.Color.White;
+            this.tcbtest.Items = new string[] {
+        "test1",
+        "test2"};
+            this.tcbtest.Location = new System.Drawing.Point(6, 91);
+            this.tcbtest.Name = "tcbtest";
+            this.tcbtest.SelectItemIndex = 0;
+            this.tcbtest.Size = new System.Drawing.Size(153, 32);
+            this.tcbtest.strText = "test1";
+            this.tcbtest.TabIndex = 70;
+            this.tcbtest.Value = 0;
+            this.tcbtest.Visible = false;
+            // 
             // btnPostProfit
             // 
             this.btnPostProfit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
@@ -344,6 +362,23 @@ namespace EMS
             this.btnConnectChoose.UseVisualStyleBackColor = true;
             this.btnConnectChoose.Click += new System.EventHandler(this.btnConnectChoose_Click);
             // 
+            // tcbConnectStatus
+            // 
+            this.tcbConnectStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbConnectStatus.CenterShow = true;
+            this.tcbConnectStatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbConnectStatus.ForeColor = System.Drawing.Color.White;
+            this.tcbConnectStatus.Items = new string[] {
+        "485",
+        "tcp"};
+            this.tcbConnectStatus.Location = new System.Drawing.Point(550, 91);
+            this.tcbConnectStatus.Name = "tcbConnectStatus";
+            this.tcbConnectStatus.SelectItemIndex = 0;
+            this.tcbConnectStatus.Size = new System.Drawing.Size(153, 32);
+            this.tcbConnectStatus.strText = "485";
+            this.tcbConnectStatus.TabIndex = 67;
+            this.tcbConnectStatus.Value = 485;
+            // 
             // btnEMSRun
             // 
             this.btnEMSRun.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
@@ -358,6 +393,23 @@ namespace EMS
             this.btnEMSRun.Text = "确定";
             this.btnEMSRun.UseVisualStyleBackColor = true;
             this.btnEMSRun.Click += new System.EventHandler(this.btnEMSRun_Click);
+            // 
+            // tcbEMSstatus
+            // 
+            this.tcbEMSstatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbEMSstatus.CenterShow = true;
+            this.tcbEMSstatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbEMSstatus.ForeColor = System.Drawing.Color.White;
+            this.tcbEMSstatus.Items = new string[] {
+        "测试模式",
+        "运行模式"};
+            this.tcbEMSstatus.Location = new System.Drawing.Point(285, 91);
+            this.tcbEMSstatus.Name = "tcbEMSstatus";
+            this.tcbEMSstatus.SelectItemIndex = 0;
+            this.tcbEMSstatus.Size = new System.Drawing.Size(153, 32);
+            this.tcbEMSstatus.strText = "测试模式";
+            this.tcbEMSstatus.TabIndex = 65;
+            this.tcbEMSstatus.Value = 0;
             // 
             // btnTest
             // 
@@ -451,6 +503,24 @@ namespace EMS
             this.btnPCSErrorClean.UseVisualStyleBackColor = true;
             this.btnPCSErrorClean.Click += new System.EventHandler(this.btnPCSErrorClean_Click);
             // 
+            // tcbSYSModel
+            // 
+            this.tcbSYSModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbSYSModel.CenterShow = true;
+            this.tcbSYSModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbSYSModel.ForeColor = System.Drawing.Color.White;
+            this.tcbSYSModel.Items = new string[] {
+        "手工模式",
+        "预设策略",
+        "网络控制"};
+            this.tcbSYSModel.Location = new System.Drawing.Point(145, 29);
+            this.tcbSYSModel.Name = "tcbSYSModel";
+            this.tcbSYSModel.SelectItemIndex = 0;
+            this.tcbSYSModel.Size = new System.Drawing.Size(187, 32);
+            this.tcbSYSModel.strText = "手工模式";
+            this.tcbSYSModel.TabIndex = 23;
+            this.tcbSYSModel.Value = 0;
+            // 
             // btnPCSOff
             // 
             this.btnPCSOff.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
@@ -507,118 +577,6 @@ namespace EMS
             this.gb.TabStop = false;
             this.gb.Text = "手动模式";
             // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label24.Location = new System.Drawing.Point(261, 44);
-            this.label24.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(66, 19);
-            this.label24.TabIndex = 52;
-            this.label24.Text = "充放电";
-            // 
-            // lablPCSwaValue2
-            // 
-            this.lablPCSwaValue2.AutoSize = true;
-            this.lablPCSwaValue2.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lablPCSwaValue2.Location = new System.Drawing.Point(725, 43);
-            this.lablPCSwaValue2.Name = "lablPCSwaValue2";
-            this.lablPCSwaValue2.Size = new System.Drawing.Size(29, 19);
-            this.lablPCSwaValue2.TabIndex = 49;
-            this.lablPCSwaValue2.Text = "Kw";
-            // 
-            // label36
-            // 
-            this.label36.AutoSize = true;
-            this.label36.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label36.Location = new System.Drawing.Point(10, 44);
-            this.label36.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(77, 19);
-            this.label36.TabIndex = 46;
-            this.label36.Text = "PCS设置";
-            // 
-            // labPCSwaValue
-            // 
-            this.labPCSwaValue.AutoSize = true;
-            this.labPCSwaValue.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.labPCSwaValue.Location = new System.Drawing.Point(468, 43);
-            this.labPCSwaValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labPCSwaValue.Name = "labPCSwaValue";
-            this.labPCSwaValue.Size = new System.Drawing.Size(96, 19);
-            this.labPCSwaValue.TabIndex = 45;
-            this.labPCSwaValue.Text = "PCS设置值";
-            // 
-            // tcbtest
-            // 
-            this.tcbtest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbtest.CenterShow = true;
-            this.tcbtest.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbtest.ForeColor = System.Drawing.Color.White;
-            this.tcbtest.Items = new string[] {
-        "test1",
-        "test2"};
-            this.tcbtest.Location = new System.Drawing.Point(6, 91);
-            this.tcbtest.Name = "tcbtest";
-            this.tcbtest.SelectItemIndex = 0;
-            this.tcbtest.Size = new System.Drawing.Size(153, 32);
-            this.tcbtest.strText = "test1";
-            this.tcbtest.TabIndex = 70;
-            this.tcbtest.Value = 0;
-            // 
-            // tcbConnectStatus
-            // 
-            this.tcbConnectStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbConnectStatus.CenterShow = true;
-            this.tcbConnectStatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbConnectStatus.ForeColor = System.Drawing.Color.White;
-            this.tcbConnectStatus.Items = new string[] {
-        "485",
-        "tcp"};
-            this.tcbConnectStatus.Location = new System.Drawing.Point(550, 91);
-            this.tcbConnectStatus.Name = "tcbConnectStatus";
-            this.tcbConnectStatus.SelectItemIndex = 0;
-            this.tcbConnectStatus.Size = new System.Drawing.Size(153, 32);
-            this.tcbConnectStatus.strText = "485";
-            this.tcbConnectStatus.TabIndex = 67;
-            this.tcbConnectStatus.Value = 485;
-            // 
-            // tcbEMSstatus
-            // 
-            this.tcbEMSstatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbEMSstatus.CenterShow = true;
-            this.tcbEMSstatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbEMSstatus.ForeColor = System.Drawing.Color.White;
-            this.tcbEMSstatus.Items = new string[] {
-        "测试模式",
-        "运行模式"};
-            this.tcbEMSstatus.Location = new System.Drawing.Point(285, 91);
-            this.tcbEMSstatus.Name = "tcbEMSstatus";
-            this.tcbEMSstatus.SelectItemIndex = 0;
-            this.tcbEMSstatus.Size = new System.Drawing.Size(153, 32);
-            this.tcbEMSstatus.strText = "测试模式";
-            this.tcbEMSstatus.TabIndex = 65;
-            this.tcbEMSstatus.Value = 0;
-            // 
-            // tcbSYSModel
-            // 
-            this.tcbSYSModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbSYSModel.CenterShow = true;
-            this.tcbSYSModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbSYSModel.ForeColor = System.Drawing.Color.White;
-            this.tcbSYSModel.Items = new string[] {
-        "手工模式",
-        "预设策略",
-        "网络控制"};
-            this.tcbSYSModel.Location = new System.Drawing.Point(145, 29);
-            this.tcbSYSModel.Name = "tcbSYSModel";
-            this.tcbSYSModel.SelectItemIndex = 0;
-            this.tcbSYSModel.Size = new System.Drawing.Size(187, 32);
-            this.tcbSYSModel.strText = "手工模式";
-            this.tcbSYSModel.TabIndex = 23;
-            this.tcbSYSModel.Value = 0;
-            // 
             // tcbPCSMode
             // 
             this.tcbPCSMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
@@ -654,6 +612,17 @@ namespace EMS
             this.tnePCSwaValue.Value = 0;
             this.tnePCSwaValue.ValueStep = 1;
             // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label24.Location = new System.Drawing.Point(261, 44);
+            this.label24.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(66, 19);
+            this.label24.TabIndex = 52;
+            this.label24.Text = "充放电";
+            // 
             // tcbPCSType
             // 
             this.tcbPCSType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
@@ -674,6 +643,38 @@ namespace EMS
             this.tcbPCSType.strText = "待机";
             this.tcbPCSType.TabIndex = 50;
             this.tcbPCSType.Value = 0;
+            // 
+            // lablPCSwaValue2
+            // 
+            this.lablPCSwaValue2.AutoSize = true;
+            this.lablPCSwaValue2.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lablPCSwaValue2.Location = new System.Drawing.Point(725, 43);
+            this.lablPCSwaValue2.Name = "lablPCSwaValue2";
+            this.lablPCSwaValue2.Size = new System.Drawing.Size(29, 19);
+            this.lablPCSwaValue2.TabIndex = 49;
+            this.lablPCSwaValue2.Text = "Kw";
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label36.Location = new System.Drawing.Point(10, 44);
+            this.label36.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(77, 19);
+            this.label36.TabIndex = 46;
+            this.label36.Text = "PCS设置";
+            // 
+            // labPCSwaValue
+            // 
+            this.labPCSwaValue.AutoSize = true;
+            this.labPCSwaValue.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labPCSwaValue.Location = new System.Drawing.Point(468, 43);
+            this.labPCSwaValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labPCSwaValue.Name = "labPCSwaValue";
+            this.labPCSwaValue.Size = new System.Drawing.Size(96, 19);
+            this.labPCSwaValue.TabIndex = 45;
+            this.labPCSwaValue.Text = "PCS设置值";
             // 
             // frmControl
             // 

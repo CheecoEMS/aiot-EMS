@@ -1082,10 +1082,8 @@ namespace EMS
                     }
                 }
 
-                //if (frmMain.TacticsList.LoadFromMySQL())
                 if (frmMain.TacticsList.LoadFromMySQL())
                 {
-                    frmMain.ShowShedule2Char(false);
                     frmMain.TacticsList.ActiveIndex = -1;
                     result  = true;
                 }
@@ -1158,7 +1156,6 @@ namespace EMS
                 //更新策略
                 if (result)
                 {
-                    frmSet.SaveSet2File();
                     frmMain.TacticsList.LoadJFPGFromSQL();
                     if (aIsFileData)
                         File.Delete(strDataFile);

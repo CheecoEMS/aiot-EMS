@@ -41,6 +41,7 @@ namespace EMS
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
+        
         private static ILog log = LogManager.GetLogger("TacticsClass");
 
 
@@ -218,15 +219,7 @@ namespace EMS
         /// 
         public void CheckTacticsOnce()
         {
-            DateTime now;
             TacticsClass oneTactics = null;
-
-            if (TacticsList.Count == 0)
-            {
-                LoadFromMySQL();
-            }
-
-            now = DateTime.Now;
 
             if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
             {
@@ -235,6 +228,14 @@ namespace EMS
                     TacticsOn = true;
                 return;
             }
+
+            //开启策略，若EMS无策略则重新读取数据库
+            if (TacticsList.Count == 0)
+            {
+                LoadFromMySQL();
+            }
+
+            DateTime now = DateTime.Now;
 
             //没有策略的执行策略就要停止输出
             if (TacticsList.Count == 0)
@@ -252,7 +253,7 @@ namespace EMS
 
 
             //判断时间所在的区间和工作内容
-            int i = 0;
+            int i;
             for (i = 0; i < TacticsList.Count; i++)
             {
                 oneTactics = TacticsList[i];

@@ -1702,7 +1702,7 @@ namespace EMS
             this.btnFlash3.Name = "btnFlash3";
             this.btnFlash3.Size = new System.Drawing.Size(88, 44);
             this.btnFlash3.TabIndex = 21;
-            this.btnFlash3.Text = "刷新";
+            this.btnFlash3.Text = "更新";
             this.btnFlash3.UseVisualStyleBackColor = false;
             this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
             // 
