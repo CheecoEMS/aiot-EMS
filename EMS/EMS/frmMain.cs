@@ -743,14 +743,14 @@ namespace EMS
         static void Cloud_timerCallback(Object state)
         {
             // 定时器触发时要执行的代码  
-            if (frmSet.config.EMSstatus == 1)
-            {
+            //if (frmSet.config.EMSstatus == 1)
+            //{
                 DateTime tempTime = DateTime.Now;
                 //采集数据保存在数据库中
                 frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
                 //采集数据上传云端
                 frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
-            }
+            //}
 
             //make json
 /*            DateTime tempTimeq = DateTime.Now;
