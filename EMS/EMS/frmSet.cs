@@ -1197,6 +1197,7 @@ namespace EMS
                 tcbUseBalaTactics.SetValue(PutTchCheck(config.UseBalaTactics));
                 tcbiPCSfactory.SetSelectItemIndex(config.iPCSfactory);
                 tcbPCSGridModel_OnValueChange(null);
+                tcbGPIO.SetSelectItemIndex((config.GPIOSelect==1)? 1:0);// 0、2：风冷 1：液冷
                 tcbBMSVer.SetSelectItemIndex(config.BMSVerb);
                 tcbPCSForceRun.SetValue(PutTchCheck(config.PCSForceRun));
                 //10.25
@@ -2246,5 +2247,10 @@ namespace EMS
             }
         }
 
+
+        private void touchCombox1_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
