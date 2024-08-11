@@ -402,7 +402,8 @@ namespace EMS
         public static bool Set_Config()
         {
             string astrSQL = "UPDATE config SET "
-                        + "Open104 = '" + frmSet.config.Open104.ToString()
+                        + "SysID = '" + frmSet.config.SysID 
+                        + "', Open104 = '" + frmSet.config.Open104.ToString()
                         + "', NetTick = '" + frmSet.config.NetTick.ToString()
                         + "', SysName = '" + frmSet.config.SysName
                         + "', SysPower = '" + frmSet.config.SysPower.ToString()
@@ -430,7 +431,7 @@ namespace EMS
                         + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
                         + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
                         + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
-                        + "' WHERE SysID = '" + frmSet.config.SysID + "';";
+                        +"';";
 
             bool result = false;
 
