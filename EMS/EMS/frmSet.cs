@@ -1448,11 +1448,12 @@ namespace EMS
             "delete from fire where rTime<'"+astrData+"'",
             //"delete from log where rTime<'"+astrData+"'", 暂时注释
             "delete from pcs where rTime<'"+astrData+"'",
-            "delete from pncontrolerwhere rTime<'"+astrData+"'",
+            "delete from pncontroler where rTime<'"+astrData+"'",
             "delete from profit where rTime<'"+astrData+"'",
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
-            "delete from warningwhere rTime<'"+astrData+"'"
+            "delete from warningwhere rTime<'"+astrData+"'",
+            "delete from liquidcool rTime<'"+astrData+"'"
             //,"delete from chargeinform rTime<'"+astrData+"'"
             };
             foreach (string astrSQl in strSQL)
@@ -1971,7 +1972,9 @@ namespace EMS
             "delete from profit; ",
             // "delete from tactics; ",
             "delete from tempcontrol; ",
-            "delete from warning; "};
+            "delete from warning; ",
+            "delete from liquidcool; "
+            };
             foreach (string astrSQl in strSQL)
             {
                 DBConnection.ExecSQL(astrSQl);

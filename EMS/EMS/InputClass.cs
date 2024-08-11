@@ -6675,8 +6675,8 @@ namespace EMS
                 if (Fire != null)
                     Fire.Save2DataSource(tempDate);
                 //UPS
-                if (UPS != null)
-                    UPS.Save2DataSource(tempDate);
+/*                if (UPS != null)
+                    UPS.Save2DataSource(tempDate);*/
                 //其他 
             }
             catch (Exception ex)
