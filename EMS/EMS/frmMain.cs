@@ -888,11 +888,8 @@ namespace EMS
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SysThreathStoped = true;
-            //关闭云链接
-            TCPCloud.CloseConnect();
             //关闭gpio
             frmSet.GPIOClose();
-           // System.Environment.Exit(0);
         }
 
         /// <summary>
