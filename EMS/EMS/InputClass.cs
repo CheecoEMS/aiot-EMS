@@ -4914,8 +4914,8 @@ namespace EMS
               
             } 
         }
-        //正接线柱的温度
-        private void UpdatePTemp(double[] aCellTemps, string aData)
+
+        private void UpdatePTemp_168(double[] aCellTemps, string aData)
         {
             double dTemp;
             for (int i = 0; i < 12; i++)
@@ -4925,8 +4925,60 @@ namespace EMS
                 aCellTemps[i * 20 + 14] = Math.Round(dTemp, 1);
             }
         }
-        //负接线柱的温度
-        private void UpdateOTemp(double[] aCellTemps, string aData)
+        private void UpdatePTemp_160(double[] aCellTemps, string aData)
+        {
+            double dTemp;
+            for (int i = 0; i < 5; i++)
+            {
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 28] = Math.Round(dTemp, 1);
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 30] = Math.Round(dTemp, 1);
+            }
+        }
+
+
+        //正接线柱的温度
+        private void UpdatePTemp(double[] aCellTemps, string aData)
+        {
+            switch (frmSet.config.BMSVerb)
+            {
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdatePTemp_168(aCellTemps, aData);
+                            break;
+                        case 160:
+                            UpdatePTemp_160(aCellTemps, aData);
+                            break;
+                        default:
+                            {
+                                UpdatePTemp_168(aCellTemps, aData);
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        private void UpdateOTemp_160(double[] aCellTemps, string aData)
+        {
+            double dTemp;
+            for (int i = 0; i < 5; i++)
+            {
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 29] = Math.Round(dTemp, 1);
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 31] = Math.Round(dTemp, 1);
+            }
+
+        }
+        private void UpdateOTemp_168(double[] aCellTemps, string aData)
         {
             double dTemp;
             for (int i = 0; i < 12; i++)
@@ -4934,6 +4986,33 @@ namespace EMS
                 dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
                 aData = aData.Substring(4, aData.Length - 4);
                 aCellTemps[i * 20 + 15] = Math.Round(dTemp, 1);
+            }
+
+        }
+
+        //负接线柱的温度
+        private void UpdateOTemp(double[] aCellTemps, string aData)
+        {
+
+            switch (frmSet.config.BMSVerb)
+            {
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdateOTemp_168(aCellTemps, aData);
+                            break;
+                        case 160:
+                            UpdateOTemp_160(aCellTemps, aData);
+                            break;
+                        default:
+                            {
+                                UpdateOTemp_168(aCellTemps, aData);
+                            }
+                            break;
+                    }
+                break;
+                  
             }
         }
 
@@ -5200,30 +5279,14 @@ namespace EMS
             if (GetSysData(46, ref strTemp))
             {
                 bPrepared = true;
-                switch (frmSet.config.CellTNum)
-                {
-                    case 168:
-                        UpdatePTemp(CellTemps, strTemp);
-                        break;
-                    case 160:
-                        UpdatePTemp_liquidcool(CellTemps, strTemp);
-                        break;
-                }
+                UpdatePTemp(CellTemps, strTemp);
+
             }
             //负接线柱温度
             if (GetSysData(47, ref strTemp))
             {
                 bPrepared = true;
-                switch (frmSet.config.CellTNum) 
-                {
-                    case 168:
-                        UpdateOTemp(CellTemps, strTemp);
-                        break;
-                    case 140:
-                        UpdateOTemp_liquidcool(CellTemps, strTemp);
-                        break;
-                }                
-
+                UpdateOTemp(CellTemps, strTemp);
             }
 
             //电池信息读取
