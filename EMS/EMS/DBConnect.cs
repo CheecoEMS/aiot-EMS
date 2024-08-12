@@ -1801,7 +1801,7 @@ namespace EMS
                     "profit", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
-                        new Column { Name = "rTime", Type = "date", IsNullable = true, Default = "NULL", Comment = "日期" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "日期" },
                         new Column { Name = "profit", Type = "float", IsNullable = true, Default = "NULL", Comment = "收益" },
                         new Column { Name = "inPower", Type = "float", IsNullable = true, Default = "NULL", Comment = "充电量kwh" },
                         new Column { Name = "auxkwhAll", Type = "float", IsNullable = true, Default = "NULL", Comment = "辅助电用总量" },
@@ -1909,7 +1909,7 @@ namespace EMS
                         new Column { Name = "rTimeLength", Type = "int", IsNullable = true, Key = "" , Comment = "响应时长（秒）"},
                         new Column { Name = "rOutPower", Type = "float", IsNullable = true, Key = "" , Comment = "放电电量（kwh）"},
                         new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" , Comment = "充电电量（kwh)"},
-                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"},
+                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"}
                     }
                 },
                 {
