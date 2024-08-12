@@ -2885,7 +2885,7 @@ namespace EMS
                 + Nukwh[0].ToString() + "','"
                 + AllUkva.ToString() + "','"
                 + AllNukva.ToString() + "','"
-                + AllAAkva.ToString() + "','"
+                + AllAAkva.ToString()
                 + "')"); //+"')");  
         }
     }
