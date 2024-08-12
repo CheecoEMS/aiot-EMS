@@ -1401,12 +1401,14 @@ namespace EMS
                         new Column { Name = "UseYunTactics", Type = "int", IsNullable = true, Key = ""  , Comment = "是否接收云策略"},
                         new Column { Name = "UseBalaTactics", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = ""  , Comment = "BMS版本"},
+                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = ""  , Comment = "BMS供应商版本"},
                         new Column { Name = "PCSForceRun", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = ""  , Comment = "EMS工作状态"},                     
                         new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = ""  , Comment = "IO口配置"},
                         new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主机IP地址" },
-                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" }
+                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" },
+                        new Column { Name = "CellVNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池电压数量" },
+                        new Column { Name = "CellTNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池温度数量" }
                     }
                 },
                 {

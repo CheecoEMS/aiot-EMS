@@ -376,16 +376,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
                 //5.15
                 frmMain.Selffrm.AllEquipment.init_LED();
-                //11.30 BMS区分风冷和液冷字段配置
-                if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 1;
-                }
-                else if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;
-                }
-
+                
                 //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
                 //DownData:向云上传JSON文件

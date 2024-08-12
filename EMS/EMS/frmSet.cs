@@ -331,7 +331,7 @@ namespace EMS
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus FROM config; ";
+                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum FROM config; ";
             try
             {
 
@@ -373,6 +373,8 @@ namespace EMS
                                 config.GPIOSelect = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
                                 config.MasterIp = rd.IsDBNull(27) ? "192.168.186.9" : rd.GetString(27);
                                 config.ConnectStatus = rd.IsDBNull(28) ? "485" : rd.GetString(28);
+                                config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
+                                config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
 
                                 result = true;
                             }
@@ -431,6 +433,8 @@ namespace EMS
                         + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
                         + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
                         + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
+                        + "', CellVNum = '" + frmSet.config.CellVNum.ToString()
+                        + "', CellTNum = '" + frmSet.config.CellTNum.ToString()
                         +"';";
 
             bool result = false;
@@ -2148,13 +2152,15 @@ namespace EMS
             public int UseYunTactics { get; set; } // bool
             public int UseBalaTactics { get; set; } // bool
             public int iPCSfactory { get; set; } // int
-            public int BMSVerb { get; set; } // int
+            public int BMSVerb { get; set; } // int   1：协能
             public int PCSForceRun { get; set; } // bool           
             public int EMSstatus { get; set; } // bool
             public int GPIOSelect { get; set; }
             public string MasterIp { get; set; }
             public string ConnectStatus { get; set; }
 
+            public int CellVNum { get; set; }
+            public int CellTNum { get; set; }
         }
 
         public class ComponentSettingsClass

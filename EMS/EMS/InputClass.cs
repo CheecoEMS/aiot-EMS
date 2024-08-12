@@ -4763,18 +4763,61 @@ namespace EMS
         }
 
 
-        private void UpdateCellTemp(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp(double[] aCellTemps, int Group, string aData)
         {
-
             switch (frmSet.config.BMSVerb)
             {
-                //case 0:
-                //     UpdateCellTemp0(aCellTemps, aStart, aData);
-                //    break;
-                //case 1:
-                default: 
-                    UpdateCellTemp1(aCellTemps, aStart, aData);
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                            }
+                            else if (Group == 2)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 120, aData);
+                            }
+                            break;
+                        case 160:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_160(aCellTemps, 0, aData);
+                            }
+                            else if (Group == 2)
+                            {
+                                UpdateCellTemp_160(aCellTemps, 144, aData);
+                            }
+                            break;
+                        
+                        default:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                            }
+                            else
+                            {
+                                UpdateCellTemp_168(aCellTemps, 120, aData);
+                            }
+                            break;
+                    }
                     break;
+                
+/*                default:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdateCellTemp_168(aCellTemps, 0, aData);
+                            break;
+                        case 140:
+
+                            break;
+                        default:
+                            UpdateCellTemp_168(aCellTemps, 0, aData);
+                            break;
+                    }
+                    break;*/
             }
         }
 
@@ -4856,7 +4899,7 @@ namespace EMS
         /// </summary>
         /// <param name="aCellTemps"></param>
         /// <param name="aData"></param>
-        private void UpdateCellTemp1(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp_168(double[] aCellTemps, int aStart, string aData)
         { 
             double dTemp;  
             for (int i = 0; i < 6; i++)
@@ -4938,7 +4981,7 @@ namespace EMS
 
             }
         }
-        private void UpdateCellTemp2_liquidcool(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp_160(double[] aCellTemps, int aStart, string aData)
         {
             double dTemp;
             for (int i = 0; i < 2; i++)
@@ -5157,12 +5200,12 @@ namespace EMS
             if (GetSysData(46, ref strTemp))
             {
                 bPrepared = true;
-                switch (BMStype)
+                switch (frmSet.config.CellTNum)
                 {
-                    case 1:
+                    case 168:
                         UpdatePTemp(CellTemps, strTemp);
                         break;
-                    case 2:
+                    case 160:
                         UpdatePTemp_liquidcool(CellTemps, strTemp);
                         break;
                 }
@@ -5171,12 +5214,12 @@ namespace EMS
             if (GetSysData(47, ref strTemp))
             {
                 bPrepared = true;
-                switch (BMStype) 
+                switch (frmSet.config.CellTNum) 
                 {
-                    case 1:
+                    case 168:
                         UpdateOTemp(CellTemps, strTemp);
                         break;
-                    case 2:
+                    case 140:
                         UpdateOTemp_liquidcool(CellTemps, strTemp);
                         break;
                 }                
@@ -5197,27 +5240,11 @@ namespace EMS
             //温度
             if (GetSysData(35, ref strTemp))
             {
-                switch (BMStype)
-                {
-                    case 1:
-                        UpdateCellTemp(CellTemps, 0, strTemp);
-                        break;
-                    case 2:
-                        UpdateCellTemp_liquidcool(CellTemps, 0, strTemp);
-                        break;
-                }
+                UpdateCellTemp(CellTemps, 1, strTemp);
             }
             if (GetSysData(36, ref strTemp))
             {
-                switch (BMStype)
-                {
-                    case 1:
-                        UpdateCellTemp(CellTemps, 120, strTemp);
-                        break;
-                    case 2:
-                        UpdateCellTemp2_liquidcool(CellTemps, 144, strTemp);
-                        break;
-                }
+                UpdateCellTemp(CellTemps, 2, strTemp);
             }
 
             //单独区分接触器状态
