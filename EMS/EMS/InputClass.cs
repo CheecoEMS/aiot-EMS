@@ -2320,7 +2320,7 @@ namespace EMS
             //基本信息
             DBConnection.ExecSQL("insert LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
                 + "InwaterPressure,OutwaterPressure,Error1，Error2)value('"
-                + time.ToString("yyyy-M-d H:m:s") + "','"
+                + arDate + "','"
                 + state.ToString() + "','"
                 + OutwaterTemp.ToString() + "','"
                 + InwaterTemp.ToString() + "','"
@@ -5665,7 +5665,7 @@ namespace EMS
             //基本信息
             DBConnection.ExecSQL("insert tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
                 + "evaporationTemp,fanControl,error)value('"
-                + time.ToString("yyyy-M-d H:m:s") + "','"
+                + arDate + "','"
                 + state.ToString() + "','"
                 + indoorTemp.ToString() + "','"
                 + indoorHumidity.ToString() + "','"
