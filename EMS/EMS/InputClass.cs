@@ -2879,7 +2879,7 @@ namespace EMS
         {
             //return;
             //基本信息Gridkva,
-            DBConnection.ExecSQL("insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva,iot_code)"
+            DBConnection.ExecSQL("insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva)"
                 + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + Ukwh[0].ToString() + "','"
                 + Nukwh[0].ToString() + "','"
