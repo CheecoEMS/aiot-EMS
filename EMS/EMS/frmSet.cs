@@ -1453,8 +1453,8 @@ namespace EMS
             "delete from profit where rTime<'"+astrData+"'",
             "delete from tactics where rTime<'"+astrData+"'",
             "delete from tempcontrol where rTime<'"+astrData+"'",
-            "delete from warningwhere rTime<'"+astrData+"'",
-            "delete from liquidcool rTime<'"+astrData+"'"
+            "delete from warning where rTime<'"+astrData+"'",
+            "delete from liquidcool where rTime<'"+astrData+"'"
             //,"delete from chargeinform rTime<'"+astrData+"'"
             };
             foreach (string astrSQl in strSQL)
