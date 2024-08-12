@@ -1898,8 +1898,8 @@ namespace EMS
                 {
                     "pncontroler", new List<Column>
                     {
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" , Comment = "调度编号"},
                         new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" , Comment = "下达时间"},
                         new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "命令模式"},

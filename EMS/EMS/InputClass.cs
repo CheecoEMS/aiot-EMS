@@ -2318,8 +2318,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
-                + "InwaterPressure,OutwaterPressure,Error1，Error2)value('"
+            DBConnection.ExecSQL("INSERT INTO LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
+                + "InwaterPressure,OutwaterPressure,Error1，Error2)VALUES ('"
                 + arDate + "','"
                 + state.ToString() + "','"
                 + OutwaterTemp.ToString() + "','"
@@ -2368,8 +2368,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert ups (rTime,V,A )"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+            DBConnection.ExecSQL("INSERT INTO ups (rTime,V,A )"
+                + "VALUES ('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + v.ToString() + "','"
                 + a.ToString() + "','"
                 +  "')");
@@ -2413,9 +2413,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert fire (rTime,firestate,temp, humidity, waterlogging1,"
+            DBConnection.ExecSQL("INSERT INTO  fire (rTime,firestate,temp, humidity, waterlogging1,"
                 + "waterlogging2,smoke,CO )"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+                + "VALUES ('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + FireState.ToString() + "','"
                  + Temp.ToString() + "','"
                   + Humidity.ToString() + "','"
@@ -2879,8 +2879,8 @@ namespace EMS
         {
             //return;
             //基本信息Gridkva,
-            DBConnection.ExecSQL("insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva)"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+            DBConnection.ExecSQL("INSERT  INTO elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva)"
+                + "VALUES('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + Ukwh[0].ToString() + "','"
                 + Nukwh[0].ToString() + "','"
                 + AllUkva.ToString() + "','"
@@ -3203,7 +3203,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter2 (rTime, "
+            DBConnection.ExecSQL("INSERT INTO elemeter2 (rTime, "
                  + "Ukwh,UkwhJ,UkwhF,UkwhP,UkwhG,"
                  + "PUkwh,PUkwhJ,PUkwhF,PUkwhP,PUkwhG,"
                  + "OUkwh,OUkwhJ,OUkwhF,OUkwhP,OUkwhG,"
@@ -3212,9 +3212,9 @@ namespace EMS
                  + "ONukwh, ONukwhJ,ONukwhF,ONukwhP,ONukwhG,"
                 + "AllUkva, AUkva, BUkva, CUkva,   "
                 + "AllNukva,  ANukva, BNukva,  CNukva, "
-                + " AllAAkva, AAkva, BAkva, CAkva," +
-                " Aa,Ba,Ca, Akv, Bkv,Ckv, ABkv,  BCkv,  CAkv, AllPFoctor, APFoctor,  BPFoctor, CPFoctor, HZ, "
-                + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)value( '"
+                + " AllAAkva, AAkva, BAkva, CAkva," 
+                + " Aa,Ba,Ca, Akv, Bkv,Ckv, ABkv,  BCkv,  CAkv, AllPFoctor, APFoctor,  BPFoctor, CPFoctor, HZ, "
+                + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)VALUES( '"
                 + arDate + "','"//rTime.ToString("yyyy-M-d H:m:s")
                 + Ukwh[0].ToString() + "','" + Ukwh[1].ToString() + "','" + Ukwh[2].ToString() + "','" + Ukwh[3].ToString() + "','" + Ukwh[4].ToString() + "','"
                 + PUkwh[0].ToString() + "','" + PUkwh[1].ToString() + "','" + PUkwh[2].ToString() + "','" + PUkwh[3].ToString() + "','" + PUkwh[4].ToString() + "','"
@@ -3366,8 +3366,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
-                + "Ukva,Nukva,Akva,V,A)value('" + arDate + "','"// rTime.ToString("yyyy-M-d H:m:s")
+            DBConnection.ExecSQL("INSERT INTO elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
+                + "Ukva,Nukva,Akva,V,A)VALUES('" + arDate + "','"// rTime.ToString("yyyy-M-d H:m:s")
                  + Akwh[0].ToString() + "','" + Akwh[1].ToString() + "','" + Akwh[2].ToString() + "','" + Akwh[3].ToString() + "','"
                 + Akwh[4].ToString() + "','" + UKva.ToString() + "','" + NUKva.ToString() + "','" + AKva.ToString() + "','"
                 + Lv.ToString() + "','" + La.ToString() + "')");
@@ -4480,12 +4480,12 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
+            DBConnection.ExecSQL("INSERT INTO pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
                 + " aUkwa,  bUkwa,  cUkwa,  allUkwa,   aNUkwr, bNUkwr,   cNUkwr, allNUkwr, "
                 + " aAkwa,  bAkwa,  cAkwa,  allAkwa, aPFactor, bPFactor,   cPFactor,  allPFactor,"
                 + " inputPower, inputV,  inputA, PCSTemp, "
                 + " ACInkwh,ACOutkwh,DCInkwh,DCOutkwh,"
-                + "Error1,Error2,Error3,Error4,Error7 )value('"
+                + "Error1,Error2,Error3,Error4,Error7 )VALUES('"
                  + arDate + "','" + State.ToString() + "','"  // rTime.ToString("yyyy-M-d H:m:s")
                  + aV.ToString() + "','" + bV.ToString() + "','" + cV.ToString() + "','"
                  + aA.ToString() + "','" + bA.ToString() + "','" + cA.ToString() + "','" + hz.ToString() + "','"
@@ -5409,9 +5409,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
+            DBConnection.ExecSQL("INSERT INTO battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
                 + " cellMaxV,   cellIDMaxV, cellMinV,  cellIDMinV,   cellMaxTemp,  cellIDMaxtemp,  averageV,averageTemp  "
-                + " )value('" + arDate + "','" //rTime.ToString("yyyy-M-d H:m:s") 
+                + " )VALUES('" + arDate + "','" //rTime.ToString("yyyy-M-d H:m:s") 
                 + batteryID.ToString() + "','" + v.ToString() + "','" + a.ToString() + "','" + soc.ToString() + "','"
                 + soh.ToString() + "','" + insulationR.ToString() + "','" + positiveR.ToString() + "','"
                 + negativeR.ToString() + "','" + cellMaxV.ToString() + "','" + cellIDMaxV.ToString() + "','"
@@ -5663,8 +5663,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
-                + "evaporationTemp,fanControl,error)value('"
+            DBConnection.ExecSQL("INSERT INTO tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
+                + "evaporationTemp,fanControl,error)VALUES('"
                 + arDate + "','"
                 + state.ToString() + "','"
                 + indoorTemp.ToString() + "','"
