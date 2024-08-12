@@ -1466,8 +1466,7 @@ namespace EMS
                         new Column { Name = "AllNukva", Type = "float", IsNullable = true, Key = "", Comment = "总无用功率" },
                         new Column { Name = "AllAAkva", Type = "float", IsNullable = true, Key = "", Comment = "总视在用功率" },
                         new Column { Name = "AllPFoctor", Type = "float", IsNullable = true, Key = "", Comment = "总功率因数" },
-                        new Column { Name = "HZ", Type = "float", IsNullable = true, Key = "", Comment = "频率" },
-                        new Column { Name = "iot_code", Type = "varchar(10)", IsNullable = true, Key = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci", Comment = "iot_code" }
+                        new Column { Name = "HZ", Type = "float", IsNullable = true, Key = "", Comment = "频率" }
                     }
                 },
                 {
@@ -1927,7 +1926,7 @@ namespace EMS
                         new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
-                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "记录三级告警标志位" }
+                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" }
                     }
                 }
                 // Add more tables as needed

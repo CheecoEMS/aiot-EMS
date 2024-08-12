@@ -2886,7 +2886,7 @@ namespace EMS
                 + AllUkva.ToString() + "','"
                 + AllNukva.ToString() + "','"
                 + AllAAkva.ToString() + "','"
-                + iot_code + "')"); //+"')");  
+                + "')"); //+"')");  
         }
     }
 
