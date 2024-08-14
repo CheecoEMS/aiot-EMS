@@ -485,6 +485,8 @@ namespace EMS
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
                     frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
+                    frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+                    frmMain.Selffrm.Slave104.IEC104_Init();
                 }
 
                 //使用TCP/IP通讯方式

@@ -19,37 +19,50 @@ using M2Mqtt.Internal;
 using log4net;
 using System.Collections.Generic;
 using System.Collections;
+using System.ComponentModel;
 
 public struct APCI
 {    // U-Format
     public byte start;    // 起始字节
     public byte len;      // 帧长度
-    public byte field1;   // 控制域1-4
-    public byte field2;
-    public byte field3;
-    public byte field4;
-};
-
-public struct ASDU_header
-{                 // 数据单元标识
-    byte type;             // 类型标识
-    byte qual;             // 可变结构限定词
-    byte tx_cause_1;       // 传送原因
-    byte tx_cause_2;
-    byte commom_asdu_1;    // 公共地址
-    byte commom_asdu_2;
+    public byte TX_field1;   // 控制域1-4 发送序号
+    public byte TX_field2;
+    public byte RX_field3;   //接收序号
+    public byte RX_field4;
 };
 
 public struct ASDU
-{
-    ASDU_header  header;      // 数据单元标识
-	byte[] data ;   // 信息体
+{                 // 数据单元标识
+
+    public byte function;          // 类型标识
+    public byte qual;              // 可变结构限定词
+    public byte tx_cause_1;        // 传送原因
+    public byte tx_cause_2;
+    public byte commom_asdu_1;     // 公共地址
+    public byte commom_asdu_2;
+
+    public string Object_Address_1;  // 信息对象地址
+    public string Object_Address_2;
+    public string Object_Address_3;
+    public byte[] data;            // 信息体
 };
 
 public struct APDU
 {
-     APCI apci;
-	 ASDU asdu;
+    public APCI apci;
+    public ASDU asdu;
+    public bool Isconnect;            // 104通信连接标志
+
+    //public APCI perv_apci;
+    //public ASDU perv_asdu;
+    public bool[] YX_rawdata;            // 遥信 数据
+    public float[] YC_rawdata;            // 遥测 原数据
+    public bool[] YX_perv_rawdata;            // 原数据
+    public float[] YC_perv_rawdata;            // 原数据
+
+    public int count_test;            // 测试值
+    public bool bool_test;            // 测试值
+
 };
 
 namespace IEC104
@@ -74,6 +87,10 @@ namespace IEC104
 
     public class CIEC104Slave
     {
+        public delegate void OnReceive104DataEvent(object sender, PropertyChangedEventArgs e);//建立事件委托
+        public event OnReceive104DataEvent Receive104DataEvent;//收到数据的事件
+
+        static ManualResetEventSlim IEC104Send_Event = new ManualResetEventSlim(true);
         /*1.由于字节1和字节3的最低位固定为0，不用于构成序号，所以在计算序号时，要先转换成十进制数值，再除以2；
 
         2.由于低位字节在前，高位字节在后，所以计算时要先做颠倒；*/
@@ -88,23 +105,62 @@ namespace IEC104
 
         private static ILog log = LogManager.GetLogger("IEC104");
 
+        public static APDU app;
 
+
+        private int _ErrorState_104;
+        public int ErrorState_104 { get { return _ErrorState_104; } set { if (_ErrorState_104 != value) { _ErrorState_104 = value; OnPropertyChanged(); } } }
+        private int _RunState_104;
+        public int RunState_104 { get { return _RunState_104; } set { if (_RunState_104 != value) { _RunState_104 = value; OnPropertyChanged(); } } }
+        
+        private int _EState_104;
+        public int EState_104 { get { return _EState_104; } set { if (_EState_104 != value) { _EState_104 = value; OnPropertyChanged(); } } }
+       
+
+        public  bool HostStart_104 { get { return _HostStart_104; } set { if (_HostStart_104 != value) {  _HostStart_104 = value; CIEC104Slave.ReturnSoleYXData(0X1E); } } }
+        private  bool _HostStart_104;
+
+        public  double  aC_104 { get { return _aC_104; } set { if (_aC_104 != value) {_aC_104 = value;   } } }
+        private  double _aC_104;
+
+        public  double PCSKVA_104 { get { return _PCSKVA_104; } set { if (_PCSKVA_104 != value) { _PCSKVA_104 = value;  } } }
+        private  double _PCSKVA_104;
+
+        public  double SOC_104 { get { return _SOC_104; } set { if (_SOC_104 != value) { _SOC_104 = value;  } } }
+        private  double _SOC_104;
+        public  double ChargeAmount_104 { get { return _ChargeAmount_104; } set { if (_ChargeAmount_104 != value) { _ChargeAmount_104 = value; } } }
+        private  double _ChargeAmount_104;
+
+
+        public  double DisChargeAmount_104 { get { return _DisChargeAmount_104; } set { if (_DisChargeAmount_104 != value) { _DisChargeAmount_104 = value;  } } }
+        private static double _DisChargeAmount_104;
+        public  void IEC104_Init()
+        {
+            app.Isconnect = false;
+            app.apci.start = 100;
+            app.YC_rawdata = new float[25];
+            app.YC_perv_rawdata = new float[25];
+            app.YX_rawdata = new bool[25];
+            app.YX_perv_rawdata = new bool[25];
+            app.asdu.commom_asdu_1 = 0xFF;
+            app.asdu.commom_asdu_2 = 0xFF;
+        }
         /********************总召唤全部流程*******************************/
         public static void NAIec104InterrogationAll(byte[] TX_bytes, byte[] RX_bytes)
         {
             //传入参数： TX_bytes：从站序号  RX_bytes：主站序号
             //更新主站
 
-            Build_SR_num(RX_bytes);
+            Build_R_num(RX_bytes);
             InterrogationConfirm(TX_bytes, RX_bytes); //发送帧的镜像，除传送原因不同
 
-            Build_SR_num(TX_bytes);
+            Build_T_num(TX_bytes);
             ReturnAllYCData(TX_bytes, RX_bytes);
 
-            Build_SR_num(TX_bytes);
+            Build_T_num(TX_bytes);
             ReturnAllYXData(TX_bytes, RX_bytes);
 
-            Build_SR_num(TX_bytes);
+            Build_T_num(TX_bytes);
             InterrogationComplete(TX_bytes, RX_bytes);
         }
 
@@ -140,6 +196,11 @@ namespace IEC104
             //string hexString = BitConverter.ToString(message);
             
             frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"总召唤确认 ++{temp:x}");
 
             //return message;
         }
@@ -181,6 +242,11 @@ namespace IEC104
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"总召唤结束 ++{temp:x}");
 
             return message;
 
@@ -238,7 +304,7 @@ namespace IEC104
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message);
-
+            app.Isconnect = true;
 
         }
         /**************************获取发送序号*******************/
@@ -261,9 +327,23 @@ namespace IEC104
         {
             //序号递增+1
             int num = 0;
-            num = ( (Convert.ToInt32(bytes[0])+Convert.ToInt32(bytes[1])*16*16 )/2 + 1)*2;
+            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16 ) / 2 + 1) * 2;
             Array.Copy(BitConverter.GetBytes(num),0,bytes,0,2);
 
+        }
+        public static void Build_R_num(byte[] bytes)
+        {
+            int num = 0;
+            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16) / 2 + 1) * 2;
+            Array.Copy(BitConverter.GetBytes(num), 0, bytes, 0, 2);
+            app.apci.RX_field3 = bytes[0];
+            app.apci.RX_field4 = bytes[1];
+        }
+        public static void Build_T_num(byte[] bytes)
+        {
+            int num = 0;
+            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16) / 2 + 1) * 2;
+            Array.Copy(BitConverter.GetBytes(num), 0, bytes, 0, 2);
         }
         /******************************************************************/
         /*                          解析I帧                               */
@@ -285,7 +365,7 @@ namespace IEC104
                     if (msg[8] == 5 && msg[9] == 0)
                     {
                         //更新主站的序号
-                        Build_SR_num(TX_bytes);
+                        Build_T_num(TX_bytes);
                         ReturnAllYXData(RX_bytes, TX_bytes);
                     }
                     break;
@@ -295,7 +375,7 @@ namespace IEC104
                     if (msg[8] == 5 && msg[9] == 0) //(遥信被请求，遥测被请求)
                     {
                         //更新主站的序号
-                        Build_SR_num(TX_bytes);
+                        Build_T_num(TX_bytes);
                         ReturnAllYCData(RX_bytes, TX_bytes);
                     }
                     break;
@@ -408,21 +488,22 @@ namespace IEC104
         {
             frmMain.Selffrm.AllEquipment.BMS.Get104Info();
             //byte[] message = new byte[47]; //15个遥测值 总共5*15+15=90字节     
-            byte[] message = new byte[92];
+            byte[] message = new byte[130];
 
 
             //byte[] message = new byte[19];
             //byte[] send_message = new byte[45];
-            byte[] send_message = new byte[90];
+            byte[] send_message = new byte[125];
 
             //测试数据
 
             int count = 15;
-           
+            float PcsRun = 0;
+
 
             message[0] = 0x68;
             //message[1] = 0x2B;     //APDU长度45字节     58
-            message[1] = 0x58;   //
+            message[1] = 0x7B;   //
             //发送序号
             message[2] = TX_bytes[0];
             message[3] = TX_bytes[1];
@@ -432,7 +513,7 @@ namespace IEC104
             //类型标示
             message[6] = 0x0D;   //短浮点数值0D   4字节的遥测值 + 1字节的品质描述符
             //可变限结构限定词
-            message[7] = 0x8f;   //15个字节连续地址的数据
+            message[7] = 0x96;   //22个字节连续地址的数据
             //message[7] = 0x01;
             //传输原因 
             message[8] = 0x14;   //响应总召唤
@@ -448,6 +529,9 @@ namespace IEC104
             //message[15] = 0x01;
 
 
+            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) PcsRun = 0;
+            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电") PcsRun = 2;
+            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电") PcsRun = 1;
             //信息元素(PCS数据) 
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].aA, ref message,ref count);          //A电流
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref message, ref count);          //B电流
@@ -456,9 +540,9 @@ namespace IEC104
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref message, ref count);         //b对地电压
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref message, ref count);         //c对地电压
             if (frmSet.config.SysCount == 1)
-                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
+                Get_One_YC_Data(-(float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref message, ref count);     //总有用功率
             else
-                Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
+                Get_One_YC_Data(-(float)frmMain.Selffrm.AllEquipment.AllwaValue, ref message, ref count);
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref message, ref count);    //总无功功率
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref message, ref count);  //总功率因数
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref message, ref count);      //可充电量
@@ -467,13 +551,25 @@ namespace IEC104
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref message, ref count);             //当日放电电量
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0], ref message, ref count);    //累计充电电量
             Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0], ref message, ref count);    //累计放电电量
+            Get_One_YC_Data((float)100, ref message, ref count);    //累计充电电量
+            Get_One_YC_Data((float)100, ref message, ref count);    //累计放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.soc, ref message, ref count);    //累计充电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.soh, ref message, ref count);    //累计放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref message, ref count);    //累计放电电量
+            Get_One_YC_Data((float)frmMain.Selffrm.AllEquipment.BMS.averageTemp, ref message, ref count);    //累计充电电量
+            Get_One_YC_Data(PcsRun, ref message, ref count);    //累计放电电量
 
-            Array.Copy(message,send_message, 90);
+            Array.Copy(message, send_message, 125);
             //验证消息
             //string hexString = BitConverter.ToString(send_message);
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(send_message);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥测数据 ++{temp:x}");
 
             //return message;
         }
@@ -560,13 +656,24 @@ namespace IEC104
             }*/
             return true;
         }
-
+        static public bool Get_Rawdata(float data, ref float[] rawdata, ref int count)
+        {
+            rawdata[count] = data;
+            count += 1;
+            return true;
+        }
+        static public bool Get_Rawdata(bool data, ref bool[] rawdata, ref int count)
+        {
+            rawdata[count] = data;
+            count += 1;
+            return true;
+        }
         /******************************************************************/
         /*                          遥信数据                              */
         /******************************************************************/
         public static  byte[] ReturnAllYXData(byte[] TX_bytes, byte[] RX_bytes)
         {
-            byte[] message = new byte[21];   // 15 + 6 =21
+            byte[] message = new byte[22];   // 15 + 6 =21
 
 
             message[0] = 0x68;
@@ -629,6 +736,11 @@ namespace IEC104
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥信数据 ++{temp:x}");
 
             return message;
         }
@@ -662,8 +774,11 @@ namespace IEC104
 
             //send msg
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
-
-          
+            UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥调返校 ++{temp:x}");
         }
 
         /**********************遥调获取参数值********************/
@@ -760,6 +875,10 @@ namespace IEC104
             //string hexString = BitConverter.ToString(msg);
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
         }
 
 
@@ -780,6 +899,10 @@ namespace IEC104
 
             //send msg
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
         }
 
         /*********************遥控激活结束******************************/
@@ -797,6 +920,11 @@ namespace IEC104
 
             //send msg
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥控激活结束 ++{temp:x}");
         }
 
         /*********************遥调激活结束******************************/
@@ -817,6 +945,11 @@ namespace IEC104
 
 
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥调激活结束 ++{temp:x}");
         }
         
 
@@ -959,6 +1092,8 @@ namespace IEC104
             {
                 // u 帧
                 ProcessFormatU(data);
+                app.Isconnect = true;
+                IEC104Send_Event.Set();
 
             }
             else if ((data[2] & 0x01) == 0x01)
@@ -986,12 +1121,389 @@ namespace IEC104
                         ProcessFormatI(_data);
                     }
                 }
+                app.Isconnect = true;
+                IEC104Send_Event.Set();
             }
             else
             {
                 ProcessFormatI(data);
+                app.Isconnect = true;
+                IEC104Send_Event.Set();
             }
         }
 
+        static public void ReturnSoleYXData(byte function)
+        {
+            if (app.Isconnect == false) return;
+
+            int Index = 0;
+            int count = 0;
+            int dif_count = 0;  //记录变化数据个数
+            app.asdu.function = function;
+            byte[] message = new byte[100];
+            byte[] arr = new byte[10];
+
+            //***********************拼装数据************************//
+            message[Index++] = 0x68;
+            message[Index++] = 0x00; //占位无用
+            //发送序号
+            message[Index++] = app.apci.TX_field1;
+            message[Index++] = app.apci.TX_field2;
+            //接收序号
+            message[Index++] = app.apci.RX_field3;
+            message[Index++] = app.apci.RX_field4;
+            //类型标示
+            message[Index++] = app.asdu.function;   //单点信息（遥信）
+            //可变限结构限定词
+            message[Index++] = 0x00;   //占位无用
+            //message[7] = 0x01;
+            //传输原因 
+            message[Index++] = 0x03;   //突发
+            message[Index++] = 0x00;
+            //公共地址：装置地址
+            message[Index++] = app.asdu.commom_asdu_1;
+            message[Index++] = app.asdu.commom_asdu_2;
+
+
+            //信息元素(储能表数据)
+            //储能事故总信号  : ( 1:故障 0：正常 )
+            if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) arr[0] = 0x01;
+            else arr[0] = 0x00;
+            //运行状态 ： （0正常运行，1故障）
+            if (frmMain.Selffrm.AllEquipment.runState == 1) arr[1] = 0x01;
+            else if (frmMain.Selffrm.AllEquipment.runState == 0) arr[1] = 0x00;
+            //BMS通信 ： （ 1：通信 0：失联 ）
+            if (frmMain.Selffrm.AllEquipment.BMS.Prepared == true) arr[2] = 0x01;
+            else arr[2] = 0x00;
+            //储能需求侧相应模式投入 ( 1:进入网控 0：未进入)
+            if (frmMain.Selffrm.AllEquipment.eState == 2) arr[3] = 0x01;
+            else arr[3] = 0x00;
+            //PCS开关状态  0:停机 1：开机
+            //if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) arr[5] = 0x00;
+            //else arr[5] = 0x01;
+            //包一个壳，不给他们pcs真实运行状态值 
+            //PCS开关状态  0:停机 1：开机
+
+            if (frmMain.Selffrm.AllEquipment.PCSList[0].Prepared == true) arr[4] = 0x01;
+            else arr[4] = 0x00;
+
+            if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) arr[5] = 0x01;
+            else arr[5] = 0x00;
+
+
+
+
+            Get_Rawdata(Convert.ToBoolean(arr[0]), ref app.YX_rawdata, ref count);        //储能事故总信号
+            Get_Rawdata(Convert.ToBoolean(arr[1]), ref app.YX_rawdata, ref count);             //运行状态
+            Get_Rawdata(Convert.ToBoolean(arr[2]), ref app.YX_rawdata, ref count);         //BMS通信
+            Get_Rawdata(Convert.ToBoolean(arr[3]), ref app.YX_rawdata, ref count);         //储能需求侧响应模式投入
+            Get_Rawdata(Convert.ToBoolean(arr[4]), ref app.YX_rawdata, ref count);             //PCS通信
+            Get_Rawdata(Convert.ToBoolean(arr[5]), ref app.YX_rawdata, ref count);             //告警总
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+            //Get_Rawdata(Convert.ToBoolean(app.bool_test), ref app.YX_rawdata, ref count);
+
+
+            for (int i = 0; i < app.YX_rawdata.Length; i++)
+            {
+                if (app.YX_rawdata[i] != app.YX_perv_rawdata[i])
+                {
+                    // apdu.asdu.data[i] = message[i];
+                    app.asdu.Object_Address_1 = ((i + 1) & 0xFF).ToString("X");
+                    app.asdu.Object_Address_2 = (((i + 1) >> 8) & 0xFF).ToString("X");
+                    app.asdu.Object_Address_3 = (((i + 1) >> 16) & 0xFF).ToString("X");
+                    //信息体地址 0x4001
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_1, 16);
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_2, 16);
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_3, 16);
+
+                    if (app.YX_rawdata[i] == true) message[Index++] = 0x01;
+                    else message[Index++] = 0x00;
+                    if (app.asdu.function == 0X1E)
+                    {
+                        //时标
+                        int second = DateTime.Now.Millisecond + DateTime.Now.Second * 1000;
+                        message[Index++] = (byte)second;
+                        message[Index++] = (byte)(second >> 8);
+                        message[Index++] = (byte)DateTime.Now.Minute;
+                        message[Index++] = (byte)DateTime.Now.Hour;
+                        message[Index++] = (byte)DateTime.Now.Day;
+                        message[Index++] = (byte)DateTime.Now.Month;
+                        message[Index++] = (byte)(DateTime.Now.Year - 2000);
+                    }
+                    dif_count++;
+                }
+
+            }
+
+
+            //数据修正
+            message[1] = (byte)(Index - 2);
+            message[7] = (byte)(dif_count);
+
+            Array.Resize(ref message, Index);
+
+
+            if (dif_count == 0) return;
+            IEC104Send_Event.Wait();
+            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message))
+            {
+                UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+                temp += 2;
+                app.apci.TX_field1 = (byte)temp;
+                app.apci.TX_field2 = (byte)(temp >> 8);
+                Console.WriteLine(string.Join("-", message));
+                Console.WriteLine($"变化遥信 ++{temp:x}");
+
+            }
+            else
+            {
+                app.apci.TX_field1 = 0;
+                app.apci.TX_field2 = 0;
+                app.apci.RX_field3 = 0;
+                app.apci.RX_field4 = 0;
+                app.Isconnect = false;
+
+            }
+
+        }
+        static public void ReturnSoleYCData()
+        {
+            if (app.Isconnect == false) return;
+            /****************************************************/
+            float PcsRun = 0;
+            int Index = 0;
+            int count = 0;      //记录数据次序
+            int dif_count = 0;  //记录变化数据个数
+            byte[] message = new byte[200];
+
+            //***********************拼装数据************************//
+            message[Index++] = 0x68;
+            message[Index++] = 0x00; //占位无用
+            //发送序号
+            message[Index++] = app.apci.TX_field1;
+            message[Index++] = app.apci.TX_field2;
+            //接收序号
+            message[Index++] = app.apci.RX_field3;
+            message[Index++] = app.apci.RX_field4;
+            //类型标示
+            message[Index++] = 0x0D;   //短浮点数值0D   4字节的遥测值 + 1字节的品质描述符
+            //可变限结构限定词
+            message[Index++] = 0x00;   //占位无用
+            //message[7] = 0x01;
+            //传输原因 
+            message[Index++] = 0x03;   //突发(变化遥信、变换遥测、soe等)
+            message[Index++] = 0x00;
+            //公共地址：装置地址
+            message[Index++] = app.asdu.commom_asdu_1;
+            message[Index++] = app.asdu.commom_asdu_2;
+
+            /********/
+            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) PcsRun = 0;
+            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电") PcsRun = 2;
+            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电") PcsRun = 1;
+
+            //frmMain.Selffrm.AllEquipment.BMS.Get104Info();
+
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].aA, ref app.YC_rawdata, ref count);          //A电流
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bA, ref app.YC_rawdata, ref count);          //B电流
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cA, ref app.YC_rawdata, ref count);          //C电流
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].aV, ref app.YC_rawdata, ref count);         //a对地电压
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].bV, ref app.YC_rawdata, ref count);         //b对地电压
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].cV, ref app.YC_rawdata, ref count);         //c对地电压
+            if (frmSet.config.SysCount == 1)
+                Get_Rawdata(-(float)frmMain.Selffrm.AllEquipment.PCSList[0].allUkva, ref app.YC_rawdata, ref count);     //总有用功率
+            else
+                Get_Rawdata(-(float)frmMain.Selffrm.AllEquipment.AllwaValue, ref app.YC_rawdata, ref count);
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allNUkvar, ref app.YC_rawdata, ref count);    //总无功功率
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor, ref app.YC_rawdata, ref count);  //总功率因数
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.ChargeAmount, ref app.YC_rawdata, ref count);      //可充电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.DisChargeAmount, ref app.YC_rawdata, ref count);   //可放电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2PKWH[0], ref app.YC_rawdata, ref count);             //当日充电电量            
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.E2OKWH[0], ref app.YC_rawdata, ref count);             //当日放电电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0], ref app.YC_rawdata, ref count);    //累计充电电量
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0], ref app.YC_rawdata, ref count);    //累计放电电量
+            Get_Rawdata((float)100, ref app.YC_rawdata, ref count);    //最大充电功率允许值
+            Get_Rawdata((float)100, ref app.YC_rawdata, ref count);    //最大放电功率允许值
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soc, ref app.YC_rawdata, ref count);    //SOC
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.soh, ref app.YC_rawdata, ref count);    //SOH
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.PCSScheduleKVA, ref app.YC_rawdata, ref count);    //有功功率设置
+            Get_Rawdata((float)frmMain.Selffrm.AllEquipment.BMS.averageTemp, ref app.YC_rawdata, ref count);    //Bms温度
+            Get_Rawdata(PcsRun, ref app.YC_rawdata, ref count);    //PCS运行状态
+
+
+
+            for (int i = 0; i < app.YC_rawdata.Length; i++)
+            {
+                if (app.YC_rawdata[i] != app.YC_perv_rawdata[i])
+                {
+                    //信息体地址 0x4001
+                    app.asdu.Object_Address_1 = ((i + 16385) & 0xFF).ToString("X");
+                    app.asdu.Object_Address_2 = (((i + 16385) >> 8) & 0xFF).ToString("X");
+                    app.asdu.Object_Address_3 = (((i + 16385) >> 16) & 0xFF).ToString("X");
+
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_1, 16);
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_2, 16);
+                    message[Index++] = Convert.ToByte(app.asdu.Object_Address_3, 16);
+
+                    //数据
+                    Get_One_YC_Data(app.YC_rawdata[i], ref message, ref Index);
+                    dif_count++;
+                }
+
+            }
+
+
+
+            //数据修正          
+            message[1] = (byte)(Index - 2);
+            message[7] = (byte)(dif_count);
+            Array.Resize(ref message, Index);
+
+            if (dif_count == 0) return;
+            IEC104Send_Event.Wait();
+            if (frmMain.Selffrm.TCPserver.SendMsg_byte(message))
+            {
+                UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+                temp += 2;
+                app.apci.TX_field1 = (byte)temp;
+                app.apci.TX_field2 = (byte)(temp >> 8);
+                Console.WriteLine(string.Join("-", message));
+                Console.WriteLine($"变化遥测 ++{temp:x}");
+
+            }
+            else//连接戳五清空接收序号
+            {
+                app.apci.TX_field1 = 0;
+                app.apci.TX_field2 = 0;
+                app.apci.RX_field3 = 0;
+                app.apci.RX_field4 = 0;
+                app.Isconnect = false;
+
+            }
+
+        }
+
+        public event EventHandler PropertyChanged;
+
+        public virtual void OnPropertyChanged()
+        {
+            PropertyChanged?.Invoke(this, EventArgs.Empty);
+        }
+        public void IEC104_PropertyChanged(object sender, EventArgs e)
+        {
+           
+            if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == true))
+            {
+                app.apci.TX_field1 = 0;
+                app.apci.TX_field2 = 0;
+                app.apci.RX_field3 = 0;
+                app.apci.RX_field4 = 0;
+                app.Isconnect = false;
+            }
+            if (app.Isconnect == true)
+            {
+                ReturnSoleYCData();
+                if (app.Isconnect != true) return;
+
+                ReturnSoleYXData(0x01);
+                if (app.Isconnect != true) return;
+
+                ReturnSoleYXData(0X1E);
+
+                Array.Copy(app.YX_rawdata, app.YX_perv_rawdata, app.YX_rawdata.Length);
+                Array.Copy(app.YC_rawdata, app.YC_perv_rawdata, app.YC_rawdata.Length);
+
+            }
+        }
+        //获取最大充放电功率
+        //public void GetMax_Dis_ChargePower()
+        //{
+        //    double dValue = 0;
+        //    double dGridKVA = frmMain.Selffrm.AllEquipment.GridKVA; //  实时数据电网功率（关口表-视在功率）
+        //    double dGridKW = frmMain.Selffrm.AllEquipment.GridKVA * frmMain.Selffrm.AllEquipment.PCSList[0].allPFactor;  //  实时数据电网功率（关口表-有功功率）
+
+        //    double PowerCap = frmSet.cloudLimits.MaxGridKW;       //最大需量（有功功率）
+
+
+        //    //if ((dGridKVA >= PowerCap) && (frmMain.Selffrm.AllEquipment.wTypeActive == "充电"))//表1用于限流和防止超限 ,PCS在不工作时也有0.1，0.2的功率值
+        //    { //超限
+        //        dValue = dGridKW - PowerCap;  //关口表有功功率-最大需量
+        //        //限流qiao 
+        //        if (dValue >= Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA))  //相当于 用户侧功率 > 最大需量
+        //        {
+        //            frmMain.Selffrm.AllEquipment.MaxChargePower = 0;  
+        //        }
+        //        else
+        //        {
+        //            //if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA != 0)
+        //            {   //最大需量 - 用户量
+        //                frmMain.Selffrm.AllEquipment.MaxChargePower = ((Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA) - dValue));
+        //            }
+        //            //else { frmMain.Selffrm.AllEquipment.MaxChargePower = 0; }
+        //        }
+        //    }
+        //    //else if ((dGridKVA <= frmSet.MinGridKW) && (frmMain.Selffrm.AllEquipment.wTypeActive == "放电"))
+        //    {
+        //        //逆流
+        //        dValue = frmSet.MinGridKW - dGridKVA;
+        //        //限流qiao 
+        //        if (dValue >= Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA))
+        //        {
+        //            frmMain.Selffrm.AllEquipment.MaxDisChargePower = 0;
+        //        }
+        //        else
+        //        {
+        //            //if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA != 0)
+        //            {
+        //                frmMain.Selffrm.AllEquipment.MaxDisChargePower = ((Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA) - dValue));
+        //            }
+        //            //else { frmMain.Selffrm.AllEquipment.MaxDisChargePower = 0; }
+        //        }
+        //    }
+        //    #region else
+        //    //else
+        //    //{
+        //    //    if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")
+        //    //    {
+        //    //        //客户剩余的功率 大于 计划功率
+        //    //        dValue = PowerCap - (frmMain.Selffrm.AllEquipment.GridKVA_window - Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA));
+        //    //        if (dValue >= Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA))
+        //    //        {
+        //    //            dRate = 1;
+        //    //        }
+        //    //        else
+        //    //        {
+        //    //            if (PCSScheduleKVA != 0)
+        //    //            {
+        //    //                dRate = (dValue / Math.Abs(PCSScheduleKVA));
+        //    //            }
+        //    //            else { dRate = 0; }
+        //    //        }
+        //    //    }
+        //    //    else if (wTypeActive == "放电")
+        //    //    {
+        //    //        dValue = (GridKVA_window + Math.Abs(PCSKVA)) - frmSet.MinGridKW;
+        //    //        if (dValue >= Math.Abs(PCSScheduleKVA))
+        //    //        {
+        //    //            dRate = 1;
+        //    //        }
+        //    //        else
+        //    //        {
+        //    //            if (PCSScheduleKVA != 0)
+        //    //            {
+        //    //                dRate = (dValue / Math.Abs(PCSScheduleKVA));
+        //    //            }
+        //    //            else { dRate = 0; }
+        //    //        }
+        //    //    }
+        //    //}
+        //    #endregion
+
+        //}
     }
 }

@@ -5083,7 +5083,7 @@ namespace EMS
         /// <param name="aCellList"></param>
         /// <param name="aStart"></param>
         /// <param name="aData"></param>
-        private void UpdateCellV(double[] aCellV, int aStart, string aData)//List<CellClass> aCellList
+        private void UpdateCellV_240(double[] aCellV, int aStart, string aData)//List<CellClass> aCellList
         {
             string strData = "";
             double dTemp;
@@ -5102,6 +5102,57 @@ namespace EMS
                 }
             }
         }
+
+
+
+        private void UpdateCellV(double[] aCellV, int Group, string aData) 
+        {
+           {
+                switch (frmSet.config.BMSVerb)
+                {
+                    case 1:
+                        switch (frmSet.config.CellVNum)
+                        {
+                            case 240:
+                                if (Group == 1)
+                                {
+                                    UpdateCellV_240(aCellV, 0, aData);//CellList
+                                }
+                                else if (Group == 2)
+                                {
+                                    UpdateCellV_240(aCellV, 120, aData);//CellList
+                                }
+                                break;
+                            case 260:
+                                if (Group == 1)
+                                {
+                                }
+                                else if (Group == 2)
+                                {
+                                }
+                                break;
+
+                            default:
+                                if (Group == 1)
+                                {
+                                    UpdateCellV_240(aCellV, 0, aData);//CellList
+                                }
+                                else
+                                {
+                                    UpdateCellV_240(aCellV, 120, aData);//CellList
+                                }
+                                break;
+                        }
+                        break;
+                }
+            }
+
+
+
+
+        }
+
+
 
         public void GetCellErrUPVInfo()
         {
@@ -5293,12 +5344,14 @@ namespace EMS
             if (GetSysData(33, ref strTemp))
             {
                 bPrepared = true;
-                UpdateCellV(CellVs, 0, strTemp);//CellList
+                UpdateCellV(CellVs, 1, strTemp);
+
             }
             if (GetSysData(34, ref strTemp))
             {
                 bPrepared = true;
-                UpdateCellV(CellVs, 120, strTemp);
+                UpdateCellV(CellVs, 2, strTemp);
+
             }
             //温度
             if (GetSysData(35, ref strTemp))
@@ -8364,7 +8417,10 @@ namespace EMS
                         continue;
                     }
                     GetDataFromBMS();
-
+                    if (frmSet.config.Open104 == 1)
+                    {
+                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }
                     //均衡操作
                     //StartStopBMSBala();
                     //Thread.Sleep(10);
@@ -8468,7 +8524,10 @@ namespace EMS
                     {
                         frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                     }
-
+                    if (frmSet.config.Open104 == 1)
+                    {
+                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }
                     //PCS的DSP2 11.27
                     if (DSP2 != null)
                     {
