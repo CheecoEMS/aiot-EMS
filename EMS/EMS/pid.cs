@@ -1,4 +1,29 @@
-﻿using System;
+﻿/** *****************************************************************************************
+  * @file    pid.c                                                                          *
+  * @author  swp                                                                            *
+  * @version V1.0.0                                                                         *
+  * @date    27-August-2013                                                                 *
+  * @brief   pid的具体实现。实现过程完全与硬件无关                                               *
+  *   可直接调用，任意移植                                                                     *
+  *   使用时先定一个pid对象，然后调用PID_ini()初始化                                             *
+  *   每次读取到传感器数据后即可调用PID_calc()来对数据进行处理                                     *
+  *****************************************************************************************
+  *                          使用示例                                                      *
+  *                                                                                       *
+  *          float SersorData;                                                            *
+  *          float SetData = 10；                                                         *
+  *          //pid模式,pid三参数,pid最大输出, pid最大积分输出                                 *
+  *          PID_ini( _mode,  PID,  _max_out,  _max_iout) ;                               *
+  *          while(1)                                                                     *
+  *          {                                                                            *
+  *             SersorData = sersor();                                                    *
+  *             SersorData = PID_calc(SersorData, SetData );    //测量值,目标值             *
+  *             printf("%2.2f",SersorData);                                               *
+  *          }                                                                            *
+  *****************************************************************************************
+  *          MPU6050的参考参数 P：10 I：40 D:0                                             *
+  *****************************************************************************************/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,23 +33,7 @@ namespace EMS
 {
     public class PID
     {
-        /**
-  ****************************(C) COPYRIGHT 2019 DJI****************************
-  * @file       pid.c/h
-  * @brief      pid实现函数，包括初始化，PID计算函数，
-  * @note       
-  * @history
-  *  Version    Date            Author          Modification
-  *  V1.0.0     Dec-26-2018     RM              1. 完成
-  *
-  @verbatim
-  ==============================================================================
-
-  ==============================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2019 DJI****************************
-  */
-
+    
        public enum PID_MODE
         {
             PID_POSITION = 0,
