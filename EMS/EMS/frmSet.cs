@@ -26,11 +26,11 @@ namespace EMS
 
         public static frmSet oneForm = null;
 
-        public static CloudLimitClass cloudLimits = new CloudLimitClass();
-        public static ConfigClass config = new ConfigClass();
-        public static VariChargeClass variCharge = new VariChargeClass();
-        public static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
-        public static HistoryDataClass historyDatas = new HistoryDataClass();
+        public volatile static CloudLimitClass cloudLimits = new CloudLimitClass();
+        public volatile static ConfigClass config = new ConfigClass();
+        public volatile static VariChargeClass variCharge = new VariChargeClass();
+        public volatile static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
+        public volatile static HistoryDataClass historyDatas = new HistoryDataClass();
 
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
