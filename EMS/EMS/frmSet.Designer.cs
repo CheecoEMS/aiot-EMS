@@ -43,17 +43,30 @@ namespace EMS
             this.btnEqipments = new System.Windows.Forms.Button();
             this.tbAll = new System.Windows.Forms.TabControl();
             this.plSetMain = new System.Windows.Forms.TabPage();
+            this.tcbGPIO = new EMS.TouchCombox(this.components);
             this.label99 = new System.Windows.Forms.Label();
+            this.tcbPCSForceRun = new EMS.TCheckBox(this.components);
             this.btnClose = new System.Windows.Forms.Button();
+            this.tcbBMSVer = new EMS.TouchCombox(this.components);
             this.tbBMSVer = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.btnCleanDataBase = new System.Windows.Forms.Button();
+            this.tcbiPCSfactory = new EMS.TouchCombox(this.components);
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
+            this.ttbSystemID = new EMS.TouchText(this.components);
+            this.tcbAutoRun = new EMS.TCheckBox(this.components);
+            this.tcbPCSGridModel = new EMS.TouchCombox(this.components);
             this.label25 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.tneISDay = new EMS.TouchNumberEdit(this.components);
+            this.tneISMonth = new EMS.TouchNumberEdit(this.components);
+            this.tneISYear = new EMS.TouchNumberEdit(this.components);
             this.label58 = new System.Windows.Forms.Label();
             this.label59 = new System.Windows.Forms.Label();
+            this.tneCellCount = new EMS.TouchNumberEdit(this.components);
+            this.tneSysSelfPower = new EMS.TouchNumberEdit(this.components);
+            this.tneSysPower = new EMS.TouchNumberEdit(this.components);
             this.label31 = new System.Windows.Forms.Label();
             this.label30 = new System.Windows.Forms.Label();
             this.label28 = new System.Windows.Forms.Label();
@@ -99,6 +112,14 @@ namespace EMS
             this.label69 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.tnePrice9 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice8 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice7 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice6 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice4 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice3 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice2 = new EMS.TouchNumberEdit(this.components);
+            this.tnePrice1 = new EMS.TouchNumberEdit(this.components);
             this.label75 = new System.Windows.Forms.Label();
             this.label70 = new System.Windows.Forms.Label();
             this.label68 = new System.Windows.Forms.Label();
@@ -108,6 +129,8 @@ namespace EMS
             this.tbShedule = new System.Windows.Forms.TabPage();
             this.panel12 = new System.Windows.Forms.Panel();
             this.btnFlash3 = new System.Windows.Forms.Button();
+            this.tcbUseBalaTactics = new EMS.TCheckBox(this.components);
+            this.tcbUseYunTactics = new EMS.TCheckBox(this.components);
             this.btnUpT = new System.Windows.Forms.Button();
             this.btnDownT = new System.Windows.Forms.Button();
             this.btnAdd3 = new System.Windows.Forms.Button();
@@ -138,28 +161,44 @@ namespace EMS
             this.Memo = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tpCom = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.tneMaxGridKWH = new EMS.TouchNumberEdit(this.components);
+            this.tneMinGridKWH = new EMS.TouchNumberEdit(this.components);
+            this.tneMaxSOC = new EMS.TouchNumberEdit(this.components);
+            this.tneMinSOC = new EMS.TouchNumberEdit(this.components);
             this.label51 = new System.Windows.Forms.Label();
             this.label52 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.label22 = new System.Windows.Forms.Label();
             this.panel7 = new System.Windows.Forms.Panel();
+            this.tnePUM = new EMS.TouchNumberEdit(this.components);
             this.label27 = new System.Windows.Forms.Label();
+            this.tneWarnGridkva = new EMS.TouchNumberEdit(this.components);
             this.label26 = new System.Windows.Forms.Label();
+            this.tcbDebugComName = new EMS.TouchCombox(this.components);
             this.labDebugRate = new System.Windows.Forms.Label();
             this.label50 = new System.Windows.Forms.Label();
             this.label49 = new System.Windows.Forms.Label();
             this.panel6 = new System.Windows.Forms.Panel();
             this.label6 = new System.Windows.Forms.Label();
+            this.tneNetTimeS = new EMS.TouchNumberEdit(this.components);
+            this.tneNetTimeM = new EMS.TouchNumberEdit(this.components);
+            this.tneNetTimeH = new EMS.TouchNumberEdit(this.components);
             this.label19 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.tneSysInterval = new EMS.TouchNumberEdit(this.components);
+            this.tneUnInterval = new EMS.TouchNumberEdit(this.components);
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.tneSysCount = new EMS.TouchNumberEdit(this.components);
             this.label5 = new System.Windows.Forms.Label();
+            this.tcbIsMaster = new EMS.TCheckBox(this.components);
+            this.tneMaster485Addr = new EMS.TouchNumberEdit(this.components);
+            this.tne485Addr = new EMS.TouchNumberEdit(this.components);
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tpLog = new System.Windows.Forms.TabPage();
@@ -168,29 +207,51 @@ namespace EMS
             this.btnBMSRead = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV3 = new EMS.TouchNumberEdit(this.components);
+            this.tneBMScellPV3 = new EMS.TouchNumberEdit(this.components);
             this.label20 = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.label64 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV2 = new EMS.TouchNumberEdit(this.components);
+            this.tneBMScellPV2 = new EMS.TouchNumberEdit(this.components);
             this.label77 = new System.Windows.Forms.Label();
             this.label92 = new System.Windows.Forms.Label();
             this.label93 = new System.Windows.Forms.Label();
+            this.tneBMScellUPV1 = new EMS.TouchNumberEdit(this.components);
             this.label94 = new System.Windows.Forms.Label();
             this.label95 = new System.Windows.Forms.Label();
+            this.tneBMScellPV1 = new EMS.TouchNumberEdit(this.components);
             this.label96 = new System.Windows.Forms.Label();
             this.btnBMSRun = new System.Windows.Forms.Button();
             this.label97 = new System.Windows.Forms.Label();
             this.label98 = new System.Windows.Forms.Label();
+            this.tneBMSwaValue = new EMS.TouchNumberEdit(this.components);
             this.btnBMSClose = new System.Windows.Forms.Button();
             this.btnBMSOn = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tcbFenMode = new EMS.TouchCombox(this.components);
             this.label63 = new System.Windows.Forms.Label();
             this.label62 = new System.Windows.Forms.Label();
+            this.tneFenMinTemp = new EMS.TouchNumberEdit(this.components);
             this.label61 = new System.Windows.Forms.Label();
             this.label60 = new System.Windows.Forms.Label();
+            this.tneFenMaxTemp = new EMS.TouchNumberEdit(this.components);
             this.label57 = new System.Windows.Forms.Label();
             this.btnATAppy = new System.Windows.Forms.Button();
             this.label82 = new System.Windows.Forms.Label();
+            this.tcbTCRunWithSys = new EMS.TCheckBox(this.components);
+            this.tcbTCMode = new EMS.TouchCombox(this.components);
+            this.tneHotTempReturn = new EMS.TouchNumberEdit(this.components);
+            this.tneSetHotTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneSetCoolTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneCoolTempReturn = new EMS.TouchNumberEdit(this.components);
+            this.tneSetHumidity = new EMS.TouchNumberEdit(this.components);
+            this.tneTCMaxHumidity = new EMS.TouchNumberEdit(this.components);
+            this.tneTCMaxTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneHumiReturn = new EMS.TouchNumberEdit(this.components);
+            this.tneTCMinTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneTCMinHumidity = new EMS.TouchNumberEdit(this.components);
             this.label71 = new System.Windows.Forms.Label();
             this.label72 = new System.Windows.Forms.Label();
             this.label73 = new System.Windows.Forms.Label();
@@ -222,6 +283,11 @@ namespace EMS
             this.label90 = new System.Windows.Forms.Label();
             this.label91 = new System.Windows.Forms.Label();
             this.btnDHRun = new System.Windows.Forms.Button();
+            this.tcbDHSetRunStatus = new EMS.TouchCombox(this.components);
+            this.tneDHSetTempBoot = new EMS.TouchNumberEdit(this.components);
+            this.tneDHSetHumidityBoot = new EMS.TouchNumberEdit(this.components);
+            this.tneDHSetHumidityStop = new EMS.TouchNumberEdit(this.components);
+            this.tneDHSetTempStop = new EMS.TouchNumberEdit(this.components);
             this.label78 = new System.Windows.Forms.Label();
             this.label81 = new System.Windows.Forms.Label();
             this.label87 = new System.Windows.Forms.Label();
@@ -231,9 +297,16 @@ namespace EMS
             this.btnLCRead = new System.Windows.Forms.Button();
             this.btnLCOpen = new System.Windows.Forms.Button();
             this.btnLCClose = new System.Windows.Forms.Button();
+            this.tcbLCWaterPump = new EMS.TouchCombox(this.components);
             this.label56 = new System.Windows.Forms.Label();
+            this.tcbLCTemperSelect = new EMS.TouchCombox(this.components);
             this.label35 = new System.Windows.Forms.Label();
             this.btnLCRun = new System.Windows.Forms.Button();
+            this.tcbLCModel = new EMS.TouchCombox(this.components);
+            this.tneLCHotTempReturn = new EMS.TouchNumberEdit(this.components);
+            this.tneLCSetHotTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneLCSetCoolTemp = new EMS.TouchNumberEdit(this.components);
+            this.tneLCCoolTempReturn = new EMS.TouchNumberEdit(this.components);
             this.label37 = new System.Windows.Forms.Label();
             this.label53 = new System.Windows.Forms.Label();
             this.label54 = new System.Windows.Forms.Label();
@@ -255,79 +328,6 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
-            this.tcbGPIO = new EMS.TouchCombox(this.components);
-            this.tcbPCSForceRun = new EMS.TCheckBox(this.components);
-            this.tcbBMSVer = new EMS.TouchCombox(this.components);
-            this.tcbiPCSfactory = new EMS.TouchCombox(this.components);
-            this.ttbSystemID = new EMS.TouchText(this.components);
-            this.tcbAutoRun = new EMS.TCheckBox(this.components);
-            this.tcbPCSGridModel = new EMS.TouchCombox(this.components);
-            this.tneISDay = new EMS.TouchNumberEdit(this.components);
-            this.tneISMonth = new EMS.TouchNumberEdit(this.components);
-            this.tneISYear = new EMS.TouchNumberEdit(this.components);
-            this.tneCellCount = new EMS.TouchNumberEdit(this.components);
-            this.tneSysSelfPower = new EMS.TouchNumberEdit(this.components);
-            this.tneSysPower = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice9 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice8 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice7 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice6 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice4 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice3 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice2 = new EMS.TouchNumberEdit(this.components);
-            this.tnePrice1 = new EMS.TouchNumberEdit(this.components);
-            this.tcbUseBalaTactics = new EMS.TCheckBox(this.components);
-            this.tcbUseYunTactics = new EMS.TCheckBox(this.components);
-            this.tneMaxGridKWH = new EMS.TouchNumberEdit(this.components);
-            this.tneMinGridKWH = new EMS.TouchNumberEdit(this.components);
-            this.tneMaxSOC = new EMS.TouchNumberEdit(this.components);
-            this.tneMinSOC = new EMS.TouchNumberEdit(this.components);
-            this.tnePUM = new EMS.TouchNumberEdit(this.components);
-            this.tneWarnGridkva = new EMS.TouchNumberEdit(this.components);
-            this.tcbDebugComName = new EMS.TouchCombox(this.components);
-            this.tneNetTimeS = new EMS.TouchNumberEdit(this.components);
-            this.tneNetTimeM = new EMS.TouchNumberEdit(this.components);
-            this.tneNetTimeH = new EMS.TouchNumberEdit(this.components);
-            this.tneSysInterval = new EMS.TouchNumberEdit(this.components);
-            this.tneUnInterval = new EMS.TouchNumberEdit(this.components);
-            this.tneSysCount = new EMS.TouchNumberEdit(this.components);
-            this.tcbIsMaster = new EMS.TCheckBox(this.components);
-            this.tneMaster485Addr = new EMS.TouchNumberEdit(this.components);
-            this.tne485Addr = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellUPV3 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellPV3 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellUPV2 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellPV2 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellUPV1 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMScellPV1 = new EMS.TouchNumberEdit(this.components);
-            this.tneBMSwaValue = new EMS.TouchNumberEdit(this.components);
-            this.tcbFenMode = new EMS.TouchCombox(this.components);
-            this.tneFenMinTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneFenMaxTemp = new EMS.TouchNumberEdit(this.components);
-            this.tcbTCRunWithSys = new EMS.TCheckBox(this.components);
-            this.tcbTCMode = new EMS.TouchCombox(this.components);
-            this.tneHotTempReturn = new EMS.TouchNumberEdit(this.components);
-            this.tneSetHotTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneSetCoolTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneCoolTempReturn = new EMS.TouchNumberEdit(this.components);
-            this.tneSetHumidity = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMaxHumidity = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMaxTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneHumiReturn = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMinTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneTCMinHumidity = new EMS.TouchNumberEdit(this.components);
-            this.tcbDHSetRunStatus = new EMS.TouchCombox(this.components);
-            this.tneDHSetTempBoot = new EMS.TouchNumberEdit(this.components);
-            this.tneDHSetHumidityBoot = new EMS.TouchNumberEdit(this.components);
-            this.tneDHSetHumidityStop = new EMS.TouchNumberEdit(this.components);
-            this.tneDHSetTempStop = new EMS.TouchNumberEdit(this.components);
-            this.tcbLCWaterPump = new EMS.TouchCombox(this.components);
-            this.tcbLCTemperSelect = new EMS.TouchCombox(this.components);
-            this.tcbLCModel = new EMS.TouchCombox(this.components);
-            this.tneLCHotTempReturn = new EMS.TouchNumberEdit(this.components);
-            this.tneLCSetHotTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneLCSetCoolTemp = new EMS.TouchNumberEdit(this.components);
-            this.tneLCCoolTempReturn = new EMS.TouchNumberEdit(this.components);
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -600,6 +600,23 @@ namespace EMS
             this.plSetMain.TabIndex = 0;
             this.plSetMain.Text = "基本信息";
             // 
+            // tcbGPIO
+            // 
+            this.tcbGPIO.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbGPIO.CenterShow = true;
+            this.tcbGPIO.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbGPIO.ForeColor = System.Drawing.Color.White;
+            this.tcbGPIO.Items = new string[] {
+        "风冷",
+        "液冷"};
+            this.tcbGPIO.Location = new System.Drawing.Point(127, 398);
+            this.tcbGPIO.Name = "tcbGPIO";
+            this.tcbGPIO.SelectItemIndex = 0;
+            this.tcbGPIO.Size = new System.Drawing.Size(182, 33);
+            this.tcbGPIO.strText = "风冷";
+            this.tcbGPIO.TabIndex = 65;
+            this.tcbGPIO.Value = 0;
+            // 
             // label99
             // 
             this.label99.AutoSize = true;
@@ -608,6 +625,18 @@ namespace EMS
             this.label99.Size = new System.Drawing.Size(71, 16);
             this.label99.TabIndex = 64;
             this.label99.Text = "系统版本";
+            // 
+            // tcbPCSForceRun
+            // 
+            this.tcbPCSForceRun.BackColor = System.Drawing.Color.Transparent;
+            this.tcbPCSForceRun.Caption = "强制PCS运行";
+            this.tcbPCSForceRun.Checked = false;
+            this.tcbPCSForceRun.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbPCSForceRun.ForeColor = System.Drawing.Color.White;
+            this.tcbPCSForceRun.Location = new System.Drawing.Point(351, 606);
+            this.tcbPCSForceRun.Name = "tcbPCSForceRun";
+            this.tcbPCSForceRun.Size = new System.Drawing.Size(150, 32);
+            this.tcbPCSForceRun.TabIndex = 63;
             // 
             // btnClose
             // 
@@ -623,6 +652,23 @@ namespace EMS
             this.btnClose.Text = "关闭系统";
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            // 
+            // tcbBMSVer
+            // 
+            this.tcbBMSVer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbBMSVer.CenterShow = true;
+            this.tcbBMSVer.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbBMSVer.ForeColor = System.Drawing.Color.White;
+            this.tcbBMSVer.Items = new string[] {
+        "无",
+        "协能"};
+            this.tcbBMSVer.Location = new System.Drawing.Point(492, 330);
+            this.tcbBMSVer.Name = "tcbBMSVer";
+            this.tcbBMSVer.SelectItemIndex = 0;
+            this.tcbBMSVer.Size = new System.Drawing.Size(154, 33);
+            this.tcbBMSVer.strText = "无";
+            this.tcbBMSVer.TabIndex = 61;
+            this.tcbBMSVer.Value = 0;
             // 
             // tbBMSVer
             // 
@@ -663,6 +709,23 @@ namespace EMS
             this.btnCleanDataBase.UseVisualStyleBackColor = true;
             this.btnCleanDataBase.Click += new System.EventHandler(this.btnCleanDataBase_Click);
             // 
+            // tcbiPCSfactory
+            // 
+            this.tcbiPCSfactory.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbiPCSfactory.CenterShow = true;
+            this.tcbiPCSfactory.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbiPCSfactory.ForeColor = System.Drawing.Color.White;
+            this.tcbiPCSfactory.Items = new string[] {
+        "英博01",
+        "精石01"};
+            this.tcbiPCSfactory.Location = new System.Drawing.Point(127, 330);
+            this.tcbiPCSfactory.Name = "tcbiPCSfactory";
+            this.tcbiPCSfactory.SelectItemIndex = 0;
+            this.tcbiPCSfactory.Size = new System.Drawing.Size(182, 33);
+            this.tcbiPCSfactory.strText = "英博01";
+            this.tcbiPCSfactory.TabIndex = 57;
+            this.tcbiPCSfactory.Value = 0;
+            // 
             // label9
             // 
             this.label9.AutoSize = true;
@@ -680,6 +743,57 @@ namespace EMS
             this.label8.Size = new System.Drawing.Size(23, 16);
             this.label8.TabIndex = 55;
             this.label8.Text = "年";
+            // 
+            // ttbSystemID
+            // 
+            this.ttbSystemID.ASCOnly = false;
+            this.ttbSystemID.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.ttbSystemID.DefaultValue = 0;
+            this.ttbSystemID.DefKeyTypeOnly = false;
+            this.ttbSystemID.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ttbSystemID.ForeColor = System.Drawing.Color.White;
+            this.ttbSystemID.IsPassWord = false;
+            this.ttbSystemID.IsTimerFormat = false;
+            this.ttbSystemID.KeyType = 0;
+            this.ttbSystemID.Location = new System.Drawing.Point(128, 54);
+            this.ttbSystemID.MaxTextLength = 0;
+            this.ttbSystemID.Name = "ttbSystemID";
+            this.ttbSystemID.Size = new System.Drawing.Size(489, 32);
+            this.ttbSystemID.strText = "";
+            this.ttbSystemID.TabIndex = 54;
+            this.ttbSystemID.WithNumberKeys = true;
+            this.ttbSystemID.WithSymbolKeys = true;
+            // 
+            // tcbAutoRun
+            // 
+            this.tcbAutoRun.BackColor = System.Drawing.Color.Transparent;
+            this.tcbAutoRun.Caption = "预留";
+            this.tcbAutoRun.Checked = false;
+            this.tcbAutoRun.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbAutoRun.ForeColor = System.Drawing.Color.White;
+            this.tcbAutoRun.Location = new System.Drawing.Point(68, 606);
+            this.tcbAutoRun.Name = "tcbAutoRun";
+            this.tcbAutoRun.Size = new System.Drawing.Size(263, 32);
+            this.tcbAutoRun.TabIndex = 53;
+            this.tcbAutoRun.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tcbAutoRun_OnValueChange);
+            // 
+            // tcbPCSGridModel
+            // 
+            this.tcbPCSGridModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbPCSGridModel.CenterShow = true;
+            this.tcbPCSGridModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbPCSGridModel.ForeColor = System.Drawing.Color.White;
+            this.tcbPCSGridModel.Items = new string[] {
+        "并网",
+        "离网"};
+            this.tcbPCSGridModel.Location = new System.Drawing.Point(128, 121);
+            this.tcbPCSGridModel.Name = "tcbPCSGridModel";
+            this.tcbPCSGridModel.SelectItemIndex = 0;
+            this.tcbPCSGridModel.Size = new System.Drawing.Size(182, 33);
+            this.tcbPCSGridModel.strText = "并网";
+            this.tcbPCSGridModel.TabIndex = 52;
+            this.tcbPCSGridModel.Value = 0;
+            this.tcbPCSGridModel.OnValueChange += new EMS.TouchCombox.OnValueChangEventDelegate(this.tcbPCSGridModel_OnValueChange);
             // 
             // label25
             // 
@@ -699,6 +813,60 @@ namespace EMS
             this.label3.TabIndex = 49;
             this.label3.Text = "识别ID";
             // 
+            // tneISDay
+            // 
+            this.tneISDay.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneISDay.CanEdit = true;
+            this.tneISDay.DefaultValue = 0;
+            this.tneISDay.FoceInZone = false;
+            this.tneISDay.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneISDay.ForeColor = System.Drawing.Color.White;
+            this.tneISDay.Location = new System.Drawing.Point(492, 252);
+            this.tneISDay.Maximum = 31;
+            this.tneISDay.Minimum = 1;
+            this.tneISDay.Name = "tneISDay";
+            this.tneISDay.Size = new System.Drawing.Size(124, 32);
+            this.tneISDay.strText = "";
+            this.tneISDay.TabIndex = 48;
+            this.tneISDay.Value = 1;
+            this.tneISDay.ValueStep = 1;
+            // 
+            // tneISMonth
+            // 
+            this.tneISMonth.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneISMonth.CanEdit = true;
+            this.tneISMonth.DefaultValue = 0;
+            this.tneISMonth.FoceInZone = false;
+            this.tneISMonth.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneISMonth.ForeColor = System.Drawing.Color.White;
+            this.tneISMonth.Location = new System.Drawing.Point(311, 252);
+            this.tneISMonth.Maximum = 12;
+            this.tneISMonth.Minimum = 1;
+            this.tneISMonth.Name = "tneISMonth";
+            this.tneISMonth.Size = new System.Drawing.Size(124, 32);
+            this.tneISMonth.strText = "";
+            this.tneISMonth.TabIndex = 47;
+            this.tneISMonth.Value = 1;
+            this.tneISMonth.ValueStep = 1;
+            // 
+            // tneISYear
+            // 
+            this.tneISYear.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneISYear.CanEdit = true;
+            this.tneISYear.DefaultValue = 0;
+            this.tneISYear.FoceInZone = false;
+            this.tneISYear.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneISYear.ForeColor = System.Drawing.Color.White;
+            this.tneISYear.Location = new System.Drawing.Point(127, 252);
+            this.tneISYear.Maximum = 2060;
+            this.tneISYear.Minimum = 2022;
+            this.tneISYear.Name = "tneISYear";
+            this.tneISYear.Size = new System.Drawing.Size(124, 32);
+            this.tneISYear.strText = "";
+            this.tneISYear.TabIndex = 46;
+            this.tneISYear.Value = 2023;
+            this.tneISYear.ValueStep = 1;
+            // 
             // label58
             // 
             this.label58.AutoSize = true;
@@ -716,6 +884,60 @@ namespace EMS
             this.label59.Size = new System.Drawing.Size(23, 16);
             this.label59.TabIndex = 44;
             this.label59.Text = "月";
+            // 
+            // tneCellCount
+            // 
+            this.tneCellCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneCellCount.CanEdit = true;
+            this.tneCellCount.DefaultValue = 0;
+            this.tneCellCount.FoceInZone = false;
+            this.tneCellCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneCellCount.ForeColor = System.Drawing.Color.White;
+            this.tneCellCount.Location = new System.Drawing.Point(493, 183);
+            this.tneCellCount.Maximum = 600;
+            this.tneCellCount.Minimum = 200;
+            this.tneCellCount.Name = "tneCellCount";
+            this.tneCellCount.Size = new System.Drawing.Size(124, 32);
+            this.tneCellCount.strText = "";
+            this.tneCellCount.TabIndex = 29;
+            this.tneCellCount.Value = 0;
+            this.tneCellCount.ValueStep = 1;
+            // 
+            // tneSysSelfPower
+            // 
+            this.tneSysSelfPower.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSysSelfPower.CanEdit = true;
+            this.tneSysSelfPower.DefaultValue = 0;
+            this.tneSysSelfPower.FoceInZone = false;
+            this.tneSysSelfPower.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSysSelfPower.ForeColor = System.Drawing.Color.White;
+            this.tneSysSelfPower.Location = new System.Drawing.Point(493, 121);
+            this.tneSysSelfPower.Maximum = 500;
+            this.tneSysSelfPower.Minimum = 200;
+            this.tneSysSelfPower.Name = "tneSysSelfPower";
+            this.tneSysSelfPower.Size = new System.Drawing.Size(124, 32);
+            this.tneSysSelfPower.strText = "";
+            this.tneSysSelfPower.TabIndex = 28;
+            this.tneSysSelfPower.Value = 0;
+            this.tneSysSelfPower.ValueStep = 1;
+            // 
+            // tneSysPower
+            // 
+            this.tneSysPower.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSysPower.CanEdit = true;
+            this.tneSysPower.DefaultValue = 0;
+            this.tneSysPower.FoceInZone = false;
+            this.tneSysPower.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSysPower.ForeColor = System.Drawing.Color.White;
+            this.tneSysPower.Location = new System.Drawing.Point(128, 185);
+            this.tneSysPower.Maximum = 2000;
+            this.tneSysPower.Minimum = 200;
+            this.tneSysPower.Name = "tneSysPower";
+            this.tneSysPower.Size = new System.Drawing.Size(124, 32);
+            this.tneSysPower.strText = "";
+            this.tneSysPower.TabIndex = 27;
+            this.tneSysPower.Value = 0;
+            this.tneSysPower.ValueStep = 1;
             // 
             // label31
             // 
@@ -1267,6 +1489,150 @@ namespace EMS
             this.groupBox4.Text = "电价(单位：0.01分)";
             this.groupBox4.Visible = false;
             // 
+            // tnePrice9
+            // 
+            this.tnePrice9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice9.CanEdit = true;
+            this.tnePrice9.DefaultValue = 0;
+            this.tnePrice9.FoceInZone = false;
+            this.tnePrice9.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice9.ForeColor = System.Drawing.Color.White;
+            this.tnePrice9.Location = new System.Drawing.Point(284, 163);
+            this.tnePrice9.Maximum = 30000;
+            this.tnePrice9.Minimum = 0;
+            this.tnePrice9.Name = "tnePrice9";
+            this.tnePrice9.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice9.strText = "";
+            this.tnePrice9.TabIndex = 79;
+            this.tnePrice9.Value = 0;
+            this.tnePrice9.ValueStep = 1;
+            // 
+            // tnePrice8
+            // 
+            this.tnePrice8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice8.CanEdit = true;
+            this.tnePrice8.DefaultValue = 0;
+            this.tnePrice8.FoceInZone = false;
+            this.tnePrice8.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice8.ForeColor = System.Drawing.Color.White;
+            this.tnePrice8.Location = new System.Drawing.Point(284, 125);
+            this.tnePrice8.Maximum = 30000;
+            this.tnePrice8.Minimum = 0;
+            this.tnePrice8.Name = "tnePrice8";
+            this.tnePrice8.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice8.strText = "";
+            this.tnePrice8.TabIndex = 78;
+            this.tnePrice8.Value = 0;
+            this.tnePrice8.ValueStep = 1;
+            // 
+            // tnePrice7
+            // 
+            this.tnePrice7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice7.CanEdit = true;
+            this.tnePrice7.DefaultValue = 0;
+            this.tnePrice7.FoceInZone = false;
+            this.tnePrice7.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice7.ForeColor = System.Drawing.Color.White;
+            this.tnePrice7.Location = new System.Drawing.Point(284, 87);
+            this.tnePrice7.Maximum = 30000;
+            this.tnePrice7.Minimum = 0;
+            this.tnePrice7.Name = "tnePrice7";
+            this.tnePrice7.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice7.strText = "";
+            this.tnePrice7.TabIndex = 77;
+            this.tnePrice7.Value = 0;
+            this.tnePrice7.ValueStep = 1;
+            // 
+            // tnePrice6
+            // 
+            this.tnePrice6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice6.CanEdit = true;
+            this.tnePrice6.DefaultValue = 0;
+            this.tnePrice6.FoceInZone = false;
+            this.tnePrice6.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice6.ForeColor = System.Drawing.Color.White;
+            this.tnePrice6.Location = new System.Drawing.Point(284, 49);
+            this.tnePrice6.Maximum = 30000;
+            this.tnePrice6.Minimum = 0;
+            this.tnePrice6.Name = "tnePrice6";
+            this.tnePrice6.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice6.strText = "";
+            this.tnePrice6.TabIndex = 76;
+            this.tnePrice6.Value = 0;
+            this.tnePrice6.ValueStep = 1;
+            // 
+            // tnePrice4
+            // 
+            this.tnePrice4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice4.CanEdit = true;
+            this.tnePrice4.DefaultValue = 0;
+            this.tnePrice4.FoceInZone = false;
+            this.tnePrice4.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice4.ForeColor = System.Drawing.Color.White;
+            this.tnePrice4.Location = new System.Drawing.Point(44, 164);
+            this.tnePrice4.Maximum = 30000;
+            this.tnePrice4.Minimum = 0;
+            this.tnePrice4.Name = "tnePrice4";
+            this.tnePrice4.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice4.strText = "";
+            this.tnePrice4.TabIndex = 75;
+            this.tnePrice4.Value = 0;
+            this.tnePrice4.ValueStep = 1;
+            // 
+            // tnePrice3
+            // 
+            this.tnePrice3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice3.CanEdit = true;
+            this.tnePrice3.DefaultValue = 0;
+            this.tnePrice3.FoceInZone = false;
+            this.tnePrice3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice3.ForeColor = System.Drawing.Color.White;
+            this.tnePrice3.Location = new System.Drawing.Point(44, 125);
+            this.tnePrice3.Maximum = 30000;
+            this.tnePrice3.Minimum = 0;
+            this.tnePrice3.Name = "tnePrice3";
+            this.tnePrice3.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice3.strText = "";
+            this.tnePrice3.TabIndex = 74;
+            this.tnePrice3.Value = 0;
+            this.tnePrice3.ValueStep = 1;
+            // 
+            // tnePrice2
+            // 
+            this.tnePrice2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice2.CanEdit = true;
+            this.tnePrice2.DefaultValue = 0;
+            this.tnePrice2.FoceInZone = false;
+            this.tnePrice2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice2.ForeColor = System.Drawing.Color.White;
+            this.tnePrice2.Location = new System.Drawing.Point(44, 87);
+            this.tnePrice2.Maximum = 30000;
+            this.tnePrice2.Minimum = 0;
+            this.tnePrice2.Name = "tnePrice2";
+            this.tnePrice2.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice2.strText = "";
+            this.tnePrice2.TabIndex = 73;
+            this.tnePrice2.Value = 0;
+            this.tnePrice2.ValueStep = 1;
+            // 
+            // tnePrice1
+            // 
+            this.tnePrice1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePrice1.CanEdit = true;
+            this.tnePrice1.DefaultValue = 0;
+            this.tnePrice1.FoceInZone = false;
+            this.tnePrice1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePrice1.ForeColor = System.Drawing.Color.White;
+            this.tnePrice1.Location = new System.Drawing.Point(44, 49);
+            this.tnePrice1.Maximum = 30000;
+            this.tnePrice1.Minimum = 0;
+            this.tnePrice1.Name = "tnePrice1";
+            this.tnePrice1.Size = new System.Drawing.Size(151, 32);
+            this.tnePrice1.strText = "";
+            this.tnePrice1.TabIndex = 72;
+            this.tnePrice1.Value = 0;
+            this.tnePrice1.ValueStep = 1;
+            // 
             // label75
             // 
             this.label75.AutoSize = true;
@@ -1369,6 +1735,30 @@ namespace EMS
             this.btnFlash3.Text = "更新";
             this.btnFlash3.UseVisualStyleBackColor = false;
             this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
+            // 
+            // tcbUseBalaTactics
+            // 
+            this.tcbUseBalaTactics.BackColor = System.Drawing.Color.Transparent;
+            this.tcbUseBalaTactics.Caption = "使用均衡策略";
+            this.tcbUseBalaTactics.Checked = false;
+            this.tcbUseBalaTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbUseBalaTactics.ForeColor = System.Drawing.Color.White;
+            this.tcbUseBalaTactics.Location = new System.Drawing.Point(534, 3);
+            this.tcbUseBalaTactics.Name = "tcbUseBalaTactics";
+            this.tcbUseBalaTactics.Size = new System.Drawing.Size(153, 32);
+            this.tcbUseBalaTactics.TabIndex = 20;
+            // 
+            // tcbUseYunTactics
+            // 
+            this.tcbUseYunTactics.BackColor = System.Drawing.Color.Transparent;
+            this.tcbUseYunTactics.Caption = "使用云策略";
+            this.tcbUseYunTactics.Checked = false;
+            this.tcbUseYunTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbUseYunTactics.ForeColor = System.Drawing.Color.White;
+            this.tcbUseYunTactics.Location = new System.Drawing.Point(383, 3);
+            this.tcbUseYunTactics.Name = "tcbUseYunTactics";
+            this.tcbUseYunTactics.Size = new System.Drawing.Size(134, 32);
+            this.tcbUseYunTactics.TabIndex = 19;
             // 
             // btnUpT
             // 
@@ -1758,6 +2148,78 @@ namespace EMS
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "充放电限制";
             // 
+            // tneMaxGridKWH
+            // 
+            this.tneMaxGridKWH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneMaxGridKWH.CanEdit = true;
+            this.tneMaxGridKWH.DefaultValue = 0;
+            this.tneMaxGridKWH.FoceInZone = false;
+            this.tneMaxGridKWH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneMaxGridKWH.ForeColor = System.Drawing.Color.White;
+            this.tneMaxGridKWH.Location = new System.Drawing.Point(158, 29);
+            this.tneMaxGridKWH.Maximum = 999999;
+            this.tneMaxGridKWH.Minimum = 1;
+            this.tneMaxGridKWH.Name = "tneMaxGridKWH";
+            this.tneMaxGridKWH.Size = new System.Drawing.Size(164, 32);
+            this.tneMaxGridKWH.strText = "";
+            this.tneMaxGridKWH.TabIndex = 36;
+            this.tneMaxGridKWH.Value = 0;
+            this.tneMaxGridKWH.ValueStep = 1;
+            // 
+            // tneMinGridKWH
+            // 
+            this.tneMinGridKWH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneMinGridKWH.CanEdit = true;
+            this.tneMinGridKWH.DefaultValue = 0;
+            this.tneMinGridKWH.FoceInZone = false;
+            this.tneMinGridKWH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneMinGridKWH.ForeColor = System.Drawing.Color.White;
+            this.tneMinGridKWH.Location = new System.Drawing.Point(568, 34);
+            this.tneMinGridKWH.Maximum = 999999;
+            this.tneMinGridKWH.Minimum = -100;
+            this.tneMinGridKWH.Name = "tneMinGridKWH";
+            this.tneMinGridKWH.Size = new System.Drawing.Size(190, 32);
+            this.tneMinGridKWH.strText = "";
+            this.tneMinGridKWH.TabIndex = 35;
+            this.tneMinGridKWH.Value = 0;
+            this.tneMinGridKWH.ValueStep = 1;
+            // 
+            // tneMaxSOC
+            // 
+            this.tneMaxSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneMaxSOC.CanEdit = true;
+            this.tneMaxSOC.DefaultValue = 0;
+            this.tneMaxSOC.FoceInZone = false;
+            this.tneMaxSOC.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneMaxSOC.ForeColor = System.Drawing.Color.White;
+            this.tneMaxSOC.Location = new System.Drawing.Point(158, 75);
+            this.tneMaxSOC.Maximum = 100;
+            this.tneMaxSOC.Minimum = 1;
+            this.tneMaxSOC.Name = "tneMaxSOC";
+            this.tneMaxSOC.Size = new System.Drawing.Size(164, 32);
+            this.tneMaxSOC.strText = "";
+            this.tneMaxSOC.TabIndex = 34;
+            this.tneMaxSOC.Value = 0;
+            this.tneMaxSOC.ValueStep = 1;
+            // 
+            // tneMinSOC
+            // 
+            this.tneMinSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneMinSOC.CanEdit = true;
+            this.tneMinSOC.DefaultValue = 0;
+            this.tneMinSOC.FoceInZone = false;
+            this.tneMinSOC.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneMinSOC.ForeColor = System.Drawing.Color.White;
+            this.tneMinSOC.Location = new System.Drawing.Point(568, 81);
+            this.tneMinSOC.Maximum = 100;
+            this.tneMinSOC.Minimum = 0;
+            this.tneMinSOC.Name = "tneMinSOC";
+            this.tneMinSOC.Size = new System.Drawing.Size(190, 32);
+            this.tneMinSOC.strText = "";
+            this.tneMinSOC.TabIndex = 33;
+            this.tneMinSOC.Value = 0;
+            this.tneMinSOC.ValueStep = 1;
+            // 
             // label51
             // 
             this.label51.AutoSize = true;
@@ -1810,6 +2272,24 @@ namespace EMS
             this.panel7.Size = new System.Drawing.Size(796, 115);
             this.panel7.TabIndex = 49;
             // 
+            // tnePUM
+            // 
+            this.tnePUM.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tnePUM.CanEdit = true;
+            this.tnePUM.DefaultValue = 0;
+            this.tnePUM.FoceInZone = false;
+            this.tnePUM.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tnePUM.ForeColor = System.Drawing.Color.White;
+            this.tnePUM.Location = new System.Drawing.Point(95, 78);
+            this.tnePUM.Maximum = 2000;
+            this.tnePUM.Minimum = 1;
+            this.tnePUM.Name = "tnePUM";
+            this.tnePUM.Size = new System.Drawing.Size(164, 32);
+            this.tnePUM.strText = "";
+            this.tnePUM.TabIndex = 37;
+            this.tnePUM.Value = 0;
+            this.tnePUM.ValueStep = 1;
+            // 
             // label27
             // 
             this.label27.AutoSize = true;
@@ -1819,6 +2299,24 @@ namespace EMS
             this.label27.TabIndex = 36;
             this.label27.Text = "需量控制";
             // 
+            // tneWarnGridkva
+            // 
+            this.tneWarnGridkva.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneWarnGridkva.CanEdit = true;
+            this.tneWarnGridkva.DefaultValue = 0;
+            this.tneWarnGridkva.FoceInZone = false;
+            this.tneWarnGridkva.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneWarnGridkva.ForeColor = System.Drawing.Color.White;
+            this.tneWarnGridkva.Location = new System.Drawing.Point(567, 18);
+            this.tneWarnGridkva.Maximum = 2000;
+            this.tneWarnGridkva.Minimum = 1;
+            this.tneWarnGridkva.Name = "tneWarnGridkva";
+            this.tneWarnGridkva.Size = new System.Drawing.Size(164, 32);
+            this.tneWarnGridkva.strText = "";
+            this.tneWarnGridkva.TabIndex = 35;
+            this.tneWarnGridkva.Value = 0;
+            this.tneWarnGridkva.ValueStep = 1;
+            // 
             // label26
             // 
             this.label26.AutoSize = true;
@@ -1827,6 +2325,40 @@ namespace EMS
             this.label26.Size = new System.Drawing.Size(106, 21);
             this.label26.TabIndex = 5;
             this.label26.Text = "告警电网功率";
+            // 
+            // tcbDebugComName
+            // 
+            this.tcbDebugComName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbDebugComName.CenterShow = true;
+            this.tcbDebugComName.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbDebugComName.ForeColor = System.Drawing.Color.White;
+            this.tcbDebugComName.Items = new string[] {
+        "Com1",
+        "Com2",
+        "Com3",
+        "Com4",
+        "Com5",
+        "Com6",
+        "Com7",
+        "Com8",
+        "Com9",
+        "Com10",
+        "Com11",
+        "Com12",
+        "Com13",
+        "Com14",
+        "Com15",
+        "Com16",
+        "Com17",
+        "Com18",
+        "Com19"};
+            this.tcbDebugComName.Location = new System.Drawing.Point(95, 18);
+            this.tcbDebugComName.Name = "tcbDebugComName";
+            this.tcbDebugComName.SelectItemIndex = 0;
+            this.tcbDebugComName.Size = new System.Drawing.Size(179, 32);
+            this.tcbDebugComName.strText = "Com1";
+            this.tcbDebugComName.TabIndex = 4;
+            this.tcbDebugComName.Value = 0;
             // 
             // labDebugRate
             // 
@@ -1879,6 +2411,60 @@ namespace EMS
             this.label6.TabIndex = 44;
             this.label6.Text = " 时";
             // 
+            // tneNetTimeS
+            // 
+            this.tneNetTimeS.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneNetTimeS.CanEdit = true;
+            this.tneNetTimeS.DefaultValue = 0;
+            this.tneNetTimeS.FoceInZone = false;
+            this.tneNetTimeS.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneNetTimeS.ForeColor = System.Drawing.Color.White;
+            this.tneNetTimeS.Location = new System.Drawing.Point(567, 15);
+            this.tneNetTimeS.Maximum = 0;
+            this.tneNetTimeS.Minimum = 0;
+            this.tneNetTimeS.Name = "tneNetTimeS";
+            this.tneNetTimeS.Size = new System.Drawing.Size(124, 32);
+            this.tneNetTimeS.strText = "";
+            this.tneNetTimeS.TabIndex = 43;
+            this.tneNetTimeS.Value = 0;
+            this.tneNetTimeS.ValueStep = 1;
+            // 
+            // tneNetTimeM
+            // 
+            this.tneNetTimeM.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneNetTimeM.CanEdit = true;
+            this.tneNetTimeM.DefaultValue = 0;
+            this.tneNetTimeM.FoceInZone = false;
+            this.tneNetTimeM.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneNetTimeM.ForeColor = System.Drawing.Color.White;
+            this.tneNetTimeM.Location = new System.Drawing.Point(368, 15);
+            this.tneNetTimeM.Maximum = 0;
+            this.tneNetTimeM.Minimum = 0;
+            this.tneNetTimeM.Name = "tneNetTimeM";
+            this.tneNetTimeM.Size = new System.Drawing.Size(124, 32);
+            this.tneNetTimeM.strText = "";
+            this.tneNetTimeM.TabIndex = 42;
+            this.tneNetTimeM.Value = 0;
+            this.tneNetTimeM.ValueStep = 1;
+            // 
+            // tneNetTimeH
+            // 
+            this.tneNetTimeH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneNetTimeH.CanEdit = true;
+            this.tneNetTimeH.DefaultValue = 0;
+            this.tneNetTimeH.FoceInZone = false;
+            this.tneNetTimeH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneNetTimeH.ForeColor = System.Drawing.Color.White;
+            this.tneNetTimeH.Location = new System.Drawing.Point(142, 15);
+            this.tneNetTimeH.Maximum = 0;
+            this.tneNetTimeH.Minimum = 0;
+            this.tneNetTimeH.Name = "tneNetTimeH";
+            this.tneNetTimeH.Size = new System.Drawing.Size(124, 32);
+            this.tneNetTimeH.strText = "";
+            this.tneNetTimeH.TabIndex = 41;
+            this.tneNetTimeH.Value = 0;
+            this.tneNetTimeH.ValueStep = 1;
+            // 
             // label19
             // 
             this.label19.AutoSize = true;
@@ -1919,6 +2505,44 @@ namespace EMS
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(806, 61);
             this.panel4.TabIndex = 45;
+            // 
+            // tneSysInterval
+            // 
+            this.tneSysInterval.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSysInterval.CanEdit = true;
+            this.tneSysInterval.DefaultValue = 0;
+            this.tneSysInterval.FoceInZone = false;
+            this.tneSysInterval.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSysInterval.ForeColor = System.Drawing.Color.White;
+            this.tneSysInterval.Location = new System.Drawing.Point(142, 17);
+            this.tneSysInterval.Maximum = 1000;
+            this.tneSysInterval.Minimum = 1;
+            this.tneSysInterval.Name = "tneSysInterval";
+            this.tneSysInterval.Size = new System.Drawing.Size(179, 32);
+            this.tneSysInterval.strText = "";
+            this.tneSysInterval.TabIndex = 20;
+            this.tneSysInterval.Value = 0;
+            this.tneSysInterval.ValueStep = 1;
+            this.tneSysInterval.Visible = false;
+            // 
+            // tneUnInterval
+            // 
+            this.tneUnInterval.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneUnInterval.CanEdit = true;
+            this.tneUnInterval.DefaultValue = 0;
+            this.tneUnInterval.FoceInZone = false;
+            this.tneUnInterval.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneUnInterval.ForeColor = System.Drawing.Color.White;
+            this.tneUnInterval.Location = new System.Drawing.Point(567, 17);
+            this.tneUnInterval.Maximum = 3600;
+            this.tneUnInterval.Minimum = 5;
+            this.tneUnInterval.Name = "tneUnInterval";
+            this.tneUnInterval.Size = new System.Drawing.Size(190, 32);
+            this.tneUnInterval.strText = "";
+            this.tneUnInterval.TabIndex = 19;
+            this.tneUnInterval.Value = 0;
+            this.tneUnInterval.ValueStep = 1;
+            this.tneUnInterval.Visible = false;
             // 
             // label11
             // 
@@ -1975,6 +2599,24 @@ namespace EMS
             this.panel3.Size = new System.Drawing.Size(796, 126);
             this.panel3.TabIndex = 44;
             // 
+            // tneSysCount
+            // 
+            this.tneSysCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSysCount.CanEdit = true;
+            this.tneSysCount.DefaultValue = 1;
+            this.tneSysCount.FoceInZone = false;
+            this.tneSysCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSysCount.ForeColor = System.Drawing.Color.White;
+            this.tneSysCount.Location = new System.Drawing.Point(142, 63);
+            this.tneSysCount.Maximum = 254;
+            this.tneSysCount.Minimum = 1;
+            this.tneSysCount.Name = "tneSysCount";
+            this.tneSysCount.Size = new System.Drawing.Size(179, 32);
+            this.tneSysCount.strText = "1";
+            this.tneSysCount.TabIndex = 42;
+            this.tneSysCount.Value = 1;
+            this.tneSysCount.ValueStep = 1;
+            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -1983,6 +2625,56 @@ namespace EMS
             this.label5.Size = new System.Drawing.Size(90, 21);
             this.label5.TabIndex = 41;
             this.label5.Text = "储能柜个数";
+            // 
+            // tcbIsMaster
+            // 
+            this.tcbIsMaster.BackColor = System.Drawing.Color.Transparent;
+            this.tcbIsMaster.Caption = "本身为主控";
+            this.tcbIsMaster.Checked = false;
+            this.tcbIsMaster.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbIsMaster.ForeColor = System.Drawing.Color.White;
+            this.tcbIsMaster.Location = new System.Drawing.Point(43, 20);
+            this.tcbIsMaster.Name = "tcbIsMaster";
+            this.tcbIsMaster.Size = new System.Drawing.Size(138, 32);
+            this.tcbIsMaster.TabIndex = 40;
+            this.tcbIsMaster.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tcbIsMaster_OnValueChange);
+            // 
+            // tneMaster485Addr
+            // 
+            this.tneMaster485Addr.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneMaster485Addr.CanEdit = true;
+            this.tneMaster485Addr.DefaultValue = 0;
+            this.tneMaster485Addr.Enabled = false;
+            this.tneMaster485Addr.FoceInZone = false;
+            this.tneMaster485Addr.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneMaster485Addr.ForeColor = System.Drawing.Color.White;
+            this.tneMaster485Addr.Location = new System.Drawing.Point(564, 63);
+            this.tneMaster485Addr.Maximum = 254;
+            this.tneMaster485Addr.Minimum = 1;
+            this.tneMaster485Addr.Name = "tneMaster485Addr";
+            this.tneMaster485Addr.Size = new System.Drawing.Size(193, 32);
+            this.tneMaster485Addr.strText = "1";
+            this.tneMaster485Addr.TabIndex = 39;
+            this.tneMaster485Addr.Value = 1;
+            this.tneMaster485Addr.ValueStep = 1;
+            // 
+            // tne485Addr
+            // 
+            this.tne485Addr.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tne485Addr.CanEdit = true;
+            this.tne485Addr.DefaultValue = 0;
+            this.tne485Addr.FoceInZone = false;
+            this.tne485Addr.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tne485Addr.ForeColor = System.Drawing.Color.White;
+            this.tne485Addr.Location = new System.Drawing.Point(567, 14);
+            this.tne485Addr.Maximum = 254;
+            this.tne485Addr.Minimum = 1;
+            this.tne485Addr.Name = "tne485Addr";
+            this.tne485Addr.Size = new System.Drawing.Size(190, 32);
+            this.tne485Addr.strText = "";
+            this.tne485Addr.TabIndex = 38;
+            this.tne485Addr.Value = 0;
+            this.tne485Addr.ValueStep = 1;
             // 
             // label14
             // 
@@ -2095,6 +2787,42 @@ namespace EMS
             this.label16.TabIndex = 72;
             this.label16.Text = "mv";
             // 
+            // tneBMScellUPV3
+            // 
+            this.tneBMScellUPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV3.CanEdit = true;
+            this.tneBMScellUPV3.DefaultValue = 0;
+            this.tneBMScellUPV3.FoceInZone = false;
+            this.tneBMScellUPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV3.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV3.Location = new System.Drawing.Point(630, 126);
+            this.tneBMScellUPV3.Maximum = 4000;
+            this.tneBMScellUPV3.Minimum = 0;
+            this.tneBMScellUPV3.Name = "tneBMScellUPV3";
+            this.tneBMScellUPV3.Size = new System.Drawing.Size(137, 32);
+            this.tneBMScellUPV3.strText = "";
+            this.tneBMScellUPV3.TabIndex = 71;
+            this.tneBMScellUPV3.Value = 0;
+            this.tneBMScellUPV3.ValueStep = 1;
+            // 
+            // tneBMScellPV3
+            // 
+            this.tneBMScellPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV3.CanEdit = true;
+            this.tneBMScellPV3.DefaultValue = 0;
+            this.tneBMScellPV3.FoceInZone = false;
+            this.tneBMScellPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV3.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV3.Location = new System.Drawing.Point(630, 74);
+            this.tneBMScellPV3.Maximum = 4000;
+            this.tneBMScellPV3.Minimum = 0;
+            this.tneBMScellPV3.Name = "tneBMScellPV3";
+            this.tneBMScellPV3.Size = new System.Drawing.Size(137, 32);
+            this.tneBMScellPV3.strText = "";
+            this.tneBMScellPV3.TabIndex = 70;
+            this.tneBMScellPV3.Value = 0;
+            this.tneBMScellPV3.ValueStep = 1;
+            // 
             // label20
             // 
             this.label20.AutoSize = true;
@@ -2137,6 +2865,42 @@ namespace EMS
             this.label64.TabIndex = 66;
             this.label64.Text = "mv";
             // 
+            // tneBMScellUPV2
+            // 
+            this.tneBMScellUPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV2.CanEdit = true;
+            this.tneBMScellUPV2.DefaultValue = 0;
+            this.tneBMScellUPV2.FoceInZone = false;
+            this.tneBMScellUPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV2.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV2.Location = new System.Drawing.Point(365, 126);
+            this.tneBMScellUPV2.Maximum = 4000;
+            this.tneBMScellUPV2.Minimum = 0;
+            this.tneBMScellUPV2.Name = "tneBMScellUPV2";
+            this.tneBMScellUPV2.Size = new System.Drawing.Size(134, 32);
+            this.tneBMScellUPV2.strText = "";
+            this.tneBMScellUPV2.TabIndex = 65;
+            this.tneBMScellUPV2.Value = 0;
+            this.tneBMScellUPV2.ValueStep = 1;
+            // 
+            // tneBMScellPV2
+            // 
+            this.tneBMScellPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV2.CanEdit = true;
+            this.tneBMScellPV2.DefaultValue = 0;
+            this.tneBMScellPV2.FoceInZone = false;
+            this.tneBMScellPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV2.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV2.Location = new System.Drawing.Point(365, 74);
+            this.tneBMScellPV2.Maximum = 4000;
+            this.tneBMScellPV2.Minimum = 0;
+            this.tneBMScellPV2.Name = "tneBMScellPV2";
+            this.tneBMScellPV2.Size = new System.Drawing.Size(134, 32);
+            this.tneBMScellPV2.strText = "";
+            this.tneBMScellPV2.TabIndex = 64;
+            this.tneBMScellPV2.Value = 0;
+            this.tneBMScellPV2.ValueStep = 1;
+            // 
             // label77
             // 
             this.label77.AutoSize = true;
@@ -2169,6 +2933,24 @@ namespace EMS
             this.label93.TabIndex = 61;
             this.label93.Text = "mv";
             // 
+            // tneBMScellUPV1
+            // 
+            this.tneBMScellUPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellUPV1.CanEdit = true;
+            this.tneBMScellUPV1.DefaultValue = 0;
+            this.tneBMScellUPV1.FoceInZone = false;
+            this.tneBMScellUPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellUPV1.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellUPV1.Location = new System.Drawing.Point(96, 126);
+            this.tneBMScellUPV1.Maximum = 4000;
+            this.tneBMScellUPV1.Minimum = 0;
+            this.tneBMScellUPV1.Name = "tneBMScellUPV1";
+            this.tneBMScellUPV1.Size = new System.Drawing.Size(138, 32);
+            this.tneBMScellUPV1.strText = "";
+            this.tneBMScellUPV1.TabIndex = 60;
+            this.tneBMScellUPV1.Value = 0;
+            this.tneBMScellUPV1.ValueStep = 1;
+            // 
             // label94
             // 
             this.label94.AutoSize = true;
@@ -2189,6 +2971,24 @@ namespace EMS
             this.label95.Size = new System.Drawing.Size(29, 19);
             this.label95.TabIndex = 58;
             this.label95.Text = "mv";
+            // 
+            // tneBMScellPV1
+            // 
+            this.tneBMScellPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMScellPV1.CanEdit = true;
+            this.tneBMScellPV1.DefaultValue = 0;
+            this.tneBMScellPV1.FoceInZone = false;
+            this.tneBMScellPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMScellPV1.ForeColor = System.Drawing.Color.White;
+            this.tneBMScellPV1.Location = new System.Drawing.Point(96, 74);
+            this.tneBMScellPV1.Maximum = 4000;
+            this.tneBMScellPV1.Minimum = 0;
+            this.tneBMScellPV1.Name = "tneBMScellPV1";
+            this.tneBMScellPV1.Size = new System.Drawing.Size(138, 32);
+            this.tneBMScellPV1.strText = "";
+            this.tneBMScellPV1.TabIndex = 57;
+            this.tneBMScellPV1.Value = 0;
+            this.tneBMScellPV1.ValueStep = 1;
             // 
             // label96
             // 
@@ -2236,6 +3036,24 @@ namespace EMS
             this.label98.Size = new System.Drawing.Size(114, 19);
             this.label98.TabIndex = 53;
             this.label98.Text = "1级限制功率";
+            // 
+            // tneBMSwaValue
+            // 
+            this.tneBMSwaValue.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneBMSwaValue.CanEdit = true;
+            this.tneBMSwaValue.DefaultValue = 0;
+            this.tneBMSwaValue.FoceInZone = false;
+            this.tneBMSwaValue.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneBMSwaValue.ForeColor = System.Drawing.Color.White;
+            this.tneBMSwaValue.Location = new System.Drawing.Point(138, 31);
+            this.tneBMSwaValue.Maximum = 840;
+            this.tneBMSwaValue.Minimum = 0;
+            this.tneBMSwaValue.Name = "tneBMSwaValue";
+            this.tneBMSwaValue.Size = new System.Drawing.Size(124, 32);
+            this.tneBMSwaValue.strText = "";
+            this.tneBMSwaValue.TabIndex = 52;
+            this.tneBMSwaValue.Value = 0;
+            this.tneBMSwaValue.ValueStep = 1;
             // 
             // btnBMSClose
             // 
@@ -2322,6 +3140,24 @@ namespace EMS
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "空调设置";
             // 
+            // tcbFenMode
+            // 
+            this.tcbFenMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbFenMode.CenterShow = true;
+            this.tcbFenMode.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbFenMode.ForeColor = System.Drawing.Color.White;
+            this.tcbFenMode.Items = new string[] {
+        "禁用",
+        "冷凝温度",
+        "供液温度"};
+            this.tcbFenMode.Location = new System.Drawing.Point(475, 15);
+            this.tcbFenMode.Name = "tcbFenMode";
+            this.tcbFenMode.SelectItemIndex = 0;
+            this.tcbFenMode.Size = new System.Drawing.Size(178, 34);
+            this.tcbFenMode.strText = "禁用";
+            this.tcbFenMode.TabIndex = 93;
+            this.tcbFenMode.Value = 0;
+            // 
             // label63
             // 
             this.label63.AutoSize = true;
@@ -2340,6 +3176,24 @@ namespace EMS
             this.label62.TabIndex = 91;
             this.label62.Text = "0.1℃";
             // 
+            // tneFenMinTemp
+            // 
+            this.tneFenMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneFenMinTemp.CanEdit = true;
+            this.tneFenMinTemp.DefaultValue = 0;
+            this.tneFenMinTemp.FoceInZone = false;
+            this.tneFenMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneFenMinTemp.ForeColor = System.Drawing.Color.White;
+            this.tneFenMinTemp.Location = new System.Drawing.Point(477, 333);
+            this.tneFenMinTemp.Maximum = 1000;
+            this.tneFenMinTemp.Minimum = 0;
+            this.tneFenMinTemp.Name = "tneFenMinTemp";
+            this.tneFenMinTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneFenMinTemp.strText = "";
+            this.tneFenMinTemp.TabIndex = 90;
+            this.tneFenMinTemp.Value = 0;
+            this.tneFenMinTemp.ValueStep = 1;
+            // 
             // label61
             // 
             this.label61.AutoSize = true;
@@ -2357,6 +3211,24 @@ namespace EMS
             this.label60.Size = new System.Drawing.Size(48, 21);
             this.label60.TabIndex = 88;
             this.label60.Text = "0.1℃";
+            // 
+            // tneFenMaxTemp
+            // 
+            this.tneFenMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneFenMaxTemp.CanEdit = true;
+            this.tneFenMaxTemp.DefaultValue = 0;
+            this.tneFenMaxTemp.FoceInZone = false;
+            this.tneFenMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneFenMaxTemp.ForeColor = System.Drawing.Color.White;
+            this.tneFenMaxTemp.Location = new System.Drawing.Point(477, 288);
+            this.tneFenMaxTemp.Maximum = 1000;
+            this.tneFenMaxTemp.Minimum = 0;
+            this.tneFenMaxTemp.Name = "tneFenMaxTemp";
+            this.tneFenMaxTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneFenMaxTemp.strText = "";
+            this.tneFenMaxTemp.TabIndex = 87;
+            this.tneFenMaxTemp.Value = 0;
+            this.tneFenMaxTemp.ValueStep = 1;
             // 
             // label57
             // 
@@ -2390,6 +3262,230 @@ namespace EMS
             this.label82.Size = new System.Drawing.Size(48, 21);
             this.label82.TabIndex = 84;
             this.label82.Text = "0.1℃";
+            // 
+            // tcbTCRunWithSys
+            // 
+            this.tcbTCRunWithSys.BackColor = System.Drawing.Color.Transparent;
+            this.tcbTCRunWithSys.Caption = "来电自动开启空调";
+            this.tcbTCRunWithSys.Checked = false;
+            this.tcbTCRunWithSys.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbTCRunWithSys.ForeColor = System.Drawing.Color.White;
+            this.tcbTCRunWithSys.Location = new System.Drawing.Point(42, 300);
+            this.tcbTCRunWithSys.Name = "tcbTCRunWithSys";
+            this.tcbTCRunWithSys.Size = new System.Drawing.Size(217, 32);
+            this.tcbTCRunWithSys.TabIndex = 83;
+            this.tcbTCRunWithSys.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tcbTCMode
+            // 
+            this.tcbTCMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbTCMode.CenterShow = true;
+            this.tcbTCMode.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbTCMode.ForeColor = System.Drawing.Color.White;
+            this.tcbTCMode.Items = new string[] {
+        "自动",
+        "强制制冷",
+        "强制制热",
+        "强制送风",
+        "强制关闭"};
+            this.tcbTCMode.Location = new System.Drawing.Point(133, 18);
+            this.tcbTCMode.Name = "tcbTCMode";
+            this.tcbTCMode.SelectItemIndex = 0;
+            this.tcbTCMode.Size = new System.Drawing.Size(178, 34);
+            this.tcbTCMode.strText = "自动";
+            this.tcbTCMode.TabIndex = 82;
+            this.tcbTCMode.Value = 0;
+            this.tcbTCMode.OnValueChange += new EMS.TouchCombox.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneHotTempReturn
+            // 
+            this.tneHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneHotTempReturn.CanEdit = true;
+            this.tneHotTempReturn.DefaultValue = 0;
+            this.tneHotTempReturn.FoceInZone = false;
+            this.tneHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneHotTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneHotTempReturn.Location = new System.Drawing.Point(475, 55);
+            this.tneHotTempReturn.Maximum = 150;
+            this.tneHotTempReturn.Minimum = 10;
+            this.tneHotTempReturn.Name = "tneHotTempReturn";
+            this.tneHotTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneHotTempReturn.strText = "";
+            this.tneHotTempReturn.TabIndex = 81;
+            this.tneHotTempReturn.Value = 0;
+            this.tneHotTempReturn.ValueStep = 1;
+            this.tneHotTempReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneSetHotTemp
+            // 
+            this.tneSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSetHotTemp.CanEdit = true;
+            this.tneSetHotTemp.DefaultValue = 0;
+            this.tneSetHotTemp.FoceInZone = false;
+            this.tneSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSetHotTemp.ForeColor = System.Drawing.Color.White;
+            this.tneSetHotTemp.Location = new System.Drawing.Point(135, 65);
+            this.tneSetHotTemp.Maximum = 350;
+            this.tneSetHotTemp.Minimum = -400;
+            this.tneSetHotTemp.Name = "tneSetHotTemp";
+            this.tneSetHotTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneSetHotTemp.strText = "";
+            this.tneSetHotTemp.TabIndex = 80;
+            this.tneSetHotTemp.Value = 0;
+            this.tneSetHotTemp.ValueStep = 1;
+            this.tneSetHotTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneSetCoolTemp
+            // 
+            this.tneSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSetCoolTemp.CanEdit = true;
+            this.tneSetCoolTemp.DefaultValue = 0;
+            this.tneSetCoolTemp.FoceInZone = false;
+            this.tneSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSetCoolTemp.ForeColor = System.Drawing.Color.White;
+            this.tneSetCoolTemp.Location = new System.Drawing.Point(135, 111);
+            this.tneSetCoolTemp.Maximum = 500;
+            this.tneSetCoolTemp.Minimum = 190;
+            this.tneSetCoolTemp.Name = "tneSetCoolTemp";
+            this.tneSetCoolTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneSetCoolTemp.strText = "";
+            this.tneSetCoolTemp.TabIndex = 79;
+            this.tneSetCoolTemp.Value = 0;
+            this.tneSetCoolTemp.ValueStep = 1;
+            this.tneSetCoolTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneCoolTempReturn
+            // 
+            this.tneCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneCoolTempReturn.CanEdit = true;
+            this.tneCoolTempReturn.DefaultValue = 0;
+            this.tneCoolTempReturn.FoceInZone = false;
+            this.tneCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneCoolTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneCoolTempReturn.Location = new System.Drawing.Point(476, 99);
+            this.tneCoolTempReturn.Maximum = 150;
+            this.tneCoolTempReturn.Minimum = 10;
+            this.tneCoolTempReturn.Name = "tneCoolTempReturn";
+            this.tneCoolTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneCoolTempReturn.strText = "";
+            this.tneCoolTempReturn.TabIndex = 78;
+            this.tneCoolTempReturn.Value = 0;
+            this.tneCoolTempReturn.ValueStep = 1;
+            this.tneCoolTempReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneSetHumidity
+            // 
+            this.tneSetHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneSetHumidity.CanEdit = true;
+            this.tneSetHumidity.DefaultValue = 0;
+            this.tneSetHumidity.FoceInZone = false;
+            this.tneSetHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneSetHumidity.ForeColor = System.Drawing.Color.White;
+            this.tneSetHumidity.Location = new System.Drawing.Point(135, 156);
+            this.tneSetHumidity.Maximum = 800;
+            this.tneSetHumidity.Minimum = 200;
+            this.tneSetHumidity.Name = "tneSetHumidity";
+            this.tneSetHumidity.Size = new System.Drawing.Size(124, 32);
+            this.tneSetHumidity.strText = "";
+            this.tneSetHumidity.TabIndex = 77;
+            this.tneSetHumidity.Value = 0;
+            this.tneSetHumidity.ValueStep = 1;
+            this.tneSetHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneTCMaxHumidity
+            // 
+            this.tneTCMaxHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMaxHumidity.CanEdit = true;
+            this.tneTCMaxHumidity.DefaultValue = 0;
+            this.tneTCMaxHumidity.FoceInZone = false;
+            this.tneTCMaxHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMaxHumidity.ForeColor = System.Drawing.Color.White;
+            this.tneTCMaxHumidity.Location = new System.Drawing.Point(135, 249);
+            this.tneTCMaxHumidity.Maximum = 1000;
+            this.tneTCMaxHumidity.Minimum = 0;
+            this.tneTCMaxHumidity.Name = "tneTCMaxHumidity";
+            this.tneTCMaxHumidity.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMaxHumidity.strText = "";
+            this.tneTCMaxHumidity.TabIndex = 76;
+            this.tneTCMaxHumidity.Value = 0;
+            this.tneTCMaxHumidity.ValueStep = 1;
+            this.tneTCMaxHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneTCMaxTemp
+            // 
+            this.tneTCMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMaxTemp.CanEdit = true;
+            this.tneTCMaxTemp.DefaultValue = 0;
+            this.tneTCMaxTemp.FoceInZone = false;
+            this.tneTCMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMaxTemp.ForeColor = System.Drawing.Color.White;
+            this.tneTCMaxTemp.Location = new System.Drawing.Point(135, 201);
+            this.tneTCMaxTemp.Maximum = 550;
+            this.tneTCMaxTemp.Minimum = 0;
+            this.tneTCMaxTemp.Name = "tneTCMaxTemp";
+            this.tneTCMaxTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMaxTemp.strText = "";
+            this.tneTCMaxTemp.TabIndex = 75;
+            this.tneTCMaxTemp.Value = 0;
+            this.tneTCMaxTemp.ValueStep = 1;
+            this.tneTCMaxTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneHumiReturn
+            // 
+            this.tneHumiReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneHumiReturn.CanEdit = true;
+            this.tneHumiReturn.DefaultValue = 0;
+            this.tneHumiReturn.FoceInZone = false;
+            this.tneHumiReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneHumiReturn.ForeColor = System.Drawing.Color.White;
+            this.tneHumiReturn.Location = new System.Drawing.Point(477, 143);
+            this.tneHumiReturn.Maximum = 900;
+            this.tneHumiReturn.Minimum = 100;
+            this.tneHumiReturn.Name = "tneHumiReturn";
+            this.tneHumiReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneHumiReturn.strText = "";
+            this.tneHumiReturn.TabIndex = 74;
+            this.tneHumiReturn.Value = 0;
+            this.tneHumiReturn.ValueStep = 1;
+            this.tneHumiReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneTCMinTemp
+            // 
+            this.tneTCMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMinTemp.CanEdit = true;
+            this.tneTCMinTemp.DefaultValue = 0;
+            this.tneTCMinTemp.FoceInZone = false;
+            this.tneTCMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMinTemp.ForeColor = System.Drawing.Color.White;
+            this.tneTCMinTemp.Location = new System.Drawing.Point(476, 190);
+            this.tneTCMinTemp.Maximum = 200;
+            this.tneTCMinTemp.Minimum = -300;
+            this.tneTCMinTemp.Name = "tneTCMinTemp";
+            this.tneTCMinTemp.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMinTemp.strText = "";
+            this.tneTCMinTemp.TabIndex = 73;
+            this.tneTCMinTemp.Value = 0;
+            this.tneTCMinTemp.ValueStep = 1;
+            this.tneTCMinTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
+            // 
+            // tneTCMinHumidity
+            // 
+            this.tneTCMinHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneTCMinHumidity.CanEdit = true;
+            this.tneTCMinHumidity.DefaultValue = 0;
+            this.tneTCMinHumidity.FoceInZone = false;
+            this.tneTCMinHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneTCMinHumidity.ForeColor = System.Drawing.Color.White;
+            this.tneTCMinHumidity.Location = new System.Drawing.Point(476, 237);
+            this.tneTCMinHumidity.Maximum = 1000;
+            this.tneTCMinHumidity.Minimum = 0;
+            this.tneTCMinHumidity.Name = "tneTCMinHumidity";
+            this.tneTCMinHumidity.Size = new System.Drawing.Size(124, 32);
+            this.tneTCMinHumidity.strText = "";
+            this.tneTCMinHumidity.TabIndex = 72;
+            this.tneTCMinHumidity.Value = 0;
+            this.tneTCMinHumidity.ValueStep = 1;
+            this.tneTCMinHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
             // 
             // label71
             // 
@@ -2724,6 +3820,95 @@ namespace EMS
             this.btnDHRun.UseVisualStyleBackColor = true;
             this.btnDHRun.Click += new System.EventHandler(this.btnDHRun_Click);
             // 
+            // tcbDHSetRunStatus
+            // 
+            this.tcbDHSetRunStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbDHSetRunStatus.CenterShow = true;
+            this.tcbDHSetRunStatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbDHSetRunStatus.ForeColor = System.Drawing.Color.White;
+            this.tcbDHSetRunStatus.Items = new string[] {
+        "手动切换",
+        "自动切换"};
+            this.tcbDHSetRunStatus.Location = new System.Drawing.Point(129, 38);
+            this.tcbDHSetRunStatus.Name = "tcbDHSetRunStatus";
+            this.tcbDHSetRunStatus.SelectItemIndex = 0;
+            this.tcbDHSetRunStatus.Size = new System.Drawing.Size(178, 34);
+            this.tcbDHSetRunStatus.strText = "手动切换";
+            this.tcbDHSetRunStatus.TabIndex = 82;
+            this.tcbDHSetRunStatus.Value = 0;
+            // 
+            // tneDHSetTempBoot
+            // 
+            this.tneDHSetTempBoot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneDHSetTempBoot.CanEdit = true;
+            this.tneDHSetTempBoot.DefaultValue = 0;
+            this.tneDHSetTempBoot.FoceInZone = false;
+            this.tneDHSetTempBoot.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneDHSetTempBoot.ForeColor = System.Drawing.Color.White;
+            this.tneDHSetTempBoot.Location = new System.Drawing.Point(483, 38);
+            this.tneDHSetTempBoot.Maximum = 100;
+            this.tneDHSetTempBoot.Minimum = 0;
+            this.tneDHSetTempBoot.Name = "tneDHSetTempBoot";
+            this.tneDHSetTempBoot.Size = new System.Drawing.Size(124, 32);
+            this.tneDHSetTempBoot.strText = "";
+            this.tneDHSetTempBoot.TabIndex = 81;
+            this.tneDHSetTempBoot.Value = 5;
+            this.tneDHSetTempBoot.ValueStep = 1;
+            // 
+            // tneDHSetHumidityBoot
+            // 
+            this.tneDHSetHumidityBoot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneDHSetHumidityBoot.CanEdit = true;
+            this.tneDHSetHumidityBoot.DefaultValue = 0;
+            this.tneDHSetHumidityBoot.FoceInZone = false;
+            this.tneDHSetHumidityBoot.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneDHSetHumidityBoot.ForeColor = System.Drawing.Color.White;
+            this.tneDHSetHumidityBoot.Location = new System.Drawing.Point(487, 129);
+            this.tneDHSetHumidityBoot.Maximum = 100;
+            this.tneDHSetHumidityBoot.Minimum = 20;
+            this.tneDHSetHumidityBoot.Name = "tneDHSetHumidityBoot";
+            this.tneDHSetHumidityBoot.Size = new System.Drawing.Size(124, 31);
+            this.tneDHSetHumidityBoot.strText = "";
+            this.tneDHSetHumidityBoot.TabIndex = 80;
+            this.tneDHSetHumidityBoot.Value = 80;
+            this.tneDHSetHumidityBoot.ValueStep = 1;
+            // 
+            // tneDHSetHumidityStop
+            // 
+            this.tneDHSetHumidityStop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneDHSetHumidityStop.CanEdit = true;
+            this.tneDHSetHumidityStop.DefaultValue = 0;
+            this.tneDHSetHumidityStop.FoceInZone = false;
+            this.tneDHSetHumidityStop.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneDHSetHumidityStop.ForeColor = System.Drawing.Color.White;
+            this.tneDHSetHumidityStop.Location = new System.Drawing.Point(487, 175);
+            this.tneDHSetHumidityStop.Maximum = 100;
+            this.tneDHSetHumidityStop.Minimum = 20;
+            this.tneDHSetHumidityStop.Name = "tneDHSetHumidityStop";
+            this.tneDHSetHumidityStop.Size = new System.Drawing.Size(124, 31);
+            this.tneDHSetHumidityStop.strText = "";
+            this.tneDHSetHumidityStop.TabIndex = 79;
+            this.tneDHSetHumidityStop.Value = 70;
+            this.tneDHSetHumidityStop.ValueStep = 1;
+            // 
+            // tneDHSetTempStop
+            // 
+            this.tneDHSetTempStop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneDHSetTempStop.CanEdit = true;
+            this.tneDHSetTempStop.DefaultValue = 0;
+            this.tneDHSetTempStop.FoceInZone = false;
+            this.tneDHSetTempStop.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneDHSetTempStop.ForeColor = System.Drawing.Color.White;
+            this.tneDHSetTempStop.Location = new System.Drawing.Point(484, 82);
+            this.tneDHSetTempStop.Maximum = 100;
+            this.tneDHSetTempStop.Minimum = 0;
+            this.tneDHSetTempStop.Name = "tneDHSetTempStop";
+            this.tneDHSetTempStop.Size = new System.Drawing.Size(124, 32);
+            this.tneDHSetTempStop.strText = "";
+            this.tneDHSetTempStop.TabIndex = 78;
+            this.tneDHSetTempStop.Value = 10;
+            this.tneDHSetTempStop.ValueStep = 1;
+            // 
             // label78
             // 
             this.label78.AutoSize = true;
@@ -2846,6 +4031,25 @@ namespace EMS
             this.btnLCClose.UseVisualStyleBackColor = true;
             this.btnLCClose.Click += new System.EventHandler(this.btnLClose_Click);
             // 
+            // tcbLCWaterPump
+            // 
+            this.tcbLCWaterPump.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbLCWaterPump.CenterShow = true;
+            this.tcbLCWaterPump.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbLCWaterPump.ForeColor = System.Drawing.Color.White;
+            this.tcbLCWaterPump.Items = new string[] {
+        "默认档",
+        "一档",
+        "二档",
+        "三档"};
+            this.tcbLCWaterPump.Location = new System.Drawing.Point(129, 128);
+            this.tcbLCWaterPump.Name = "tcbLCWaterPump";
+            this.tcbLCWaterPump.SelectItemIndex = 0;
+            this.tcbLCWaterPump.Size = new System.Drawing.Size(178, 34);
+            this.tcbLCWaterPump.strText = "默认档";
+            this.tcbLCWaterPump.TabIndex = 89;
+            this.tcbLCWaterPump.Value = 0;
+            // 
             // label56
             // 
             this.label56.AutoSize = true;
@@ -2854,6 +4058,25 @@ namespace EMS
             this.label56.Size = new System.Drawing.Size(106, 21);
             this.label56.TabIndex = 88;
             this.label56.Text = "水泵档位选择";
+            // 
+            // tcbLCTemperSelect
+            // 
+            this.tcbLCTemperSelect.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbLCTemperSelect.CenterShow = true;
+            this.tcbLCTemperSelect.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbLCTemperSelect.ForeColor = System.Drawing.Color.White;
+            this.tcbLCTemperSelect.Items = new string[] {
+        "电芯平均温度",
+        "出水温度",
+        "回水温度",
+        "电芯权重温度"};
+            this.tcbLCTemperSelect.Location = new System.Drawing.Point(129, 84);
+            this.tcbLCTemperSelect.Name = "tcbLCTemperSelect";
+            this.tcbLCTemperSelect.SelectItemIndex = 0;
+            this.tcbLCTemperSelect.Size = new System.Drawing.Size(178, 34);
+            this.tcbLCTemperSelect.strText = "电芯平均温度";
+            this.tcbLCTemperSelect.TabIndex = 87;
+            this.tcbLCTemperSelect.Value = 0;
             // 
             // label35
             // 
@@ -2878,6 +4101,98 @@ namespace EMS
             this.btnLCRun.Text = "应用";
             this.btnLCRun.UseVisualStyleBackColor = true;
             this.btnLCRun.Click += new System.EventHandler(this.btnLCRun_Click);
+            // 
+            // tcbLCModel
+            // 
+            this.tcbLCModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbLCModel.CenterShow = true;
+            this.tcbLCModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbLCModel.ForeColor = System.Drawing.Color.White;
+            this.tcbLCModel.Items = new string[] {
+        "停止",
+        "内循环",
+        "制冷",
+        "加热",
+        "全自动"};
+            this.tcbLCModel.Location = new System.Drawing.Point(129, 38);
+            this.tcbLCModel.Name = "tcbLCModel";
+            this.tcbLCModel.SelectItemIndex = 0;
+            this.tcbLCModel.Size = new System.Drawing.Size(178, 34);
+            this.tcbLCModel.strText = "停止";
+            this.tcbLCModel.TabIndex = 82;
+            this.tcbLCModel.Value = 0;
+            // 
+            // tneLCHotTempReturn
+            // 
+            this.tneLCHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneLCHotTempReturn.CanEdit = true;
+            this.tneLCHotTempReturn.DefaultValue = 0;
+            this.tneLCHotTempReturn.FoceInZone = false;
+            this.tneLCHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneLCHotTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneLCHotTempReturn.Location = new System.Drawing.Point(483, 38);
+            this.tneLCHotTempReturn.Maximum = 100;
+            this.tneLCHotTempReturn.Minimum = 10;
+            this.tneLCHotTempReturn.Name = "tneLCHotTempReturn";
+            this.tneLCHotTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneLCHotTempReturn.strText = "";
+            this.tneLCHotTempReturn.TabIndex = 81;
+            this.tneLCHotTempReturn.Value = 0;
+            this.tneLCHotTempReturn.ValueStep = 1;
+            // 
+            // tneLCSetHotTemp
+            // 
+            this.tneLCSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneLCSetHotTemp.CanEdit = true;
+            this.tneLCSetHotTemp.DefaultValue = 0;
+            this.tneLCSetHotTemp.FoceInZone = false;
+            this.tneLCSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneLCSetHotTemp.ForeColor = System.Drawing.Color.White;
+            this.tneLCSetHotTemp.Location = new System.Drawing.Point(487, 129);
+            this.tneLCSetHotTemp.Maximum = 350;
+            this.tneLCSetHotTemp.Minimum = 50;
+            this.tneLCSetHotTemp.Name = "tneLCSetHotTemp";
+            this.tneLCSetHotTemp.Size = new System.Drawing.Size(124, 31);
+            this.tneLCSetHotTemp.strText = "";
+            this.tneLCSetHotTemp.TabIndex = 80;
+            this.tneLCSetHotTemp.Value = 0;
+            this.tneLCSetHotTemp.ValueStep = 1;
+            // 
+            // tneLCSetCoolTemp
+            // 
+            this.tneLCSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneLCSetCoolTemp.CanEdit = true;
+            this.tneLCSetCoolTemp.DefaultValue = 0;
+            this.tneLCSetCoolTemp.FoceInZone = false;
+            this.tneLCSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneLCSetCoolTemp.ForeColor = System.Drawing.Color.White;
+            this.tneLCSetCoolTemp.Location = new System.Drawing.Point(487, 175);
+            this.tneLCSetCoolTemp.Maximum = 350;
+            this.tneLCSetCoolTemp.Minimum = 50;
+            this.tneLCSetCoolTemp.Name = "tneLCSetCoolTemp";
+            this.tneLCSetCoolTemp.Size = new System.Drawing.Size(124, 31);
+            this.tneLCSetCoolTemp.strText = "";
+            this.tneLCSetCoolTemp.TabIndex = 79;
+            this.tneLCSetCoolTemp.Value = 0;
+            this.tneLCSetCoolTemp.ValueStep = 1;
+            // 
+            // tneLCCoolTempReturn
+            // 
+            this.tneLCCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tneLCCoolTempReturn.CanEdit = true;
+            this.tneLCCoolTempReturn.DefaultValue = 0;
+            this.tneLCCoolTempReturn.FoceInZone = false;
+            this.tneLCCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tneLCCoolTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tneLCCoolTempReturn.Location = new System.Drawing.Point(484, 82);
+            this.tneLCCoolTempReturn.Maximum = 100;
+            this.tneLCCoolTempReturn.Minimum = 10;
+            this.tneLCCoolTempReturn.Name = "tneLCCoolTempReturn";
+            this.tneLCCoolTempReturn.Size = new System.Drawing.Size(124, 32);
+            this.tneLCCoolTempReturn.strText = "";
+            this.tneLCCoolTempReturn.TabIndex = 78;
+            this.tneLCCoolTempReturn.Value = 0;
+            this.tneLCCoolTempReturn.ValueStep = 1;
             // 
             // label37
             // 
@@ -3158,1321 +4473,6 @@ namespace EMS
             this.pbTimer.Size = new System.Drawing.Size(852, 17);
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
-            // 
-            // tcbGPIO
-            // 
-            this.tcbGPIO.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbGPIO.CenterShow = true;
-            this.tcbGPIO.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbGPIO.ForeColor = System.Drawing.Color.White;
-            this.tcbGPIO.Items = new string[] {
-        "风冷",
-        "液冷"};
-            this.tcbGPIO.Location = new System.Drawing.Point(127, 398);
-            this.tcbGPIO.Name = "tcbGPIO";
-            this.tcbGPIO.SelectItemIndex = 0;
-            this.tcbGPIO.Size = new System.Drawing.Size(182, 33);
-            this.tcbGPIO.strText = "风冷";
-            this.tcbGPIO.TabIndex = 65;
-            this.tcbGPIO.Value = 0;
-            // 
-            // tcbPCSForceRun
-            // 
-            this.tcbPCSForceRun.BackColor = System.Drawing.Color.Transparent;
-            this.tcbPCSForceRun.Caption = "强制PCS运行";
-            this.tcbPCSForceRun.Checked = false;
-            this.tcbPCSForceRun.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbPCSForceRun.ForeColor = System.Drawing.Color.White;
-            this.tcbPCSForceRun.Location = new System.Drawing.Point(351, 606);
-            this.tcbPCSForceRun.Name = "tcbPCSForceRun";
-            this.tcbPCSForceRun.Size = new System.Drawing.Size(150, 32);
-            this.tcbPCSForceRun.TabIndex = 63;
-            // 
-            // tcbBMSVer
-            // 
-            this.tcbBMSVer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbBMSVer.CenterShow = true;
-            this.tcbBMSVer.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbBMSVer.ForeColor = System.Drawing.Color.White;
-            this.tcbBMSVer.Items = new string[] {
-        "内嵌式1",
-        "定制板1"};
-            this.tcbBMSVer.Location = new System.Drawing.Point(492, 330);
-            this.tcbBMSVer.Name = "tcbBMSVer";
-            this.tcbBMSVer.SelectItemIndex = 0;
-            this.tcbBMSVer.Size = new System.Drawing.Size(154, 33);
-            this.tcbBMSVer.strText = "内嵌式1";
-            this.tcbBMSVer.TabIndex = 61;
-            this.tcbBMSVer.Value = 0;
-            // 
-            // tcbiPCSfactory
-            // 
-            this.tcbiPCSfactory.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbiPCSfactory.CenterShow = true;
-            this.tcbiPCSfactory.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbiPCSfactory.ForeColor = System.Drawing.Color.White;
-            this.tcbiPCSfactory.Items = new string[] {
-        "英博01",
-        "精石01"};
-            this.tcbiPCSfactory.Location = new System.Drawing.Point(127, 330);
-            this.tcbiPCSfactory.Name = "tcbiPCSfactory";
-            this.tcbiPCSfactory.SelectItemIndex = 0;
-            this.tcbiPCSfactory.Size = new System.Drawing.Size(182, 33);
-            this.tcbiPCSfactory.strText = "英博01";
-            this.tcbiPCSfactory.TabIndex = 57;
-            this.tcbiPCSfactory.Value = 0;
-            // 
-            // ttbSystemID
-            // 
-            this.ttbSystemID.ASCOnly = false;
-            this.ttbSystemID.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.ttbSystemID.DefaultValue = 0;
-            this.ttbSystemID.DefKeyTypeOnly = false;
-            this.ttbSystemID.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ttbSystemID.ForeColor = System.Drawing.Color.White;
-            this.ttbSystemID.IsPassWord = false;
-            this.ttbSystemID.IsTimerFormat = false;
-            this.ttbSystemID.KeyType = 0;
-            this.ttbSystemID.Location = new System.Drawing.Point(128, 54);
-            this.ttbSystemID.MaxTextLength = 0;
-            this.ttbSystemID.Name = "ttbSystemID";
-            this.ttbSystemID.Size = new System.Drawing.Size(489, 32);
-            this.ttbSystemID.strText = "";
-            this.ttbSystemID.TabIndex = 54;
-            this.ttbSystemID.WithNumberKeys = true;
-            this.ttbSystemID.WithSymbolKeys = true;
-            // 
-            // tcbAutoRun
-            // 
-            this.tcbAutoRun.BackColor = System.Drawing.Color.Transparent;
-            this.tcbAutoRun.Caption = "预留";
-            this.tcbAutoRun.Checked = false;
-            this.tcbAutoRun.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbAutoRun.ForeColor = System.Drawing.Color.White;
-            this.tcbAutoRun.Location = new System.Drawing.Point(68, 606);
-            this.tcbAutoRun.Name = "tcbAutoRun";
-            this.tcbAutoRun.Size = new System.Drawing.Size(263, 32);
-            this.tcbAutoRun.TabIndex = 53;
-            this.tcbAutoRun.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tcbAutoRun_OnValueChange);
-            // 
-            // tcbPCSGridModel
-            // 
-            this.tcbPCSGridModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbPCSGridModel.CenterShow = true;
-            this.tcbPCSGridModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbPCSGridModel.ForeColor = System.Drawing.Color.White;
-            this.tcbPCSGridModel.Items = new string[] {
-        "并网",
-        "离网"};
-            this.tcbPCSGridModel.Location = new System.Drawing.Point(128, 121);
-            this.tcbPCSGridModel.Name = "tcbPCSGridModel";
-            this.tcbPCSGridModel.SelectItemIndex = 0;
-            this.tcbPCSGridModel.Size = new System.Drawing.Size(182, 33);
-            this.tcbPCSGridModel.strText = "并网";
-            this.tcbPCSGridModel.TabIndex = 52;
-            this.tcbPCSGridModel.Value = 0;
-            this.tcbPCSGridModel.OnValueChange += new EMS.TouchCombox.OnValueChangEventDelegate(this.tcbPCSGridModel_OnValueChange);
-            // 
-            // tneISDay
-            // 
-            this.tneISDay.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneISDay.CanEdit = true;
-            this.tneISDay.DefaultValue = 0;
-            this.tneISDay.FoceInZone = false;
-            this.tneISDay.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneISDay.ForeColor = System.Drawing.Color.White;
-            this.tneISDay.Location = new System.Drawing.Point(492, 252);
-            this.tneISDay.Maximum = 31;
-            this.tneISDay.Minimum = 1;
-            this.tneISDay.Name = "tneISDay";
-            this.tneISDay.Size = new System.Drawing.Size(124, 32);
-            this.tneISDay.strText = "";
-            this.tneISDay.TabIndex = 48;
-            this.tneISDay.Value = 1;
-            this.tneISDay.ValueStep = 1;
-            // 
-            // tneISMonth
-            // 
-            this.tneISMonth.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneISMonth.CanEdit = true;
-            this.tneISMonth.DefaultValue = 0;
-            this.tneISMonth.FoceInZone = false;
-            this.tneISMonth.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneISMonth.ForeColor = System.Drawing.Color.White;
-            this.tneISMonth.Location = new System.Drawing.Point(311, 252);
-            this.tneISMonth.Maximum = 12;
-            this.tneISMonth.Minimum = 1;
-            this.tneISMonth.Name = "tneISMonth";
-            this.tneISMonth.Size = new System.Drawing.Size(124, 32);
-            this.tneISMonth.strText = "";
-            this.tneISMonth.TabIndex = 47;
-            this.tneISMonth.Value = 1;
-            this.tneISMonth.ValueStep = 1;
-            // 
-            // tneISYear
-            // 
-            this.tneISYear.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneISYear.CanEdit = true;
-            this.tneISYear.DefaultValue = 0;
-            this.tneISYear.FoceInZone = false;
-            this.tneISYear.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneISYear.ForeColor = System.Drawing.Color.White;
-            this.tneISYear.Location = new System.Drawing.Point(127, 252);
-            this.tneISYear.Maximum = 2060;
-            this.tneISYear.Minimum = 2022;
-            this.tneISYear.Name = "tneISYear";
-            this.tneISYear.Size = new System.Drawing.Size(124, 32);
-            this.tneISYear.strText = "";
-            this.tneISYear.TabIndex = 46;
-            this.tneISYear.Value = 2023;
-            this.tneISYear.ValueStep = 1;
-            // 
-            // tneCellCount
-            // 
-            this.tneCellCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneCellCount.CanEdit = true;
-            this.tneCellCount.DefaultValue = 0;
-            this.tneCellCount.FoceInZone = false;
-            this.tneCellCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneCellCount.ForeColor = System.Drawing.Color.White;
-            this.tneCellCount.Location = new System.Drawing.Point(493, 183);
-            this.tneCellCount.Maximum = 600;
-            this.tneCellCount.Minimum = 200;
-            this.tneCellCount.Name = "tneCellCount";
-            this.tneCellCount.Size = new System.Drawing.Size(124, 32);
-            this.tneCellCount.strText = "";
-            this.tneCellCount.TabIndex = 29;
-            this.tneCellCount.Value = 0;
-            this.tneCellCount.ValueStep = 1;
-            // 
-            // tneSysSelfPower
-            // 
-            this.tneSysSelfPower.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSysSelfPower.CanEdit = true;
-            this.tneSysSelfPower.DefaultValue = 0;
-            this.tneSysSelfPower.FoceInZone = false;
-            this.tneSysSelfPower.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSysSelfPower.ForeColor = System.Drawing.Color.White;
-            this.tneSysSelfPower.Location = new System.Drawing.Point(493, 121);
-            this.tneSysSelfPower.Maximum = 500;
-            this.tneSysSelfPower.Minimum = 200;
-            this.tneSysSelfPower.Name = "tneSysSelfPower";
-            this.tneSysSelfPower.Size = new System.Drawing.Size(124, 32);
-            this.tneSysSelfPower.strText = "";
-            this.tneSysSelfPower.TabIndex = 28;
-            this.tneSysSelfPower.Value = 0;
-            this.tneSysSelfPower.ValueStep = 1;
-            // 
-            // tneSysPower
-            // 
-            this.tneSysPower.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSysPower.CanEdit = true;
-            this.tneSysPower.DefaultValue = 0;
-            this.tneSysPower.FoceInZone = false;
-            this.tneSysPower.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSysPower.ForeColor = System.Drawing.Color.White;
-            this.tneSysPower.Location = new System.Drawing.Point(128, 185);
-            this.tneSysPower.Maximum = 2000;
-            this.tneSysPower.Minimum = 200;
-            this.tneSysPower.Name = "tneSysPower";
-            this.tneSysPower.Size = new System.Drawing.Size(124, 32);
-            this.tneSysPower.strText = "";
-            this.tneSysPower.TabIndex = 27;
-            this.tneSysPower.Value = 0;
-            this.tneSysPower.ValueStep = 1;
-            // 
-            // tnePrice9
-            // 
-            this.tnePrice9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice9.CanEdit = true;
-            this.tnePrice9.DefaultValue = 0;
-            this.tnePrice9.FoceInZone = false;
-            this.tnePrice9.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice9.ForeColor = System.Drawing.Color.White;
-            this.tnePrice9.Location = new System.Drawing.Point(284, 163);
-            this.tnePrice9.Maximum = 30000;
-            this.tnePrice9.Minimum = 0;
-            this.tnePrice9.Name = "tnePrice9";
-            this.tnePrice9.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice9.strText = "";
-            this.tnePrice9.TabIndex = 79;
-            this.tnePrice9.Value = 0;
-            this.tnePrice9.ValueStep = 1;
-            // 
-            // tnePrice8
-            // 
-            this.tnePrice8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice8.CanEdit = true;
-            this.tnePrice8.DefaultValue = 0;
-            this.tnePrice8.FoceInZone = false;
-            this.tnePrice8.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice8.ForeColor = System.Drawing.Color.White;
-            this.tnePrice8.Location = new System.Drawing.Point(284, 125);
-            this.tnePrice8.Maximum = 30000;
-            this.tnePrice8.Minimum = 0;
-            this.tnePrice8.Name = "tnePrice8";
-            this.tnePrice8.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice8.strText = "";
-            this.tnePrice8.TabIndex = 78;
-            this.tnePrice8.Value = 0;
-            this.tnePrice8.ValueStep = 1;
-            // 
-            // tnePrice7
-            // 
-            this.tnePrice7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice7.CanEdit = true;
-            this.tnePrice7.DefaultValue = 0;
-            this.tnePrice7.FoceInZone = false;
-            this.tnePrice7.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice7.ForeColor = System.Drawing.Color.White;
-            this.tnePrice7.Location = new System.Drawing.Point(284, 87);
-            this.tnePrice7.Maximum = 30000;
-            this.tnePrice7.Minimum = 0;
-            this.tnePrice7.Name = "tnePrice7";
-            this.tnePrice7.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice7.strText = "";
-            this.tnePrice7.TabIndex = 77;
-            this.tnePrice7.Value = 0;
-            this.tnePrice7.ValueStep = 1;
-            // 
-            // tnePrice6
-            // 
-            this.tnePrice6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice6.CanEdit = true;
-            this.tnePrice6.DefaultValue = 0;
-            this.tnePrice6.FoceInZone = false;
-            this.tnePrice6.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice6.ForeColor = System.Drawing.Color.White;
-            this.tnePrice6.Location = new System.Drawing.Point(284, 49);
-            this.tnePrice6.Maximum = 30000;
-            this.tnePrice6.Minimum = 0;
-            this.tnePrice6.Name = "tnePrice6";
-            this.tnePrice6.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice6.strText = "";
-            this.tnePrice6.TabIndex = 76;
-            this.tnePrice6.Value = 0;
-            this.tnePrice6.ValueStep = 1;
-            // 
-            // tnePrice4
-            // 
-            this.tnePrice4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice4.CanEdit = true;
-            this.tnePrice4.DefaultValue = 0;
-            this.tnePrice4.FoceInZone = false;
-            this.tnePrice4.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice4.ForeColor = System.Drawing.Color.White;
-            this.tnePrice4.Location = new System.Drawing.Point(44, 164);
-            this.tnePrice4.Maximum = 30000;
-            this.tnePrice4.Minimum = 0;
-            this.tnePrice4.Name = "tnePrice4";
-            this.tnePrice4.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice4.strText = "";
-            this.tnePrice4.TabIndex = 75;
-            this.tnePrice4.Value = 0;
-            this.tnePrice4.ValueStep = 1;
-            // 
-            // tnePrice3
-            // 
-            this.tnePrice3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice3.CanEdit = true;
-            this.tnePrice3.DefaultValue = 0;
-            this.tnePrice3.FoceInZone = false;
-            this.tnePrice3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice3.ForeColor = System.Drawing.Color.White;
-            this.tnePrice3.Location = new System.Drawing.Point(44, 125);
-            this.tnePrice3.Maximum = 30000;
-            this.tnePrice3.Minimum = 0;
-            this.tnePrice3.Name = "tnePrice3";
-            this.tnePrice3.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice3.strText = "";
-            this.tnePrice3.TabIndex = 74;
-            this.tnePrice3.Value = 0;
-            this.tnePrice3.ValueStep = 1;
-            // 
-            // tnePrice2
-            // 
-            this.tnePrice2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice2.CanEdit = true;
-            this.tnePrice2.DefaultValue = 0;
-            this.tnePrice2.FoceInZone = false;
-            this.tnePrice2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice2.ForeColor = System.Drawing.Color.White;
-            this.tnePrice2.Location = new System.Drawing.Point(44, 87);
-            this.tnePrice2.Maximum = 30000;
-            this.tnePrice2.Minimum = 0;
-            this.tnePrice2.Name = "tnePrice2";
-            this.tnePrice2.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice2.strText = "";
-            this.tnePrice2.TabIndex = 73;
-            this.tnePrice2.Value = 0;
-            this.tnePrice2.ValueStep = 1;
-            // 
-            // tnePrice1
-            // 
-            this.tnePrice1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePrice1.CanEdit = true;
-            this.tnePrice1.DefaultValue = 0;
-            this.tnePrice1.FoceInZone = false;
-            this.tnePrice1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePrice1.ForeColor = System.Drawing.Color.White;
-            this.tnePrice1.Location = new System.Drawing.Point(44, 49);
-            this.tnePrice1.Maximum = 30000;
-            this.tnePrice1.Minimum = 0;
-            this.tnePrice1.Name = "tnePrice1";
-            this.tnePrice1.Size = new System.Drawing.Size(151, 32);
-            this.tnePrice1.strText = "";
-            this.tnePrice1.TabIndex = 72;
-            this.tnePrice1.Value = 0;
-            this.tnePrice1.ValueStep = 1;
-            // 
-            // tcbUseBalaTactics
-            // 
-            this.tcbUseBalaTactics.BackColor = System.Drawing.Color.Transparent;
-            this.tcbUseBalaTactics.Caption = "使用均衡策略";
-            this.tcbUseBalaTactics.Checked = false;
-            this.tcbUseBalaTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbUseBalaTactics.ForeColor = System.Drawing.Color.White;
-            this.tcbUseBalaTactics.Location = new System.Drawing.Point(534, 3);
-            this.tcbUseBalaTactics.Name = "tcbUseBalaTactics";
-            this.tcbUseBalaTactics.Size = new System.Drawing.Size(153, 32);
-            this.tcbUseBalaTactics.TabIndex = 20;
-            // 
-            // tcbUseYunTactics
-            // 
-            this.tcbUseYunTactics.BackColor = System.Drawing.Color.Transparent;
-            this.tcbUseYunTactics.Caption = "使用云策略";
-            this.tcbUseYunTactics.Checked = false;
-            this.tcbUseYunTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbUseYunTactics.ForeColor = System.Drawing.Color.White;
-            this.tcbUseYunTactics.Location = new System.Drawing.Point(383, 3);
-            this.tcbUseYunTactics.Name = "tcbUseYunTactics";
-            this.tcbUseYunTactics.Size = new System.Drawing.Size(134, 32);
-            this.tcbUseYunTactics.TabIndex = 19;
-            // 
-            // tneMaxGridKWH
-            // 
-            this.tneMaxGridKWH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneMaxGridKWH.CanEdit = true;
-            this.tneMaxGridKWH.DefaultValue = 0;
-            this.tneMaxGridKWH.FoceInZone = false;
-            this.tneMaxGridKWH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneMaxGridKWH.ForeColor = System.Drawing.Color.White;
-            this.tneMaxGridKWH.Location = new System.Drawing.Point(158, 29);
-            this.tneMaxGridKWH.Maximum = 999999;
-            this.tneMaxGridKWH.Minimum = 1;
-            this.tneMaxGridKWH.Name = "tneMaxGridKWH";
-            this.tneMaxGridKWH.Size = new System.Drawing.Size(164, 32);
-            this.tneMaxGridKWH.strText = "";
-            this.tneMaxGridKWH.TabIndex = 36;
-            this.tneMaxGridKWH.Value = 0;
-            this.tneMaxGridKWH.ValueStep = 1;
-            // 
-            // tneMinGridKWH
-            // 
-            this.tneMinGridKWH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneMinGridKWH.CanEdit = true;
-            this.tneMinGridKWH.DefaultValue = 0;
-            this.tneMinGridKWH.FoceInZone = false;
-            this.tneMinGridKWH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneMinGridKWH.ForeColor = System.Drawing.Color.White;
-            this.tneMinGridKWH.Location = new System.Drawing.Point(568, 34);
-            this.tneMinGridKWH.Maximum = 999999;
-            this.tneMinGridKWH.Minimum = -100;
-            this.tneMinGridKWH.Name = "tneMinGridKWH";
-            this.tneMinGridKWH.Size = new System.Drawing.Size(190, 32);
-            this.tneMinGridKWH.strText = "";
-            this.tneMinGridKWH.TabIndex = 35;
-            this.tneMinGridKWH.Value = 0;
-            this.tneMinGridKWH.ValueStep = 1;
-            // 
-            // tneMaxSOC
-            // 
-            this.tneMaxSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneMaxSOC.CanEdit = true;
-            this.tneMaxSOC.DefaultValue = 0;
-            this.tneMaxSOC.FoceInZone = false;
-            this.tneMaxSOC.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneMaxSOC.ForeColor = System.Drawing.Color.White;
-            this.tneMaxSOC.Location = new System.Drawing.Point(158, 75);
-            this.tneMaxSOC.Maximum = 100;
-            this.tneMaxSOC.Minimum = 1;
-            this.tneMaxSOC.Name = "tneMaxSOC";
-            this.tneMaxSOC.Size = new System.Drawing.Size(164, 32);
-            this.tneMaxSOC.strText = "";
-            this.tneMaxSOC.TabIndex = 34;
-            this.tneMaxSOC.Value = 0;
-            this.tneMaxSOC.ValueStep = 1;
-            // 
-            // tneMinSOC
-            // 
-            this.tneMinSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneMinSOC.CanEdit = true;
-            this.tneMinSOC.DefaultValue = 0;
-            this.tneMinSOC.FoceInZone = false;
-            this.tneMinSOC.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneMinSOC.ForeColor = System.Drawing.Color.White;
-            this.tneMinSOC.Location = new System.Drawing.Point(568, 81);
-            this.tneMinSOC.Maximum = 100;
-            this.tneMinSOC.Minimum = 0;
-            this.tneMinSOC.Name = "tneMinSOC";
-            this.tneMinSOC.Size = new System.Drawing.Size(190, 32);
-            this.tneMinSOC.strText = "";
-            this.tneMinSOC.TabIndex = 33;
-            this.tneMinSOC.Value = 0;
-            this.tneMinSOC.ValueStep = 1;
-            // 
-            // tnePUM
-            // 
-            this.tnePUM.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tnePUM.CanEdit = true;
-            this.tnePUM.DefaultValue = 0;
-            this.tnePUM.FoceInZone = false;
-            this.tnePUM.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tnePUM.ForeColor = System.Drawing.Color.White;
-            this.tnePUM.Location = new System.Drawing.Point(95, 78);
-            this.tnePUM.Maximum = 2000;
-            this.tnePUM.Minimum = 1;
-            this.tnePUM.Name = "tnePUM";
-            this.tnePUM.Size = new System.Drawing.Size(164, 32);
-            this.tnePUM.strText = "";
-            this.tnePUM.TabIndex = 37;
-            this.tnePUM.Value = 0;
-            this.tnePUM.ValueStep = 1;
-            // 
-            // tneWarnGridkva
-            // 
-            this.tneWarnGridkva.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneWarnGridkva.CanEdit = true;
-            this.tneWarnGridkva.DefaultValue = 0;
-            this.tneWarnGridkva.FoceInZone = false;
-            this.tneWarnGridkva.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneWarnGridkva.ForeColor = System.Drawing.Color.White;
-            this.tneWarnGridkva.Location = new System.Drawing.Point(567, 18);
-            this.tneWarnGridkva.Maximum = 2000;
-            this.tneWarnGridkva.Minimum = 1;
-            this.tneWarnGridkva.Name = "tneWarnGridkva";
-            this.tneWarnGridkva.Size = new System.Drawing.Size(164, 32);
-            this.tneWarnGridkva.strText = "";
-            this.tneWarnGridkva.TabIndex = 35;
-            this.tneWarnGridkva.Value = 0;
-            this.tneWarnGridkva.ValueStep = 1;
-            // 
-            // tcbDebugComName
-            // 
-            this.tcbDebugComName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbDebugComName.CenterShow = true;
-            this.tcbDebugComName.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbDebugComName.ForeColor = System.Drawing.Color.White;
-            this.tcbDebugComName.Items = new string[] {
-        "Com1",
-        "Com2",
-        "Com3",
-        "Com4",
-        "Com5",
-        "Com6",
-        "Com7",
-        "Com8",
-        "Com9",
-        "Com10",
-        "Com11",
-        "Com12",
-        "Com13",
-        "Com14",
-        "Com15",
-        "Com16",
-        "Com17",
-        "Com18",
-        "Com19"};
-            this.tcbDebugComName.Location = new System.Drawing.Point(95, 18);
-            this.tcbDebugComName.Name = "tcbDebugComName";
-            this.tcbDebugComName.SelectItemIndex = 0;
-            this.tcbDebugComName.Size = new System.Drawing.Size(179, 32);
-            this.tcbDebugComName.strText = "Com1";
-            this.tcbDebugComName.TabIndex = 4;
-            this.tcbDebugComName.Value = 0;
-            // 
-            // tneNetTimeS
-            // 
-            this.tneNetTimeS.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneNetTimeS.CanEdit = true;
-            this.tneNetTimeS.DefaultValue = 0;
-            this.tneNetTimeS.FoceInZone = false;
-            this.tneNetTimeS.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneNetTimeS.ForeColor = System.Drawing.Color.White;
-            this.tneNetTimeS.Location = new System.Drawing.Point(567, 15);
-            this.tneNetTimeS.Maximum = 0;
-            this.tneNetTimeS.Minimum = 0;
-            this.tneNetTimeS.Name = "tneNetTimeS";
-            this.tneNetTimeS.Size = new System.Drawing.Size(124, 32);
-            this.tneNetTimeS.strText = "";
-            this.tneNetTimeS.TabIndex = 43;
-            this.tneNetTimeS.Value = 0;
-            this.tneNetTimeS.ValueStep = 1;
-            // 
-            // tneNetTimeM
-            // 
-            this.tneNetTimeM.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneNetTimeM.CanEdit = true;
-            this.tneNetTimeM.DefaultValue = 0;
-            this.tneNetTimeM.FoceInZone = false;
-            this.tneNetTimeM.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneNetTimeM.ForeColor = System.Drawing.Color.White;
-            this.tneNetTimeM.Location = new System.Drawing.Point(368, 15);
-            this.tneNetTimeM.Maximum = 0;
-            this.tneNetTimeM.Minimum = 0;
-            this.tneNetTimeM.Name = "tneNetTimeM";
-            this.tneNetTimeM.Size = new System.Drawing.Size(124, 32);
-            this.tneNetTimeM.strText = "";
-            this.tneNetTimeM.TabIndex = 42;
-            this.tneNetTimeM.Value = 0;
-            this.tneNetTimeM.ValueStep = 1;
-            // 
-            // tneNetTimeH
-            // 
-            this.tneNetTimeH.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneNetTimeH.CanEdit = true;
-            this.tneNetTimeH.DefaultValue = 0;
-            this.tneNetTimeH.FoceInZone = false;
-            this.tneNetTimeH.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneNetTimeH.ForeColor = System.Drawing.Color.White;
-            this.tneNetTimeH.Location = new System.Drawing.Point(142, 15);
-            this.tneNetTimeH.Maximum = 0;
-            this.tneNetTimeH.Minimum = 0;
-            this.tneNetTimeH.Name = "tneNetTimeH";
-            this.tneNetTimeH.Size = new System.Drawing.Size(124, 32);
-            this.tneNetTimeH.strText = "";
-            this.tneNetTimeH.TabIndex = 41;
-            this.tneNetTimeH.Value = 0;
-            this.tneNetTimeH.ValueStep = 1;
-            // 
-            // tneSysInterval
-            // 
-            this.tneSysInterval.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSysInterval.CanEdit = true;
-            this.tneSysInterval.DefaultValue = 0;
-            this.tneSysInterval.FoceInZone = false;
-            this.tneSysInterval.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSysInterval.ForeColor = System.Drawing.Color.White;
-            this.tneSysInterval.Location = new System.Drawing.Point(142, 17);
-            this.tneSysInterval.Maximum = 1000;
-            this.tneSysInterval.Minimum = 1;
-            this.tneSysInterval.Name = "tneSysInterval";
-            this.tneSysInterval.Size = new System.Drawing.Size(179, 32);
-            this.tneSysInterval.strText = "";
-            this.tneSysInterval.TabIndex = 20;
-            this.tneSysInterval.Value = 0;
-            this.tneSysInterval.ValueStep = 1;
-            this.tneSysInterval.Visible = false;
-            // 
-            // tneUnInterval
-            // 
-            this.tneUnInterval.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneUnInterval.CanEdit = true;
-            this.tneUnInterval.DefaultValue = 0;
-            this.tneUnInterval.FoceInZone = false;
-            this.tneUnInterval.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneUnInterval.ForeColor = System.Drawing.Color.White;
-            this.tneUnInterval.Location = new System.Drawing.Point(567, 17);
-            this.tneUnInterval.Maximum = 3600;
-            this.tneUnInterval.Minimum = 5;
-            this.tneUnInterval.Name = "tneUnInterval";
-            this.tneUnInterval.Size = new System.Drawing.Size(190, 32);
-            this.tneUnInterval.strText = "";
-            this.tneUnInterval.TabIndex = 19;
-            this.tneUnInterval.Value = 0;
-            this.tneUnInterval.ValueStep = 1;
-            this.tneUnInterval.Visible = false;
-            // 
-            // tneSysCount
-            // 
-            this.tneSysCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSysCount.CanEdit = true;
-            this.tneSysCount.DefaultValue = 1;
-            this.tneSysCount.FoceInZone = false;
-            this.tneSysCount.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSysCount.ForeColor = System.Drawing.Color.White;
-            this.tneSysCount.Location = new System.Drawing.Point(142, 63);
-            this.tneSysCount.Maximum = 254;
-            this.tneSysCount.Minimum = 1;
-            this.tneSysCount.Name = "tneSysCount";
-            this.tneSysCount.Size = new System.Drawing.Size(179, 32);
-            this.tneSysCount.strText = "1";
-            this.tneSysCount.TabIndex = 42;
-            this.tneSysCount.Value = 1;
-            this.tneSysCount.ValueStep = 1;
-            // 
-            // tcbIsMaster
-            // 
-            this.tcbIsMaster.BackColor = System.Drawing.Color.Transparent;
-            this.tcbIsMaster.Caption = "本身为主控";
-            this.tcbIsMaster.Checked = false;
-            this.tcbIsMaster.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbIsMaster.ForeColor = System.Drawing.Color.White;
-            this.tcbIsMaster.Location = new System.Drawing.Point(43, 20);
-            this.tcbIsMaster.Name = "tcbIsMaster";
-            this.tcbIsMaster.Size = new System.Drawing.Size(138, 32);
-            this.tcbIsMaster.TabIndex = 40;
-            this.tcbIsMaster.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tcbIsMaster_OnValueChange);
-            // 
-            // tneMaster485Addr
-            // 
-            this.tneMaster485Addr.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneMaster485Addr.CanEdit = true;
-            this.tneMaster485Addr.DefaultValue = 0;
-            this.tneMaster485Addr.Enabled = false;
-            this.tneMaster485Addr.FoceInZone = false;
-            this.tneMaster485Addr.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneMaster485Addr.ForeColor = System.Drawing.Color.White;
-            this.tneMaster485Addr.Location = new System.Drawing.Point(564, 63);
-            this.tneMaster485Addr.Maximum = 254;
-            this.tneMaster485Addr.Minimum = 1;
-            this.tneMaster485Addr.Name = "tneMaster485Addr";
-            this.tneMaster485Addr.Size = new System.Drawing.Size(193, 32);
-            this.tneMaster485Addr.strText = "1";
-            this.tneMaster485Addr.TabIndex = 39;
-            this.tneMaster485Addr.Value = 1;
-            this.tneMaster485Addr.ValueStep = 1;
-            // 
-            // tne485Addr
-            // 
-            this.tne485Addr.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tne485Addr.CanEdit = true;
-            this.tne485Addr.DefaultValue = 0;
-            this.tne485Addr.FoceInZone = false;
-            this.tne485Addr.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tne485Addr.ForeColor = System.Drawing.Color.White;
-            this.tne485Addr.Location = new System.Drawing.Point(567, 14);
-            this.tne485Addr.Maximum = 254;
-            this.tne485Addr.Minimum = 1;
-            this.tne485Addr.Name = "tne485Addr";
-            this.tne485Addr.Size = new System.Drawing.Size(190, 32);
-            this.tne485Addr.strText = "";
-            this.tne485Addr.TabIndex = 38;
-            this.tne485Addr.Value = 0;
-            this.tne485Addr.ValueStep = 1;
-            // 
-            // tneBMScellUPV3
-            // 
-            this.tneBMScellUPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellUPV3.CanEdit = true;
-            this.tneBMScellUPV3.DefaultValue = 0;
-            this.tneBMScellUPV3.FoceInZone = false;
-            this.tneBMScellUPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellUPV3.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellUPV3.Location = new System.Drawing.Point(630, 126);
-            this.tneBMScellUPV3.Maximum = 4000;
-            this.tneBMScellUPV3.Minimum = 0;
-            this.tneBMScellUPV3.Name = "tneBMScellUPV3";
-            this.tneBMScellUPV3.Size = new System.Drawing.Size(137, 32);
-            this.tneBMScellUPV3.strText = "";
-            this.tneBMScellUPV3.TabIndex = 71;
-            this.tneBMScellUPV3.Value = 0;
-            this.tneBMScellUPV3.ValueStep = 1;
-            // 
-            // tneBMScellPV3
-            // 
-            this.tneBMScellPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellPV3.CanEdit = true;
-            this.tneBMScellPV3.DefaultValue = 0;
-            this.tneBMScellPV3.FoceInZone = false;
-            this.tneBMScellPV3.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellPV3.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellPV3.Location = new System.Drawing.Point(630, 74);
-            this.tneBMScellPV3.Maximum = 4000;
-            this.tneBMScellPV3.Minimum = 0;
-            this.tneBMScellPV3.Name = "tneBMScellPV3";
-            this.tneBMScellPV3.Size = new System.Drawing.Size(137, 32);
-            this.tneBMScellPV3.strText = "";
-            this.tneBMScellPV3.TabIndex = 70;
-            this.tneBMScellPV3.Value = 0;
-            this.tneBMScellPV3.ValueStep = 1;
-            // 
-            // tneBMScellUPV2
-            // 
-            this.tneBMScellUPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellUPV2.CanEdit = true;
-            this.tneBMScellUPV2.DefaultValue = 0;
-            this.tneBMScellUPV2.FoceInZone = false;
-            this.tneBMScellUPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellUPV2.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellUPV2.Location = new System.Drawing.Point(365, 126);
-            this.tneBMScellUPV2.Maximum = 4000;
-            this.tneBMScellUPV2.Minimum = 0;
-            this.tneBMScellUPV2.Name = "tneBMScellUPV2";
-            this.tneBMScellUPV2.Size = new System.Drawing.Size(134, 32);
-            this.tneBMScellUPV2.strText = "";
-            this.tneBMScellUPV2.TabIndex = 65;
-            this.tneBMScellUPV2.Value = 0;
-            this.tneBMScellUPV2.ValueStep = 1;
-            // 
-            // tneBMScellPV2
-            // 
-            this.tneBMScellPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellPV2.CanEdit = true;
-            this.tneBMScellPV2.DefaultValue = 0;
-            this.tneBMScellPV2.FoceInZone = false;
-            this.tneBMScellPV2.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellPV2.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellPV2.Location = new System.Drawing.Point(365, 74);
-            this.tneBMScellPV2.Maximum = 4000;
-            this.tneBMScellPV2.Minimum = 0;
-            this.tneBMScellPV2.Name = "tneBMScellPV2";
-            this.tneBMScellPV2.Size = new System.Drawing.Size(134, 32);
-            this.tneBMScellPV2.strText = "";
-            this.tneBMScellPV2.TabIndex = 64;
-            this.tneBMScellPV2.Value = 0;
-            this.tneBMScellPV2.ValueStep = 1;
-            // 
-            // tneBMScellUPV1
-            // 
-            this.tneBMScellUPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellUPV1.CanEdit = true;
-            this.tneBMScellUPV1.DefaultValue = 0;
-            this.tneBMScellUPV1.FoceInZone = false;
-            this.tneBMScellUPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellUPV1.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellUPV1.Location = new System.Drawing.Point(96, 126);
-            this.tneBMScellUPV1.Maximum = 4000;
-            this.tneBMScellUPV1.Minimum = 0;
-            this.tneBMScellUPV1.Name = "tneBMScellUPV1";
-            this.tneBMScellUPV1.Size = new System.Drawing.Size(138, 32);
-            this.tneBMScellUPV1.strText = "";
-            this.tneBMScellUPV1.TabIndex = 60;
-            this.tneBMScellUPV1.Value = 0;
-            this.tneBMScellUPV1.ValueStep = 1;
-            // 
-            // tneBMScellPV1
-            // 
-            this.tneBMScellPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMScellPV1.CanEdit = true;
-            this.tneBMScellPV1.DefaultValue = 0;
-            this.tneBMScellPV1.FoceInZone = false;
-            this.tneBMScellPV1.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMScellPV1.ForeColor = System.Drawing.Color.White;
-            this.tneBMScellPV1.Location = new System.Drawing.Point(96, 74);
-            this.tneBMScellPV1.Maximum = 4000;
-            this.tneBMScellPV1.Minimum = 0;
-            this.tneBMScellPV1.Name = "tneBMScellPV1";
-            this.tneBMScellPV1.Size = new System.Drawing.Size(138, 32);
-            this.tneBMScellPV1.strText = "";
-            this.tneBMScellPV1.TabIndex = 57;
-            this.tneBMScellPV1.Value = 0;
-            this.tneBMScellPV1.ValueStep = 1;
-            // 
-            // tneBMSwaValue
-            // 
-            this.tneBMSwaValue.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneBMSwaValue.CanEdit = true;
-            this.tneBMSwaValue.DefaultValue = 0;
-            this.tneBMSwaValue.FoceInZone = false;
-            this.tneBMSwaValue.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneBMSwaValue.ForeColor = System.Drawing.Color.White;
-            this.tneBMSwaValue.Location = new System.Drawing.Point(138, 31);
-            this.tneBMSwaValue.Maximum = 840;
-            this.tneBMSwaValue.Minimum = 0;
-            this.tneBMSwaValue.Name = "tneBMSwaValue";
-            this.tneBMSwaValue.Size = new System.Drawing.Size(124, 32);
-            this.tneBMSwaValue.strText = "";
-            this.tneBMSwaValue.TabIndex = 52;
-            this.tneBMSwaValue.Value = 0;
-            this.tneBMSwaValue.ValueStep = 1;
-            // 
-            // tcbFenMode
-            // 
-            this.tcbFenMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbFenMode.CenterShow = true;
-            this.tcbFenMode.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbFenMode.ForeColor = System.Drawing.Color.White;
-            this.tcbFenMode.Items = new string[] {
-        "禁用",
-        "冷凝温度",
-        "供液温度"};
-            this.tcbFenMode.Location = new System.Drawing.Point(475, 15);
-            this.tcbFenMode.Name = "tcbFenMode";
-            this.tcbFenMode.SelectItemIndex = 0;
-            this.tcbFenMode.Size = new System.Drawing.Size(178, 34);
-            this.tcbFenMode.strText = "禁用";
-            this.tcbFenMode.TabIndex = 93;
-            this.tcbFenMode.Value = 0;
-            // 
-            // tneFenMinTemp
-            // 
-            this.tneFenMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneFenMinTemp.CanEdit = true;
-            this.tneFenMinTemp.DefaultValue = 0;
-            this.tneFenMinTemp.FoceInZone = false;
-            this.tneFenMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneFenMinTemp.ForeColor = System.Drawing.Color.White;
-            this.tneFenMinTemp.Location = new System.Drawing.Point(477, 333);
-            this.tneFenMinTemp.Maximum = 1000;
-            this.tneFenMinTemp.Minimum = 0;
-            this.tneFenMinTemp.Name = "tneFenMinTemp";
-            this.tneFenMinTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneFenMinTemp.strText = "";
-            this.tneFenMinTemp.TabIndex = 90;
-            this.tneFenMinTemp.Value = 0;
-            this.tneFenMinTemp.ValueStep = 1;
-            // 
-            // tneFenMaxTemp
-            // 
-            this.tneFenMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneFenMaxTemp.CanEdit = true;
-            this.tneFenMaxTemp.DefaultValue = 0;
-            this.tneFenMaxTemp.FoceInZone = false;
-            this.tneFenMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneFenMaxTemp.ForeColor = System.Drawing.Color.White;
-            this.tneFenMaxTemp.Location = new System.Drawing.Point(477, 288);
-            this.tneFenMaxTemp.Maximum = 1000;
-            this.tneFenMaxTemp.Minimum = 0;
-            this.tneFenMaxTemp.Name = "tneFenMaxTemp";
-            this.tneFenMaxTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneFenMaxTemp.strText = "";
-            this.tneFenMaxTemp.TabIndex = 87;
-            this.tneFenMaxTemp.Value = 0;
-            this.tneFenMaxTemp.ValueStep = 1;
-            // 
-            // tcbTCRunWithSys
-            // 
-            this.tcbTCRunWithSys.BackColor = System.Drawing.Color.Transparent;
-            this.tcbTCRunWithSys.Caption = "来电自动开启空调";
-            this.tcbTCRunWithSys.Checked = false;
-            this.tcbTCRunWithSys.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbTCRunWithSys.ForeColor = System.Drawing.Color.White;
-            this.tcbTCRunWithSys.Location = new System.Drawing.Point(42, 300);
-            this.tcbTCRunWithSys.Name = "tcbTCRunWithSys";
-            this.tcbTCRunWithSys.Size = new System.Drawing.Size(217, 32);
-            this.tcbTCRunWithSys.TabIndex = 83;
-            this.tcbTCRunWithSys.OnValueChange += new EMS.TCheckBox.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tcbTCMode
-            // 
-            this.tcbTCMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbTCMode.CenterShow = true;
-            this.tcbTCMode.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbTCMode.ForeColor = System.Drawing.Color.White;
-            this.tcbTCMode.Items = new string[] {
-        "自动",
-        "强制制冷",
-        "强制制热",
-        "强制送风",
-        "强制关闭"};
-            this.tcbTCMode.Location = new System.Drawing.Point(133, 18);
-            this.tcbTCMode.Name = "tcbTCMode";
-            this.tcbTCMode.SelectItemIndex = 0;
-            this.tcbTCMode.Size = new System.Drawing.Size(178, 34);
-            this.tcbTCMode.strText = "自动";
-            this.tcbTCMode.TabIndex = 82;
-            this.tcbTCMode.Value = 0;
-            this.tcbTCMode.OnValueChange += new EMS.TouchCombox.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneHotTempReturn
-            // 
-            this.tneHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneHotTempReturn.CanEdit = true;
-            this.tneHotTempReturn.DefaultValue = 0;
-            this.tneHotTempReturn.FoceInZone = false;
-            this.tneHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneHotTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneHotTempReturn.Location = new System.Drawing.Point(475, 55);
-            this.tneHotTempReturn.Maximum = 150;
-            this.tneHotTempReturn.Minimum = 10;
-            this.tneHotTempReturn.Name = "tneHotTempReturn";
-            this.tneHotTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneHotTempReturn.strText = "";
-            this.tneHotTempReturn.TabIndex = 81;
-            this.tneHotTempReturn.Value = 0;
-            this.tneHotTempReturn.ValueStep = 1;
-            this.tneHotTempReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneSetHotTemp
-            // 
-            this.tneSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSetHotTemp.CanEdit = true;
-            this.tneSetHotTemp.DefaultValue = 0;
-            this.tneSetHotTemp.FoceInZone = false;
-            this.tneSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSetHotTemp.ForeColor = System.Drawing.Color.White;
-            this.tneSetHotTemp.Location = new System.Drawing.Point(135, 65);
-            this.tneSetHotTemp.Maximum = 350;
-            this.tneSetHotTemp.Minimum = -400;
-            this.tneSetHotTemp.Name = "tneSetHotTemp";
-            this.tneSetHotTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneSetHotTemp.strText = "";
-            this.tneSetHotTemp.TabIndex = 80;
-            this.tneSetHotTemp.Value = 0;
-            this.tneSetHotTemp.ValueStep = 1;
-            this.tneSetHotTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneSetCoolTemp
-            // 
-            this.tneSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSetCoolTemp.CanEdit = true;
-            this.tneSetCoolTemp.DefaultValue = 0;
-            this.tneSetCoolTemp.FoceInZone = false;
-            this.tneSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSetCoolTemp.ForeColor = System.Drawing.Color.White;
-            this.tneSetCoolTemp.Location = new System.Drawing.Point(135, 111);
-            this.tneSetCoolTemp.Maximum = 500;
-            this.tneSetCoolTemp.Minimum = 190;
-            this.tneSetCoolTemp.Name = "tneSetCoolTemp";
-            this.tneSetCoolTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneSetCoolTemp.strText = "";
-            this.tneSetCoolTemp.TabIndex = 79;
-            this.tneSetCoolTemp.Value = 0;
-            this.tneSetCoolTemp.ValueStep = 1;
-            this.tneSetCoolTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneCoolTempReturn
-            // 
-            this.tneCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneCoolTempReturn.CanEdit = true;
-            this.tneCoolTempReturn.DefaultValue = 0;
-            this.tneCoolTempReturn.FoceInZone = false;
-            this.tneCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneCoolTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneCoolTempReturn.Location = new System.Drawing.Point(476, 99);
-            this.tneCoolTempReturn.Maximum = 150;
-            this.tneCoolTempReturn.Minimum = 10;
-            this.tneCoolTempReturn.Name = "tneCoolTempReturn";
-            this.tneCoolTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneCoolTempReturn.strText = "";
-            this.tneCoolTempReturn.TabIndex = 78;
-            this.tneCoolTempReturn.Value = 0;
-            this.tneCoolTempReturn.ValueStep = 1;
-            this.tneCoolTempReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneSetHumidity
-            // 
-            this.tneSetHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneSetHumidity.CanEdit = true;
-            this.tneSetHumidity.DefaultValue = 0;
-            this.tneSetHumidity.FoceInZone = false;
-            this.tneSetHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneSetHumidity.ForeColor = System.Drawing.Color.White;
-            this.tneSetHumidity.Location = new System.Drawing.Point(135, 156);
-            this.tneSetHumidity.Maximum = 800;
-            this.tneSetHumidity.Minimum = 200;
-            this.tneSetHumidity.Name = "tneSetHumidity";
-            this.tneSetHumidity.Size = new System.Drawing.Size(124, 32);
-            this.tneSetHumidity.strText = "";
-            this.tneSetHumidity.TabIndex = 77;
-            this.tneSetHumidity.Value = 0;
-            this.tneSetHumidity.ValueStep = 1;
-            this.tneSetHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneTCMaxHumidity
-            // 
-            this.tneTCMaxHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMaxHumidity.CanEdit = true;
-            this.tneTCMaxHumidity.DefaultValue = 0;
-            this.tneTCMaxHumidity.FoceInZone = false;
-            this.tneTCMaxHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMaxHumidity.ForeColor = System.Drawing.Color.White;
-            this.tneTCMaxHumidity.Location = new System.Drawing.Point(135, 249);
-            this.tneTCMaxHumidity.Maximum = 1000;
-            this.tneTCMaxHumidity.Minimum = 0;
-            this.tneTCMaxHumidity.Name = "tneTCMaxHumidity";
-            this.tneTCMaxHumidity.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMaxHumidity.strText = "";
-            this.tneTCMaxHumidity.TabIndex = 76;
-            this.tneTCMaxHumidity.Value = 0;
-            this.tneTCMaxHumidity.ValueStep = 1;
-            this.tneTCMaxHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneTCMaxTemp
-            // 
-            this.tneTCMaxTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMaxTemp.CanEdit = true;
-            this.tneTCMaxTemp.DefaultValue = 0;
-            this.tneTCMaxTemp.FoceInZone = false;
-            this.tneTCMaxTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMaxTemp.ForeColor = System.Drawing.Color.White;
-            this.tneTCMaxTemp.Location = new System.Drawing.Point(135, 201);
-            this.tneTCMaxTemp.Maximum = 550;
-            this.tneTCMaxTemp.Minimum = 0;
-            this.tneTCMaxTemp.Name = "tneTCMaxTemp";
-            this.tneTCMaxTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMaxTemp.strText = "";
-            this.tneTCMaxTemp.TabIndex = 75;
-            this.tneTCMaxTemp.Value = 0;
-            this.tneTCMaxTemp.ValueStep = 1;
-            this.tneTCMaxTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneHumiReturn
-            // 
-            this.tneHumiReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneHumiReturn.CanEdit = true;
-            this.tneHumiReturn.DefaultValue = 0;
-            this.tneHumiReturn.FoceInZone = false;
-            this.tneHumiReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneHumiReturn.ForeColor = System.Drawing.Color.White;
-            this.tneHumiReturn.Location = new System.Drawing.Point(477, 143);
-            this.tneHumiReturn.Maximum = 900;
-            this.tneHumiReturn.Minimum = 100;
-            this.tneHumiReturn.Name = "tneHumiReturn";
-            this.tneHumiReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneHumiReturn.strText = "";
-            this.tneHumiReturn.TabIndex = 74;
-            this.tneHumiReturn.Value = 0;
-            this.tneHumiReturn.ValueStep = 1;
-            this.tneHumiReturn.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneTCMinTemp
-            // 
-            this.tneTCMinTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMinTemp.CanEdit = true;
-            this.tneTCMinTemp.DefaultValue = 0;
-            this.tneTCMinTemp.FoceInZone = false;
-            this.tneTCMinTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMinTemp.ForeColor = System.Drawing.Color.White;
-            this.tneTCMinTemp.Location = new System.Drawing.Point(476, 190);
-            this.tneTCMinTemp.Maximum = 200;
-            this.tneTCMinTemp.Minimum = -300;
-            this.tneTCMinTemp.Name = "tneTCMinTemp";
-            this.tneTCMinTemp.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMinTemp.strText = "";
-            this.tneTCMinTemp.TabIndex = 73;
-            this.tneTCMinTemp.Value = 0;
-            this.tneTCMinTemp.ValueStep = 1;
-            this.tneTCMinTemp.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tneTCMinHumidity
-            // 
-            this.tneTCMinHumidity.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneTCMinHumidity.CanEdit = true;
-            this.tneTCMinHumidity.DefaultValue = 0;
-            this.tneTCMinHumidity.FoceInZone = false;
-            this.tneTCMinHumidity.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneTCMinHumidity.ForeColor = System.Drawing.Color.White;
-            this.tneTCMinHumidity.Location = new System.Drawing.Point(476, 237);
-            this.tneTCMinHumidity.Maximum = 1000;
-            this.tneTCMinHumidity.Minimum = 0;
-            this.tneTCMinHumidity.Name = "tneTCMinHumidity";
-            this.tneTCMinHumidity.Size = new System.Drawing.Size(124, 32);
-            this.tneTCMinHumidity.strText = "";
-            this.tneTCMinHumidity.TabIndex = 72;
-            this.tneTCMinHumidity.Value = 0;
-            this.tneTCMinHumidity.ValueStep = 1;
-            this.tneTCMinHumidity.OnValueChange += new EMS.TouchNumberEdit.OnValueChangEventDelegate(this.tneSetHotTemp_OnValueChange);
-            // 
-            // tcbDHSetRunStatus
-            // 
-            this.tcbDHSetRunStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbDHSetRunStatus.CenterShow = true;
-            this.tcbDHSetRunStatus.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbDHSetRunStatus.ForeColor = System.Drawing.Color.White;
-            this.tcbDHSetRunStatus.Items = new string[] {
-        "手动切换",
-        "自动切换"};
-            this.tcbDHSetRunStatus.Location = new System.Drawing.Point(129, 38);
-            this.tcbDHSetRunStatus.Name = "tcbDHSetRunStatus";
-            this.tcbDHSetRunStatus.SelectItemIndex = 0;
-            this.tcbDHSetRunStatus.Size = new System.Drawing.Size(178, 34);
-            this.tcbDHSetRunStatus.strText = "手动切换";
-            this.tcbDHSetRunStatus.TabIndex = 82;
-            this.tcbDHSetRunStatus.Value = 0;
-            // 
-            // tneDHSetTempBoot
-            // 
-            this.tneDHSetTempBoot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneDHSetTempBoot.CanEdit = true;
-            this.tneDHSetTempBoot.DefaultValue = 0;
-            this.tneDHSetTempBoot.FoceInZone = false;
-            this.tneDHSetTempBoot.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneDHSetTempBoot.ForeColor = System.Drawing.Color.White;
-            this.tneDHSetTempBoot.Location = new System.Drawing.Point(483, 38);
-            this.tneDHSetTempBoot.Maximum = 100;
-            this.tneDHSetTempBoot.Minimum = 0;
-            this.tneDHSetTempBoot.Name = "tneDHSetTempBoot";
-            this.tneDHSetTempBoot.Size = new System.Drawing.Size(124, 32);
-            this.tneDHSetTempBoot.strText = "";
-            this.tneDHSetTempBoot.TabIndex = 81;
-            this.tneDHSetTempBoot.Value = 5;
-            this.tneDHSetTempBoot.ValueStep = 1;
-            // 
-            // tneDHSetHumidityBoot
-            // 
-            this.tneDHSetHumidityBoot.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneDHSetHumidityBoot.CanEdit = true;
-            this.tneDHSetHumidityBoot.DefaultValue = 0;
-            this.tneDHSetHumidityBoot.FoceInZone = false;
-            this.tneDHSetHumidityBoot.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneDHSetHumidityBoot.ForeColor = System.Drawing.Color.White;
-            this.tneDHSetHumidityBoot.Location = new System.Drawing.Point(487, 129);
-            this.tneDHSetHumidityBoot.Maximum = 100;
-            this.tneDHSetHumidityBoot.Minimum = 20;
-            this.tneDHSetHumidityBoot.Name = "tneDHSetHumidityBoot";
-            this.tneDHSetHumidityBoot.Size = new System.Drawing.Size(124, 31);
-            this.tneDHSetHumidityBoot.strText = "";
-            this.tneDHSetHumidityBoot.TabIndex = 80;
-            this.tneDHSetHumidityBoot.Value = 80;
-            this.tneDHSetHumidityBoot.ValueStep = 1;
-            // 
-            // tneDHSetHumidityStop
-            // 
-            this.tneDHSetHumidityStop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneDHSetHumidityStop.CanEdit = true;
-            this.tneDHSetHumidityStop.DefaultValue = 0;
-            this.tneDHSetHumidityStop.FoceInZone = false;
-            this.tneDHSetHumidityStop.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneDHSetHumidityStop.ForeColor = System.Drawing.Color.White;
-            this.tneDHSetHumidityStop.Location = new System.Drawing.Point(487, 175);
-            this.tneDHSetHumidityStop.Maximum = 100;
-            this.tneDHSetHumidityStop.Minimum = 20;
-            this.tneDHSetHumidityStop.Name = "tneDHSetHumidityStop";
-            this.tneDHSetHumidityStop.Size = new System.Drawing.Size(124, 31);
-            this.tneDHSetHumidityStop.strText = "";
-            this.tneDHSetHumidityStop.TabIndex = 79;
-            this.tneDHSetHumidityStop.Value = 70;
-            this.tneDHSetHumidityStop.ValueStep = 1;
-            // 
-            // tneDHSetTempStop
-            // 
-            this.tneDHSetTempStop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneDHSetTempStop.CanEdit = true;
-            this.tneDHSetTempStop.DefaultValue = 0;
-            this.tneDHSetTempStop.FoceInZone = false;
-            this.tneDHSetTempStop.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneDHSetTempStop.ForeColor = System.Drawing.Color.White;
-            this.tneDHSetTempStop.Location = new System.Drawing.Point(484, 82);
-            this.tneDHSetTempStop.Maximum = 100;
-            this.tneDHSetTempStop.Minimum = 0;
-            this.tneDHSetTempStop.Name = "tneDHSetTempStop";
-            this.tneDHSetTempStop.Size = new System.Drawing.Size(124, 32);
-            this.tneDHSetTempStop.strText = "";
-            this.tneDHSetTempStop.TabIndex = 78;
-            this.tneDHSetTempStop.Value = 10;
-            this.tneDHSetTempStop.ValueStep = 1;
-            // 
-            // tcbLCWaterPump
-            // 
-            this.tcbLCWaterPump.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbLCWaterPump.CenterShow = true;
-            this.tcbLCWaterPump.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbLCWaterPump.ForeColor = System.Drawing.Color.White;
-            this.tcbLCWaterPump.Items = new string[] {
-        "默认档",
-        "一档",
-        "二档",
-        "三档"};
-            this.tcbLCWaterPump.Location = new System.Drawing.Point(129, 128);
-            this.tcbLCWaterPump.Name = "tcbLCWaterPump";
-            this.tcbLCWaterPump.SelectItemIndex = 0;
-            this.tcbLCWaterPump.Size = new System.Drawing.Size(178, 34);
-            this.tcbLCWaterPump.strText = "默认档";
-            this.tcbLCWaterPump.TabIndex = 89;
-            this.tcbLCWaterPump.Value = 0;
-            // 
-            // tcbLCTemperSelect
-            // 
-            this.tcbLCTemperSelect.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbLCTemperSelect.CenterShow = true;
-            this.tcbLCTemperSelect.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbLCTemperSelect.ForeColor = System.Drawing.Color.White;
-            this.tcbLCTemperSelect.Items = new string[] {
-        "电芯平均温度",
-        "出水温度",
-        "回水温度",
-        "电芯权重温度"};
-            this.tcbLCTemperSelect.Location = new System.Drawing.Point(129, 84);
-            this.tcbLCTemperSelect.Name = "tcbLCTemperSelect";
-            this.tcbLCTemperSelect.SelectItemIndex = 0;
-            this.tcbLCTemperSelect.Size = new System.Drawing.Size(178, 34);
-            this.tcbLCTemperSelect.strText = "电芯平均温度";
-            this.tcbLCTemperSelect.TabIndex = 87;
-            this.tcbLCTemperSelect.Value = 0;
-            // 
-            // tcbLCModel
-            // 
-            this.tcbLCModel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tcbLCModel.CenterShow = true;
-            this.tcbLCModel.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbLCModel.ForeColor = System.Drawing.Color.White;
-            this.tcbLCModel.Items = new string[] {
-        "停止",
-        "内循环",
-        "制冷",
-        "加热",
-        "全自动"};
-            this.tcbLCModel.Location = new System.Drawing.Point(129, 38);
-            this.tcbLCModel.Name = "tcbLCModel";
-            this.tcbLCModel.SelectItemIndex = 0;
-            this.tcbLCModel.Size = new System.Drawing.Size(178, 34);
-            this.tcbLCModel.strText = "停止";
-            this.tcbLCModel.TabIndex = 82;
-            this.tcbLCModel.Value = 0;
-            // 
-            // tneLCHotTempReturn
-            // 
-            this.tneLCHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneLCHotTempReturn.CanEdit = true;
-            this.tneLCHotTempReturn.DefaultValue = 0;
-            this.tneLCHotTempReturn.FoceInZone = false;
-            this.tneLCHotTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneLCHotTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneLCHotTempReturn.Location = new System.Drawing.Point(483, 38);
-            this.tneLCHotTempReturn.Maximum = 100;
-            this.tneLCHotTempReturn.Minimum = 10;
-            this.tneLCHotTempReturn.Name = "tneLCHotTempReturn";
-            this.tneLCHotTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneLCHotTempReturn.strText = "";
-            this.tneLCHotTempReturn.TabIndex = 81;
-            this.tneLCHotTempReturn.Value = 0;
-            this.tneLCHotTempReturn.ValueStep = 1;
-            // 
-            // tneLCSetHotTemp
-            // 
-            this.tneLCSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneLCSetHotTemp.CanEdit = true;
-            this.tneLCSetHotTemp.DefaultValue = 0;
-            this.tneLCSetHotTemp.FoceInZone = false;
-            this.tneLCSetHotTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneLCSetHotTemp.ForeColor = System.Drawing.Color.White;
-            this.tneLCSetHotTemp.Location = new System.Drawing.Point(487, 129);
-            this.tneLCSetHotTemp.Maximum = 350;
-            this.tneLCSetHotTemp.Minimum = 50;
-            this.tneLCSetHotTemp.Name = "tneLCSetHotTemp";
-            this.tneLCSetHotTemp.Size = new System.Drawing.Size(124, 31);
-            this.tneLCSetHotTemp.strText = "";
-            this.tneLCSetHotTemp.TabIndex = 80;
-            this.tneLCSetHotTemp.Value = 0;
-            this.tneLCSetHotTemp.ValueStep = 1;
-            // 
-            // tneLCSetCoolTemp
-            // 
-            this.tneLCSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneLCSetCoolTemp.CanEdit = true;
-            this.tneLCSetCoolTemp.DefaultValue = 0;
-            this.tneLCSetCoolTemp.FoceInZone = false;
-            this.tneLCSetCoolTemp.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneLCSetCoolTemp.ForeColor = System.Drawing.Color.White;
-            this.tneLCSetCoolTemp.Location = new System.Drawing.Point(487, 175);
-            this.tneLCSetCoolTemp.Maximum = 350;
-            this.tneLCSetCoolTemp.Minimum = 50;
-            this.tneLCSetCoolTemp.Name = "tneLCSetCoolTemp";
-            this.tneLCSetCoolTemp.Size = new System.Drawing.Size(124, 31);
-            this.tneLCSetCoolTemp.strText = "";
-            this.tneLCSetCoolTemp.TabIndex = 79;
-            this.tneLCSetCoolTemp.Value = 0;
-            this.tneLCSetCoolTemp.ValueStep = 1;
-            // 
-            // tneLCCoolTempReturn
-            // 
-            this.tneLCCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tneLCCoolTempReturn.CanEdit = true;
-            this.tneLCCoolTempReturn.DefaultValue = 0;
-            this.tneLCCoolTempReturn.FoceInZone = false;
-            this.tneLCCoolTempReturn.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tneLCCoolTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tneLCCoolTempReturn.Location = new System.Drawing.Point(484, 82);
-            this.tneLCCoolTempReturn.Maximum = 100;
-            this.tneLCCoolTempReturn.Minimum = 10;
-            this.tneLCCoolTempReturn.Name = "tneLCCoolTempReturn";
-            this.tneLCCoolTempReturn.Size = new System.Drawing.Size(124, 32);
-            this.tneLCCoolTempReturn.strText = "";
-            this.tneLCCoolTempReturn.TabIndex = 78;
-            this.tneLCCoolTempReturn.Value = 0;
-            this.tneLCCoolTempReturn.ValueStep = 1;
             // 
             // frmSet
             // 
