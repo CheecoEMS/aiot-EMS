@@ -348,14 +348,15 @@ namespace IEC104
         /******************************************************************/
         /*                          解析I帧                               */
         /******************************************************************/
+
         public static void ProcessFormatI(byte[] msg)
         {
             //获取主站发送报文中的发送序号和接收序号
             byte[] TX_bytes = new byte[2];    //主站序号（国网调度中心）
             byte[] RX_bytes = new byte[2];    //从站信号（EMS）
 
-            TX_bytes = Get_S_num( TX_bytes, msg);
-            RX_bytes = Get_R_num( RX_bytes, msg);
+            TX_bytes = Get_S_num(TX_bytes, msg);
+            RX_bytes = Get_R_num(RX_bytes, msg);
 
             switch (msg[6])
             {
@@ -381,81 +382,178 @@ namespace IEC104
                     break;
                 //总召唤
                 case 0x64:
-                    //接收总召唤
+                    //log.Debug("接收总召唤");
                     NAIec104InterrogationAll(RX_bytes, TX_bytes);
                     break;
                 //单命令遥控
                 case 0x2D:
-                    //接收遥控预置
-                    int YKnum = Get_YKD_Num(msg, true);
-                    if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
+                    //if (frmSet.Listen104 == 1)
                     {
-                        //遥控返校
-                        //接收遥控预置
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKACK(msg, RX_bytes, TX_bytes);
+                        //接收遥控执行
+                        if (msg[8] == 6 && msg[9] == 0)
+                        {
+                            //执行确认
+                            //log.Debug("接收遥控执行确认");
+                            Build_T_num(TX_bytes);
+                            NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
+                            //激活结束
+                            Build_R_num(RX_bytes);
+                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                        }
+                        //遥控撤销
+                        else if (msg[8] == 8 && msg[9] == 0)
+                        {
+                            //撤销确认
+                            //log.Debug("接收遥控撤销确认");
+                            Build_T_num(TX_bytes);
+                            NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
+                            //激活结束
+                            Build_R_num(RX_bytes);
+                            NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+                        }
                     }
-                    //接收遥控执行
-                    else if (msg[8] == 6 && msg[9] == 0)
-                    {
-                        //执行确认
-                        //接收遥控执行确认
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
-                        //激活结束
-                        Build_SR_num(RX_bytes);
-                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
-                    }
-                    //遥控撤销
-                    else if (msg[8] == 8 && msg[9] == 0)
-                    {
-                        //撤销确认
-                        //接收遥控撤销确认
-                        Build_SR_num(TX_bytes);
-                        NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
-                        //激活结束
-                        Build_SR_num(RX_bytes);
-                        NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
-                    }               
                     break;
                 //遥调(设定浮点数值命令)
                 case 50:
                     int YDnum = Get_YKD_Num(msg, false);
-                    //接收遥调预置
-                    if (msg[8] == 6 && msg[9] == 0 && isYDACK[YDnum] == 0)
-                    {
-                        //遥调返校
-                        //接收遥调预置
-                        Build_SR_num(TX_bytes);
-                        NAIec104YDACK(msg, RX_bytes, TX_bytes);
-                    }
                     //接收遥调执行
-                    else if (msg[8] == 6 && msg[9] == 0 )
+                    if (msg[8] == 6 && msg[9] == 0)
                     {
                         //执行确认
-                        //接收遥调执行确认
-                        Build_SR_num(TX_bytes);
+                        //log.Debug("接收遥调执行确认");
+                        Build_T_num(TX_bytes);
                         NAIec104YDEXEACK(msg, RX_bytes, TX_bytes);
                         //激活结束
-                        Build_SR_num(RX_bytes);
+                        Build_R_num(RX_bytes);
                         NAIec104YDFinishACK(msg, RX_bytes, TX_bytes);
                     }
                     //遥调撤销
                     else if (msg[8] == 8 && msg[9] == 0)
                     {
                         //撤销确认
-                        //接收遥调撤销确认
-                        Build_SR_num(TX_bytes);
+                        //log.Debug("接收遥调撤销确认");
+                        Build_T_num(TX_bytes);
                         NAIec104YDDeactACK(msg, RX_bytes, TX_bytes);
                         //激活结束
-                        Build_SR_num(RX_bytes);
+                        Build_R_num(RX_bytes);
                         NAIec104YDFinishACK(msg, RX_bytes, TX_bytes);
-                    }                
+                    }
                     break;
             }
 
-    
+
         }
+
+
+
+        //public static void ProcessFormatI(byte[] msg)
+        //{
+        //    //获取主站发送报文中的发送序号和接收序号
+        //    byte[] TX_bytes = new byte[2];    //主站序号（国网调度中心）
+        //    byte[] RX_bytes = new byte[2];    //从站信号（EMS）
+
+        //    TX_bytes = Get_S_num( TX_bytes, msg);
+        //    RX_bytes = Get_R_num( RX_bytes, msg);
+
+        //    switch (msg[6])
+        //    {
+        //        //单点遥信
+        //        case 1:
+        //            /*传输原因*/
+        //            if (msg[8] == 5 && msg[9] == 0)
+        //            {
+        //                //更新主站的序号
+        //                Build_T_num(TX_bytes);
+        //                ReturnAllYXData(RX_bytes, TX_bytes);
+        //            }
+        //            break;
+        //        //短浮点数遥测
+        //        case 13:
+        //            /*传输原因*/
+        //            if (msg[8] == 5 && msg[9] == 0) //(遥信被请求，遥测被请求)
+        //            {
+        //                //更新主站的序号
+        //                Build_T_num(TX_bytes);
+        //                ReturnAllYCData(RX_bytes, TX_bytes);
+        //            }
+        //            break;
+        //        //总召唤
+        //        case 0x64:
+        //            //接收总召唤
+        //            NAIec104InterrogationAll(RX_bytes, TX_bytes);
+        //            break;
+        //        //单命令遥控
+        //        case 0x2D:
+        //            //接收遥控预置
+        //            int YKnum = Get_YKD_Num(msg, true);
+        //            if (msg[8] == 6 && msg[9] == 0 && isYKACK[YKnum] == 0)
+        //            {
+        //                //遥控返校
+        //                //接收遥控预置
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YKACK(msg, RX_bytes, TX_bytes);
+        //            }
+        //            //接收遥控执行
+        //            else if (msg[8] == 6 && msg[9] == 0)
+        //            {
+        //                //执行确认
+        //                //接收遥控执行确认
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YKEXEACK(msg, RX_bytes, TX_bytes);
+        //                //激活结束
+        //                Build_SR_num(RX_bytes);
+        //                NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+        //            }
+        //            //遥控撤销
+        //            else if (msg[8] == 8 && msg[9] == 0)
+        //            {
+        //                //撤销确认
+        //                //接收遥控撤销确认
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YKDeactACK(msg, RX_bytes, TX_bytes);
+        //                //激活结束
+        //                Build_SR_num(RX_bytes);
+        //                NAIec104YKFinishACK(msg, RX_bytes, TX_bytes);
+        //            }               
+        //            break;
+        //        //遥调(设定浮点数值命令)
+        //        case 50:
+        //            int YDnum = Get_YKD_Num(msg, false);
+        //            //接收遥调预置
+        //            if (msg[8] == 6 && msg[9] == 0 && isYDACK[YDnum] == 0)
+        //            {
+        //                //遥调返校
+        //                //接收遥调预置
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YDACK(msg, RX_bytes, TX_bytes);
+        //            }
+        //            //接收遥调执行
+        //            else if (msg[8] == 6 && msg[9] == 0 )
+        //            {
+        //                //执行确认
+        //                //接收遥调执行确认
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YDEXEACK(msg, RX_bytes, TX_bytes);
+        //                //激活结束
+        //                Build_SR_num(RX_bytes);
+        //                NAIec104YDFinishACK(msg, RX_bytes, TX_bytes);
+        //            }
+        //            //遥调撤销
+        //            else if (msg[8] == 8 && msg[9] == 0)
+        //            {
+        //                //撤销确认
+        //                //接收遥调撤销确认
+        //                Build_SR_num(TX_bytes);
+        //                NAIec104YDDeactACK(msg, RX_bytes, TX_bytes);
+        //                //激活结束
+        //                Build_SR_num(RX_bytes);
+        //                NAIec104YDFinishACK(msg, RX_bytes, TX_bytes);
+        //            }                
+        //            break;
+        //    }
+
+
+        //}
 
 
 
@@ -710,25 +808,25 @@ namespace IEC104
             else if(frmMain.Selffrm.AllEquipment.runState == 0 )
                 message[16] = 0x00;
             //PCS充电放电状态 （1：充电 0：放电）
-            if(frmMain.Selffrm.AllEquipment.wTypeActive ==  "充电")
+            if (frmMain.Selffrm.AllEquipment.BMS.Prepared == true)
                 message[17] = 0x01;
             else
                 message[17] = 0x00;
             //BMS通信 ： （ 1：通信 0：失联 ）
-            if (frmMain.Selffrm.AllEquipment.BMS.Prepared == true )
+            if (frmMain.Selffrm.AllEquipment.eState == 2)
                 message[18] = 0x01;
             else
                 message[18] = 0x00;
             //储能需求侧相应模式投入 ( 1:进入网控 0：未进入)
-            if (frmMain.Selffrm.AllEquipment.eState == 2)
+            if (frmMain.Selffrm.AllEquipment.PCSList[0].Prepared == true)
                 message[19] = 0x01;
             else
                 message[19] = 0x00;
             //PCS开关状态  0:停机 1：开机
-            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255)
-                message[20] = 0x00;
-            else
+            if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true)
                 message[20] = 0x01;
+            else
+                message[20] = 0x00;
 
 
             //验证消息
@@ -809,52 +907,147 @@ namespace IEC104
 
 
         /**********************(单点)遥调执行确认********************/
-        //参数设置是4个字节
         public static void NAIec104YDEXEACK(byte[] msg, byte[] TX_bytes, byte[] RX_bytes)
         {
 
-                //发送序号
-                msg[2] = TX_bytes[0];
-                msg[3] = TX_bytes[1];
-                //接收序号
-                msg[4] = RX_bytes[0];
-                msg[5] = RX_bytes[1];
-                //传输原因
-                msg[8] = 0x07;
+            //发送序号
+            msg[2] = TX_bytes[0];
+            msg[3] = TX_bytes[1];
+            //接收序号
+            msg[4] = RX_bytes[0];
+            msg[5] = RX_bytes[1];
+            //传输原因
+            msg[8] = 0x07;
 
-                int num = Get_YKD_Num(msg, false);
-                //do something
-                switch (num)
-                {
-                    //设置PCS功率值
-                    //写入PCS的功率 ： 充电为正 放电为负
-                    case 0:
-                        float input = Get_YD_Input(msg);
+            int num = Get_YKD_Num(msg, false);
+            //do something
+            switch (num)
+            {
+                //设置PCS功率值
+                //写入PCS的功率 ： 充电为正 放电为负
+
+                case 0:
+                    float input = Get_YD_Input(msg);
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = (input / frmSet.config.SysCount);
+
+                        if (input == 0)
+                        {
+                            frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+                        }
+                        else if (input > 0)
+                        {
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
+                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+                        }
+                        else
+                        {
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
+                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+                        }
+                        Console.WriteLine("/*************************************************************************/");
+
+                        Console.WriteLine($"计划功率值  {input} ----策略预备执行动作 -{frmMain.Selffrm.AllEquipment.wTypeActive}--{frmMain.Selffrm.AllEquipment.PCSTypeActive}");
+                        Console.WriteLine("/*************************************************************************/");
+
+                    }
+                    //log.Debug("写入功率值：" + input + "写入PCSScheduleKVA" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA);
+                    break;
+                //储能需求侧响应模式投入
+                case 1:
+                    if (msg[15] == 0x00)
+                    {
                         lock (frmMain.Selffrm.AllEquipment)
                         {
-                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = (input / frmSet.config.SysCount);
-                            if (input >= 0)
-                            {
-                                frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
-                                frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                            }
-                            else 
-                            {
-                                frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
-                                frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                            }
+                            frmMain.Selffrm.AllEquipment.eState = 1; ///手工
+                            frmSet.config.SysMode = 1;
+                            frmMain.TacticsList.TacticsOn = true; //恢复策略模式
+                            frmMain.TacticsList.ActiveIndex = -2;
                         }
-                        break;
-                }
-                //send msg
+                    }
+                    else
+                    {
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
+                            frmSet.config.SysMode = 2;
+                            frmMain.TacticsList.TacticsOn = false;   //关闭策略
 
-                //string hexString = BitConverter.ToString(msg);
+                            //初始化设置
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                            frmMain.Selffrm.AllEquipment.HostStart = false;
+                            frmMain.Selffrm.AllEquipment.SlaveStart = false;
+                            frmMain.Selffrm.Slave104.HostStart_104 = false;
+                        }
+                    }
+                    break;
 
+            }
+            //send msg
 
-                frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
-                isYDACK[num] = 0;
-            
+            string hexString = BitConverter.ToString(msg);
+            //log.Debug("发送遥调执行确认：" + hexString);
+
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"遥调执行确认 ++{temp:x}");
+
+            isYDACK[num] = 0;
+
         }
+
+
+
+        //参数设置是4个字节
+        //public static void NAIec104YDEXEACK(byte[] msg, byte[] TX_bytes, byte[] RX_bytes)
+        //{
+
+        //        //发送序号
+        //        msg[2] = TX_bytes[0];
+        //        msg[3] = TX_bytes[1];
+        //        //接收序号
+        //        msg[4] = RX_bytes[0];
+        //        msg[5] = RX_bytes[1];
+        //        //传输原因
+        //        msg[8] = 0x07;
+
+        //        int num = Get_YKD_Num(msg, false);
+        //        //do something
+        //        switch (num)
+        //        {
+        //            //设置PCS功率值
+        //            //写入PCS的功率 ： 充电为正 放电为负
+        //            case 0:
+        //                float input = Get_YD_Input(msg);
+        //                lock (frmMain.Selffrm.AllEquipment)
+        //                {
+        //                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = (input / frmSet.config.SysCount);
+        //                    if (input >= 0)
+        //                    {
+        //                        frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
+        //                        frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+        //                    }
+        //                    else 
+        //                    {
+        //                        frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
+        //                        frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+        //                    }
+        //                }
+        //                break;
+        //        }
+        //        //send msg
+
+        //        //string hexString = BitConverter.ToString(msg);
+
+
+        //        frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+        //        isYDACK[num] = 0;
+
+        //}
 
         /*********************遥调撤销确认******************************/
         public static void NAIec104YDDeactACK(byte[] msg, byte[] TX_bytes, byte[] RX_bytes)
@@ -1003,7 +1196,7 @@ namespace IEC104
             {
                 //进入网控模式
                 case 0:
-                    if (msg[15] == 0x00)
+                    if (msg[15] == 0x00)   //关闭
                     {
                         lock (frmMain.Selffrm.AllEquipment)
                         {
@@ -1011,9 +1204,16 @@ namespace IEC104
                             frmSet.config.SysMode = 1;
                             frmMain.TacticsList.TacticsOn = true; //恢复策略模式
                             frmMain.TacticsList.ActiveIndex = -2;
+
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                            frmMain.Selffrm.AllEquipment.HostStart = false;
+                            frmMain.Selffrm.AllEquipment.SlaveStart = false;
+                            frmMain.Selffrm.Slave104.HostStart_104 = false;
+
+                            frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
                         }
                     }
-                    else
+                    else  //开启
                     {
                         lock (frmMain.Selffrm.AllEquipment)
                         {
@@ -1023,47 +1223,115 @@ namespace IEC104
 
                             //初始化设置
                             frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                            frmMain.Selffrm.AllEquipment.HostStart = false;
-                            frmMain.Selffrm.AllEquipment.SlaveStart = false;
+                            frmMain.Selffrm.AllEquipment.HostStart = true;
+                            frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                            frmMain.Selffrm.Slave104.HostStart_104 = true;
                         }
                     }
                     break;
-                //打开PCS
-                case 1:
-                    if (frmMain.Selffrm.AllEquipment.eState == 2)
-                    {
-                        //PCS运行开关
-                        if (msg[15] == 0x00) //pcs关闭
-                        {
-                            lock (frmMain.Selffrm.AllEquipment)
-                            {
-                                frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                                frmMain.Selffrm.AllEquipment.HostStart = false;
-                                frmMain.Selffrm.AllEquipment.SlaveStart = false;
-                            }
 
-                            frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-
-                        }
-                        else //pcs打开
-                        {
-                            lock (frmMain.Selffrm.AllEquipment)
-                            {
-                                frmMain.Selffrm.AllEquipment.HostStart = true;
-                                frmMain.Selffrm.AllEquipment.SlaveStart = true;
-                            }
-                        }
-                    }
-                    break;
             }
             //send msg
-            //string hexString = BitConverter.ToString(msg);
-            //"发送遥控执行确认：" + hexString
+            string hexString = BitConverter.ToString(msg);
+            //log.Debug("发送遥控执行确认：" + hexString);
             frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
-            isYKACK[num] = 0;
+            UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+            temp += 2;
+            app.apci.TX_field1 = (byte)temp;
+            app.apci.TX_field2 = (byte)(temp >> 8);
+            Console.WriteLine($"(单点)遥控执行确认 ++{temp:x}");
 
+            isYKACK[num] = 0;
+            //log.Debug("eState:" + frmMain.Selffrm.AllEquipment.eState);
+            //log.Debug("HostStart:"+ frmMain.Selffrm.AllEquipment.HostStart);
 
         }
+
+
+        //public static void NAIec104YKEXEACK(byte[] msg, byte[] TX_bytes, byte[] RX_bytes)
+        //{
+
+        //    //发送序号
+        //    msg[2] = TX_bytes[0];
+        //    msg[3] = TX_bytes[1];
+        //    //接收序号
+        //    msg[4] = RX_bytes[0];
+        //    msg[5] = RX_bytes[1];
+        //    //传输原因
+        //    msg[8] = 0x07;
+
+        //    int num = Get_YKD_Num(msg, true);
+        //    //do something
+        //    switch (num)
+        //    {
+        //        //进入网控模式
+        //        case 0:
+        //            if (msg[15] == 0x00)
+        //            {
+        //                lock (frmMain.Selffrm.AllEquipment)
+        //                {
+        //                    frmMain.Selffrm.AllEquipment.eState = 1;
+        //                    frmSet.config.SysMode = 1;
+        //                    frmMain.TacticsList.TacticsOn = true; //恢复策略模式
+        //                    frmMain.TacticsList.ActiveIndex = -2;
+        //                }
+        //            }
+        //            else
+        //            {
+        //                lock (frmMain.Selffrm.AllEquipment)
+        //                {
+        //                    frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
+        //                    frmSet.config.SysMode = 2;
+        //                    frmMain.TacticsList.TacticsOn = false;   //关闭策略
+
+        //                    //初始化设置
+        //                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+        //                    frmMain.Selffrm.AllEquipment.HostStart = false;
+        //                    frmMain.Selffrm.AllEquipment.SlaveStart = false;
+        //                }
+        //            }
+        //            break;
+        //        //打开PCS
+        //        case 1:
+        //            if (frmMain.Selffrm.AllEquipment.eState == 2)
+        //            {
+        //                //PCS运行开关
+        //                if (msg[15] == 0x00) //pcs关闭
+        //                {
+        //                    lock (frmMain.Selffrm.AllEquipment)
+        //                    {
+        //                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+        //                        frmMain.Selffrm.AllEquipment.HostStart = false;
+        //                        frmMain.Selffrm.AllEquipment.SlaveStart = false;
+        //                    }
+
+        //                    frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+
+        //                }
+        //                else //pcs打开
+        //                {
+        //                    lock (frmMain.Selffrm.AllEquipment)
+        //                    {
+        //                        frmMain.Selffrm.AllEquipment.HostStart = true;
+        //                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
+        //                    }
+        //                }
+        //            }
+        //            break;
+        //    }
+        //    //send msg
+        //    //string hexString = BitConverter.ToString(msg);
+        //    //"发送遥控执行确认：" + hexString
+        //    frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+        //    UInt16 temp = ((ushort)(app.apci.TX_field1 | (app.apci.TX_field2 << 8)));
+        //    temp += 2;
+        //    app.apci.TX_field1 = (byte)temp;
+        //    app.apci.TX_field2 = (byte)(temp >> 8);
+        //    Console.WriteLine($"(单点)遥控执行确认 ++{temp:x}");
+        //    isYKACK[num] = 0;
+
+
+        //}
 
         /**********************获取遥控号/遥调地址********************/
         //isYGK ： ture（遥控） false（遥调）
@@ -1088,6 +1356,8 @@ namespace IEC104
         }
         public void iec104_packet_parser(byte[] data)
         {
+            IEC104Send_Event.Reset();
+            app.Isconnect = false;
             if ((data[2] & 0x03) == 0x03)
             {
                 // u 帧
@@ -1397,7 +1667,7 @@ namespace IEC104
         public void IEC104_PropertyChanged(object sender, EventArgs e)
         {
            
-            if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == true))
+            if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == false))
             {
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
