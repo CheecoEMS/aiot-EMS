@@ -77,6 +77,8 @@ namespace EMS
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
         private static System.Threading.Timer Heartbeat_Timer;
+        private static System.Threading.Timer Led_Timer;
+
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -537,7 +539,11 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
-                InitializeLed_Timer();
+
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    InitializeLed_Timer();
+                }
 
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
@@ -861,7 +867,7 @@ namespace EMS
         static void InitializeLed_Timer()
         {
 
-            Heartbeat_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
+            Led_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
         }
         static void LedLoop_timerCallback(Object state)
         {
