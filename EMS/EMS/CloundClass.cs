@@ -421,7 +421,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
@@ -433,7 +433,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
@@ -452,7 +452,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
@@ -464,7 +464,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
@@ -524,7 +524,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
@@ -536,7 +536,7 @@ namespace EMS
                     {
                         try
                         {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
                         catch (MqttClientException ex)
