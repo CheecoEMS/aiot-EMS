@@ -30,6 +30,7 @@ using System.Collections.Concurrent;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
 using MySqlX.XDevAPI;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace EMS
 {
@@ -5062,18 +5063,22 @@ namespace EMS
         }
         private void UpdateCellTemp_160(double[] aCellTemps, int aStart, string aData)
         {
-            double dTemp;
-            for (int i = 0; i < 2; i++)
+            try
             {
-                //1-10
-                for (int j = 0; j < 28; j++)
+                double dTemp;
+                for (int i = 0; i < 3; i++)
                 {
-                    dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    aCellTemps[aStart + i * 48 + j] = Math.Round(dTemp, 1);
-                }
+                    //1-10
+                    for (int j = 0; j < 28; j++)
+                    {
+                        dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                        aData = aData.Substring(4, aData.Length - 4);
+                        aCellTemps[aStart + i * 48 + j] = Math.Round(dTemp, 1);
+                    }
 
+                }
             }
+            catch    {  }
         }
         /******************************** 液冷 ********************************/
 
