@@ -6124,7 +6124,7 @@ namespace EMS
         public double UBmsPcsState = 1; //充电state
         public double OBmsPcsState = 1; //放电state
 
-        //8.13多级防逆超限
+        //8.13多级防逆超限release2.1
         public double dRate = 0;
         public double dValue = 0;
         public bool FineToCharge = false;//自适应需量中，记录是否下发充电指令
@@ -6139,7 +6139,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Release3.0";
+        public string EMSVersion { get; set; } = "EMS240815release3.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";

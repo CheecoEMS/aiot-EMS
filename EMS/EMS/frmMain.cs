@@ -352,8 +352,7 @@ namespace EMS
 
                 //读取配置文件
                 //frmSet.LoadSetInf();
-                //初始化端口
-                frmSet.InitGPIO();
+
                 //连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -376,9 +375,11 @@ namespace EMS
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
+                //初始化端口
+                frmSet.InitGPIO();
                 //5.15
                 frmMain.Selffrm.AllEquipment.init_LED();
-                
+
                 //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
                 //DownData:向云上传JSON文件
