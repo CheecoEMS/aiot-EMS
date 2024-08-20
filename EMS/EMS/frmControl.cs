@@ -326,21 +326,7 @@ namespace EMS
         private void btnTimeCalibration_Click(object sender, EventArgs e)
         {
             //校准电表日期
-            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-            {
-                frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-            }
-            if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-            {
-                foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                {
-                    tempEleMeter.timing(73);
-                }
-            }
-            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-            {
-                frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-            }
+            frmMain.Selffrm.AllEquipment.MeterCalibration();
         }
 
         private void BookUi()

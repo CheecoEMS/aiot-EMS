@@ -375,10 +375,18 @@ namespace EMS
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
+
+
                 //初始化端口
                 frmSet.InitGPIO();
-                //5.15
+                //初始化灯板
                 frmMain.Selffrm.AllEquipment.init_LED();
+                //初始化液冷机
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                }
+
 
                 //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
@@ -451,21 +459,7 @@ namespace EMS
                 }
 
                 //校准电表日期
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-                {
-                    foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                    {
-                        tempEleMeter.timing(73);
-                    }
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                }
+                frmMain.Selffrm.AllEquipment.MeterCalibration();
 
 
                 //8.7 每台主机初始化对外接口
@@ -637,21 +631,7 @@ namespace EMS
                 //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
                 frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
                 //校准电表日期
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-                {
-                    foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                    {
-                        tempEleMeter.timing(73);
-                    }
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                }
+                frmMain.Selffrm.AllEquipment.MeterCalibration();
                 //每晚00：00更新策略
                 if (frmMain.TacticsList != null)
                 {

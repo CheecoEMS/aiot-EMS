@@ -6139,7 +6139,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815release3.1";
+        public string EMSVersion { get; set; } = "EMS240815release3.2";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6186,6 +6186,35 @@ namespace EMS
             //  //free onePark;
             //}
         }
+
+        public void MeterCalibration()
+        {
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            {
+                if (Elemeter2.Prepared)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
+                }
+            }
+            if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
+            {
+                foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
+                {
+                    if (tempEleMeter.Prepared)
+                    {
+                        tempEleMeter.timing(73);
+                    }
+                }
+            }
+            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+            {
+                if (Elemeter3.Prepared)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
+                }
+            }
+        }
+
 
         public void AddValue(double value)
         {
@@ -8180,10 +8209,6 @@ namespace EMS
         {
             try
             {
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
-                }
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
@@ -8398,9 +8423,9 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
-                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复
+                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
-                                        frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                                            frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
                                         }
                                     }
                                 }
