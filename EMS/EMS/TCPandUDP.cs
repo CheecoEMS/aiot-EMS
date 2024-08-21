@@ -630,7 +630,11 @@ namespace Modbus
             }
         }
 
-
+        public bool GetConnectStatus()
+        {
+            if (socketWrapper_2404 != null) return true;
+            else return false;
+        }
 
         //104数据发送
         public bool SendMsg_byte(byte[] msg)

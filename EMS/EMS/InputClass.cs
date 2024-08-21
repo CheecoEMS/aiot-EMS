@@ -8394,7 +8394,11 @@ namespace EMS
                         continue;
                     }
                     GetDataFromBMS();
-
+                    //变化上送
+                    if (frmSet.config.Open104 == 1)
+                    {
+                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }
                     //均衡操作
                     //StartStopBMSBala();
                     //Thread.Sleep(10);
@@ -8498,7 +8502,11 @@ namespace EMS
                     {
                         frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                     }
-
+                    //变h遥信
+                    if (frmSet.config.Open104 == 1)
+                    {
+                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    }
                     //PCS的DSP2 11.27
                     if (DSP2 != null)
                     {
