@@ -31,6 +31,7 @@ using System.Drawing.Imaging;
 using System.Threading.Tasks;
 using MySqlX.XDevAPI;
 using System.Windows.Forms.DataVisualization.Charting;
+using static IEC104.CIEC104Slave;
 
 namespace EMS
 {
@@ -1962,10 +1963,7 @@ namespace EMS
         }
         public void init_LiquidCool() //初始化
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-            }
+                    frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();            
         }
         //导入配置
         public bool ExecCommand()
@@ -7119,6 +7117,12 @@ namespace EMS
                         AllwaValue = Elemeter1Z.AllUkva;
                     }
                 }
+                    //变h遥信
+                    //if (frmSet.config.Open104 == 1)
+                    //{
+                    //    IAsyncResult ar_104 = frmMain.Selffrm.Slave104.iec104_delegate.BeginInvoke(frmMain.Selffrm.Slave104.IEC104_PropertyChanged, null);
+                    //   // frmMain.Selffrm.Slave104.OnPropertyChanged();
+                    //}
             }
 
         }
@@ -8388,6 +8392,10 @@ namespace EMS
                 Thread.Sleep(1000);
                 try
                 {
+
+                    DateTime startTime = DateTime.Now;
+                    DateTime endTime ;
+
                     if (BMS == null)
                     {
                         Thread.Sleep(1000);
@@ -8397,8 +8405,10 @@ namespace EMS
                     //变化上送
                     if (frmSet.config.Open104 == 1)
                     {
-                        frmMain.Selffrm.Slave104.OnPropertyChanged();
+                        IAsyncResult ar_104 = frmMain.Selffrm.iec104_delegate.BeginInvoke(new AsyncCallback(frmMain.Selffrm.Slave104.IEC104_PropertyChanged), null);
                     }
+                    endTime = DateTime.Now;
+                    Console.WriteLine("#********* IEC104******* IEC104**********#" + (endTime - startTime).TotalSeconds);
                     //均衡操作
                     //StartStopBMSBala();
                     //Thread.Sleep(10);
@@ -8437,6 +8447,9 @@ namespace EMS
                             OldEMSError[i] = EMSError[i];
                         }
                     }
+                    endTime = DateTime.Now;
+                    Console.WriteLine("#********* BMS DONE******* BMS DONE**********#" + (endTime - startTime).TotalSeconds);
+
                 }
                 catch (Exception ex)
                 {
@@ -8502,17 +8515,18 @@ namespace EMS
                     {
                         frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
                     }
-                    //变h遥信
-                    if (frmSet.config.Open104 == 1)
-                    {
-                        frmMain.Selffrm.Slave104.OnPropertyChanged();
-                    }
                     //PCS的DSP2 11.27
                     if (DSP2 != null)
                     {
                         DSP2.GetDataFromEqipment();
                     }
-                    
+
+                    ////其他线程循环过快
+                    //if (frmSet.config.Open104 == 1)
+                    //{
+                    //    IAsyncResult ar_104 = frmMain.Selffrm.iec104_delegate.BeginInvoke(new AsyncCallback(frmMain.Selffrm.Slave104.IEC104_PropertyChanged), null);
+                    //}
+
                     //消防
                     FireFBGPIO();
                     //急停

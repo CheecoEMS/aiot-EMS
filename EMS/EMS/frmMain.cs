@@ -15,6 +15,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using static IEC104.CIEC104Slave;
 
 //351200 
 
@@ -54,6 +55,12 @@ namespace EMS
         public delegate void Displaydelegate(byte[] InputBuf);
         public Displaydelegate disp_delegate;
         private delegate void UpdateChart(Chart aOneChart, bool aCleanAllSeries);
+
+
+
+        //
+        public IEC104_delegate iec104_delegate = delegate_init; //
+        public static void delegate_init() { }
 
         //8.18
         //public ThreadPoolClass ThreadPool = new ThreadPoolClass();
@@ -482,8 +489,11 @@ namespace EMS
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
                     frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
-                    frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
                     frmMain.Selffrm.Slave104.IEC104_Init();
+
+                    //IEC104EVENT eventHandler = new IEC104EVENT();
+                    //IEC104_delegate iec104_delegate = frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+                    // frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
                 }
 
                 //使用TCP/IP通讯方式

@@ -583,7 +583,8 @@ namespace Modbus
                                                                      //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
 
                     CheckBackground();//检查是否存在资源未释放
-                    
+
+                    acceptSocket.ReceiveTimeout = 2000; //2s 加了这个会出现 发送时socker对象不存在的问题
                     socketWrapper_2404 = new SocketWrapper(acceptSocket);
 
                     CancellationTokenSource aCts = new CancellationTokenSource();
