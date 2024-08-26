@@ -77,6 +77,8 @@ namespace EMS
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
         private static System.Threading.Timer Heartbeat_Timer;
+        private static System.Threading.Timer Led_Timer;
+
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -335,113 +337,6 @@ namespace EMS
                     break;
             }
         }
-        //收到命令函数
-        private void OnReceiveCMD(int DataSourceType, byte[] aByteData)
-        {
-            int SysID =0;
-            int CMDID = 0;
-            short iAddr = 0;
-            short iLen = 0;
-            long iData = 0;
-            ////判断是否为传到的命令 
-            //检查是否是为命令  //检查crc 
-
-            //string RecCommandInfo = new StackTrace().ToString();
-
-            if (!ModbusBase.CheckResponse(aByteData)) 
-                return;
-            
-            //解析命令
-            iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen); 
-            if (SysID != frmSet.config.i485Addr)
-                return;
-
-            AllEquipment.NetControl = true;
-            AllEquipment.NetCtlTime = DateTime.Now;
-            frmSet.config.SysMode = 2;
-            byte[] message = new byte[7];
-            short[] sData01 = { 00, 00 };
-            switch (CMDID)
-            {
-                case 0x03://读取 
-                    if(CloudClass.Back3Data(iAddr) != null)
-                    {
-                        ////modbus返回:使用缓冲区中的数据将指定数量的字节写入串行端口。
-                        spNetControl.Write(CloudClass.Back3Data(iAddr), 0, 7);
-                    }
-                   // spNetControl.Write(CloudClass.Back3Data(iAddr),0,7);
-                    //8.5从机接受
-                    //frmMain.Selffrm.AllEquipment.WriteDataPCSCommandINI(Selffrm.AllEquipment.rDate, System.Text.Encoding.UTF8.GetString(aByteData));
-                    break;
-                case 0x06://设置                     
-                    spNetControl.Write(aByteData, 0, aByteData.Length);
-
-                    CloudClass.Active6Data(iAddr, (int)iData);
-                    //8.4 收到指令后向从机发送确认报文
-                    //frmMain.Selffrm.AllEquipment.EMS.PCSCommandConfirm();
-                    //8.5System.DateTime.Now.ToString("g")
-                    //"hh:mm:ss"
-                    //frmMain.Selffrm.AllEquipment.WriteDataPCSCommandINI(System.DateTime.Now.ToString("hh:mm:ss"), ToHexStrFromByte(aByteData),iAddr);
-                    break; 
-                case 0x20://读取设备SN  
-                    sData01[0] = 10002; ;
-                    message = ModbusBase.BuildCloundMSG((byte)frmSet.config.i485Addr, 0x27, 01, sData01);
-                    TCPCloud.SendMSG(message); 
-                    break;
-                case 0x21:
-                    sData01[0] = (short)1;
-                    message = ModbusBase.BuildCloundMSG(1, 0x22, 01, sData01);
-                    TCPCloud.SendMSG(message); 
-                    break;
-                case 0x26: //闻讯间隔
-                    sData01[0] = (short)1;
-                    message = ModbusBase.BuildCloundMSG(1, 0x26, 01, sData01);
-                    TCPCloud.SendMSG(message);
-                    frmSet.config.YunInterval = iLen;
-                    //设置云的读取间隔，判断两次无数据就会重新连接云（2B） 
-                    TCPCloud.ReconnectTime = frmSet.config.YunInterval;//AllEquipment.AskInterval;
-                    frmSet.SaveSet2File();//保存数据 
-                    break; 
-                case 0x16: 
-                   // CloundClass.Command16(iAddr, iData);
-                    break;
-                case 0x18:
-                    //主机获取从机执行反馈
-
-                default: 
-                    break; 
-            }
-        }
-
-        //串口收到数据的事件
-        private void spNetControl_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
-        {
-            //主机不接受任何网络指令
-            if (frmSet.config.IsMaster == 1)
-            {
-                spNetControl.DiscardOutBuffer();
-                spNetControl.DiscardInBuffer();
-                return;
-            }
-            //处理网络控制信息
-            try
-            {
-                Thread.Sleep(100);  //（毫秒）等待一定时间，确保数据的完整性 int len        
-                int len = spNetControl.BytesToRead;
-                if (len != 0)
-                {
-                    byte[] buff = new byte[len];
-                    spNetControl.Read(buff, 0, len);
-                    OnReceiveCMDEvent = OnReceiveCMD;
-                    this.BeginInvoke(OnReceiveCMDEvent, 1, buff);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowDebugMSG(ex.ToString());
-            }
-            spNetControl.DiscardInBuffer();
-        }
 
         static public frmMain LoadForm()
         {
@@ -457,8 +352,7 @@ namespace EMS
 
                 //读取配置文件
                 //frmSet.LoadSetInf();
-                //初始化端口
-                frmSet.InitGPIO();
+
                 //连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -481,17 +375,18 @@ namespace EMS
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 frmMain.Selffrm.AllEquipment.LoadSetFromFile();
-                //5.15
+
+
+                //初始化端口
+                frmSet.InitGPIO();
+                //初始化灯板
                 frmMain.Selffrm.AllEquipment.init_LED();
-                //11.30 BMS区分风冷和液冷字段配置
-                if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                //初始化液冷机
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                 {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 1;
+                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
                 }
-                else if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;
-                }
+
 
                 //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
@@ -564,21 +459,7 @@ namespace EMS
                 }
 
                 //校准电表日期
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-                {
-                    foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                    {
-                        tempEleMeter.timing(73);
-                    }
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                }
+                frmMain.Selffrm.AllEquipment.MeterCalibration();
 
 
                 //8.7 每台主机初始化对外接口
@@ -653,7 +534,11 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
-                InitializeLed_Timer();
+
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    InitializeLed_Timer();
+                }
 
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
@@ -746,21 +631,7 @@ namespace EMS
                 //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
                 frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
                 //校准电表日期
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-                {
-                    foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                    {
-                        tempEleMeter.timing(73);
-                    }
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                }
+                frmMain.Selffrm.AllEquipment.MeterCalibration();
                 //每晚00：00更新策略
                 if (frmMain.TacticsList != null)
                 {
@@ -850,14 +721,14 @@ namespace EMS
         static void Cloud_timerCallback(Object state)
         {
             // 定时器触发时要执行的代码  
-            if (frmSet.config.EMSstatus == 1)
-            {
+            //if (frmSet.config.EMSstatus == 1)
+            //{
                 DateTime tempTime = DateTime.Now;
                 //采集数据保存在数据库中
                 frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
                 //采集数据上传云端
                 frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
-            }
+            //}
 
             //make json
 /*            DateTime tempTimeq = DateTime.Now;
@@ -977,7 +848,7 @@ namespace EMS
         static void InitializeLed_Timer()
         {
 
-            Heartbeat_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
+            Led_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
         }
         static void LedLoop_timerCallback(Object state)
         {
@@ -995,11 +866,8 @@ namespace EMS
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SysThreathStoped = true;
-            //关闭云链接
-            TCPCloud.CloseConnect();
             //关闭gpio
             frmSet.GPIOClose();
-           // System.Environment.Exit(0);
         }
 
         /// <summary>

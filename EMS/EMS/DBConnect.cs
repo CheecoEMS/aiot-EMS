@@ -1389,25 +1389,26 @@ namespace EMS
                         new Column { Name = "CellCount", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "SysInterval", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "YunInterval", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "IsMaster", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "Master485Addr", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "IsMaster", Type = "int", IsNullable = true, Key = ""  , Comment = "是否是主机"},
+                        new Column { Name = "Master485Addr", Type = "int", IsNullable = true, Key = "" , Comment = "主机设备地址" },
                         new Column { Name = "i485Addr", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "AutoRun", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "SysMode", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "PCSGridModel", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "DebugComName", Type = "varchar(255)", IsNullable = true, Key = "" },
                         new Column { Name = "DebugRate", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "UseYunTactics", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "SysCount", Type = "int", IsNullable = true, Key = ""  , Comment = "储能电站总台数"},
+                        new Column { Name = "UseYunTactics", Type = "int", IsNullable = true, Key = ""  , Comment = "是否接收云策略"},
                         new Column { Name = "UseBalaTactics", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = "" },
+                        new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = ""  , Comment = "BMS供应商版本"},
                         new Column { Name = "PCSForceRun", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" },
-                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" }
+                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = ""  , Comment = "EMS工作状态"},                     
+                        new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = ""  , Comment = "IO口配置"},
+                        new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主机IP地址" },
+                        new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" },
+                        new Column { Name = "CellVNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池电压数量" },
+                        new Column { Name = "CellTNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池温度数量" }
                     }
                 },
                 {
@@ -1467,8 +1468,7 @@ namespace EMS
                         new Column { Name = "AllNukva", Type = "float", IsNullable = true, Key = "", Comment = "总无用功率" },
                         new Column { Name = "AllAAkva", Type = "float", IsNullable = true, Key = "", Comment = "总视在用功率" },
                         new Column { Name = "AllPFoctor", Type = "float", IsNullable = true, Key = "", Comment = "总功率因数" },
-                        new Column { Name = "HZ", Type = "float", IsNullable = true, Key = "", Comment = "频率" },
-                        new Column { Name = "iot_code", Type = "varchar(10)", IsNullable = true, Key = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci", Comment = "iot_code" }
+                        new Column { Name = "HZ", Type = "float", IsNullable = true, Key = "", Comment = "频率" }
                     }
                 },
                 {
@@ -1626,7 +1626,7 @@ namespace EMS
                 {
                     "equipment", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "ID" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
                         new Column { Name = "eName", Type = "varchar(50)", IsNullable = true, Key = "", Comment = "设备唯一名称(设备唯一ID)", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column { Name = "eID", Type = "int", IsNullable = true, Key = "", Comment = "设备地址" },
@@ -1649,7 +1649,7 @@ namespace EMS
                 {
                     "errorstate", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
                         new Column { Name = "TCError", Type = "bigint", IsNullable = true, Key = "", Comment = "32位" },
                         new Column { Name = "PCSError1", Type = "int", IsNullable = true, Key = "", Comment = "" },
@@ -1677,7 +1677,7 @@ namespace EMS
                 {
                     "fire", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
                         new Column { Name = "firestate", Type = "int", IsNullable = true, Key = "", Comment = "消防系统状态" },
                         new Column { Name = "temp", Type = "float", IsNullable = true, Key = "", Comment = "温度" },
@@ -1712,7 +1712,7 @@ namespace EMS
                 {
                     "liquidcool", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
                         new Column { Name = "state", Type = "int", IsNullable = true, Key = "", Comment = "开关状态" },
                         new Column { Name = "OutwaterTemp", Type = "float", IsNullable = true, Key = "", Comment = "出水温度" },
@@ -1728,7 +1728,7 @@ namespace EMS
                 {
                    "log", new List<Column>
                    {
-                        new Column { Name = "ID", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Comment = "" },
+                       new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
                         new Column { Name = "eClass", Type = "varchar(20)", IsNullable = true, Key = "", Comment = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column { Name = "Event", Type = "varchar(255)", IsNullable = true, Key = "", Comment = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
@@ -1739,7 +1739,7 @@ namespace EMS
                 {
                     "pcs", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL" },
                         new Column { Name = "State", Type = "int", IsNullable = true, Default = "NULL" },
                         new Column { Name = "aV", Type = "float", IsNullable = true, Default = "NULL" },
@@ -1802,8 +1802,8 @@ namespace EMS
                 {
                     "profit", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
-                        new Column { Name = "rTime", Type = "date", IsNullable = true, Default = "NULL", Comment = "日期" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "日期" },
                         new Column { Name = "profit", Type = "float", IsNullable = true, Default = "NULL", Comment = "收益" },
                         new Column { Name = "inPower", Type = "float", IsNullable = true, Default = "NULL", Comment = "充电量kwh" },
                         new Column { Name = "auxkwhAll", Type = "float", IsNullable = true, Default = "NULL", Comment = "辅助电用总量" },
@@ -1834,7 +1834,7 @@ namespace EMS
                 {
                     "tactics", new List<Column>
                     {
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT", Default = "NOT NULL AUTO_INCREMENT", Comment = "" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "startTime", Type = "time", IsNullable = true, Default = "NULL", Comment = "策略开始时间" },
                         new Column { Name = "tType", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "充放电类型", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column { Name = "PCSType", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "PCS状态，恒压、恒流、恒功率", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
@@ -1847,7 +1847,7 @@ namespace EMS
                 {
                     "tempcontrol", new List<Column>
                     {
-                        new Column{ Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column{ Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "" },
                         new Column{ Name = "state", Type = "int", IsNullable = true, Default = "NULL", Comment = "开关状态1开0关" },
                         new Column{ Name = "indoorTemp", Type = "float", IsNullable = true, Default = "NULL", Comment = "室内温度" },
@@ -1863,7 +1863,7 @@ namespace EMS
                 {
                     "ups", new List<Column>
                     {
-                        new Column{ Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column{ Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "" },
                         new Column{ Name = "V", Type = "double", IsNullable = true, Default = "NULL", Comment = "" },
                         new Column{ Name = "A", Type = "double", IsNullable = true, Default = "NULL", Comment = "" }
@@ -1872,7 +1872,7 @@ namespace EMS
                 {
                     "users", new List<Column>
                     {
-                        new Column{ Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column{ Name = "UName", Type = "varchar(10)", IsNullable = false, Default = "NOT NULL", Comment = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column{ Name = "UPassword", Type = "varchar(6)", IsNullable = true, Default = "NULL", Comment = "", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column{ Name = "UPower", Type = "int", IsNullable = true, Default = "NULL", Comment = "" },
@@ -1884,7 +1884,7 @@ namespace EMS
                 {
                     "warning", new List<Column>
                     {
-                        new Column{ Name = "id", Type = "int", IsNullable = false, Default = "NOT NULL AUTO_INCREMENT", Comment = "", Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column{ Name = "rTime", Type = "datetime", IsNullable = true, Default = "NULL", Comment = "发生时间", CharacterSet = "", Collate = "" },
                         new Column{ Name = "wClass", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "类型（设备）", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
                         new Column{ Name = "eID", Type = "varchar(20)", IsNullable = true, Default = "NULL", Comment = "设备编号", CharacterSet = "utf8mb4", Collate = "utf8mb4_0900_ai_ci" },
@@ -1900,8 +1900,8 @@ namespace EMS
                 {
                     "pncontroler", new List<Column>
                     {
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY" },
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },                       
                         new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" , Comment = "调度编号"},
                         new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" , Comment = "下达时间"},
                         new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "命令模式"},
@@ -1911,7 +1911,7 @@ namespace EMS
                         new Column { Name = "rTimeLength", Type = "int", IsNullable = true, Key = "" , Comment = "响应时长（秒）"},
                         new Column { Name = "rOutPower", Type = "float", IsNullable = true, Key = "" , Comment = "放电电量（kwh）"},
                         new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" , Comment = "充电电量（kwh)"},
-                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"},
+                        new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"}
                     }
                 },
                 {
@@ -1928,6 +1928,7 @@ namespace EMS
                         new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
+                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" }
                     }
                 }
                 // Add more tables as needed

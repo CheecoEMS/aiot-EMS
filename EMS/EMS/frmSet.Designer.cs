@@ -43,6 +43,8 @@ namespace EMS
             this.btnEqipments = new System.Windows.Forms.Button();
             this.tbAll = new System.Windows.Forms.TabControl();
             this.plSetMain = new System.Windows.Forms.TabPage();
+            this.tcbGPIO = new EMS.TouchCombox(this.components);
+            this.label99 = new System.Windows.Forms.Label();
             this.tcbPCSForceRun = new EMS.TCheckBox(this.components);
             this.btnClose = new System.Windows.Forms.Button();
             this.tcbBMSVer = new EMS.TouchCombox(this.components);
@@ -558,6 +560,8 @@ namespace EMS
             // plSetMain
             // 
             this.plSetMain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.plSetMain.Controls.Add(this.tcbGPIO);
+            this.plSetMain.Controls.Add(this.label99);
             this.plSetMain.Controls.Add(this.tcbPCSForceRun);
             this.plSetMain.Controls.Add(this.btnClose);
             this.plSetMain.Controls.Add(this.tcbBMSVer);
@@ -596,6 +600,32 @@ namespace EMS
             this.plSetMain.TabIndex = 0;
             this.plSetMain.Text = "基本信息";
             // 
+            // tcbGPIO
+            // 
+            this.tcbGPIO.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tcbGPIO.CenterShow = true;
+            this.tcbGPIO.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tcbGPIO.ForeColor = System.Drawing.Color.White;
+            this.tcbGPIO.Items = new string[] {
+        "风冷",
+        "液冷"};
+            this.tcbGPIO.Location = new System.Drawing.Point(127, 398);
+            this.tcbGPIO.Name = "tcbGPIO";
+            this.tcbGPIO.SelectItemIndex = 0;
+            this.tcbGPIO.Size = new System.Drawing.Size(182, 33);
+            this.tcbGPIO.strText = "风冷";
+            this.tcbGPIO.TabIndex = 65;
+            this.tcbGPIO.Value = 0;
+            // 
+            // label99
+            // 
+            this.label99.AutoSize = true;
+            this.label99.Location = new System.Drawing.Point(25, 407);
+            this.label99.Name = "label99";
+            this.label99.Size = new System.Drawing.Size(71, 16);
+            this.label99.TabIndex = 64;
+            this.label99.Text = "系统版本";
+            // 
             // tcbPCSForceRun
             // 
             this.tcbPCSForceRun.BackColor = System.Drawing.Color.Transparent;
@@ -630,13 +660,13 @@ namespace EMS
             this.tcbBMSVer.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tcbBMSVer.ForeColor = System.Drawing.Color.White;
             this.tcbBMSVer.Items = new string[] {
-        "内嵌式1",
-        "定制板1"};
+        "无",
+        "协能"};
             this.tcbBMSVer.Location = new System.Drawing.Point(492, 330);
             this.tcbBMSVer.Name = "tcbBMSVer";
             this.tcbBMSVer.SelectItemIndex = 0;
             this.tcbBMSVer.Size = new System.Drawing.Size(154, 33);
-            this.tcbBMSVer.strText = "内嵌式1";
+            this.tcbBMSVer.strText = "无";
             this.tcbBMSVer.TabIndex = 61;
             this.tcbBMSVer.Value = 0;
             // 
@@ -1702,7 +1732,7 @@ namespace EMS
             this.btnFlash3.Name = "btnFlash3";
             this.btnFlash3.Size = new System.Drawing.Size(88, 44);
             this.btnFlash3.TabIndex = 21;
-            this.btnFlash3.Text = "刷新";
+            this.btnFlash3.Text = "更新";
             this.btnFlash3.UseVisualStyleBackColor = false;
             this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
             // 
@@ -4804,5 +4834,7 @@ namespace EMS
         private TouchNumberEdit tneBMSwaValue;
         private System.Windows.Forms.Button btnBMSClose;
         private System.Windows.Forms.Button btnBMSOn;
+        private TouchCombox tcbGPIO;
+        private System.Windows.Forms.Label label99;
     }
 }

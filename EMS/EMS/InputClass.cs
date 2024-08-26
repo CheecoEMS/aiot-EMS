@@ -30,6 +30,7 @@ using System.Collections.Concurrent;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
 using MySqlX.XDevAPI;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace EMS
 {
@@ -2318,9 +2319,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
-                + "InwaterPressure,OutwaterPressure,Error1，Error2)value('"
-                + time.ToString("yyyy-M-d H:m:s") + "','"
+            DBConnection.ExecSQL("INSERT INTO LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
+                + "InwaterPressure,OutwaterPressure,Error1，Error2)VALUES ('"
+                + arDate + "','"
                 + state.ToString() + "','"
                 + OutwaterTemp.ToString() + "','"
                 + InwaterTemp.ToString() + "','"
@@ -2368,8 +2369,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert ups (rTime,V,A )"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+            DBConnection.ExecSQL("INSERT INTO ups (rTime,V,A )"
+                + "VALUES ('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + v.ToString() + "','"
                 + a.ToString() + "','"
                 +  "')");
@@ -2413,9 +2414,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息  
-            DBConnection.ExecSQL("insert fire (rTime,firestate,temp, humidity, waterlogging1,"
+            DBConnection.ExecSQL("INSERT INTO  fire (rTime,firestate,temp, humidity, waterlogging1,"
                 + "waterlogging2,smoke,CO )"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+                + "VALUES ('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + FireState.ToString() + "','"
                  + Temp.ToString() + "','"
                   + Humidity.ToString() + "','"
@@ -2879,14 +2880,14 @@ namespace EMS
         {
             //return;
             //基本信息Gridkva,
-            DBConnection.ExecSQL("insert elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva,iot_code)"
-                + "value('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
+            DBConnection.ExecSQL("INSERT  INTO elemeter1 (rTime,Ukwh,Nukwh, AllUkva, AllNukva,AllAAkva)"
+                + "VALUES('" + arDate + "','"// time.ToString("yyyy-M-d H:m:s") 
                 + Ukwh[0].ToString() + "','"
                 + Nukwh[0].ToString() + "','"
                 + AllUkva.ToString() + "','"
                 + AllNukva.ToString() + "','"
-                + AllAAkva.ToString() + "','"
-                + iot_code + "')"); //+"')");  
+                + AllAAkva.ToString()
+                + "')"); //+"')");  
         }
     }
 
@@ -3203,7 +3204,7 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter2 (rTime, "
+            DBConnection.ExecSQL("INSERT INTO elemeter2 (rTime, "
                  + "Ukwh,UkwhJ,UkwhF,UkwhP,UkwhG,"
                  + "PUkwh,PUkwhJ,PUkwhF,PUkwhP,PUkwhG,"
                  + "OUkwh,OUkwhJ,OUkwhF,OUkwhP,OUkwhG,"
@@ -3212,9 +3213,9 @@ namespace EMS
                  + "ONukwh, ONukwhJ,ONukwhF,ONukwhP,ONukwhG,"
                 + "AllUkva, AUkva, BUkva, CUkva,   "
                 + "AllNukva,  ANukva, BNukva,  CNukva, "
-                + " AllAAkva, AAkva, BAkva, CAkva," +
-                " Aa,Ba,Ca, Akv, Bkv,Ckv, ABkv,  BCkv,  CAkv, AllPFoctor, APFoctor,  BPFoctor, CPFoctor, HZ, "
-                + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)value( '"
+                + " AllAAkva, AAkva, BAkva, CAkva," 
+                + " Aa,Ba,Ca, Akv, Bkv,Ckv, ABkv,  BCkv,  CAkv, AllPFoctor, APFoctor,  BPFoctor, CPFoctor, HZ, "
+                + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)VALUES( '"
                 + arDate + "','"//rTime.ToString("yyyy-M-d H:m:s")
                 + Ukwh[0].ToString() + "','" + Ukwh[1].ToString() + "','" + Ukwh[2].ToString() + "','" + Ukwh[3].ToString() + "','" + Ukwh[4].ToString() + "','"
                 + PUkwh[0].ToString() + "','" + PUkwh[1].ToString() + "','" + PUkwh[2].ToString() + "','" + PUkwh[3].ToString() + "','" + PUkwh[4].ToString() + "','"
@@ -3366,8 +3367,8 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
-                + "Ukva,Nukva,Akva,V,A)value('" + arDate + "','"// rTime.ToString("yyyy-M-d H:m:s")
+            DBConnection.ExecSQL("INSERT INTO elemeter3 (rTime, Akwh, AkwhJ, AkwhF, AkwhP, AkwhG, "
+                + "Ukva,Nukva,Akva,V,A)VALUES('" + arDate + "','"// rTime.ToString("yyyy-M-d H:m:s")
                  + Akwh[0].ToString() + "','" + Akwh[1].ToString() + "','" + Akwh[2].ToString() + "','" + Akwh[3].ToString() + "','"
                 + Akwh[4].ToString() + "','" + UKva.ToString() + "','" + NUKva.ToString() + "','" + AKva.ToString() + "','"
                 + Lv.ToString() + "','" + La.ToString() + "')");
@@ -4480,12 +4481,12 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
+            DBConnection.ExecSQL("INSERT INTO pcs (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
                 + " aUkwa,  bUkwa,  cUkwa,  allUkwa,   aNUkwr, bNUkwr,   cNUkwr, allNUkwr, "
                 + " aAkwa,  bAkwa,  cAkwa,  allAkwa, aPFactor, bPFactor,   cPFactor,  allPFactor,"
                 + " inputPower, inputV,  inputA, PCSTemp, "
                 + " ACInkwh,ACOutkwh,DCInkwh,DCOutkwh,"
-                + "Error1,Error2,Error3,Error4,Error7 )value('"
+                + "Error1,Error2,Error3,Error4,Error7 )VALUES('"
                  + arDate + "','" + State.ToString() + "','"  // rTime.ToString("yyyy-M-d H:m:s")
                  + aV.ToString() + "','" + bV.ToString() + "','" + cV.ToString() + "','"
                  + aA.ToString() + "','" + bA.ToString() + "','" + cA.ToString() + "','" + hz.ToString() + "','"
@@ -4763,18 +4764,61 @@ namespace EMS
         }
 
 
-        private void UpdateCellTemp(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp(double[] aCellTemps, int Group, string aData)
         {
-
             switch (frmSet.config.BMSVerb)
             {
-                //case 0:
-                //     UpdateCellTemp0(aCellTemps, aStart, aData);
-                //    break;
-                //case 1:
-                default: 
-                    UpdateCellTemp1(aCellTemps, aStart, aData);
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                            }
+                            else if (Group == 2)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 120, aData);
+                            }
+                            break;
+                        case 160:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_160(aCellTemps, 0, aData);
+                            }
+                            else if (Group == 2)
+                            {
+                                UpdateCellTemp_160(aCellTemps, 144, aData);
+                            }
+                            break;
+                        
+                        default:
+                            if (Group == 1)
+                            {
+                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                            }
+                            else
+                            {
+                                UpdateCellTemp_168(aCellTemps, 120, aData);
+                            }
+                            break;
+                    }
                     break;
+                
+/*                default:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdateCellTemp_168(aCellTemps, 0, aData);
+                            break;
+                        case 140:
+
+                            break;
+                        default:
+                            UpdateCellTemp_168(aCellTemps, 0, aData);
+                            break;
+                    }
+                    break;*/
             }
         }
 
@@ -4856,7 +4900,7 @@ namespace EMS
         /// </summary>
         /// <param name="aCellTemps"></param>
         /// <param name="aData"></param>
-        private void UpdateCellTemp1(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp_168(double[] aCellTemps, int aStart, string aData)
         { 
             double dTemp;  
             for (int i = 0; i < 6; i++)
@@ -4871,8 +4915,8 @@ namespace EMS
               
             } 
         }
-        //正接线柱的温度
-        private void UpdatePTemp(double[] aCellTemps, string aData)
+
+        private void UpdatePTemp_168(double[] aCellTemps, string aData)
         {
             double dTemp;
             for (int i = 0; i < 12; i++)
@@ -4882,8 +4926,60 @@ namespace EMS
                 aCellTemps[i * 20 + 14] = Math.Round(dTemp, 1);
             }
         }
-        //负接线柱的温度
-        private void UpdateOTemp(double[] aCellTemps, string aData)
+        private void UpdatePTemp_160(double[] aCellTemps, string aData)
+        {
+            double dTemp;
+            for (int i = 0; i < 5; i++)
+            {
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 28] = Math.Round(dTemp, 1);
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 30] = Math.Round(dTemp, 1);
+            }
+        }
+
+
+        //正接线柱的温度
+        private void UpdatePTemp(double[] aCellTemps, string aData)
+        {
+            switch (frmSet.config.BMSVerb)
+            {
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdatePTemp_168(aCellTemps, aData);
+                            break;
+                        case 160:
+                            UpdatePTemp_160(aCellTemps, aData);
+                            break;
+                        default:
+                            {
+                                UpdatePTemp_168(aCellTemps, aData);
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        private void UpdateOTemp_160(double[] aCellTemps, string aData)
+        {
+            double dTemp;
+            for (int i = 0; i < 5; i++)
+            {
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 29] = Math.Round(dTemp, 1);
+                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                aData = aData.Substring(4, aData.Length - 4);
+                aCellTemps[i * 48 + 31] = Math.Round(dTemp, 1);
+            }
+
+        }
+        private void UpdateOTemp_168(double[] aCellTemps, string aData)
         {
             double dTemp;
             for (int i = 0; i < 12; i++)
@@ -4891,6 +4987,33 @@ namespace EMS
                 dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
                 aData = aData.Substring(4, aData.Length - 4);
                 aCellTemps[i * 20 + 15] = Math.Round(dTemp, 1);
+            }
+
+        }
+
+        //负接线柱的温度
+        private void UpdateOTemp(double[] aCellTemps, string aData)
+        {
+
+            switch (frmSet.config.BMSVerb)
+            {
+                case 1:
+                    switch (frmSet.config.CellTNum)
+                    {
+                        case 168:
+                            UpdateOTemp_168(aCellTemps, aData);
+                            break;
+                        case 160:
+                            UpdateOTemp_160(aCellTemps, aData);
+                            break;
+                        default:
+                            {
+                                UpdateOTemp_168(aCellTemps, aData);
+                            }
+                            break;
+                    }
+                break;
+                  
             }
         }
 
@@ -4938,20 +5061,24 @@ namespace EMS
 
             }
         }
-        private void UpdateCellTemp2_liquidcool(double[] aCellTemps, int aStart, string aData)
+        private void UpdateCellTemp_160(double[] aCellTemps, int aStart, string aData)
         {
-            double dTemp;
-            for (int i = 0; i < 2; i++)
+            try
             {
-                //1-10
-                for (int j = 0; j < 28; j++)
+                double dTemp;
+                for (int i = 0; i < 3; i++)
                 {
-                    dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    aCellTemps[aStart + i * 48 + j] = Math.Round(dTemp, 1);
-                }
+                    //1-10
+                    for (int j = 0; j < 28; j++)
+                    {
+                        dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
+                        aData = aData.Substring(4, aData.Length - 4);
+                        aCellTemps[aStart + i * 48 + j] = Math.Round(dTemp, 1);
+                    }
 
+                }
             }
+            catch    {  }
         }
         /******************************** 液冷 ********************************/
 
@@ -5157,30 +5284,14 @@ namespace EMS
             if (GetSysData(46, ref strTemp))
             {
                 bPrepared = true;
-                switch (BMStype)
-                {
-                    case 1:
-                        UpdatePTemp(CellTemps, strTemp);
-                        break;
-                    case 2:
-                        UpdatePTemp_liquidcool(CellTemps, strTemp);
-                        break;
-                }
+                UpdatePTemp(CellTemps, strTemp);
+
             }
             //负接线柱温度
             if (GetSysData(47, ref strTemp))
             {
                 bPrepared = true;
-                switch (BMStype) 
-                {
-                    case 1:
-                        UpdateOTemp(CellTemps, strTemp);
-                        break;
-                    case 2:
-                        UpdateOTemp_liquidcool(CellTemps, strTemp);
-                        break;
-                }                
-
+                UpdateOTemp(CellTemps, strTemp);
             }
 
             //电池信息读取
@@ -5197,27 +5308,11 @@ namespace EMS
             //温度
             if (GetSysData(35, ref strTemp))
             {
-                switch (BMStype)
-                {
-                    case 1:
-                        UpdateCellTemp(CellTemps, 0, strTemp);
-                        break;
-                    case 2:
-                        UpdateCellTemp_liquidcool(CellTemps, 0, strTemp);
-                        break;
-                }
+                UpdateCellTemp(CellTemps, 1, strTemp);
             }
             if (GetSysData(36, ref strTemp))
             {
-                switch (BMStype)
-                {
-                    case 1:
-                        UpdateCellTemp(CellTemps, 120, strTemp);
-                        break;
-                    case 2:
-                        UpdateCellTemp2_liquidcool(CellTemps, 144, strTemp);
-                        break;
-                }
+                UpdateCellTemp(CellTemps, 2, strTemp);
             }
 
             //单独区分接触器状态
@@ -5409,9 +5504,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
+            DBConnection.ExecSQL("INSERT INTO battery (rTime,batteryID,v,a,soc, soh,insulationR, positiveR, negativeR,"
                 + " cellMaxV,   cellIDMaxV, cellMinV,  cellIDMinV,   cellMaxTemp,  cellIDMaxtemp,  averageV,averageTemp  "
-                + " )value('" + arDate + "','" //rTime.ToString("yyyy-M-d H:m:s") 
+                + " )VALUES('" + arDate + "','" //rTime.ToString("yyyy-M-d H:m:s") 
                 + batteryID.ToString() + "','" + v.ToString() + "','" + a.ToString() + "','" + soc.ToString() + "','"
                 + soh.ToString() + "','" + insulationR.ToString() + "','" + positiveR.ToString() + "','"
                 + negativeR.ToString() + "','" + cellMaxV.ToString() + "','" + cellIDMaxV.ToString() + "','"
@@ -5663,9 +5758,9 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-            DBConnection.ExecSQL("insert tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
-                + "evaporationTemp,fanControl,error)value('"
-                + time.ToString("yyyy-M-d H:m:s") + "','"
+            DBConnection.ExecSQL("INSERT INTO tempcontrol(rTime,state,indoorTemp,indoorHumidity,environmentTemp,condenserTemp,"
+                + "evaporationTemp,fanControl,error)VALUES('"
+                + arDate + "','"
                 + state.ToString() + "','"
                 + indoorTemp.ToString() + "','"
                 + indoorHumidity.ToString() + "','"
@@ -6029,7 +6124,7 @@ namespace EMS
         public double UBmsPcsState = 1; //充电state
         public double OBmsPcsState = 1; //放电state
 
-        //8.13多级防逆超限
+        //8.13多级防逆超限release2.1
         public double dRate = 0;
         public double dValue = 0;
         public bool FineToCharge = false;//自适应需量中，记录是否下发充电指令
@@ -6044,7 +6139,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240718Devlop1.0";
+        public string EMSVersion { get; set; } = "EMS240815release3.2";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6091,6 +6186,35 @@ namespace EMS
             //  //free onePark;
             //}
         }
+
+        public void MeterCalibration()
+        {
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            {
+                if (Elemeter2.Prepared)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
+                }
+            }
+            if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
+            {
+                foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
+                {
+                    if (tempEleMeter.Prepared)
+                    {
+                        tempEleMeter.timing(73);
+                    }
+                }
+            }
+            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+            {
+                if (Elemeter3.Prepared)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
+                }
+            }
+        }
+
 
         public void AddValue(double value)
         {
@@ -6675,8 +6799,8 @@ namespace EMS
                 if (Fire != null)
                     Fire.Save2DataSource(tempDate);
                 //UPS
-                if (UPS != null)
-                    UPS.Save2DataSource(tempDate);
+/*                if (UPS != null)
+                    UPS.Save2DataSource(tempDate);*/
                 //其他 
             }
             catch (Exception ex)
@@ -8085,10 +8209,6 @@ namespace EMS
         {
             try
             {
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
-                }
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(ReadCOM2Data);
                 ClientRecThread.IsBackground = true;
@@ -8303,9 +8423,9 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
-                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复
+                                        if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
-                                        frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                                            frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
                                         }
                                     }
                                 }
@@ -8654,6 +8774,9 @@ namespace EMS
                         var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
                         var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
                         frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
                     }
                 }
                 else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
@@ -8666,6 +8789,9 @@ namespace EMS
 
                         //记录单体电压 温度 电流
                         //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
                     }
                 }
             }
@@ -8733,9 +8859,15 @@ namespace EMS
                 CheckBMSWrror(Errors);
                 if (( Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
-                    frmSet.variCharge.UBmsPcsState = 100;
-                    frmSet.variCharge.OBmsPcsState = 100;
-                    frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
+                    if (frmSet.variCharge.UBmsPcsState != 100 || frmSet.variCharge.OBmsPcsState != 100)
+                    {
+                        frmMain.Selffrm.AllEquipment.ReduceReadPCS = false;
+                        frmSet.variCharge.UBmsPcsState = 100;
+                        frmSet.variCharge.OBmsPcsState = 100;
+
+                        //保存充放限制阀门到数据库
+                        frmSet.Set_VariCharge();
+                    }
                 }
             }
             catch (Exception ex)
@@ -8743,36 +8875,6 @@ namespace EMS
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
-
-
-        //2.21
-        public bool ReadDoPUini() 
-        {
-            INIFile ConfigINI = new INIFile();
-            try
-            {
-                //记录当天开始充电电量（positive 正向）
-                //检查最大需量是否是本月的
-                string NowMonth = ConfigINI.INIRead("Recode Date", "NowMonth", "0", DoPU);
-                if (DateTime.Now.ToString("yyyy-MM") == NowMonth)
-                {
-                    Client_PUMdemand_Max = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "Client_PUMdemand_Max", "0", DoPU));
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());    
-                return false;
-            }
-            finally
-            {
-                // ConfigINI.
-
-            }
-        }
-
 
 
         /// <summary>

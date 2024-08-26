@@ -83,6 +83,7 @@ namespace EMS
             this.label7 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.vpbSOC = new EMS.VProgressBar(this.components);
             this.labSOC = new System.Windows.Forms.Label();
             this.labACState = new System.Windows.Forms.Label();
             this.labPCSuKW = new System.Windows.Forms.Label();
@@ -97,8 +98,6 @@ namespace EMS
             this.ctMain = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panel8 = new System.Windows.Forms.Panel();
             this.pictureBox5 = new System.Windows.Forms.PictureBox();
-            this.spNetControl = new System.IO.Ports.SerialPort(this.components);
-            this.vpbSOC = new EMS.VProgressBar(this.components);
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.pnButtonTop.SuspendLayout();
@@ -742,6 +741,17 @@ namespace EMS
             this.panel4.Size = new System.Drawing.Size(538, 209);
             this.panel4.TabIndex = 75;
             // 
+            // vpbSOC
+            // 
+            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
+            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
+            this.vpbSOC.Name = "vpbSOC";
+            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
+            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.vpbSOC.TabIndex = 84;
+            this.vpbSOC.Value = 50;
+            // 
             // labSOC
             // 
             this.labSOC.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -917,21 +927,6 @@ namespace EMS
             this.pictureBox5.TabIndex = 0;
             this.pictureBox5.TabStop = false;
             // 
-            // spNetControl
-            // 
-            this.spNetControl.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.spNetControl_DataReceived);
-            // 
-            // vpbSOC
-            // 
-            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
-            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
-            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
-            this.vpbSOC.Name = "vpbSOC";
-            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
-            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.vpbSOC.TabIndex = 84;
-            this.vpbSOC.Value = 50;
-            // 
             // frmMain
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -1044,7 +1039,6 @@ namespace EMS
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
         private System.Windows.Forms.DataVisualization.Charting.Chart ctMain;
         private VProgressBar vpbSOC;
-        private System.IO.Ports.SerialPort spNetControl;
         private System.Windows.Forms.Button btnControl;
     }
 }

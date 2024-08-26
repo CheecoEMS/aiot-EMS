@@ -24,23 +24,15 @@ namespace EMS
     //全部策列，策略类
     public class TacticsListClass
     {
-        //SetThreadAffinityMask: Set hThread run on logical processer(LP:) dwThreadAffinityMask
-        [DllImport("kernel32.dll")]
-        static extern UIntPtr SetThreadAffinityMask(IntPtr hThread, UIntPtr dwThreadAffinityMask);
-
-        //Get the handler of current thread
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentThread();
-
-
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "时段内均充均放" };
         public static string[] tTypes = { "待机", "充电", "放电" };
         //策略列表
-        List<TacticsClass> TacticsList = new List<TacticsClass>();
+        public volatile List<TacticsClass> TacticsList = new List<TacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
+        
         private static ILog log = LogManager.GetLogger("TacticsClass");
 
 
@@ -218,15 +210,7 @@ namespace EMS
         /// 
         public void CheckTacticsOnce()
         {
-            DateTime now;
             TacticsClass oneTactics = null;
-
-            if (TacticsList.Count == 0)
-            {
-                LoadFromMySQL();
-            }
-
-            now = DateTime.Now;
 
             if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
             {
@@ -235,6 +219,14 @@ namespace EMS
                     TacticsOn = true;
                 return;
             }
+
+            //开启策略，若EMS无策略则重新读取数据库
+            if (TacticsList.Count == 0)
+            {
+                LoadFromMySQL();
+            }
+
+            DateTime now = DateTime.Now;
 
             //没有策略的执行策略就要停止输出
             if (TacticsList.Count == 0)
@@ -252,7 +244,7 @@ namespace EMS
 
 
             //判断时间所在的区间和工作内容
-            int i = 0;
+            int i;
             for (i = 0; i < TacticsList.Count; i++)
             {
                 oneTactics = TacticsList[i];
