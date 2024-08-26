@@ -1,5 +1,6 @@
 ﻿using log4net;
 using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,23 +24,15 @@ namespace EMS
     //全部策列，策略类
     public class TacticsListClass
     {
-        //SetThreadAffinityMask: Set hThread run on logical processer(LP:) dwThreadAffinityMask
-        [DllImport("kernel32.dll")]
-        static extern UIntPtr SetThreadAffinityMask(IntPtr hThread, UIntPtr dwThreadAffinityMask);
-
-        //Get the handler of current thread
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentThread();
-
-
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "时段内均充均放" };
         public static string[] tTypes = { "待机", "充电", "放电" };
         //策略列表
-        List<TacticsClass> TacticsList = new List<TacticsClass>();
+        public volatile List<TacticsClass> TacticsList = new List<TacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
+        
         private static ILog log = LogManager.GetLogger("TacticsClass");
 
 
@@ -47,32 +40,11 @@ namespace EMS
         {
             Parent = aParent;
         }
-        ////获取当前策略的位置
-        //public int GetTacticsIndex(DateTime aTime)
-        //{
-        //    int iResult = -1;
-        //    DateTime aStartTime;
-        //    DateTime aEndTime;
-        //    string strDate = aTime.ToString("yyyy-M-d");
-        //    for (int i = 0; i < TacticsList.Count; i++)
-        //    {
-        //        aStartTime= Convert.ToDateTime(TacticsList[i].startTime.ToString(strDate + " H:m:s"));
-        //        aEndTime = Convert.ToDateTime(TacticsList[i].endTime.ToString(strDate + " H:m:s"));
-        //        if ((aTime>= aStartTime) &&(aTime<= aEndTime))
-        //        {
-        //            iResult = i;
-        //            break;
-        //        }
-        //    } 
-        //    return iResult; 
-        //}
-
 
         public void LoadJFPGFromSQL()
         {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select startTime, eName "
-                 + " from electrovalence ", ref ctTemp);
+            string astrSQL = "select startTime, eName  from electrovalence ";
+
             try
             {
                 byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -82,31 +54,41 @@ namespace EMS
                                     0, 0 };//14*3=42    14个时段 ： 号 时 分
                 int i = 0;
                 DateTime dtTemp;
-                while (rd.Read())
+
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
-                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
-                    i++;
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (rd.Read())
+                                {
+                                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
+                                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
+                                    i++;
+                                }
+                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
+                                }
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                            }
+                        }
+                    }
                 }
-                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
-                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
-                }
-                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
             }
             catch { }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+
             }
         }
 
@@ -114,76 +96,70 @@ namespace EMS
         public bool LoadFromMySQL()
         {
             bool Result = false;
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = null;
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue"
+                    + " from tactics  order by startTime";
             try
             {
-                rd = DBConnection.GetData("select startTime,endTime, tType, PCSType, waValue"
-                     + " from tactics  order by startTime", ref ctTemp);
-                lock (TacticsList)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    if (rd.HasRows)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        while (TacticsList.Count > 0)
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
                         {
-                            // WarningList[0].Dispose();
-                            //TacticsList[0].c
-                            TacticsList.RemoveAt(0);
-                        }
-                        while (rd.Read())
-                        {
-                            TacticsClass oneTactics = new TacticsClass();
-                            oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                            oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                            oneTactics.tType = rd.GetString(2);
-                            oneTactics.PCSType = rd.GetString(3);
-                            if (oneTactics.PCSType == "恒流")
-                                oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
-                            if (oneTactics.PCSType == "恒压")
+                            if (rd != null && rd.HasRows)
                             {
-                                oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
-                                if (oneTactics.waValue < 0)
-                                    oneTactics.waValue = 0;
+                                lock (TacticsList)
+                                {
+                                    while (TacticsList.Count > 0)
+                                    {
+                                        TacticsList.RemoveAt(0);
+                                    }
+                                    while (rd.Read())
+                                    {
+                                        TacticsClass oneTactics = new TacticsClass();
+                                        oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                                        oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                        oneTactics.tType = rd.GetString(2);
+                                        oneTactics.PCSType = rd.GetString(3);
+                                        if (oneTactics.PCSType == "恒流")
+                                            oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                                        if (oneTactics.PCSType == "恒压")
+                                        {
+                                            oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                            if (oneTactics.waValue < 0)
+                                                oneTactics.waValue = 0;
+                                        }
+
+                                        //9.5 源码注释
+                                        //oneTactics.PCSType = "恒功率";
+
+
+                                        //限额
+                                        oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                                        if (oneTactics.waValue > 110)
+                                            oneTactics.waValue = 110;
+                                        //修正充放电的正负功率
+                                        if (oneTactics.tType == "放电")
+                                            oneTactics.waValue = -rd.GetInt32(4);
+                                        else
+                                            oneTactics.waValue = rd.GetInt32(4);
+
+                                        TacticsList.Add(oneTactics);
+                                    }
+                                }
+                                Result = true;
                             }
-
-                            //9.5 源码注释
-                            //oneTactics.PCSType = "恒功率";
-
-
-                            //限额
-                            oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                            if (oneTactics.waValue > 110)
-                                oneTactics.waValue = 110;
-                            //修正充放电的正负功率
-                            if (oneTactics.tType == "放电")
-                                oneTactics.waValue = -rd.GetInt32(4);
-                            else
-                                oneTactics.waValue = rd.GetInt32(4);
-
-                            TacticsList.Add(oneTactics);
                         }
-                        Result = true;
-
-                    }//if (rd.HasRows)
+                    }
                 }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error(ex.Message);
             }
             finally
             {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
-                if (ctTemp != null)
-                {
-                    ctTemp.Close();
-                    ctTemp.Dispose();
-                }
 
             }
             return Result;
@@ -228,182 +204,136 @@ namespace EMS
             }
         }
 
-        static ulong SetCpuID(int lpIdx)
-        {
-            ulong cpuLogicalProcessorId = 0;
-            if (lpIdx < 0 || lpIdx >= System.Environment.ProcessorCount)
-            {
-                lpIdx = 0;
-            }
-            cpuLogicalProcessorId |= 1UL << lpIdx;
-            return cpuLogicalProcessorId;
-        }
-
         /// <summary>
         /// 策略监视线程
         /// </summary>
-        public void AutoCheckTactics()
+        /// 
+        public void CheckTacticsOnce()
         {
-            try
-            {
-                //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(CheckTactics);
-                ClientRecThread.IsBackground = true;
-               ulong LpId = SetCpuID(3);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                //8.4
-                ClientRecThread.Priority = ThreadPriority.Lowest;
-            }
-            catch
-            {
-
-            }
-        }
-        //每分钟检查一次
-        private void CheckTactics()
-        {
-            DateTime now;
             TacticsClass oneTactics = null;
-            while (true)
+
+            if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
             {
-                Thread.Sleep(2000);
+                // 只有在策略模式才会运行策略
+                if (frmSet.config.SysMode == 1)
+                    TacticsOn = true;
+                return;
+            }
 
-                if (TacticsList.Count == 0) {
-                    LoadFromMySQL();
-                }
+            //开启策略，若EMS无策略则重新读取数据库
+            if (TacticsList.Count == 0)
+            {
+                LoadFromMySQL();
+            }
 
+            DateTime now = DateTime.Now;
 
-                if ((TacticsList.Count == 0) || (Parent.PCSList.Count == 0)||(!frmSet.IsMaster))
+            //没有策略的执行策略就要停止输出
+            if (TacticsList.Count == 0)
+            {
+                lock (frmMain.Selffrm.AllEquipment)
                 {
-                    continue;
+                    frmMain.Selffrm.AllEquipment.waValueActive = 0;
+                    //主从计划功率清零
+                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                    //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
+                    frmMain.Selffrm.AllEquipment.HostStart = false;
+                    frmMain.Selffrm.AllEquipment.SlaveStart = false;
                 }
-                   
-                now = DateTime.Now;
+            }
 
 
-                if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
+            //判断时间所在的区间和工作内容
+            int i;
+            for (i = 0; i < TacticsList.Count; i++)
+            {
+                oneTactics = TacticsList[i];
+                if (CheckTimeInShedule(oneTactics, now))
+                    break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
+            }//for
+
+            //没找到就停止
+            if (i == TacticsList.Count)
+            {
+                lock (frmMain.Selffrm.AllEquipment)
                 {
-                    Thread.Sleep(2000);
-
-                    // 只有在策略模式才会运行策略
-                    if (frmSet.SysMode == 1)
-                        TacticsOn = true;
-                    continue;
+                    frmMain.Selffrm.AllEquipment.eState = 1;
+                    //主从计划功率清零
+                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                    //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
+                    frmMain.Selffrm.AllEquipment.HostStart = false;
+                    frmMain.Selffrm.AllEquipment.SlaveStart= false;
                 }
-
-                //没有策略的执行策略就要停止输出
-                if (TacticsList.Count == 0)
-                {               
-                    lock (frmMain.Selffrm.AllEquipment)
+                return;
+            }
+            //找到区段处理方法
+            //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
+            //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
+            if (ActiveIndex != i)
+            {
+                //更换策略点
+                if (ActiveIndex >= 0)
+                {
+                    //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
+                    while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
                     {
-                        frmMain.Selffrm.AllEquipment.waValueActive = 0;
-                        //主从计划功率清零
-                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                        frmMain.Selffrm.AllEquipment.HostStart = false;
-                        frmMain.Selffrm.AllEquipment.SlaveStart = false;
-                    }
-                }
-
-
-                //判断时间所在的区间和工作内容
-                int i = 0;
-                for (i = 0; i < TacticsList.Count; i++)
-                {
-                    oneTactics = TacticsList[i];
-                    if (CheckTimeInShedule(oneTactics, now))
-                        break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
-                }//for
-
-                //没找到就停止
-                if (i == TacticsList.Count)
-                {
-                    lock (frmMain.Selffrm.AllEquipment)
-                    {
-                        frmMain.Selffrm.AllEquipment.eState = 1;
-                        //主从计划功率清零
-                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                        frmMain.Selffrm.AllEquipment.HostStart = false;
-                        frmMain.Selffrm.AllEquipment.SlaveStart= false;
-                    }
-                    continue;
-                }
-                //找到区段处理方法
-                //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
-                //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
-                if (ActiveIndex != i)
-                {
-                    //更换策略点
-                    if (ActiveIndex >= 0)
-                    {
-                        //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
-                        while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.SysCount)
-                        { 
-                            lock (frmMain.Selffrm.AllEquipment)
-                            {
-                                //2.21
-                                frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                                frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-
-                                if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
-                                {
-                                    frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                                }
-
-                                if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                                {
-                                    frmMain.Selffrm.AllEquipment.dRate = 0;                  
-                                    frmMain.Selffrm.AllEquipment.eState = 1;
-                                    frmMain.Selffrm.AllEquipment.PCSTypeActive = oneTactics.PCSType;
-                                    frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
-                                    //下发的功率值恒为正数
-                                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.SysCount;
-                                    log.Info("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
-                                    //8.5
-                                    frmMain.Selffrm.AllEquipment.HostStart = true;
-                                    frmMain.Selffrm.AllEquipment.SlaveStart = true;
-
-                                }
-
-                            }
-                        }   
-
-                        ActiveIndex = i;
-
-                        Thread.Sleep(60000);
-                    }
-                    else
-                    {
-                        //Thread.Sleep(60000);
-                        //运行策略
-                        while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.SysCount)
+                        lock (frmMain.Selffrm.AllEquipment)
                         {
+                            //2.21
+                            frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
+                            frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
 
-                            lock (frmMain.Selffrm.AllEquipment)
+                            if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
                             {
-                                //2.21
-                                frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                                frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-                                if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
-                                {
-                                    frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                                }
-
-                                if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                                {
-                                    frmMain.Selffrm.AllEquipment.eState = 1;
-                                    frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
-                                    frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
-                                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.SysCount;
-                                    log.Info("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
-                                    frmMain.Selffrm.AllEquipment.HostStart = true;
-                                    frmMain.Selffrm.AllEquipment.SlaveStart = true;
-                                }
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = true;
                             }
-                            ActiveIndex = i;
 
+                            if (frmMain.Selffrm.AllEquipment.GotoSchedule)
+                            {
+                                frmMain.Selffrm.AllEquipment.dRate = 0;
+                                frmMain.Selffrm.AllEquipment.eState = 1;
+                                frmMain.Selffrm.AllEquipment.PCSTypeActive = oneTactics.PCSType;
+                                frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
+                                //下发的功率值恒为正数
+                                frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                log.Error("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
+                                frmMain.Selffrm.AllEquipment.HostStart = true;
+                                frmMain.Selffrm.AllEquipment.SlaveStart = true;
+
+                            }
                         }
-                        Thread.Sleep(60000);
+                    }
+                    ActiveIndex = i;
+                }
+                else
+                {
+                    //运行策略
+                    while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
+                    {
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            //2.21
+                            frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
+                            frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
+                            if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
+                            {
+                                frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                            }
+
+                            if (frmMain.Selffrm.AllEquipment.GotoSchedule)
+                            {
+                                frmMain.Selffrm.AllEquipment.eState = 1;
+                                //frmMain.Selffrm.AllEquipment.runState = 0;
+                                frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
+                                frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
+                                frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                log.Error("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
+
+                                frmMain.Selffrm.AllEquipment.HostStart = true;
+                                frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                            }
+                        }
+                        ActiveIndex = i;
                     }
                 }
             }
@@ -527,30 +457,40 @@ namespace EMS
             // string strDate = DateTime.Now.ToString("yyyy-MM-dd ");
             MySqlConnection ctTemp = null;
 
-            MySqlDataReader rd = DBConnection.GetData("select rTime, AllUkva, Gridkva, Subkw from elemeter2 "
-            + " where rTime>='" + DateTime.Now.ToString("yyyy-MM-dd 00:00:00")
-             + "'and rTime<='" + DateTime.Now.ToString("yyyy-MM-dd 23:59:59")
-                 + "'  order by rTime", ref ctTemp);
+            string astrSQL = "select rTime, AllUkva, Gridkva, Subkw from elemeter2 "
+             + " where rTime>='" + DateTime.Now.ToString("yyyy-MM-dd 00:00:00")
+              + "'and rTime<='" + DateTime.Now.ToString("yyyy-MM-dd 23:59:59")
+                  + "'  order by rTime";
             try
             {
                 DateTime dtTemp;
-                while (rd.Read())
+
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    dtTemp = Convert.ToDateTime(rd.GetString(0));
-                    AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (rd.Read())
+                                {
+                                    dtTemp = Convert.ToDateTime(rd.GetString(0));
+                                    AddOneStep(aOneChar, dtTemp, -1 * rd.GetDouble(1), rd.GetDouble(2), rd.GetDouble(3));
+                                }
+                            }
+                        }
+                    }
                 }
-                ctTemp.Dispose();
             }
-            catch
+            catch (Exception ex)
             {
+
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+
             }
         }
 

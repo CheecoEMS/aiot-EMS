@@ -298,9 +298,6 @@
         FQVwu6aPeKnTulSrKEC3wNr8OTr62agoQIhqATK24VpAmxaAMZ+5RNaYJF/4AgAAAABJRU5ErkJggg==
 </value>
   </data>
-  <metadata name="tmSystime.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>21, 19</value>
-  </metadata>
   <data name="pictureBox9.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABGdBTUEAALGPC/xhBQAAAMpJREFUaEPt
@@ -375,7 +372,4 @@
         kOqz+wAAAABJRU5ErkJggg==
 </value>
   </data>
-  <metadata name="spNetControl.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>131, 17</value>
-  </metadata>
 </root>

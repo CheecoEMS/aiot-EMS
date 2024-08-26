@@ -46,14 +46,14 @@ namespace EMS
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnControl = new System.Windows.Forms.Button();
             this.btnMain = new System.Windows.Forms.Button();
+            this.btnSet = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnAbout = new System.Windows.Forms.Button();
-            this.btnSet = new System.Windows.Forms.Button();
-            this.btnState = new System.Windows.Forms.Button();
             this.btnLogin = new System.Windows.Forms.Button();
-            this.btnLine = new System.Windows.Forms.Button();
             this.btnQuery = new System.Windows.Forms.Button();
+            this.btnLine = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
+            this.btnState = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel7.SuspendLayout();
             this.panel6.SuspendLayout();
@@ -113,18 +113,18 @@ namespace EMS
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(28, 12);
+            this.label2.Location = new System.Drawing.Point(23, 12);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(222, 21);
+            this.label2.Size = new System.Drawing.Size(221, 21);
             this.label2.TabIndex = 1;
-            this.label2.Text = "硬件版本：APC104 — T112Z";
+            this.label2.Text = "硬件版本：CGP200FB + RTC";
             // 
             // panel6
             // 
             this.panel6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel6.Controls.Add(this.label5);
             this.panel6.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.panel6.Location = new System.Drawing.Point(241, 441);
+            this.panel6.Location = new System.Drawing.Point(244, 441);
             this.panel6.Name = "panel6";
             this.panel6.Size = new System.Drawing.Size(340, 43);
             this.panel6.TabIndex = 3;
@@ -134,7 +134,7 @@ namespace EMS
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.label5.ForeColor = System.Drawing.Color.White;
-            this.label5.Location = new System.Drawing.Point(28, 12);
+            this.label5.Location = new System.Drawing.Point(24, 12);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(266, 21);
             this.label5.TabIndex = 1;
@@ -145,7 +145,7 @@ namespace EMS
             this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel5.Controls.Add(this.labSN);
             this.panel5.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.panel5.Location = new System.Drawing.Point(241, 380);
+            this.panel5.Location = new System.Drawing.Point(244, 380);
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(340, 44);
             this.panel5.TabIndex = 2;
@@ -155,11 +155,11 @@ namespace EMS
             this.labSN.AutoSize = true;
             this.labSN.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labSN.ForeColor = System.Drawing.Color.White;
-            this.labSN.Location = new System.Drawing.Point(28, 12);
+            this.labSN.Location = new System.Drawing.Point(23, 12);
             this.labSN.Name = "labSN";
-            this.labSN.Size = new System.Drawing.Size(161, 21);
+            this.labSN.Size = new System.Drawing.Size(171, 21);
             this.labSN.TabIndex = 1;
-            this.labSN.Text = "设备SN：22 — 1002";
+            this.labSN.Text = "设备  SN：22 — 1002";
             // 
             // panel4
             // 
@@ -176,11 +176,11 @@ namespace EMS
             this.labSoftVerb.AutoSize = true;
             this.labSoftVerb.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labSoftVerb.ForeColor = System.Drawing.Color.White;
-            this.labSoftVerb.Location = new System.Drawing.Point(28, 12);
+            this.labSoftVerb.Location = new System.Drawing.Point(23, 12);
             this.labSoftVerb.Name = "labSoftVerb";
-            this.labSoftVerb.Size = new System.Drawing.Size(181, 21);
+            this.labSoftVerb.Size = new System.Drawing.Size(313, 21);
             this.labSoftVerb.TabIndex = 1;
-            this.labSoftVerb.Text = "软件版本：230310001b";
+            this.labSoftVerb.Text = "软件版本：1A200EMS240525Master3.1.1";
             // 
             // panel3
             // 
@@ -197,11 +197,11 @@ namespace EMS
             this.labVerb.AutoSize = true;
             this.labVerb.Font = new System.Drawing.Font("微软雅黑", 12F);
             this.labVerb.ForeColor = System.Drawing.Color.White;
-            this.labVerb.Location = new System.Drawing.Point(27, 12);
+            this.labVerb.Location = new System.Drawing.Point(23, 12);
             this.labVerb.Name = "labVerb";
-            this.labVerb.Size = new System.Drawing.Size(250, 21);
+            this.labVerb.Size = new System.Drawing.Size(106, 21);
             this.labVerb.TabIndex = 0;
-            this.labVerb.Text = "系统版本号：CGP200-A- 230310";
+            this.labVerb.Text = "系统版本号：\r\n";
             // 
             // pictureBox2
             // 
@@ -268,6 +268,24 @@ namespace EMS
             this.btnMain.UseVisualStyleBackColor = false;
             this.btnMain.Click += new System.EventHandler(this.btnMain_Click);
             // 
+            // btnSet
+            // 
+            this.btnSet.BackColor = System.Drawing.Color.Transparent;
+            this.btnSet.Enabled = false;
+            this.btnSet.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnSet.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnSet.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnSet.ForeColor = System.Drawing.Color.Gray;
+            this.btnSet.Image = ((System.Drawing.Image)(resources.GetObject("btnSet.Image")));
+            this.btnSet.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnSet.Location = new System.Drawing.Point(1, 466);
+            this.btnSet.Margin = new System.Windows.Forms.Padding(2);
+            this.btnSet.Name = "btnSet";
+            this.btnSet.Size = new System.Drawing.Size(148, 52);
+            this.btnSet.TabIndex = 36;
+            this.btnSet.Text = "系统设置";
+            this.btnSet.UseVisualStyleBackColor = false;
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::EMS.Properties.Resources.logo_2x;
@@ -295,43 +313,6 @@ namespace EMS
             this.btnAbout.UseVisualStyleBackColor = false;
             this.btnAbout.Click += new System.EventHandler(this.btnAbout_Click);
             // 
-            // btnSet
-            // 
-            this.btnSet.BackColor = System.Drawing.Color.Transparent;
-            this.btnSet.Enabled = false;
-            this.btnSet.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnSet.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnSet.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnSet.ForeColor = System.Drawing.Color.Gray;
-            this.btnSet.Image = ((System.Drawing.Image)(resources.GetObject("btnSet.Image")));
-            this.btnSet.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnSet.Location = new System.Drawing.Point(1, 466);
-            this.btnSet.Margin = new System.Windows.Forms.Padding(2);
-            this.btnSet.Name = "btnSet";
-            this.btnSet.Size = new System.Drawing.Size(148, 52);
-            this.btnSet.TabIndex = 36;
-            this.btnSet.Text = "系统设置";
-            this.btnSet.UseVisualStyleBackColor = false;
-            // 
-            // btnState
-            // 
-            this.btnState.BackColor = System.Drawing.Color.Transparent;
-            this.btnState.Enabled = false;
-            this.btnState.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnState.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnState.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnState.ForeColor = System.Drawing.Color.Gray;
-            this.btnState.Image = ((System.Drawing.Image)(resources.GetObject("btnState.Image")));
-            this.btnState.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnState.Location = new System.Drawing.Point(2, 306);
-            this.btnState.Margin = new System.Windows.Forms.Padding(2);
-            this.btnState.Name = "btnState";
-            this.btnState.Size = new System.Drawing.Size(148, 52);
-            this.btnState.TabIndex = 56;
-            this.btnState.Text = "当前状态";
-            this.btnState.UseVisualStyleBackColor = false;
-            this.btnState.Click += new System.EventHandler(this.btnState_Click);
-            // 
             // btnLogin
             // 
             this.btnLogin.BackColor = System.Drawing.Color.Transparent;
@@ -349,25 +330,6 @@ namespace EMS
             this.btnLogin.TabIndex = 38;
             this.btnLogin.Text = "用户登录";
             this.btnLogin.UseVisualStyleBackColor = false;
-            // 
-            // btnLine
-            // 
-            this.btnLine.BackColor = System.Drawing.Color.Transparent;
-            this.btnLine.Enabled = false;
-            this.btnLine.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnLine.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnLine.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnLine.ForeColor = System.Drawing.Color.Gray;
-            this.btnLine.Image = ((System.Drawing.Image)(resources.GetObject("btnLine.Image")));
-            this.btnLine.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnLine.Location = new System.Drawing.Point(2, 254);
-            this.btnLine.Margin = new System.Windows.Forms.Padding(2);
-            this.btnLine.Name = "btnLine";
-            this.btnLine.Size = new System.Drawing.Size(148, 52);
-            this.btnLine.TabIndex = 55;
-            this.btnLine.Text = "主线路图";
-            this.btnLine.UseVisualStyleBackColor = false;
-            this.btnLine.Click += new System.EventHandler(this.btnLine_Click);
             // 
             // btnQuery
             // 
@@ -388,6 +350,25 @@ namespace EMS
             this.btnQuery.UseVisualStyleBackColor = false;
             this.btnQuery.Visible = false;
             // 
+            // btnLine
+            // 
+            this.btnLine.BackColor = System.Drawing.Color.Transparent;
+            this.btnLine.Enabled = false;
+            this.btnLine.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnLine.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnLine.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnLine.ForeColor = System.Drawing.Color.Gray;
+            this.btnLine.Image = ((System.Drawing.Image)(resources.GetObject("btnLine.Image")));
+            this.btnLine.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLine.Location = new System.Drawing.Point(2, 254);
+            this.btnLine.Margin = new System.Windows.Forms.Padding(2);
+            this.btnLine.Name = "btnLine";
+            this.btnLine.Size = new System.Drawing.Size(148, 52);
+            this.btnLine.TabIndex = 55;
+            this.btnLine.Text = "主线路图";
+            this.btnLine.UseVisualStyleBackColor = false;
+            this.btnLine.Click += new System.EventHandler(this.btnLine_Click);
+            // 
             // btnWarning
             // 
             this.btnWarning.BackColor = System.Drawing.Color.Transparent;
@@ -406,6 +387,25 @@ namespace EMS
             this.btnWarning.Text = "告警信息";
             this.btnWarning.UseVisualStyleBackColor = false;
             this.btnWarning.Click += new System.EventHandler(this.btnWarning_Click);
+            // 
+            // btnState
+            // 
+            this.btnState.BackColor = System.Drawing.Color.Transparent;
+            this.btnState.Enabled = false;
+            this.btnState.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnState.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnState.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnState.ForeColor = System.Drawing.Color.Gray;
+            this.btnState.Image = ((System.Drawing.Image)(resources.GetObject("btnState.Image")));
+            this.btnState.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnState.Location = new System.Drawing.Point(2, 306);
+            this.btnState.Margin = new System.Windows.Forms.Padding(2);
+            this.btnState.Name = "btnState";
+            this.btnState.Size = new System.Drawing.Size(148, 52);
+            this.btnState.TabIndex = 56;
+            this.btnState.Text = "当前状态";
+            this.btnState.UseVisualStyleBackColor = false;
+            this.btnState.Click += new System.EventHandler(this.btnState_Click);
             // 
             // frmAbout
             // 

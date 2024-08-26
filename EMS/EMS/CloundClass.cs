@@ -14,6 +14,13 @@ using System.Diagnostics;
 //2.21
 using System.Runtime.InteropServices;
 using MySqlX.XDevAPI.Common;
+using Mysqlx.Session;
+using Mysqlx.Crud;
+using System.Drawing;
+using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
+using M2Mqtt.Exceptions;
+using System.Text;
 
 namespace EMS
 {
@@ -41,15 +48,81 @@ namespace EMS
         public string AIOTTableTopic;
         public string BalaTableTopic;
         public string BalaTacticTopic;
+        public string HeartbeatTopic;
+        public string UploadTopic;
+
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
+        public bool receivedHeartbeatResponse = false;
+        public bool SendAgain = true;
+        public string HeartbeatID;
+        public volatile bool ConnectToCloud = false;
+        private readonly object _lockMqtt = new object();
+
+        private static System.Threading.Timer Publish_Timer;//数据上云定时器
+
+        //数据上云
+        private string DataPath = "c:\\SendData"; //数据保存地址
+        private string Filters = "*.json"; //数据格式
+        string[] allFiles;
+        string aFileCap;
+        string strData;
+        public static int batchSize = 10;
 
         private static ILog log = LogManager.GetLogger("CloudClass");
 
+        private static readonly object _lockTXT = new object();
+        private static readonly object _lockPublishTimer = new object();
+
         public CloudClass()
         {
-          
+            string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
+            DataPath = strSysPath + "UpData";
+            if (!Directory.Exists(DataPath))
+            {
+                Directory.CreateDirectory(DataPath);
+            }
             //mqttConnect(); 
+        }
+
+        /// <summary>
+        /// 查询目录里的文件
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public string[] GetAllFileNames(string path, string pattern = "*.*")
+        {
+            return Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly);
+        }
+
+
+        //限速发送
+        public void SendmqttData()
+        {
+            lock (_lockTXT)
+            {
+                allFiles = GetAllFileNames(DataPath, Filters);
+                //发送数据
+                if (allFiles.Length > 0)
+                {
+                    for (int i = 0; i < allFiles.Length; i += batchSize)
+                    {
+                        string[] batch = allFiles.Skip(i).Take(batchSize).ToArray();
+                        // 逐个发送文件
+                        foreach (string allFiles in batch)
+                        {
+                            string fileName = Path.GetFileName(allFiles);
+                            aFileCap = fileName.Substring(1, 3);
+                            strData = File.ReadAllText(@allFiles);
+                            Write2Topic(aFileCap, strData);
+                            File.Delete(allFiles);
+                        }
+                    }
+                }
+                //清空数组
+                allFiles = Array.Empty<string>();
+            }
         }
         static ulong SetCpuID(int lpIdx)
         {
@@ -69,11 +142,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread mqttThread = new Thread(ListenCloud);
                 mqttThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                mqttThread.Start();
-                //8.4
                 mqttThread.Priority = ThreadPriority.Highest;
+                mqttThread.Start();
             }
             catch
             {
@@ -89,7 +159,21 @@ namespace EMS
         }
 
 
-
+        public void InitializePublish_Timer()
+        {
+            Publish_Timer = new System.Threading.Timer(Publish_TimerCallback, null, 0, 30000);
+        }
+        private void Publish_TimerCallback(Object state)
+        {
+            //上传数据
+            if (ConnectToCloud)
+            {
+                lock (_lockPublishTimer)
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                }
+            }
+        }
 
 
 
@@ -99,12 +183,14 @@ namespace EMS
             TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
             EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
             //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
-            string strID = frmSet.SysID;
+            string strID = frmSet.config.SysID;
             if (strID.Length >= 7)
                 strID = strID.Substring(strID.Length - 7, 7);
             AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
             BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
             BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
+			HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
+            UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
         }
 
 
@@ -112,71 +198,57 @@ namespace EMS
         {
             INIFile ConfigINI = new INIFile();
             string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
-            string INIPath = strSysPath + "Config.ini";
-            String iotcode = ConfigINI.INIRead("System Set", "SysID", "202300001", INIPath).Trim();
 
-
+            String iotcode = frmSet.config.SysID;
             EMQX_CLIENT_ID = iotcode;
-            log.Error("EMQX_CLIENT_ID: " + EMQX_CLIENT_ID);
 
             try
             {
-                //mqttClient = null;
-                if (mqttClient != null)
+                lock (_lockMqtt)
                 {
-                   // mqttClient.d
+                    if (mqttClient != null)
+                    {
+                        if (mqttClient.IsConnected)
+                        {
+                            mqttClient.Disconnect();
+                        }
+                        mqttClient = null;
+                    }
+                    mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, true, null, null, MqttSslProtocols.TLSv1_2);
+                    mqttClient.Connect(EMQX_CLIENT_ID,
+                                                "aiot",// user,
+                                                "Lab123123123",//pwd,
+                                                true, // cleanSession
+                                                60); // keepAlivePeriod 
+                    //2.21 暂时注释
+                    mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
                 }
-                 //   mqttClient.Disconnect();
-                // mqttClient.ConnectionClosed
-                //建立连接
-                //mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, false, null, null, MqttSslProtocols.TLSv1_2);
-                //mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, false, null, null, MqttSslProtocols.None);
-                mqttClient = new MqttClient(EMQX_BROKER_IP, EMQX_BROKER_PORT, true, null, null, MqttSslProtocols.TLSv1_2);
-                //下面这种方法是个坑，并不能正常访问到MQTT服务
-                // mqttClient = new MqttClient(IPAddress.Parse(EMQX_BROKER_IP));
-                //mqttClient.ProtocolVersion = MqttProtocolVersion.Version_3_1;               
-                mqttClient.Connect(EMQX_CLIENT_ID,
-                                            "aiot",// user,
-                                            "Lab123123123",//pwd,
-                                            true, // cleanSession
-                                            60); // keepAlivePeriod 
-                //log.Error("mqttClient连接成功");
-                //2.21
-                //AutoCloud();
-                connectflag = 1;
-
-                //2.21 暂时注释
-                mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
 
                 return mqttClient;
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message);
-                //MessageBox.Show(ex.Message);
-                //meterg,meterp,metera,air  meter
-                //ename==iot_code,eTime=time
+                log.Error("CreateClient fail: " + ex.Message);
             }
             return null;
         }
+
 
         // 建立MQTT连接
         public void mqttConnect()
         {
             try
             {
-                if ((mqttClient != null) && (mqttClient.IsConnected))
-                {
-                    //断开连接
-                    mqttClient.Disconnect();
-                }
                 CreateClient();
                 ListenTopic(PriceTopic + "request");
                 ListenTopic(TacticTopic + "request");
                 ListenTopic(EMSLimitTopic + "request");
                 ListenTopic(AIOTTableTopic + "request");
                 ListenTopic(BalaTableTopic + "request");
+				ListenTopic(HeartbeatTopic);
+                ListenTopic(UploadTopic + "request");
                 FirstRun = true;
+                SendAgain = true;
             }
             catch {
                // mqttClient.IsConnected = false;
@@ -186,34 +258,32 @@ namespace EMS
 
         public void mqttReconnect()
         {
-            //string RecCommandInfo = new StackTrace().ToString();
-            //Logger.Error("err:"+RecCommandInfo);
-
-
-            //Logger.LogInit();
-            //DateTime now = DateTime.Now;
-
-            //Logger.Info("CreateClient: " + now);
             try
             {
-                //mqttClient = null;
-                /*                if (mqttClient != null)
-                                    mqttClient.Disconnect();*/
-                if (mqttClient != null)
+                ConnectToCloud = false;
+                //保证定时器已经完成publish动作，释放锁_lockMqtt
+                lock (_lockPublishTimer)
                 {
-                    mqttClient.Connect(EMQX_CLIENT_ID,
-                                               "aiot",// user,
-                                               "Lab123123123",//pwd,
-                                               true, // cleanSession
-                                               60); // keepAlivePeriod 
-                                                    //mqttClient.Connect(EMQX_CLIENT_ID);
-                                                    //mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
+                    log.Error("mqttReconnect");
+                    //停止定时器
+                    if (Publish_Timer != null)
+                    {
+                        Publish_Timer.Change(Timeout.Infinite, Timeout.Infinite);
+                        Publish_Timer.Dispose();
+                        Publish_Timer = null;
+                    }
 
+                    CreateClient();
                     ListenTopic(PriceTopic + "request");
                     ListenTopic(TacticTopic + "request");
                     ListenTopic(EMSLimitTopic + "request");
                     ListenTopic(AIOTTableTopic + "request");
                     ListenTopic(BalaTableTopic + "request");
+                    ListenTopic(HeartbeatTopic);
+
+                    // 重新启动定时器
+                    InitializePublish_Timer();
+                    SendAgain = true;
                 }
             }
             catch (Exception ex)
@@ -221,27 +291,38 @@ namespace EMS
 
             }
 
+
         }
 
-
-
-        public void CheckConnect()
+        public void SendHeartbeat()
         {
-            if (connectflag == 1)
+            if (SendAgain)
             {
-                //log.Debug("重连");
-                //mqttClient.Disconnect();
-                if (mqttClient != null)
+                SendAgain = false;
+                HeartbeatID = Guid.NewGuid().ToString();
+                string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
+                    
+                lock (_lockMqtt)
                 {
-                    if (!mqttClient.IsConnected)
+                    if (mqttClient != null)
                     {
-                        mqttReconnect();
+                        try
+                        {
+                            mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
+                                MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+                        }
+                        catch (MqttClientException ex)
+                        { 
+                            log.Error("SendHeartbeat: " + ex.Message);
+                        }
                     }
                 }
-
             }
+            else
+            {
+                mqttReconnect();
+            }      
         }
-
         /// <summary>
         /// 给一个topic写数据
         /// </summary>
@@ -251,10 +332,20 @@ namespace EMS
         {
             if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
             {
-                mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content),
-                    MqttMsgBase.QOS_LEVEL_GRANTED_FAILURE, true);//qos                                                              
+                lock (_lockMqtt)
+                {
+                    try
+                    {
+                        mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
+                    }
+                    catch (MqttClientException ex)
+                    {
+                        log.Error("Write2Topic: " + ex.Message);
+                    }
+                }
             }
         }
+
 
         /// <summary>
         /// 设置监听一个topic
@@ -262,12 +353,16 @@ namespace EMS
         /// <param name="aTopic"></param>
         public void ListenTopic(string aTopic)
         {
-            if (mqttClient != null && !string.IsNullOrEmpty(aTopic))
+            lock (_lockMqtt)
             {
-                mqttClient.Subscribe(new string[] { aTopic },
-                new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });//QOS_LEVEL_EXACTLY_ONCE
+                if (mqttClient != null && !string.IsNullOrEmpty(aTopic))
+                {
+                    mqttClient.Subscribe(new string[] { aTopic },
+                    new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });//QOS_LEVEL_EXACTLY_ONCE
+                }
             }
         }
+
 
         //这段定义了收到消息之后做什么事情
         private void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
@@ -275,60 +370,191 @@ namespace EMS
             bool Result = false;
             string strResponse = "{ \"jsonrpc\":\"2.0\", \"result\":true, \"id\":\"";
             string ErrorstrResponse = "{ \"jsonrpc\":\"2.0\", \"result\":false, \"id\":\"";
-            string topic = e.Topic.ToString();
+            string topic = e.Topic.ToString();            
             string message = System.Text.Encoding.Default.GetString(e.Message);
+            
+            JObject jsonObject = JObject.Parse(message);
             string strID = "";
+            if (jsonObject["id"] != null)
+            {
+                strID = jsonObject["id"].ToString();
+            }       
             //同时订阅两个或者以上主题时，分类收集收到的信息
 
             if (topic == TacticTopic + "request")
             {
-                strID = GetServerTactics(message, ref Result);
-                if (Result && strID!="")
+                Result = GetServerTactics(message);
+                lock (_lockMqtt)
                 {
-                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                }
-                else
-                {
-                    mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                }
+                    if (Result)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                }       
             }
             else if (topic == PriceTopic + "request")
             {
-                strID = GetServerEPrices(message);
-                if (strID != "")
+                Result = GetServerEPrices(message);
+                lock (_lockMqtt)
                 {
-                    mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                    frmMain.TacticsList.LoadJFPGFromSQL();
+                    if (Result)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
                 }
             }
             else if (topic == EMSLimitTopic + "request")
             {
-                strID = GetServerEMSLimit(message);
-                mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                Result = GetServerEMSLimit(message);
+                lock (_lockMqtt)
+                {
+                    if (Result)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                }
             }
             else if (topic == AIOTTableTopic + "request")
             {
                 strID = GetAiotTable(message);
-                mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                lock (_lockMqtt)
+                {
+                    if (mqttClient != null)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                }
             }
             else if (topic == BalaTableTopic + "request")
             {
                 strID = GetBalaTable(message);
-                mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                     MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                lock (_lockMqtt)
+                {
+                    if (mqttClient != null)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+
+                    }
+                }
             }
-/*            else if (topic == BalaTacticTopic)
+            else if (topic == HeartbeatTopic)
             {
-                strID = GetServerBalaTactics(message);
-                mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-            }*/
+                GetHeartbeat(message);
+            }
+            else if (topic == UploadTopic  + "request")
+            {
+                Result = DataRetransmission(message);
+                lock (_lockMqtt)
+                {
+                    if (Result)
+                    {
+                        try
+                        {
+                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }
+                        catch (MqttClientException ex)
+                        {
+                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                        }
+                    }
+                }
+            }
+            /*            else if (topic == BalaTacticTopic)
+                        {
+                            //log.Info("接收到均衡策略");
+                            strID = GetServerBalaTactics(message);
+                            mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                        }*/
         }
+
 
 
 
@@ -451,6 +677,33 @@ namespace EMS
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="savePath"></param>
+        /// 
+        public static void ConvertToJson(string json, string aDirection, string aSavePath)
+        {
+            try
+            {
+                if (!Directory.Exists(aDirection))
+                    Directory.CreateDirectory(aDirection);
+
+                lock (_lockTXT)
+                {
+                    JObject jsonObject = JObject.Parse(json);
+                    string strID = jsonObject["time"].ToString();
+
+                    using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
+                    {
+                        sw.WriteLine(json);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // 向用户显示出错消息
+                Console.WriteLine("The file could not be read:" + e.Message);
+            }
+        }
+
+
         public static void ConvertToJson(object aObj, string aDirection, string aSavePath)
         {
             try
@@ -459,11 +712,15 @@ namespace EMS
                 // using (StreamReader sr = new StreamReader("c:/jamaica.txt"))  while ((line = sr.ReadLine()) != null)
                 if (!Directory.Exists(aDirection))
                     Directory.CreateDirectory(aDirection);
-                using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
+
+                lock (_lockTXT)
                 {
-                    sw.WriteLine(GetProperties(aObj));
-                    //sw.Close();
-                    //sw.Dispose();
+                    using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
+                    {
+                        sw.WriteLine(GetProperties(aObj));
+                        //sw.Close();
+                        //sw.Dispose();
+                    }
                 }
             }
             catch (Exception e)
@@ -471,26 +728,6 @@ namespace EMS
                 // 向用户显示出错消息
                 Console.WriteLine("The file could not be read:" + e.Message);
             }
-
-            //string str = JsonConvert.SerializeObject(obj);
-
-            ////json格式化
-            //JsonSerializer jsonSerializer = new JsonSerializer();
-            //TextReader textReader = new StringReader(str);
-            //JsonTextReader jsonTextReader = new JsonTextReader(textReader);
-            //object _object = jsonSerializer.Deserialize(jsonTextReader);
-            //if (_object != null)
-            //{
-            //    StringWriter stringWriter = new StringWriter();
-            //    JsonTextWriter jsonWriter = new JsonTextWriter(stringWriter)
-            //    {
-            //        Formatting = Formatting.Indented,
-            //        Indentation = 4,
-            //        IndentChar = ' '
-            //    };
-            //    jsonSerializer.Serialize(jsonWriter, _object);
-            //    File.WriteAllText(savePath, stringWriter.ToString());
-            //}
         }
 
 
@@ -562,8 +799,14 @@ namespace EMS
             if (Parent.LiquidCool != null)
             {
                 Parent.LiquidCool.time = tempTime;
-                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" +  "0air" + strTime + ".json");
+                ConvertToJson(Parent.LiquidCool, strUpPath, "\\" + "0liq" + strTime + ".json");
                 //log.
+            }
+            //除湿机
+            if (Parent.Dehumidifier != null)
+            {
+                Parent.Dehumidifier.time = tempTime;
+                ConvertToJson(Parent.Dehumidifier, strUpPath, "\\" + "0csj" + strTime + ".json");
             }
             //消防
             if (Parent.Fire != null)
@@ -575,10 +818,21 @@ namespace EMS
             Parent.time = tempTime;
             ConvertToJson(Parent, strUpPath, "\\0ems" + strTime + ".json");
         }
-
+        
         public void SaveProfit2Cloud(string astrDate)
         {
             ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + astrDate + ".json");
+        }
+
+        //模拟未连接任何设备的EMS制造数据
+        public void SaveProfit2CloudTest(string strTime)
+        {
+            ConvertToJson(Parent.Profit2Cloud, strUpPath, "\\0pem" + strTime + ".json");
+        }
+
+        public void UploadProfit2Cloud(string json, string astrDate)
+        {
+            ConvertToJson(json, strUpPath, "\\0pem" + astrDate + ".json");
         }
 
         public void SaveFault2Cloud(string astrDate)
@@ -592,6 +846,75 @@ namespace EMS
         //接收到的文件
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public bool DataRetransmission(string astrData)
+        {
+            bool result = false;
+            if (astrData == "")
+                return false;
+            JObject jsonObject = JObject.Parse(astrData);
+            string strID = "";
+            try
+            {
+                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
+                string strTopic = jsonObject["method"].ToString();
+                if (strTopic != "aiot/uploadData")
+                    return false;
+                //9.11
+                var param = jsonObject["params"];
+                if (param["topic"].ToString() == "pem")
+                {
+                    if (param["iot_code"] != null)
+                    {
+                        if (param["iot_code"].ToString() != frmMain.Selffrm.AllEquipment.iot_code)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            string start = param["start"].ToString();
+                            string end = param["end"].ToString();
+                            //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                            string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
+                            DBConnection.UploadCloud(sqlQuery);
+                            result = true;
+                        }
+                    }
+                    else
+                    {
+                        string start = param["start"].ToString();
+                        string end = param["end"].ToString();
+                        //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
+                        string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
+                        DBConnection.UploadCloud(sqlQuery);
+                        result = true;
+                    }
+                }
+                else
+                {
+                    result = false;
+                }
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+            return result;
+        }
+
+        public void GetHeartbeat(string astrData, bool aIsFileData = false)
+        {
+            JObject jsonObject = null;
+            jsonObject = JObject.Parse(astrData);
+            string ID = jsonObject["HeartBeatID"].ToString();
+            if (ID == HeartbeatID)
+            {
+                if (!ConnectToCloud)
+                {
+                    ConnectToCloud = true;
+                }
+                SendAgain = true;
+            }
+        }
 
         //接收均衡策略数据
         /// <param name="astrTacticFile"></param>
@@ -625,7 +948,7 @@ namespace EMS
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if (!frmSet.UseBalaTactics)
+                if (frmSet.config.UseBalaTactics == 0)
                     return strID;
 
                 //清理旧数据
@@ -701,11 +1024,12 @@ namespace EMS
         ///     "value":100 
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string GetServerTactics(string astrData, ref bool result)
+        public bool GetServerTactics(string astrData)
         {
+            bool result = false;
             if (astrData == "")
             {
-                return "";
+                return false;
             }
             JObject jsonObject = null;
             jsonObject = JObject.Parse(astrData);
@@ -716,23 +1040,21 @@ namespace EMS
                 string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/strategy")
-                    return "";
+                    return false;
                 int iTacticCount = jsonObject["params"]["strategy"].Count();
 
                 //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if ((!frmSet.UseYunTactics)|| (!frmSet.IsMaster))
+                if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
                 {
-                    result = false;
-                    return strID;
+                    return false;
                 }
 
                 //清理旧数据
-                int count1 = 10;
-                while (!DBConnection.ExecSQL("delete FROM tactics") && count1 > 0)
+                if (DBConnection.CheckRec("select *  FROM tactics"))
                 {
-                    Thread.Sleep(60000);
-                    count1--;
+                    DBConnection.ExecSQL("delete FROM tactics");
                 }
+
                 string strData = "";
                 //增加新数据
                 for (int i = 0; i < iTacticCount; i++)
@@ -754,36 +1076,25 @@ namespace EMS
                     //从云获取策略插入数据库中
                     strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
 
-                    int count2 = 10;
-
-                    while (count2 > 0)
+                    if (!DBConnection.ExecSQL(strData))
                     {
-                        if (DBConnection.ExecSQL(strData))
-                        {
-                            result = true;
-                            break;
-                        }
-                        else
-                        {
-                            Thread.Sleep(60000);
-                            count2--;
-                        }
+                        return false;
                     }
                 }
-                if (result)
+
+                if (frmMain.TacticsList.LoadFromMySQL())
                 {
+                    frmMain.TacticsList.ActiveIndex = -1;
+                    result  = true;
+                }
+                else
+                { 
                     result = false;
-                    if (frmMain.TacticsList.LoadFromMySQL())
-                    {
-                        frmMain.ShowShedule2Char(false);
-                        frmMain.TacticsList.ActiveIndex = -1;
-                        result = true;
-                    }
                 }
             }
             catch
             { }
-            return strID;
+            return result;
         }
 
         /// <summary>
@@ -794,15 +1105,16 @@ namespace EMS
         ///     "range":3 //  尖：1峰：2平：3谷：4
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public string  GetServerEPrices(string astrData, bool aIsFileData = false)
+        public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
         {
+            bool result = false;
             JObject jsonObject = null;
             string strDataFile = "";
             if (aIsFileData)
             {
                 strDataFile = strDownPath + "\\" + astrData;
                 if (!File.Exists(strDataFile))
-                    return "";
+                    return false;
                 StreamReader file = File.OpenText(strDataFile);
                 JsonTextReader reader = new JsonTextReader(file);
                 jsonObject = (JObject)JToken.ReadFrom(reader);
@@ -810,20 +1122,18 @@ namespace EMS
             else
             {
                 if (astrData == "")
-                    return "";
+                    return false;
                 jsonObject = JObject.Parse(astrData); 
             }
-            string strID = "";
+
             try
             {
-                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string date = jsonObject["params"]["date"].ToString();
                 int iPriceCount = jsonObject["params"]["price"].Count();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "meter/price")
-                    return "";
+                    return false;
 
-                 
                 //清理旧数据
                 DBConnection.ExecSQL("delete FROM electrovalence");
                 string strData = "";
@@ -838,18 +1148,23 @@ namespace EMS
                         + isection.ToString() + "','0','"
                         + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
-                    DBConnection.ExecSQL(strData);
+                    if(DBConnection.ExecSQL(strData))
+                    {
+                        result = true;
+                    }
                 }
                 //更新策略
-                frmSet.SaveSet2File();
-                frmMain.TacticsList.LoadJFPGFromSQL();
-                if (aIsFileData)
-                    File.Delete(strDataFile);
+                if (result)
+                {
+                    frmMain.TacticsList.LoadJFPGFromSQL();
+                    if (aIsFileData)
+                        File.Delete(strDataFile);
+                }
             }
             catch
             { }
             //输出返回数据
-            return strID;
+            return result;
         }
 
         
@@ -884,7 +1199,7 @@ namespace EMS
                 else
                 {
                     //从机器不执行网络命令(不开放离网模式)
-                    if ((frmSet.IsMaster)&&(ipcsSet!=4))
+                    if ((frmSet.config.IsMaster == 0)&&(ipcsSet!=4))
                         frmControl.SetControl(iMode, PCSClass.PCSTypes[ipcsSet], ipcsSets[icharge], ipcsSetValue,iOn, true);
                 } 
                 /*
@@ -901,67 +1216,232 @@ namespace EMS
         }
 
         //设置窗口的几个限制值
-        public string GetServerEMSLimit(string astrData)
+        public bool GetServerEMSLimit(string astrData)
         {
+            bool bResult = false;
             if (astrData == "")
-                return "";
+                return false;
+
             JObject jsonObject = JObject.Parse(astrData);
-            string strID = "";
             try
             {
-                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
-               //string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/limit")
                 {
-                    return "";
+                    return false;
                 }
                 else
                 {
-/*                    string requireLimit = jsonObject["params"]["requireLimit"].ToString();
-                    log.Debug("requireLimit:" + requireLimit);
-                    int limit = (int)double.Parse(requireLimit);
-                    log.Debug("limit:" + limit);*/
-                    frmSet.MaxGridKW = (int)double.Parse(jsonObject["params"]["requireLimit"].ToString());//需量控制
-                    frmSet.MinGridKW = (int)double.Parse(jsonObject["params"]["invertPower"].ToString());//逆功率限制值
-                    frmSet.MaxSOC = (int)(double.Parse(jsonObject["params"]["socUp"].ToString())); //SOC上限
-                    frmSet.MinSOC = (int)(double.Parse(jsonObject["params"]["socDown"].ToString())); //SOC下限
-                    //frmSet.SaveSet2File();
-                    frmSet.SetToGlobalSet();
+                    if (jsonObject["params"] != null)
+                    {
+                        var parameters = jsonObject["params"];
+                        if (parameters["requireLimit"] != null)
+                        {
+                            frmSet.cloudLimits.MaxGridKW = int.Parse(parameters["requireLimit"].ToString());
+                        }
+                        if (parameters["invertPower"] != null)
+                        {
+                            frmSet.cloudLimits.MinGridKW = int.Parse(parameters["invertPower"].ToString());
+                        }
+                        if (parameters["socUp"] != null)
+                        {
+                            frmSet.cloudLimits.MaxSOC = int.Parse(parameters["socUp"].ToString());
+                        }
+                        if (parameters["socDown"] != null)
+                        {
+                            frmSet.cloudLimits.MinSOC = int.Parse(parameters["socDown"].ToString());
+                        }
+                        if (parameters["WarnMaxGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMaxGridKW = int.Parse(parameters["WarnMaxGridKW"].ToString());
+                        }
+                        if (parameters["WarnMinGridKW"] != null)
+                        {
+                            frmSet.cloudLimits.WarnMinGridKW = int.Parse(parameters["WarnMinGridKW"].ToString());
+                        }
+                        if (parameters["PcsKva"] != null)
+                        {
+                            frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
+                        }
+                        if (parameters["Pre_Client_PUMdemand_Max"] != null)
+                        {
+                            frmSet.cloudLimits.Pre_Client_PUMdemand_Max = int.Parse(parameters["Pre_Client_PUMdemand_Max"].ToString());
+                        }
+                        if (parameters["EnableActiveReduce"] != null)
+                        {
+                            frmSet.cloudLimits.EnableActiveReduce = int.Parse(parameters["EnableActiveReduce"].ToString());
+                        }
+                        if (parameters["PumScale"] != null)
+                        {
+                            frmSet.cloudLimits.PumScale = int.Parse(parameters["PumScale"].ToString());
+                        }
+                        if (parameters["AllUkvaWindowSize"] != null)
+                        {
+                            frmSet.cloudLimits.AllUkvaWindowSize = int.Parse(parameters["AllUkvaWindowSize"].ToString());
+                        }
+                        if (parameters["PumTime"] != null)
+                        {
+                            frmSet.cloudLimits.PumTime = int.Parse(parameters["PumTime"].ToString());
+                        }
+                        if (parameters["BmsDerateRatio"] != null)
+                        {
+                            frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
+                        }
+                        if (parameters["FrigOpenLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOpenLower = int.Parse(parameters["FrigOpenLower"].ToString());
+                        }
+                        if (parameters["FrigOffLower"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffLower = int.Parse(parameters["FrigOffLower"].ToString());
+                        }
+                        if (parameters["FrigOffUpper"] != null)
+                        {
+                            frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
+                        }
 
+
+                        if (frmSet.Set_Cloudlimits())
+                        {
+                            bResult = true;
+                        }
+                        else
+                        {
+                            bResult = false;
+                        }
+                    }
+                    else
+                    {
+                        bResult = false;
+                    }
                 }
             }
-            catch 
-            { }
-            //输出返回数据
-            return strID; 
+            catch
+            {
+                // Handle exceptions if needed
+            }
+            return bResult;
         }
 
-  
+        static public byte[] Back3Data(int aAddr, short iLen)
+        {
+            byte[] returnMsg = null;
+            ushort aMsg;
+            int index = 3;
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.config.i485Addr, 3, (ushort)iLen);
+            for (int i = aAddr; i <= aAddr+iLen; ++i)
+            {
+                aMsg = 0;
+                switch (i)
+                {
+                    case 0x5000://设备序列号
+                        //aMsg = frmSet.SysID;
+                        break;
+                    case 0x5001://功率，正数为放电，负数为充电
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.PCSKVA;
+                        break;
+                    case 0x5002://日充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                        break;
+                    case 0x5003://日放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                        break;
+                    case 0x5004://月充电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5005://月放电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5006://总充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                        break;
+                    case 0x5007://总放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                        break;
+                    case 0x5008://总容量（%）
+                        aMsg = 200;
+                        break;
+                    case 0x5009://soc上限
+                        aMsg = 100;
+                        break;
+                    case 0x5010://soc下限
+                        aMsg = 5;
+                        break;
+                    case 0x5011://最大功率充电时长（分钟）
+                        aMsg = 90;
+                        break;
+                    case 0x5012://最大功率放电时长（分钟)
+                        aMsg = 90;
+                        break;
+                    case 0x5013://健康度（%）
+                        aMsg = 100;
+                        break;
+                    case 0x5014://状态1：在线，0：离线
+                        aMsg = 0;
+                        break;
+                    case 0x5015://充放电状态0：待机，1：充电，2：放电
+                        if (frmMain.Selffrm.AllEquipment.PCSKVA == 0)
+                        {
+                            aMsg = 0;
+                        }
+                        else
+                        {
+                            if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")
+                            {
+                                aMsg = 1;
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电")
+                            {
+                                aMsg = 2;
+                            }
+                        }
+                        break;
+                    case 0x5016://BMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5017://PCS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5018://EMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5019:
+                        break;
+                }
+                //组装报文
+                ModbusBase.AddMSG3(aMsg, ref returnMsg, ref index);
+            }
+            ModbusBase.AddCRC(ref returnMsg);
+            return returnMsg;
+
+        }
+
         //连控数据中读取数据-----3读取
         static public byte[] Back3Data(int aAddr ) 
         { 
             switch (aAddr)
             {
                 case 0x6001://计划功率
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
                     double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,  (ushort)value);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,  (ushort)value);
                 case 0x6003://充放电 
-                    if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")            
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
-                    else
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);                 
+                    if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
+                    else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
+                    else//待机
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 2);
                 case 0x6004: //PCSType 恒压横流恒功率、AC恒压
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3,(ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
                 case 0x6005: //EMS运行状态 ： 0正常，1故障，2停机
-                    return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
                 case 0x6006: //BMS是否告警
                     if (frmMain.Selffrm.AllEquipment.BMS.Error[1] + frmMain.Selffrm.AllEquipment.BMS.Error[2] + frmMain.Selffrm.AllEquipment.BMS.Error[3] > 0)
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 1);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
                     else
-                        return ModbusBase.BuildMSG3Back((byte)frmSet.i485Addr, 3, 0);
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
             }    
             return null;
         }
@@ -995,12 +1475,13 @@ namespace EMS
                     }
                     break;
                 case 0x6002://实际功率 
-                    log.Debug("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
+                    //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         frmMain.Selffrm.AllEquipment.HostStart = true;
                         frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
-                    }                   
+                        frmMain.Selffrm.AllEquipment.NetControl = true;
+                    }                  
                     break;
                 case 0x6003://充放电
                     lock (frmMain.Selffrm.AllEquipment)

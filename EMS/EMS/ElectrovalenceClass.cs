@@ -1,4 +1,6 @@
-﻿using MySql.Data.MySqlClient;
+﻿using log4net;
+using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 
@@ -18,6 +20,7 @@ namespace EMS
     public class ElectrovalenceListClass
     {
         List<ElectrovalenceClass> ElectrovalenceList = new List<ElectrovalenceClass>();
+        private static ILog log = LogManager.GetLogger("ElectrovalenceListClass");
 
         string[] JFPGs = { "无", "尖", "峰", "平", "谷" };
 
@@ -41,41 +44,48 @@ namespace EMS
         //数据库中装载电价的阶梯数据
         public void LoadFromMySQL()
         {
-            //TacticsList.Clear();
-            while (ElectrovalenceList.Count > 0)
-            {
-                //ElectrovalenceList[0]
-                ElectrovalenceList.RemoveAt(0);
-            }
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = DBConnection.GetData("select section ,startTime, eName  "//MaxPower
-                 + " from electrovalence ", ref ctTemp);
+            string astrSQL = "select section ,startTime, eName  from electrovalence ";
+
+
             try
             {
-                while (rd.Read())
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
-                    oneElectrovalence.section = rd.GetInt32(0);
-                    oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                    // oneElectrovalence.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                    oneElectrovalence.eName = rd.GetString(2);
-                    // oneElectrovalence.MaxPower = rd.GetInt32(3);
-                    // oneElectrovalence.price = rd.GetFloat(3);
-                    ElectrovalenceList.Add(oneElectrovalence);
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (ElectrovalenceList.Count > 0)
+                                {
+                                    ElectrovalenceList.RemoveAt(0);
+                                }
+
+                                while (rd.Read())
+                                {
+                                    ElectrovalenceClass oneElectrovalence = new ElectrovalenceClass();
+                                    oneElectrovalence.section = rd.GetInt32(0);
+                                    oneElectrovalence.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                    // oneElectrovalence.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                    oneElectrovalence.eName = rd.GetString(2);
+                                    // oneElectrovalence.MaxPower = rd.GetInt32(3);
+                                    // oneElectrovalence.price = rd.GetFloat(3);
+                                    ElectrovalenceList.Add(oneElectrovalence);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
-                rd.Close();
+                log.Error(ex.Message);
             }
             finally
             {
-                if (!rd.IsClosed)
-                    rd.Close();
-                rd.Dispose();
-                ctTemp.Close();
-                ctTemp.Dispose();
+
             }
         }
     }

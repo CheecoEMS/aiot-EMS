@@ -31,7 +31,7 @@ namespace EMS
             }
 
             //更新桌面
-            tbSysCount.Text = frmSet.SysMode.ToString();
+            tbSysCount.Text = frmSet.config.SysMode.ToString();
             tbcall1.Text = CallResult[0].ToString();
             tbcall2.Text = CallResult[1].ToString();
             tbcall3.Text = CallResult[2].ToString();

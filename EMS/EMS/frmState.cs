@@ -193,7 +193,7 @@ namespace EMS
                     tbPCSACOutput.Text = onePCS.ACOutkwh.ToString();
                     tbInTemp.Text = onePCS.InTemp.ToString();
                     tbOutTemp.Text = onePCS.OutTemp.ToString();
-                    if (frmSet.PCSGridModel == 0)
+                    if (frmSet.config.PCSGridModel == 0)
                         tbNetEnble.Text = "并网";
                     else
                         tbNetEnble.Text = "离网";
@@ -225,17 +225,17 @@ namespace EMS
                     //lbCondenserTemp.Text = oneTempControl.condenserTemp.ToString();//冷凝/供液温度; 
                     lbindoorHumidity.Text = oneTempControl.indoorHumidity.ToString();
                     //lbfanControl.Text = oneTempControl.fanControl.ToString();
-                    tneSetHotTemp.SetValue(0.1 * frmSet.SetHotTemp);
-                    tneSetCoolTemp.SetValue(0.1 * (frmSet.SetCoolTemp));
-                    tneCoolTempReturn.SetValue(0.1 * (frmSet.CoolTempReturn));
-                    tneHotTempReturn.SetValue(0.1 * (frmSet.HotTempReturn));
+                    tneSetHotTemp.SetValue(0.1 * frmSet.componentSettings.SetCoolTemp);
+                    tneSetCoolTemp.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
+                    tneCoolTempReturn.SetValue(0.1 * (frmSet.componentSettings.CoolTempReturn));
+                    tneHotTempReturn.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
                     //tneSetHumidity.SetIntValue((int)(SetHumidity));
                     //tneHumiReturn.SetIntValue((int)(HumiReturn));
                     //tcbTCRunWithSys.SetValue(TCRunWithSys);
                     ////cbTCAuto.Checked = TCAuto;
                     //tcbTCMode.SetSelectItemIndex(TCMode);
-                    tneTCMaxTemp.SetValue(0.1 * (frmSet.TCMaxTemp));
-                    tneTCMinTemp.SetValue(0.1 * (frmSet.TCMinTemp));
+                    tneTCMaxTemp.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
+                    tneTCMinTemp.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
                     //tneTCMaxHumidity.SetIntValue((int)(TCMaxHumi));
                     //tneTCMinHumidity.SetIntValue((int)(TCMinHumi));
 
@@ -260,7 +260,7 @@ namespace EMS
                     tbBMSSOC.Text = oneBMS.soc.ToString();
                     tbBMSSOH.Text = oneBMS.soh.ToString();
                     //tbBR.Text = oneBMS.positiveR.ToString();
-                    tbBMSCap.Text = (frmSet.SysSelfPower * oneBMS.soc * oneBMS.soh / 10000).ToString("0.##");
+                    tbBMSCap.Text = (frmSet.config.SysSelfPower * oneBMS.soc * oneBMS.soh / 10000).ToString("0.##");
                     tbBMSAvgTemp.Text = oneBMS.averageTemp.ToString();
                     tbBMSAvgV.Text = oneBMS.averageV.ToString();
                     tbBMSMaxTemp.Text = oneBMS.cellIDMaxtemp.ToString() + "--" + oneBMS.cellMaxTemp.ToString();
@@ -376,29 +376,9 @@ namespace EMS
                     }
                     break;
                 case 7://EMS
-                    if (frmSet.SysCount > 1 && frmSet.IsMaster)
-                    {
-                        if (frmMain.Selffrm.AllEquipment.EMSList[0] != null)
-                        { 
-                            tbShedulePCSKVA1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].ShedulePCSKVA.ToString();
-                            tbwaValueActive1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].waValueActive.ToString();
-                            tbWorkType1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].WorkType.ToString();
-                            tbPCSType1.Text =  frmMain.Selffrm.AllEquipment.EMSList[0].PCSType.ToString();
-                            tbrunState1.Text =  frmMain.Selffrm.AllEquipment.EMSList[0].runState.ToString();
-                            tbBMSErrorSate1.Text = frmMain.Selffrm.AllEquipment.EMSList[0].BMSErrorSate.ToString();
-                        }
-                    }
-                    else
-                    {
-                        tbShedulePCSKVA1.Text = (0).ToString();
-                        tbwaValueActive1.Text =(0).ToString();
-                        tbWorkType1.Text = (0).ToString();
-                        tbPCSType1.Text =  (0).ToString();
-                        tbrunState1.Text =  (0).ToString();
-                        tbBMSErrorSate1.Text = (0).ToString();
-                    }
+
                     break;
-                    }
+            }
         }
 
         private void ShowDate2Form()

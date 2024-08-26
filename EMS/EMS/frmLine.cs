@@ -121,12 +121,10 @@ namespace EMS
             if (frmMain.Selffrm.AllEquipment.ErrorState[2])
             {
                 plEMSState3.BackColor = Color.Red;
-                frmSet.SaveSet2File();
             }
             else
             {
                 plEMSState3.BackColor = Color.GreenYellow;
-                frmSet.SaveSet2File();
             }
 
             if ((frmMain.Selffrm.AllEquipment.PCSList.Count>0) && 

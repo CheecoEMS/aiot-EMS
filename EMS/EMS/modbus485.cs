@@ -19,11 +19,11 @@ namespace Modbus
             sp.DiscardOutBuffer();
             sp.DiscardInBuffer();
             sp.Write(aMessage, 0, aMessage.Length);
-            
+
         }
         public void Restart4G()
         {
-            byte[] message = new byte[14] { 0x41, 0x54, 0x2B, 0x43, 0x46, 0x55, 0x4E, 0x3D, 0x31, 0x2C,0x31,0x0D,0x0D,0x0A } ;
+            byte[] message = new byte[14] { 0x41, 0x54, 0x2B, 0x43, 0x46, 0x55, 0x4E, 0x3D, 0x31, 0x2C, 0x31, 0x0D, 0x0D, 0x0A };
             Get4GData(message);
         }
 
@@ -79,7 +79,41 @@ namespace Modbus
         /// <param name="parity"></param>
         /// <param name="stopBits"></param>
         /// <returns></returns>
-        #region //Open / Close Procedures        
+        #region //Open / Close Procedures      
+        public bool OpenEMS(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
+        {
+            //Ensure port isn't already opened:
+            sp = new SerialPort();
+            if (!sp.IsOpen)
+            {
+                //Assign desired settings to the serial port:
+                sp.PortName = portName;
+                sp.BaudRate = baudRate;
+                sp.DataBits = databits;
+                sp.Parity = parity;
+                sp.StopBits = stopBits;
+                //These timeouts are default and cannot be editted through the class at this point:
+                sp.ReadTimeout = 1000;
+                sp.WriteTimeout = 1000;
+
+                try
+                {
+                    sp.Open();
+                }
+                catch (Exception ex)
+                {
+                    frmMain.ShowDebugMSG(ex.ToString());
+                    return false;
+                }
+                modbusStatus = portName + " opened successfully";
+                return true;
+            }
+            else
+            {
+                modbusStatus = portName + " already opened";
+                return false;
+            }
+        }
         public bool Open(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
         {
             sp = Checksp(portName);
@@ -198,8 +232,8 @@ namespace Modbus
             return bResult;
         }
 
-        
-        private bool GetComDada(byte[] aMessage, ref byte[] aResponse,bool bLocksp=true)
+
+        private bool GetComDada(byte[] aMessage, ref byte[] aResponse, bool bLocksp = true)
         {
             if ((sp == null) || (!sp.IsOpen))
                 return false;
@@ -208,10 +242,10 @@ namespace Modbus
             {
                 lock (sp)
                 {
-                    bResult= GetComFreeData(aMessage,ref aResponse);
+                    bResult= GetComFreeData(aMessage, ref aResponse);
                 }
             }
-            else 
+            else
             {
                 bResult = GetComFreeData(aMessage, ref aResponse);
             }
@@ -248,7 +282,7 @@ namespace Modbus
             //Build outgoing modbus message:
             byte[] message = ModbusBase.BuildMSG3(aAddress, CommandType, aRegStart, aRegLength);
 
-            
+
             //Function 3 response buffer:
             //[11][01][05][CD][6B][B2][0E][1B] [CRC高] [CRC低]
             byte[] response = new byte[5 + (int)Math.Ceiling(aRegLength / 8.0)];
@@ -295,7 +329,7 @@ namespace Modbus
                 return false;
 
             //11.16捕捉PCS故障特加test
-            if (aAddress == 1 && aRegStart == Convert.ToInt32("001B", 16) && aRegLength == Convert.ToInt32("0004", 16) )
+            if (aAddress == 1 && aRegStart == Convert.ToInt32("001B", 16) && aRegLength == Convert.ToInt32("0004", 16))
             {
                 frmMain.Selffrm.AllEquipment.PCSList[0].WarnMessage = response;
             }
@@ -317,7 +351,7 @@ namespace Modbus
 
 
         #region //read 5 read 1 byte data
-        private bool Read5Response(byte aAddress, byte CommandType, ushort aRegAddr, bool aData, ref byte[] aResponse,bool bLocksp)
+        private bool Read5Response(byte aAddress, byte CommandType, ushort aRegAddr, bool aData, ref byte[] aResponse, bool bLocksp)
         {
             if ((sp == null) || (!sp.IsOpen))
             {
@@ -363,7 +397,7 @@ namespace Modbus
         /// <param name="aResponse"></param>
         /// <returns></returns>
         #region //write 6 write 1 short(for read 3 ) data
-        private bool Read6Response(byte aAddress, byte CommandType, ushort aRegAddr, byte[] aData, ref byte[] aResponse,bool bLocksp)
+        private bool Read6Response(byte aAddress, byte CommandType, ushort aRegAddr, byte[] aData, ref byte[] aResponse, bool bLocksp)
         {
             if ((sp == null) || (!sp.IsOpen))
             {
@@ -411,6 +445,10 @@ namespace Modbus
         private bool Read6Response(byte aAddress, byte CommandType, ushort aRegAddr, ushort aData, ref byte[] aResponse, bool bLocksp)
         {
 
+            /*            string Info = new StackTrace().ToString();
+                        log.Info(Info);*/
+
+
             if ((sp == null) || (!sp.IsOpen))
             {
                 modbusStatus = "Serial port not open";
@@ -426,8 +464,8 @@ namespace Modbus
             byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
 
             //验证消息
-/*            string hexString = BitConverter.ToString(message);
-            log.Error("发送Read6Response消息：" + hexString);*/
+            /*            string hexString = BitConverter.ToString(message);
+                        log.Info("发送Read6Response消息：" + hexString);*/
             //Function 6 response buffer:
             //[11][06][00][01][00][03] [CRC高] [CRC低]
             byte[] response = new byte[8];
@@ -436,6 +474,7 @@ namespace Modbus
             if (!GetComDada(message, ref response))
                 return false;
 
+            //log.Info("接收返回报文：" + response);
             //Evaluate message:
             if (ModbusBase.CheckResponse(response))
             {
@@ -631,8 +670,8 @@ namespace Modbus
                         iTemp = Convert.ToInt32("0x" + ResultData[0].ToString("x4") + ResultData[1].ToString("x4"), 16);
                 }
                 else if (ResultData.Length == 1)
-                    iTemp = ((Int16)(ResultData[0]));  
-                 aResult = iTemp * Coefficient;
+                    iTemp = ((Int16)(ResultData[0]));
+                aResult = iTemp * Coefficient;
                 return true;
             }
             else
@@ -772,7 +811,7 @@ namespace Modbus
 
         //5设置[11][05][00][AC][FF][00][CRC高][CRC低]
         #region Function send5 
-        public bool Send5MSG(byte aAddress, byte CommandType, ushort aRegStart, bool aData,bool bLocksp)//, ref byte[] values)
+        public bool Send5MSG(byte aAddress, byte CommandType, ushort aRegStart, bool aData, bool bLocksp)//, ref byte[] values)
         {
             byte[] response = null;
             if (!Read5Response(aAddress, CommandType, aRegStart, aData, ref response, bLocksp))
@@ -792,15 +831,15 @@ namespace Modbus
 
         //[11][06][00][01][00][03] [CRC高] [CRC低]
         #region Function send6MSG 
-        public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aData,bool bLocksp)//, ref byte[] values)
+        public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aData, bool bLocksp)//, ref byte[] values)
         {
             int count = 3;
             byte[] response = null;
-/*            if (!Read6Response(aAddress, CommandType, aRegStart, aData, ref response, bLocksp))
-            {
-                modbusStatus = "w6 error";
-                return false;
-            }*/
+            /*            if (!Read6Response(aAddress, CommandType, aRegStart, aData, ref response, bLocksp))
+                        {
+                            modbusStatus = "w6 error";
+                            return false;
+                        }*/
 
             while (!Read6Response(aAddress, CommandType, aRegStart, aData, ref response, bLocksp))
             {
@@ -809,7 +848,7 @@ namespace Modbus
                     modbusStatus = "w6 error";
                     return false;
                 }
-                count--;               
+                count--;
             }
             //[11][05][00][AC][FF][00][CRC高][CRC低]
             //返回数据转换，成功元数据返回，失败将不反悔
@@ -818,7 +857,7 @@ namespace Modbus
             //Return requested register values:
             // Array.Copy(response, 4, values, 0, 2);
 
-            
+
             modbusStatus = "write successful";
             return true;
         }
@@ -846,7 +885,7 @@ namespace Modbus
         #endregion
 
         #region Function 16 - Write Multiple Registers
-        public bool Send16MSG(byte aAddress, byte aCommandType, ushort aRegStart, ushort aRegLength, short[] values,bool bLocksp)
+        public bool Send16MSG(byte aAddress, byte aCommandType, ushort aRegStart, ushort aRegLength, short[] values, bool bLocksp)
         {
             //CommandType=16;
             //Ensure port is open:
@@ -867,7 +906,7 @@ namespace Modbus
             {
                 return false;
             }
-                
+
             //Evaluate message:
             if (ModbusBase.CheckResponse(response))
             {

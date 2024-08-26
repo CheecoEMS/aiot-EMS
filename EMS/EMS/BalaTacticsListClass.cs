@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.IO;
+using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
@@ -46,159 +47,57 @@ namespace EMS
         {
             Parent = aParent;
         }
-        ////获取当前策略的位置
-        //public int GetTacticsIndex(DateTime aTime)
-        //{
-        //    int iResult = -1;
-        //    DateTime aStartTime;
-        //    DateTime aEndTime;
-        //    string strDate = aTime.ToString("yyyy-M-d");
-        //    for (int i = 0; i < TacticsList.Count; i++)
-        //    {
-        //        aStartTime= Convert.ToDateTime(TacticsList[i].startTime.ToString(strDate + " H:m:s"));
-        //        aEndTime = Convert.ToDateTime(TacticsList[i].endTime.ToString(strDate + " H:m:s"));
-        //        if ((aTime>= aStartTime) &&(aTime<= aEndTime))
-        //        {
-        //            iResult = i;
-        //            break;
-        //        }
-        //    } 
-        //    return iResult; 
-        //}
-
-
-        /*        public void LoadJFPGFromSQL()
-                {
-                    MySqlConnection ctTemp = null;
-                    MySqlDataReader rd = DBConnection.GetData("select startTime, eName "
-                         + " from electrovalence ", ref ctTemp);
-                    try
-                    {
-                        byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                            0, 0 };//14*3=42    14个时段 ： 号 时 分
-                        int i = 0;
-                        DateTime dtTemp;
-                        while (rd.Read())
-                        {
-                            tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                            dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                            tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
-                            tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
-                            i++;
-                        }
-                        byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
-                        byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
-                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                        {
-                            frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
-                        }
-                        if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                            frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
-                    }
-                    catch { }
-                    finally
-                    {
-                        if (!rd.IsClosed)
-                            rd.Close();
-                        rd.Dispose();
-                        ctTemp.Close();
-                        ctTemp.Dispose();
-                    }
-                }*/
 
         //数据库中重新装载策略数据
         public void LoadFromMySQL()
         {
-            MySqlConnection ctTemp = null;
-            MySqlDataReader rd = null;
-/*            MySqlDataReader rd = DBConnection.GetData("select startTime,endTime"
-                 + " from balatactics  order by startTime", ref ctTemp);*/
+            string astrSQL = "select startTime,endTime from balatactics  order by startTime";
+
             try
             {
-                 rd = DBConnection.GetData("select startTime,endTime"
-                    + " from balatactics  order by startTime", ref ctTemp);
-                
-                lock (BalaTacticsList)
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
-                    //TacticsList.Clear();
-                    while (BalaTacticsList.Count > 0)
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        // WarningList[0].Dispose();
-                        //TacticsList[0].c
-                        BalaTacticsList.RemoveAt(0);
-                    }
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                lock (BalaTacticsList)
+                                {
+                                    while (BalaTacticsList.Count > 0)
+                                    {
+                                        BalaTacticsList.RemoveAt(0);
+                                    }
 
-                    while (rd.Read())
-                    {
-                        BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
-                        oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                        oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                    while (rd.Read())
+                                    {
+                                        BalaTacticsClass oneBalaTactics = new BalaTacticsClass();
+                                        oneBalaTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                                        oneBalaTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
 
-                        BalaTacticsList.Add(oneBalaTactics);
+                                        BalaTacticsList.Add(oneBalaTactics);
+                                    }                                
+                                }
+                            }
+                        }
                     }
                 }
+            }
+            catch (MySqlException ex)
+            {
+                log.Error(ex.Message);
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error(ex.Message);
             }
             finally
             {
-                if (rd != null)
-                {
-                    if (!rd.IsClosed)
-                        rd.Close();
-                    rd.Dispose();
-                }
-                if (ctTemp != null) 
-                {
-                    ctTemp.Close();
-                    ctTemp.Dispose();
-                }
+
             }
         }
-
-        /*        /// <summary>
-                /// 检查昨天的数据是否存在
-                /// </summary>
-                private bool CheckYesterdayProfit()
-                {
-                    //qiao
-                    return false;
-                }
-
-                /// <summary>
-                /// 获取昨天的电表数据
-                /// </summary> 
-                public void GetYesterdayData()
-                {
-                    //qiao
-                    try
-                    {
-                        if (CheckYesterdayProfit())
-                            return;
-                        // BeRequisitioned = true;
-                    }
-                    //设置电表为停止询问
-                    //头一次运行检车昨天的电表数据是否存在
-                    //profit
-                    //获取昨天的电表数据
-                    //计算成本
-                    //保存到数据库
-                    //如果没有就查询并保存昨天电表数据
-                    //2如果日期变化也读取昨日的数据
-                    //记录开始的电表等信息
-
-                    //设置电表为巡查模式
-                    catch { }
-                    finally
-                    {
-                        //BeRequisitioned = true;
-                    }
-                }*/
 
         static ulong SetCpuID(int lpIdx)
         {
@@ -221,11 +120,8 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(CheckBalaTactics);
                 ClientRecThread.IsBackground = true;
-                ulong LpId = SetCpuID(1);
-                SetThreadAffinityMask(GetCurrentThread(), new UIntPtr(LpId));
-                ClientRecThread.Start();
-                //8.4
                 ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Start();
             }
             catch
             {
@@ -235,8 +131,6 @@ namespace EMS
         //每分钟检查一次
         private void CheckBalaTactics()
         {
-
-            //log.Debug("Tactics 线程执行");
             DateTime now;
             BalaTacticsClass oneBalaTactics = null;
             int sleepCount = 1000;
@@ -245,7 +139,7 @@ namespace EMS
                 Thread.Sleep(sleepCount);
                 if (BalaTacticsList.Count == 0)
                     continue;
-                else if (!frmSet.UseBalaTactics)
+                else if (frmSet.config.UseBalaTactics == 0)
                 {
                     Thread.Sleep(60000);
                     continue;
