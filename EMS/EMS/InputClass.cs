@@ -1960,13 +1960,7 @@ namespace EMS
         {
             strCommandFile = "LiquidCool.txt";
         }
-        public void init_LiquidCool() //初始化
-        {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-            }
-        }
+
         //导入配置
         public bool ExecCommand()
         {
@@ -6139,7 +6133,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815release3.2";
+        public string EMSVersion { get; set; } = "EMS240815Develop1.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6705,7 +6699,13 @@ namespace EMS
         }
 
 
-
+        public void init_LiquidCool() //初始化
+        {
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+            }
+        }
 
 
         public void init_LED() //LED初始化
@@ -8425,7 +8425,7 @@ namespace EMS
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
                                         if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
-                                            frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                                            frmMain.Selffrm.AllEquipment.init_LiquidCool();
                                         }
                                     }
                                 }
