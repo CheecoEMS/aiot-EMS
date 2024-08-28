@@ -56,11 +56,8 @@ namespace EMS
         public Displaydelegate disp_delegate;
         private delegate void UpdateChart(Chart aOneChart, bool aCleanAllSeries);
 
-
-
-        //
-        public IEC104_delegate iec104_delegate = delegate_init; //
-        public static void delegate_init() { }
+        public IEC104_delegate iec104_delegate = abc;
+        public static void abc() { }
 
         //8.18
         //public ThreadPoolClass ThreadPool = new ThreadPoolClass();
@@ -72,6 +69,8 @@ namespace EMS
         public TCPClientClass TCPCloud = new TCPClientClass();
         public TCPServerClass TCPserver = new TCPServerClass();
         public CIEC104Slave   Slave104 = new CIEC104Slave();
+        //test 
+
         //private delegate void TCPserver.OnReceiveDataEventDelegate(int DataSourceType, byte[] aByteData);//建立事件委
 
         //12.5
@@ -104,7 +103,9 @@ namespace EMS
             Text = "EMS system";
 
             //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
-            TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+              TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+            //socketWrapper.OnReceiveDataEvent2 += new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+
             //tcp
             ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
 
@@ -356,11 +357,12 @@ namespace EMS
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
+                log.Warn("s00s)");
 
                 //读取配置文件
                 //frmSet.LoadSetInf();
 
-                //连接数据库
+                ////连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
 
@@ -489,11 +491,14 @@ namespace EMS
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
                     frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
-                    frmMain.Selffrm.Slave104.IEC104_Init();
+
 
                     //IEC104EVENT eventHandler = new IEC104EVENT();
                     //IEC104_delegate iec104_delegate = frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+
+
                     // frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+                    frmMain.Selffrm.Slave104.IEC104_Init();
                 }
 
                 //使用TCP/IP通讯方式

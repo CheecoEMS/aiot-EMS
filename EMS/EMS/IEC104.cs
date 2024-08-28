@@ -213,12 +213,12 @@ namespace IEC104
             //验证消息
             //string hexString = BitConverter.ToString(message);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
-            UInt16 temp = ((ushort)(TX_bytes[0] | (TX_bytes[1] << 8)));
-            temp += 2;
-            app.apci.TX_field1 = (byte)temp;
-            app.apci.TX_field2 = (byte)(temp >> 8);
-            Console.WriteLine($"总召唤确认 ++{temp:x}");
+            log.Warn("");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            
+
+            Record_Order(TX_bytes[0], TX_bytes[1]);
+
 
             //return message;
         }
@@ -259,8 +259,9 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("发送总召唤结束：" + hexString);
 
+            log.Warn("  ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
             Record_Order(TX_bytes[0], TX_bytes[1]);
             return message;
 
@@ -293,7 +294,7 @@ namespace IEC104
             message[4] = 0x02;
             message[5] = 0x00;
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
             return message;
 
         }
@@ -316,7 +317,8 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("U帧："+ hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+
             app.Isconnect = true;
         }
         /**************************获取发送序号*******************/
@@ -592,7 +594,9 @@ namespace IEC104
             //log.Debug("总无功功率:" + frmMain.Selffrm.AllEquipment.Elemeter2.AllNukva);
             //log.Debug("a对地电压:" + frmMain.Selffrm.AllEquipment.PCSList[0].aV);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message);
+            log.Warn(" ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message); log.Warn(" OK ");
+
             Record_Order(TX_bytes[0], TX_bytes[1]);
             //return message;
         }
@@ -720,8 +724,9 @@ namespace IEC104
             //验证消息
             string hexString = BitConverter.ToString(message);
             //log.Debug("发送遥信数据：" + hexString);
+            log.Warn("  ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
             Record_Order(TX_bytes[0], TX_bytes[1]);
             return message;
         }
@@ -754,7 +759,8 @@ namespace IEC104
             //log.Debug("发送遥调返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -866,7 +872,8 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调执行确认：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+
             Record_Order(TX_bytes[0], TX_bytes[1]);
             isYDACK[num] = 0;
 
@@ -890,7 +897,7 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调撤销确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -911,7 +918,7 @@ namespace IEC104
             isYKACK[num] = 0;
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -929,7 +936,7 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -950,7 +957,7 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调激活结束：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -982,7 +989,7 @@ namespace IEC104
             //log.Debug("发送遥控返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
         }
 
 
@@ -1043,7 +1050,7 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥控执行确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
             isYKACK[num] = 0;
             //log.Debug("eState:" + frmMain.Selffrm.AllEquipment.eState);
@@ -1127,7 +1134,7 @@ namespace IEC104
 
         static public void ReturnSoleYXData(byte function)
         {
-            if (app.Isconnect == false) return;
+           // if (app.Isconnect == false) return;
 
             int Index = 0;
             int count = 0;
@@ -1174,12 +1181,8 @@ namespace IEC104
             //PCS开关状态  0:停机 1：开机
             if (frmMain.Selffrm.AllEquipment.PCSList[0].Prepared == true) arr[4] = 0x01;
             else arr[4] = 0x00;
-
             if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) arr[5] = 0x01;
             else arr[5] = 0x00;
-
-
-
 
             Get_Rawdata(Convert.ToBoolean(arr[0]), ref app.YX_rawdata, ref count);        //储能事故总信号
             Get_Rawdata(Convert.ToBoolean(arr[1]), ref app.YX_rawdata, ref count);             //运行状态
@@ -1218,7 +1221,6 @@ namespace IEC104
                     }
                     dif_count++;
                 }
-
             }
 
             //数据修正
@@ -1227,28 +1229,31 @@ namespace IEC104
 
             Array.Resize(ref message, Index);
 
-            Console.WriteLine(string.Join("-", message));
 
             if (dif_count == 0) return;
-            IEC104Send_Event.Wait();
+            //IEC104Send_Event.Wait();
+            log.Warn(" 变换遥信  -- START ");
             if (frmMain.Selffrm.TCPserver.SendMsg_byte(message) == true)
             {
+                log.Warn(" 变换遥信 -- OK ");
                 Record_Order(app.apci.TX_field1, app.apci.TX_field2);
+                Console.WriteLine($"变化遥tiao  ++   :");
+                Console.WriteLine(string.Join("-", message));
             }
             else
             {
+                log.Warn(" 变换遥信 -- ERROR ");
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
                 app.apci.RX_field3 = 0;
                 app.apci.RX_field4 = 0;
                 app.Isconnect = false;
-
             }
 
         }
         static public void ReturnSoleYCData()
         {
-            if (app.Isconnect == false) return;
+            //if (app.Isconnect == false) return;
             /****************************************************/
             float PcsRun = 0;
             int Index = 0;
@@ -1351,13 +1356,20 @@ namespace IEC104
             message[7] = (byte)(dif_count);
             Array.Resize(ref message, Index);
 
-            IEC104Send_Event.Wait();
+            //IEC104Send_Event.Wait();
+            log.Warn(" 变换遥调 -- start ");
             if (frmMain.Selffrm.TCPserver.SendMsg_byte(message) == true)
             {
+                log.Warn(" 变换遥调 -- OK ");
                 Record_Order(app.apci.TX_field1, app.apci.TX_field2);
+                Console.WriteLine(string.Join("-", message));
+
+                Console.WriteLine($"变化遥测  ++   ");
+
             }
             else//连接戳五清空接收序号
             {
+                log.Warn(" 变换遥调 --ERROR ");
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
                 app.apci.RX_field3 = 0;
@@ -1374,14 +1386,17 @@ namespace IEC104
             temp += 2;
             app.apci.TX_field1 = (byte)temp;
             app.apci.TX_field2 = (byte)(temp >> 8);
-            Console.WriteLine($"变化遥测 ++{temp:x}");
+            //Console.WriteLine($"变化遥测 ++{temp:x}");
 
         }
 
         public void IEC104_PropertyChanged(IAsyncResult ar_104)
         {
+            DateTime startTime = DateTime.Now;
+            DateTime endTime;
+            Console.WriteLine("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
-            if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == false))
+          //  if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == false))
             {
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
@@ -1389,16 +1404,25 @@ namespace IEC104
                 app.apci.RX_field4 = 0;
                 app.Isconnect = false;
             }
+            endTime = DateTime.Now;
+            Console.WriteLine("$");
+            Console.WriteLine("$********* 变化 0 **********$" + (endTime - startTime).TotalSeconds);
             if (app.Isconnect == true)
             {
                 ReturnSoleYCData();
-                if (app.Isconnect != true) return;
-
+               // if (app.Isconnect != true) return;
+                endTime = DateTime.Now;
+                Console.WriteLine("$");
+                Console.WriteLine("$********* 变化 1 **********$" + (endTime - startTime).TotalSeconds);
                 ReturnSoleYXData(0x01);
-                if (app.Isconnect != true) return;
-
+               //if (app.Isconnect != true) return;
+                endTime = DateTime.Now;
+                Console.WriteLine("$");
+                Console.WriteLine("$********* 变化  2 **********$" + (endTime - startTime).TotalSeconds);
                 ReturnSoleYXData(0X1E);
-
+                endTime = DateTime.Now;
+                Console.WriteLine("$");
+                Console.WriteLine("$********* 变化 3 **********$" + (endTime - startTime).TotalSeconds);
                 Array.Copy(app.YX_rawdata, app.YX_perv_rawdata, app.YX_rawdata.Length);
                 Array.Copy(app.YC_rawdata, app.YC_perv_rawdata, app.YC_rawdata.Length);
             }

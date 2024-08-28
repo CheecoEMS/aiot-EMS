@@ -2002,9 +2002,7 @@ namespace EMS
             Set_Cloudlimits();
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
-                frmMain.Selffrm.AllEquipment.Led.SetButteryPercentOff();
                 frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
-
             }
             this.Close();
             frmMain.Selffrm.Close();
