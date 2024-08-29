@@ -154,7 +154,7 @@ namespace Modbus
 
         public void RequestSend()
         {
-            log.Warn(" 标记发送请求已发出  标记发送请求已发出 标记发送请求已发出 标记发送请求已发出 ");
+            //log.Warn(" 标记发送请求已发出  ");
             sendRequested = true; // 标记发送请求已发出
         }
         public bool Send(byte[] data)
@@ -210,7 +210,7 @@ namespace Modbus
                         }
                         if (sendRequested)
                         {
-                            log.Warn(" 退出循环，释放锁  Receive interrupted by Send request. 退出循环，释放锁");
+                            //log.Warn(" 退出循环，释放锁 ");
                             break; // 退出循环，释放锁
                         }
                     }
@@ -724,9 +724,9 @@ namespace Modbus
             {
                 try
                 {
-                    log.Warn("    **************     reveive   -- start   *************    " );
+                    //log.Warn("**************  reveive  -- start *************    " );
                     byte[] recdata = socketWrapper_2404.Receive();
-                    log.Warn("    **************     reveive   --ok   *************    ");
+                    //log.Warn("**************  reveive   --ok    *************    ");
                     if (recdata != null)
                     {
                         if (OnReceiveDataEvent2 != null)

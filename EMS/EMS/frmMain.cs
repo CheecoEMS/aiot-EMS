@@ -94,6 +94,11 @@ namespace EMS
         public TCPClientClass ModbusTcpClient = new TCPClientClass();
 
 
+        public DateTime receive_time_start ;
+        public DateTime receive_time_end ;
+        public DateTime receive_time_send;
+
+
         static public PID pid = new PID();
 
         public frmMain()
@@ -205,8 +210,8 @@ namespace EMS
         {
             //do+委托
             string hexString = BitConverter.ToString(msg);
+            receive_time_start = DateTime.Now;
             //"收到TCP消息：" + hexString
-
             Slave104.iec104_packet_parser(msg);
 
         }

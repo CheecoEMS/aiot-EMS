@@ -833,7 +833,9 @@ namespace IEC104
                             frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
                             frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
                         }
-
+                        log.Warn(" *****************  功率下发   *****************");
+                        log.Warn($"计划功率值  {input} ----策略预备执行动作 -{frmMain.Selffrm.AllEquipment.wTypeActive}--{frmMain.Selffrm.AllEquipment.PCSTypeActive}");
+                        log.Warn(" *****************  功率下发   *****************");
                     }
                     //log.Debug("写入功率值：" + input + "写入PCSScheduleKVA" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA);
                     break;
@@ -1253,7 +1255,9 @@ namespace IEC104
         }
         static public void ReturnSoleYCData()
         {
-            //if (app.Isconnect == false) return;
+            log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& start");
+
+            if (app.Isconnect == false) return;
             /****************************************************/
             float PcsRun = 0;
             int Index = 0;
@@ -1333,6 +1337,8 @@ namespace IEC104
                     //数据
                     Get_One_YC_Data(app.YC_rawdata[i], ref message, ref Index);
                     dif_count++;
+                    log.Warn("        点位 " + i);
+
                 }
 
             }
@@ -1357,10 +1363,14 @@ namespace IEC104
             Array.Resize(ref message, Index);
 
             //IEC104Send_Event.Wait();
-            log.Warn(" 变换遥调 -- start ");
+            log.Warn("        变换遥调 -- start ");
             if (frmMain.Selffrm.TCPserver.SendMsg_byte(message) == true)
             {
-                log.Warn(" 变换遥调 -- OK ");
+                frmMain.Selffrm.receive_time_send = DateTime .Now;
+
+                log.Warn($"        接收 - 发送  时间 ： {(frmMain.Selffrm.receive_time_send - frmMain.Selffrm.receive_time_start).TotalSeconds }    变换数值个数 ： {dif_count} ");
+                log.Warn("        变换遥调 -- end ");
+
                 Record_Order(app.apci.TX_field1, app.apci.TX_field2);
                 Console.WriteLine(string.Join("-", message));
 
@@ -1377,6 +1387,7 @@ namespace IEC104
                 app.Isconnect = false;
 
             }
+            log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& end");
 
         }
         //记录发送序号
@@ -1394,9 +1405,7 @@ namespace IEC104
         {
             DateTime startTime = DateTime.Now;
             DateTime endTime;
-            Console.WriteLine("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
-          //  if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == false))
+            if ((frmMain.Selffrm.TCPserver.GetConnectStatus() == false))
             {
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
@@ -1410,12 +1419,12 @@ namespace IEC104
             if (app.Isconnect == true)
             {
                 ReturnSoleYCData();
-               // if (app.Isconnect != true) return;
+               if (app.Isconnect != true) return;
                 endTime = DateTime.Now;
                 Console.WriteLine("$");
                 Console.WriteLine("$********* 变化 1 **********$" + (endTime - startTime).TotalSeconds);
                 ReturnSoleYXData(0x01);
-               //if (app.Isconnect != true) return;
+               if (app.Isconnect != true) return;
                 endTime = DateTime.Now;
                 Console.WriteLine("$");
                 Console.WriteLine("$********* 变化  2 **********$" + (endTime - startTime).TotalSeconds);
