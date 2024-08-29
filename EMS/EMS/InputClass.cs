@@ -1416,20 +1416,31 @@ namespace EMS
         }
 
 
-
         public void Led_Control_Loop()
         {
             {
+                int errorclass = 0;
                 //LED获取当前告警级别
-                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
-                else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_Error[2] = true; //三级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[2] = false;
+
+                if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
+                else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
+
+                errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.LedErrorState);
+                if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
 
                 //LED获取当前状态
                 if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
                 else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
 
                 //LED获取当前电量等级
-                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
+                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
+
+                log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}");
+
+                //frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
 
                 if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
                 {
@@ -1535,6 +1546,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.Prev_Led_ShowPowerLevel = frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel;
             }
         }
+
     }
 
     //pcs新增DSP2  11.27
