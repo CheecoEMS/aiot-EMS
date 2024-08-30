@@ -1337,7 +1337,7 @@ namespace IEC104
                     //数据
                     Get_One_YC_Data(app.YC_rawdata[i], ref message, ref Index);
                     dif_count++;
-                    log.Warn("        点位 " + i);
+                    //log.Warn("        点位 " + i);
 
                 }
 

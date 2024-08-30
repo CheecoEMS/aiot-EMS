@@ -362,8 +362,7 @@ namespace EMS
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
-                log.Warn("s00s)");
-
+                log.Warn("CHEECO-START");
                 //读取配置文件
                 //frmSet.LoadSetInf();
 
