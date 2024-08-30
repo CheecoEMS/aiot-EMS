@@ -114,6 +114,7 @@ namespace Modbus
         private readonly object socketLock = new object();
         public volatile int Max_Size = 1024;
         private volatile bool sendRequested = false;
+        private volatile bool Receive_Complete = true;
 
         public SocketWrapper(Socket socket)
         {
@@ -194,6 +195,8 @@ namespace Modbus
         public byte[] Receive()
         {
             byte[] buffer = new byte[Max_Size];
+            byte[] Rec_buffer = new byte[0];
+
             while (true)
             {
                 lock (socketLock)
@@ -205,10 +208,18 @@ namespace Modbus
                             int receiveNumber = socket.Receive(buffer);
                             if (receiveNumber > 0)
                             {
-                                return buffer.Take(receiveNumber).ToArray();
+                                if (Receive_CRC(buffer, receiveNumber) == true)
+                                {
+                                    return Rec_buffer.Concat(buffer.Take(receiveNumber)).ToArray();
+                                    //return buffer.Take(receiveNumber).ToArray();
+                                }
+                                else 
+                                {
+                                    Rec_buffer.Concat(buffer.Take(receiveNumber)).ToArray();
+                                }
                             }
                         }
-                        if (sendRequested)
+                        if (sendRequested && Receive_Complete)
                         {
                             //log.Warn(" 退出循环，释放锁 ");
                             break; // 退出循环，释放锁
@@ -223,6 +234,41 @@ namespace Modbus
             }
             return null; // 如果循环结束且没有数据，返回 null
         }
+
+
+        public bool Receive_CRC(byte[] buffer, int receiveNumber)
+        {
+            int num = 0;
+            int all_num = 0;
+            int num_s = 0;
+            int num_I = 0;
+            int ii = 0;
+            for (int i = 0; all_num < receiveNumber; i++)
+            {
+                num = buffer[all_num + 1];
+                switch (num)
+                {
+                    case 4:  num_s++; break;
+                    default: num_I++; break;
+                }
+                all_num += num + 2;
+                ii = i;
+            }
+            if (all_num == receiveNumber)
+            {
+                Receive_Complete = true;
+                log.Warn($"all : {all_num} 报文数量: {ii+1} S_num: {num_s} other_num: {num_I}");
+                return true;
+            }
+            else
+            {
+                Receive_Complete = false;
+                log.Warn($"ERROR");
+                return false;
+            }
+        }
+
+
         public byte[] Receive_NonBlock()
         {
             byte[] buffer = new byte[Max_Size];
