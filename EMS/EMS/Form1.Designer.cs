@@ -83,7 +83,6 @@ namespace EMS
             this.label7 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.vpbSOC = new EMS.VProgressBar(this.components);
             this.labSOC = new System.Windows.Forms.Label();
             this.labACState = new System.Windows.Forms.Label();
             this.labPCSuKW = new System.Windows.Forms.Label();
@@ -98,6 +97,7 @@ namespace EMS
             this.ctMain = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panel8 = new System.Windows.Forms.Panel();
             this.pictureBox5 = new System.Windows.Forms.PictureBox();
+            this.vpbSOC = new EMS.VProgressBar(this.components);
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.pnButtonTop.SuspendLayout();
@@ -548,7 +548,7 @@ namespace EMS
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label10.ForeColor = System.Drawing.Color.Silver;
-            this.label10.Location = new System.Drawing.Point(30, 315);
+            this.label10.Location = new System.Drawing.Point(29, 269);
             this.label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(74, 21);
@@ -572,7 +572,7 @@ namespace EMS
             this.labE.AutoSize = true;
             this.labE.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.labE.ForeColor = System.Drawing.Color.Silver;
-            this.labE.Location = new System.Drawing.Point(30, 266);
+            this.labE.Location = new System.Drawing.Point(29, 315);
             this.labE.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labE.Name = "labE";
             this.labE.Size = new System.Drawing.Size(74, 21);
@@ -740,17 +740,6 @@ namespace EMS
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(538, 209);
             this.panel4.TabIndex = 75;
-            // 
-            // vpbSOC
-            // 
-            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
-            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
-            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
-            this.vpbSOC.Name = "vpbSOC";
-            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
-            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.vpbSOC.TabIndex = 84;
-            this.vpbSOC.Value = 50;
             // 
             // labSOC
             // 
@@ -926,6 +915,17 @@ namespace EMS
             this.pictureBox5.Size = new System.Drawing.Size(32, 30);
             this.pictureBox5.TabIndex = 0;
             this.pictureBox5.TabStop = false;
+            // 
+            // vpbSOC
+            // 
+            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
+            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
+            this.vpbSOC.Name = "vpbSOC";
+            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
+            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.vpbSOC.TabIndex = 84;
+            this.vpbSOC.Value = 50;
             // 
             // frmMain
             // 

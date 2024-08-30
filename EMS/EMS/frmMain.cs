@@ -397,7 +397,7 @@ namespace EMS
                 //初始化液冷机
                 if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                 {
-                    frmMain.Selffrm.AllEquipment.LiquidCool.init_LiquidCool();
+                    frmMain.Selffrm.AllEquipment.init_LiquidCool();
                 }
 
 
