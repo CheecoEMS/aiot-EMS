@@ -2237,12 +2237,6 @@ namespace EMS
             frmMain.Selffrm.AllEquipment.BMS.PowerOn(true);
         }
 
-        private void btnBMSClose_Click(object sender, EventArgs e)
-        {
-            //关闭预充
-            frmMain.Selffrm.AllEquipment.BMS.PowerOn(false);
-        }
-
 
         /*********** 策略更新处理函数  ****************/
         private void RenewTactics()

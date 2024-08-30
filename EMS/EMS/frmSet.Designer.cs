@@ -227,7 +227,6 @@ namespace EMS
             this.label97 = new System.Windows.Forms.Label();
             this.label98 = new System.Windows.Forms.Label();
             this.tneBMSwaValue = new EMS.TouchNumberEdit(this.components);
-            this.btnBMSClose = new System.Windows.Forms.Button();
             this.btnBMSOn = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tcbFenMode = new EMS.TouchCombox(this.components);
@@ -2742,7 +2741,6 @@ namespace EMS
             this.groupBox6.Controls.Add(this.label97);
             this.groupBox6.Controls.Add(this.label98);
             this.groupBox6.Controls.Add(this.tneBMSwaValue);
-            this.groupBox6.Controls.Add(this.btnBMSClose);
             this.groupBox6.Controls.Add(this.btnBMSOn);
             this.groupBox6.ForeColor = System.Drawing.Color.White;
             this.groupBox6.Location = new System.Drawing.Point(12, 8);
@@ -2759,7 +2757,7 @@ namespace EMS
             this.btnBMSRead.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnBMSRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBMSRead.ForeColor = System.Drawing.Color.White;
-            this.btnBMSRead.Location = new System.Drawing.Point(438, 19);
+            this.btnBMSRead.Location = new System.Drawing.Point(528, 21);
             this.btnBMSRead.Name = "btnBMSRead";
             this.btnBMSRead.Size = new System.Drawing.Size(88, 44);
             this.btnBMSRead.TabIndex = 74;
@@ -3008,7 +3006,7 @@ namespace EMS
             this.btnBMSRun.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnBMSRun.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBMSRun.ForeColor = System.Drawing.Color.White;
-            this.btnBMSRun.Location = new System.Drawing.Point(528, 19);
+            this.btnBMSRun.Location = new System.Drawing.Point(618, 21);
             this.btnBMSRun.Name = "btnBMSRun";
             this.btnBMSRun.Size = new System.Drawing.Size(88, 44);
             this.btnBMSRun.TabIndex = 55;
@@ -3055,21 +3053,6 @@ namespace EMS
             this.tneBMSwaValue.Value = 0;
             this.tneBMSwaValue.ValueStep = 1;
             // 
-            // btnBMSClose
-            // 
-            this.btnBMSClose.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSClose.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBMSClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBMSClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBMSClose.ForeColor = System.Drawing.Color.White;
-            this.btnBMSClose.Location = new System.Drawing.Point(708, 21);
-            this.btnBMSClose.Name = "btnBMSClose";
-            this.btnBMSClose.Size = new System.Drawing.Size(88, 44);
-            this.btnBMSClose.TabIndex = 28;
-            this.btnBMSClose.Text = "关闭";
-            this.btnBMSClose.UseVisualStyleBackColor = true;
-            this.btnBMSClose.Click += new System.EventHandler(this.btnBMSClose_Click);
-            // 
             // btnBMSOn
             // 
             this.btnBMSOn.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
@@ -3077,7 +3060,7 @@ namespace EMS
             this.btnBMSOn.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
             this.btnBMSOn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBMSOn.ForeColor = System.Drawing.Color.White;
-            this.btnBMSOn.Location = new System.Drawing.Point(618, 19);
+            this.btnBMSOn.Location = new System.Drawing.Point(708, 21);
             this.btnBMSOn.Name = "btnBMSOn";
             this.btnBMSOn.Size = new System.Drawing.Size(88, 44);
             this.btnBMSOn.TabIndex = 27;
@@ -4832,7 +4815,6 @@ namespace EMS
         private System.Windows.Forms.Label label97;
         private System.Windows.Forms.Label label98;
         private TouchNumberEdit tneBMSwaValue;
-        private System.Windows.Forms.Button btnBMSClose;
         private System.Windows.Forms.Button btnBMSOn;
         private TouchCombox tcbGPIO;
         private System.Windows.Forms.Label label99;

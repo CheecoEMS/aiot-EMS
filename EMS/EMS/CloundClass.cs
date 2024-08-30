@@ -233,6 +233,16 @@ namespace EMS
             return null;
         }
 
+        public void ListernAllTopic()
+        {
+            ListenTopic(PriceTopic + "request");
+            ListenTopic(TacticTopic + "request");
+            ListenTopic(EMSLimitTopic + "request");
+            ListenTopic(AIOTTableTopic + "request");
+            ListenTopic(BalaTableTopic + "request");
+            ListenTopic(HeartbeatTopic);
+            ListenTopic(UploadTopic + "request");
+        }
 
         // 建立MQTT连接
         public void mqttConnect()
@@ -240,13 +250,7 @@ namespace EMS
             try
             {
                 CreateClient();
-                ListenTopic(PriceTopic + "request");
-                ListenTopic(TacticTopic + "request");
-                ListenTopic(EMSLimitTopic + "request");
-                ListenTopic(AIOTTableTopic + "request");
-                ListenTopic(BalaTableTopic + "request");
-				ListenTopic(HeartbeatTopic);
-                ListenTopic(UploadTopic + "request");
+                ListernAllTopic();
                 FirstRun = true;
                 SendAgain = true;
             }
@@ -274,12 +278,7 @@ namespace EMS
                     }
 
                     CreateClient();
-                    ListenTopic(PriceTopic + "request");
-                    ListenTopic(TacticTopic + "request");
-                    ListenTopic(EMSLimitTopic + "request");
-                    ListenTopic(AIOTTableTopic + "request");
-                    ListenTopic(BalaTableTopic + "request");
-                    ListenTopic(HeartbeatTopic);
+                    ListernAllTopic();
 
                     // 重新启动定时器
                     InitializePublish_Timer();
