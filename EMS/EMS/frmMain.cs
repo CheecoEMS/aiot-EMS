@@ -638,7 +638,7 @@ namespace EMS
                 frmSet.historyDatas.ClientPUMdemandMax = 0;
                 frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
 
-                frmSet.LoadHistoryDataFromMySQL();
+                frmSet.Set_HistoryData();
                 frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
             }
 
