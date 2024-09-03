@@ -152,7 +152,11 @@ namespace Modbus
                 log.Error("DestorySocket: " + ex.Message);
             }
         }
-
+        public void RequestLock()
+        {
+            //log.Warn(" 标记发送请求已发出  ");
+            sendRequested = true; // 标记发送请求已发出
+        }
         public void RequestSend()
         {
             //log.Warn(" 标记发送请求已发出  ");
@@ -530,6 +534,10 @@ namespace Modbus
             {
                 log.Warn("socketCTS_2404  ----  Close");
                 socketCTS_2404.CloseCTS(); // 请求取消当前的接收数据操作  
+                if (socketWrapper_2404 != null)
+                {
+                    socketWrapper_2404.RequestLock();
+                }
                 WaitThreadEnd(Receive2404Thread);// 等待接收线程终止
             }
 
@@ -770,9 +778,9 @@ namespace Modbus
             {
                 try
                 {
-                    //log.Warn("**************  reveive  -- start *************    " );
+                    log.Warn(" reveive  -- start     " );
                     byte[] recdata = socketWrapper_2404.Receive();
-                    //log.Warn("**************  reveive   --ok    *************    ");
+                    log.Warn(" reveive  -- start     ");
                     if (recdata != null)
                     {
                         if (OnReceiveDataEvent2 != null)
