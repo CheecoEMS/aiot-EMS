@@ -3503,6 +3503,7 @@ namespace EMS
         public string SoftwareVersion { get; set; }
         public string HardwareVersion { get; set; }
 
+        public int test = 0 ;
 
 
         public PCSClass(int aPCS)
@@ -4203,6 +4204,27 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.runState = 1;//设置运行状态为故障
                 }
             }
+
+            //设备掉电ems告警 
+//            if (aV < 10 && bV < 10 && cV < 10 && hz!= 0)
+            if(test == 1)
+            {
+                //判断条件 要在明确一下
+                if (frmMain.Selffrm.AllEquipment.GridKVA > 7)  //判断是并网柜侧断电还是客户侧断电
+                {
+                    Parent.EMSError[3] |= 0x04;  //并网柜侧断电
+                }
+                else
+                {
+                    Parent.EMSError[3] |= 0x08;  //客户侧断电
+                }
+            }
+            else 
+            {
+                Parent.EMSError[3] &= 0xFFF3;   //将并网柜侧以及客户侧断电掉电告警清除
+            }
+
+
 
 
             //处理故障
