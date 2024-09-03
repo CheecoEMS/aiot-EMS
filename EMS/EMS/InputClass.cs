@@ -964,7 +964,7 @@ namespace EMS
 
             Parent.Fault2Cloud.timestamp = dtTemp;
             Parent.Fault2Cloud.iotCode = aeID;
-            Parent.Fault2Cloud.faultCode = "E00021";// "E" + aWaringID.ToString();
+            Parent.Fault2Cloud.faultCode = "E00021";
             Parent.Fault2Cloud.faultLevel = awLevels;
             Parent.Fault2Cloud.faultName = awClass+ aWarning+"("+aWaringID.ToString()+")";
 
@@ -992,19 +992,12 @@ namespace EMS
                         dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + awClass + "','" + aeID + "','" +
                          aWaringID.ToString() + "','" + awLevels.ToString() + "','" + aWarning + "')");
                     Parent.Fault2Cloud.faultBack = false;
-                    //设置故障指示灯 qiao
+                    //设置故障指示灯
                     if (awLevels == 3)
                     {
                         lock (Parent.ErrorState)
                         {
                             Parent.ErrorState[2] = true;
-                            //Parent.LedErrorState[2] = true;
-
-                            //powerOff
-                            //frmSet.PCSMOff();
-
-                            //取消蜂鸣器
-                            //SysIO.SetGPIOState(11, 0);
                         }
                     }
                     if (awLevels == 2)
@@ -2332,7 +2325,7 @@ namespace EMS
         {
             //基本信息
             DBConnection.ExecSQL("INSERT INTO LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
-                + "InwaterPressure,OutwaterPressure,Error1，Error2)VALUES ('"
+                + "InwaterPressure,OutwaterPressure,Error1,Error2)VALUES ('"
                 + arDate + "','"
                 + state.ToString() + "','"
                 + OutwaterTemp.ToString() + "','"
@@ -2478,8 +2471,6 @@ namespace EMS
                 {
                     if (tempError)
                     {
-                        //SysIO.SetGPIOState(11, 0);
-                        //frmSet.PCSMOff(); 
                         frmSet.Err3off();
                         lock (Parent.ErrorState)
                         {
@@ -2523,19 +2514,13 @@ namespace EMS
                     TempData = Math.Round(float.Parse(strTemp), 3); //温度
                     if (TempData > 40)
                     {
-                        //9.11 添加注释:取消温度传感器
-                        //tempError = true; 
-
-
                         //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过高");
                     }
                     if (tempError != IsError[0])
                     {
                         if (tempError)
                         {
-                            //frmSet.PCSMOff();
                             frmSet.Err3off();
-                            //SysIO.SetGPIOState(11, 0);
                             lock (Parent.ErrorState)
                             {
                                 Parent.ErrorState[2] = true;
@@ -2549,8 +2534,6 @@ namespace EMS
                         else
                             Parent.EMSError[1] &= 0xFFDF;
 
-                        // RecodError("温湿度传感器", iot_code, 17, ErrorClass.EMSErrorsPower[17],
-                        //     ErrorClass.EMSErrors[17], tempError);
                         IsError[0] = tempError;
                     }
                 }
@@ -2561,7 +2544,6 @@ namespace EMS
                     if (TempData <0)
                     {
                         tempError = true;
-                        //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过低");
                     }
                     if (tempError != IsError[1])
                     {
@@ -2583,8 +2565,6 @@ namespace EMS
                         else
                             Parent.EMSError[1] &= 0xFEFF;
 
-                        // RecodError("温湿度传感器", iot_code, 17, ErrorClass.EMSErrorsPower[17],
-                        //     ErrorClass.EMSErrors[17], tempError);
                         IsError[1] = tempError;
                     }
                 }
@@ -8451,6 +8431,8 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
+                                        
+                                        
                                         if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
                                             frmMain.Selffrm.AllEquipment.init_LiquidCool();
