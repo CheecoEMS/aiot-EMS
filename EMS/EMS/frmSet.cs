@@ -31,8 +31,6 @@ namespace EMS
         public volatile static VariChargeClass variCharge = new VariChargeClass();
         public volatile static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
         public volatile static HistoryDataClass historyDatas = new HistoryDataClass();
-        public volatile static string DataBaseVersion = "";//数据库版本号
-        public static string EMSneedDataBaseVersion = "0815";//EMS对应数据库版本号
 
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
@@ -125,86 +123,6 @@ namespace EMS
         }
 
         /***********************************************************************************************************************/
-
-        /*********************************************
-         * 
-         *          DataBaseVersion
-         * 
-         ********************************************/
-
-        public static bool LoadDataBaseVersionFromMySQL()
-        {
-            bool result = false;
-            string astrSQL = "SELECT Version FROM DataBaseVersion;";
-
-            try
-            {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                    {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                DataBaseVersion = rd.IsDBNull(0) ? "001" : rd.GetString(0);
-                                result = true;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
-                result = false;
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message);
-                result = false;
-            }
-            finally
-            {
-
-
-            }
-            return result;
-
-        }
-
-        public static bool Set_DataBaseVersion()
-        {
-            string astrSQL = "update  DataBaseVersion  SET "
-                + " Version ='" + frmSet.EMSneedDataBaseVersion
-                + "';";
-
-            bool result = false;
-
-            try
-            {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 处理异常情况
-                result = false;
-                log.Error(ex.Message);
-            }
-            return result;
-        }
-
-
 
         /*********************************************
          * 

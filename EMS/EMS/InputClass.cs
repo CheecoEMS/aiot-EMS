@@ -8174,20 +8174,8 @@ namespace EMS
                         //如果主机是单机  
                         if (frmSet.config.SysCount == 1)
                         {
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-
-                                //记录客户当月最大需量
-                                frmSet.Set_Cloudlimits();
-                            }
-
-                            //限制客户当月最大需量低于100时，不进行充放
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
+                            //记录需量
+                            RecordPUM();
 
                             //单机防逆流
                             SingleReflux();
@@ -8195,21 +8183,9 @@ namespace EMS
                         else
                         {
                             AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
-                                                     
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                //记录客户当月最大需量
-                                frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
-                                frmSet.Set_HistoryData();
-                            }
 
-                            //限制客户当月最大需量低于100时，不进行充放
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
+                            //记录需量
+                            RecordPUM();
 
                             //多机防逆流
                             MutiReflux();
@@ -8222,7 +8198,29 @@ namespace EMS
                 }
             }
         }
+
+        private void RecordPUM()
+        {
+            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+            if (Client_PUMdemand_now > Client_PUMdemand_Max)
+            {
+                Client_PUMdemand_Max = Client_PUMdemand_now;
+                //记录客户当月最大需量
+                frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
+                frmSet.Set_HistoryData();
+            }
+
+/*            //限制客户当月最大需量低于100时，不进行充放
+            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
+            {
+                continue;
+            }*/
+        }
+
+
+        
         //Com2 readThread2
+
 
         public void AutoReadDataCom2()
         {
@@ -8545,7 +8543,8 @@ namespace EMS
 
                    // Console.WriteLine("*");
                     //Console.WriteLine("#********* IEC104***  end   **** IEC104**********#" + (endTime - startTime).TotalSeconds);
-                    //PCS的DSP2 11.27
+                    //PCS的
+                    //2 11.27
                     if (DSP2 != null)
                     {
                         DSP2.GetDataFromEqipment();

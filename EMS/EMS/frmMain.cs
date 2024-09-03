@@ -363,27 +363,16 @@ namespace EMS
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
                 log.Warn("CHEECO-START");
-                //读取配置文件
-                //frmSet.LoadSetInf();
 
                 ////连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
-
-                //判断数据库版本
-                frmSet.LoadDataBaseVersionFromMySQL();
-                if (frmSet.DataBaseVersion != frmSet.EMSneedDataBaseVersion)
-                {
-                    //对齐数据库
-                    DBConnection.CheckTables();
-                    //更新数据库版本号
-                    frmSet.Set_DataBaseVersion();
-                }
-
+                DBConnection.CheckTables();
                 frmSet.LoadCloudLimitsFromMySQL();
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
+
                 //获取历史需量
                 if (frmSet.config.IsMaster == 1)
                 {
