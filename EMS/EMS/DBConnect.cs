@@ -1930,6 +1930,12 @@ namespace EMS
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
                         new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" }
                     }
+                },
+                {
+                    "DataBaseVersion", new List<Column>
+                    {
+                        new Column { Name = "Version", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "数据库版本"}
+                    }
                 }
                 // Add more tables as needed
             };

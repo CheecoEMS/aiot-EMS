@@ -370,7 +370,16 @@ namespace EMS
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
 
-                DBConnection.CheckTables();
+                //判断数据库版本
+                frmSet.LoadDataBaseVersionFromMySQL();
+                if (frmSet.DataBaseVersion != frmSet.EMSneedDataBaseVersion)
+                {
+                    //对齐数据库
+                    DBConnection.CheckTables();
+                    //更新数据库版本号
+                    frmSet.Set_DataBaseVersion();
+                }
+
                 frmSet.LoadCloudLimitsFromMySQL();
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
