@@ -1973,12 +1973,7 @@ namespace EMS
         {
             strCommandFile = "LiquidCool.txt";
         }
-        public void init_LiquidCool() //初始化
-        {
-            {
-                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-            }
-        }
+
         //导入配置
         public bool ExecCommand()
         {
@@ -2033,6 +2028,19 @@ namespace EMS
                     SetSysData(25, 0xff00, true);//01/05 
                 }*/
 
+
+        public void GetOutwaterTempFromEquipment_Heartbeat()
+        {
+            string strData = "";
+            string strTemp = "";
+            bool bPrepared = false;
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                GetSysData(25, ref strData);
+                log.Warn("液冷机:  " + strData);
+                OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
+            }
+        }
 
         public void GetSetDataFromEquipment()
         {
@@ -6433,6 +6441,7 @@ namespace EMS
                                 if (frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                                 {
                                     frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                                    frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
                                 }
                             }
 
@@ -6742,7 +6751,6 @@ namespace EMS
 
         public void init_LiquidCool() //初始化
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
             {
                 frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
             }
