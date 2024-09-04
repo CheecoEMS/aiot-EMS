@@ -767,45 +767,6 @@ namespace EMS
             return columns;
         }
 
-        /*        private static List<Column> GetTableColumns(string tableName)
-                {
-                    // 首先获取表的列信息
-                    string query = $"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY FROM information_schema.columns WHERE table_schema = 'emsdata' AND table_name = '{tableName}';";
-                    MySqlCommand cmd = new MySqlCommand(query, connection);
-                    MySqlDataReader reader = cmd.ExecuteReader();
-
-                    List<Column> columns = new List<Column>();
-                    while (reader.Read())
-                    {
-                        columns.Add(new Column
-                        {
-                            Name = reader.GetString("COLUMN_NAME"),
-                            Type = reader.GetString("COLUMN_TYPE"),
-                            IsNullable = reader.GetString("IS_NULLABLE") == "YES",
-                            Key = reader.GetString("COLUMN_KEY") == "PRI" ? "PRIMARY KEY" : string.Empty
-                        });
-                    }
-                    reader.Close();
-
-                    // 检查哪些列是 AUTO_INCREMENT
-                    string autoIncrementQuery = $"SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = 'emsdata' AND table_name = '{tableName}' AND EXTRA LIKE '%auto_increment%';";
-                    MySqlCommand autoIncrementCmd = new MySqlCommand(autoIncrementQuery, connection);
-                    reader = autoIncrementCmd.ExecuteReader();
-
-                    while (reader.Read())
-                    {
-                        string columnName = reader.GetString("COLUMN_NAME");
-                        var column = columns.FirstOrDefault(c => c.Name == columnName);
-                        if (column != null)
-                        {
-                            column.Key += " AUTO_INCREMENT";
-                        }
-                    }
-                    reader.Close();
-
-                    return columns;
-                }*/
-
         public static void CreateTable(string tableName, List<Column> columns)
         {
             // 基础的 CREATE TABLE 语句

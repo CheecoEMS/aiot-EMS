@@ -1,37 +1,15 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using log4net;
-using log4net.Util;
+﻿using log4net;
 using Modbus;
 using MySql.Data.MySqlClient;
-using Mysqlx;
-using Mysqlx.Crud;
-using Mysqlx.Prepare;
-using Org.BouncyCastle.Asn1.Crmf;
-using Org.BouncyCastle.Bcpg;
 using System;
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
-using System.Transactions;
 using System.Windows.Forms;
-using static Mysqlx.Expect.Open.Types.Condition.Types;
-using static System.Collections.Specialized.BitVector32;
-using System.Net.Sockets;
-using Org.BouncyCastle.Crypto;
-using MySqlX.XDevAPI.Common;
-using System.Collections.Concurrent;
-using System.Drawing.Imaging;
-using System.Threading.Tasks;
-using MySqlX.XDevAPI;
-using System.Windows.Forms.DataVisualization.Charting;
-using static IEC104.CIEC104Slave;
 
 namespace EMS
 {
