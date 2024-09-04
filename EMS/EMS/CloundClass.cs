@@ -6,21 +6,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Forms;
 using Modbus;
 using System.Threading;
 using log4net;
-using System.Diagnostics;
-//2.21
 using System.Runtime.InteropServices;
-using MySqlX.XDevAPI.Common;
-using Mysqlx.Session;
-using Mysqlx.Crud;
-using System.Drawing;
-using System.Runtime.InteropServices.ComTypes;
-using System.Threading.Tasks;
 using M2Mqtt.Exceptions;
-using System.Text;
 
 namespace EMS
 {

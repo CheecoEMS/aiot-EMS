@@ -8,13 +8,6 @@ using System.Windows.Forms;
 using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 using log4net;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Net;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using static IEC104.CIEC104Slave;
 
 //351200 
@@ -363,18 +356,16 @@ namespace EMS
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
                 log.Warn("CHEECO-START");
-                //读取配置文件
-                //frmSet.LoadSetInf();
 
                 ////连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
-
                 DBConnection.CheckTables();
                 frmSet.LoadCloudLimitsFromMySQL();
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
+
                 //获取历史需量
                 if (frmSet.config.IsMaster == 1)
                 {
@@ -634,7 +625,7 @@ namespace EMS
                 frmSet.historyDatas.ClientPUMdemandMax = 0;
                 frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
 
-                frmSet.LoadHistoryDataFromMySQL();
+                frmSet.Set_HistoryData();
                 frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
             }
 
@@ -774,106 +765,105 @@ namespace EMS
 
         static void UI_timerCallback(Object state)
         {
-            Task.Run(() =>
+
+            // 和页面按钮有关
+            if (!frmMain.Selffrm.BeFoused)
+                return;
+
+            // 单个数据
+            if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
             {
-                // 和页面按钮有关
-                if (!frmMain.Selffrm.BeFoused)
-                    return;
-
-                // 单个数据
-                if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+                string strCap = "手动";
+                if (TacticsList.TacticsOn)
                 {
-                    string strCap = "手动";
-                    if (TacticsList.TacticsOn)
-                    {
-                        strCap = "策略";
-                    }
-                    else if (frmSet.config.PCSGridModel == 1)
-                    {
-                        strCap = "离网";
-                    }
-                    else if (frmSet.config.SysMode == 2)
-                    {
-                        strCap = "网控";
-                    }
-
-                    double allUkva = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva;
-                    string stateText, powerText;
-                    if (allUkva > 0.5)
-                    {
-                        stateText = strCap + "放电";
-                        powerText = allUkva.ToString("F1") + "kw";
-                    }
-                    else if (allUkva < -0.5)
-                    {
-                        stateText = strCap + "充电";
-                        powerText = allUkva.ToString("F1") + "kw";
-                    }
-                    else
-                    {
-                        stateText = strCap + "待机";
-                        powerText = "0.0kw";
-                    }
-
-                    if (frmMain.Selffrm.labState.IsHandleCreated && frmMain.Selffrm.labPCSuKW.IsHandleCreated)
-                    {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labState.Text = stateText;
-                            frmMain.Selffrm.labPCSuKW.Text = powerText;
-                        }));
-                    }
+                    strCap = "策略";
+                }
+                else if (frmSet.config.PCSGridModel == 1)
+                {
+                    strCap = "离网";
+                }
+                else if (frmSet.config.SysMode == 2)
+                {
+                    strCap = "网控";
                 }
 
-                // 温度
-                if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                double allUkva = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva;
+                string stateText, powerText;
+                if (allUkva > 0.5)
                 {
-                    double indoorTemp = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp;
-                    if (frmMain.Selffrm.labACState.IsHandleCreated)
-                    {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labACState.Text = indoorTemp.ToString() + "℃";
-                        }));
-                    }
+                    stateText = strCap + "放电";
+                    powerText = allUkva.ToString("F1") + "kw";
+                }
+                else if (allUkva < -0.5)
+                {
+                    stateText = strCap + "充电";
+                    powerText = allUkva.ToString("F1") + "kw";
+                }
+                else
+                {
+                    stateText = strCap + "待机";
+                    powerText = "0.0kw";
                 }
 
-                // SOC
-                double BMSSOC = frmMain.Selffrm.AllEquipment.BMSSOC;
-                if (frmMain.Selffrm.labSOC.IsHandleCreated && frmMain.Selffrm.vpbSOC.IsHandleCreated)
+                if (frmMain.Selffrm.labState.IsHandleCreated && frmMain.Selffrm.labPCSuKW.IsHandleCreated)
                 {
                     frmMain.Selffrm.Invoke((Action)(() =>
                     {
-                        frmMain.Selffrm.labSOC.Text = BMSSOC.ToString() + "%";
-                        frmMain.Selffrm.vpbSOC.Value = (int)BMSSOC;
+                        frmMain.Selffrm.labState.Text = stateText;
+                        frmMain.Selffrm.labPCSuKW.Text = powerText;
                     }));
                 }
+            }
 
-                // 电表数据
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            // 温度
+            if (frmMain.Selffrm.AllEquipment.TempControl != null)
+            {
+                double indoorTemp = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp;
+                if (frmMain.Selffrm.labACState.IsHandleCreated)
                 {
-                    double GridKVA = frmMain.Selffrm.AllEquipment.GridKVA;
-                    double PCSOKWH = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
-                    double PCSPKWH = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
-                    double E2OKWH = frmMain.Selffrm.AllEquipment.E2OKWH[0];
-                    double E2PKWH = frmMain.Selffrm.AllEquipment.E2PKWH[0];
-                    if (frmMain.Selffrm.labGridkva.IsHandleCreated &&
-                        frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                    frmMain.Selffrm.Invoke((Action)(() =>
                     {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labGridkva.Text = GridKVA.ToString("F3");
-                            frmMain.Selffrm.labPCSOKWH.Text = PCSOKWH.ToString("F3");
-                            frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
-                            frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
-                            frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
-                        }));
-                    }
+                        frmMain.Selffrm.labACState.Text = indoorTemp.ToString() + "℃";
+                    }));
                 }
-            });
+            }
+
+            // SOC
+            double BMSSOC = frmMain.Selffrm.AllEquipment.BMSSOC;
+            if (frmMain.Selffrm.labSOC.IsHandleCreated && frmMain.Selffrm.vpbSOC.IsHandleCreated)
+            {
+                frmMain.Selffrm.Invoke((Action)(() =>
+                {
+                    frmMain.Selffrm.labSOC.Text = BMSSOC.ToString() + "%";
+                    frmMain.Selffrm.vpbSOC.Value = (int)BMSSOC;
+                }));
+            }
+
+            // 电表数据
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            {
+                double GridKVA = frmMain.Selffrm.AllEquipment.GridKVA;
+                double PCSOKWH = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                double PCSPKWH = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                double E2OKWH = frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                double E2PKWH = frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                if (frmMain.Selffrm.labGridkva.IsHandleCreated &&
+                    frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                {
+                    frmMain.Selffrm.Invoke((Action)(() =>
+                    {
+                        frmMain.Selffrm.labGridkva.Text = GridKVA.ToString("F3");
+                        frmMain.Selffrm.labPCSOKWH.Text = PCSOKWH.ToString("F3");
+                        frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
+                        frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
+                        frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
+                    }));
+                }
+            }
+            
         }
 
         static void InitializeLed_Timer()
