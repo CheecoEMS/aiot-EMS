@@ -2452,7 +2452,7 @@ namespace EMS
                                 case 2:
                                     lock (Parent.EMSError)
                                     {
-                                        Parent.EMSError[1] |= 0x0001;
+                                        Parent.EMSError[2] |= 0x0001;
                                     }
                                     break;
 
@@ -2469,7 +2469,7 @@ namespace EMS
                         case 1:
                             lock (Parent.EMSError)
                             {
-                                Parent.EMSError[2] &= 0x7FFF;
+                                Parent.EMSError[1] &= 0x7FFF;
                             }
                             break;
                         case 2:
