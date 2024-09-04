@@ -1,37 +1,15 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using log4net;
-using log4net.Util;
+﻿using log4net;
 using Modbus;
 using MySql.Data.MySqlClient;
-using Mysqlx;
-using Mysqlx.Crud;
-using Mysqlx.Prepare;
-using Org.BouncyCastle.Asn1.Crmf;
-using Org.BouncyCastle.Bcpg;
 using System;
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
-using System.Transactions;
 using System.Windows.Forms;
-using static Mysqlx.Expect.Open.Types.Condition.Types;
-using static System.Collections.Specialized.BitVector32;
-using System.Net.Sockets;
-using Org.BouncyCastle.Crypto;
-using MySqlX.XDevAPI.Common;
-using System.Collections.Concurrent;
-using System.Drawing.Imaging;
-using System.Threading.Tasks;
-using MySqlX.XDevAPI;
-using System.Windows.Forms.DataVisualization.Charting;
-using static IEC104.CIEC104Slave;
 
 namespace EMS
 {
@@ -964,7 +942,7 @@ namespace EMS
 
             Parent.Fault2Cloud.timestamp = dtTemp;
             Parent.Fault2Cloud.iotCode = aeID;
-            Parent.Fault2Cloud.faultCode = "E00021";// "E" + aWaringID.ToString();
+            Parent.Fault2Cloud.faultCode = "E00021";
             Parent.Fault2Cloud.faultLevel = awLevels;
             Parent.Fault2Cloud.faultName = awClass+ aWarning+"("+aWaringID.ToString()+")";
 
@@ -992,19 +970,12 @@ namespace EMS
                         dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + awClass + "','" + aeID + "','" +
                          aWaringID.ToString() + "','" + awLevels.ToString() + "','" + aWarning + "')");
                     Parent.Fault2Cloud.faultBack = false;
-                    //设置故障指示灯 qiao
+                    //设置故障指示灯
                     if (awLevels == 3)
                     {
                         lock (Parent.ErrorState)
                         {
                             Parent.ErrorState[2] = true;
-                            //Parent.LedErrorState[2] = true;
-
-                            //powerOff
-                            //frmSet.PCSMOff();
-
-                            //取消蜂鸣器
-                            //SysIO.SetGPIOState(11, 0);
                         }
                     }
                     if (awLevels == 2)
@@ -2332,7 +2303,7 @@ namespace EMS
         {
             //基本信息
             DBConnection.ExecSQL("INSERT INTO LiquidCool(rTime,state,OutwaterTemp,InwaterTemp,environmentTemp,ExgasTemp,"
-                + "InwaterPressure,OutwaterPressure,Error1，Error2)VALUES ('"
+                + "InwaterPressure,OutwaterPressure,Error1,Error2)VALUES ('"
                 + arDate + "','"
                 + state.ToString() + "','"
                 + OutwaterTemp.ToString() + "','"
@@ -2445,23 +2416,24 @@ namespace EMS
     public class WaterloggingClass : BaseEquipmentClass
     {
         public int WaterlogData;
-        public bool IsError = false;
-
+        public int Num;
         
-        public WaterloggingClass()
+        public WaterloggingClass(int num)
         {
             strCommandFile = "Fire.txt";
+            Num = num;
         }
 
         //
         override public void GetDataFromEqipment()
         { 
             string strTemp = "";
-            bool tempError = false;
+
             if (GetSysData(0, ref strTemp))
             {
                 WaterlogData = int.Parse(strTemp);
-                Prepared = true; 
+
+                //记录水浸告警
                 if (WaterlogData != 0)
                 {
                     if (GetSysData(0, ref strTemp))
@@ -2469,28 +2441,54 @@ namespace EMS
                         WaterlogData = int.Parse(strTemp);
                         if (WaterlogData != 0)
                         {
-                            tempError=true; 
-                            //DBConnection.RecordLOG("系统", "水浸传感器", "水浸触发");
-                        } 
+                            switch (Num)
+                            {
+                                case 1:
+                                    lock (Parent.EMSError)
+                                    {
+                                        Parent.EMSError[1] |= 0x8000;
+                                    }
+                                    break;
+                                case 2:
+                                    lock (Parent.EMSError)
+                                    {
+                                        Parent.EMSError[2] |= 0x0001;
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
                     }
                 }
-                if (tempError != IsError)
+                else//恢复水浸告警
                 {
-                    if (tempError)
+                    switch (Num)
                     {
-                        //SysIO.SetGPIOState(11, 0);
-                        //frmSet.PCSMOff(); 
-                        frmSet.Err3off();
-                        lock (Parent.ErrorState)
-                        {
-                            Parent.ErrorState[2] = true;
-                        }
-                    }                  
-                    IsError = tempError;
-                } 
+                        case 1:
+                            lock (Parent.EMSError)
+                            {
+                                Parent.EMSError[1] &= 0x7FFF;
+                            }
+                            break;
+                        case 2:
+                            lock (Parent.EMSError)
+                            {
+                                Parent.EMSError[2]  &= 0xFFFE;
+                            }
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                }
+
+                Prepared = true;//通讯正常
             } 
             else
-                Prepared = false;
+                Prepared = false;//通讯异常
         }
     }
 
@@ -2517,75 +2515,45 @@ namespace EMS
             {
                 TempData = Math.Round(float.Parse(strTemp), 3); //温度
                 bPrepared = true;
+                
                 if (TempData>40)
                 {
                     GetSysData(1, ref strTemp);
                     TempData = Math.Round(float.Parse(strTemp), 3); //温度
                     if (TempData > 40)
                     {
-                        //9.11 添加注释:取消温度传感器
-                        //tempError = true; 
-
-
-                        //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过高");
-                    }
-                    if (tempError != IsError[0])
-                    {
-                        if (tempError)
+                        lock (Parent.EMSError)
                         {
-                            //frmSet.PCSMOff();
-                            frmSet.Err3off();
-                            //SysIO.SetGPIOState(11, 0);
-                            lock (Parent.ErrorState)
-                            {
-                                Parent.ErrorState[2] = true;
-                            }
-                            lock (Parent.EMSError)
-                            {
-                                Parent.EMSError[1] &= 0xFFDF;
-                                Parent.EMSError[1] |= 0x20;
-                            }
+                            Parent.EMSError[1] |= 0x20;
                         }
-                        else
-                            Parent.EMSError[1] &= 0xFFDF;
-
-                        // RecodError("温湿度传感器", iot_code, 17, ErrorClass.EMSErrorsPower[17],
-                        //     ErrorClass.EMSErrors[17], tempError);
-                        IsError[0] = tempError;
                     }
                 }
-                else if (TempData <0 )
+                else
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[1] &= 0xFFDF;
+                    }
+                }
+
+
+                if (TempData <0)
                 {
                     GetSysData(1, ref strTemp);
                     TempData = Math.Round(float.Parse(strTemp), 3); //温度
                     if (TempData <0)
                     {
-                        tempError = true;
-                        //DBConnection.RecordLOG("系统", "温湿度传感器", "温度过低");
-                    }
-                    if (tempError != IsError[1])
-                    {
-                        if (tempError)
+                        lock (Parent.EMSError)
                         {
-                            //frmSet.PCSMOff();
-                            frmSet.Err3off();
-                            //SysIO.SetGPIOState(11, 0);
-                            lock (Parent.ErrorState)
-                            {
-                                Parent.ErrorState[2] = true;
-                            }
-                            lock (Parent.EMSError)
-                            {
-                                Parent.EMSError[1] &= 0xFEFF;
-                                Parent.EMSError[1] |= 0x100;
-                            }
+                            Parent.EMSError[1] |= 0x100;
                         }
-                        else
-                            Parent.EMSError[1] &= 0xFEFF;
-
-                        // RecodError("温湿度传感器", iot_code, 17, ErrorClass.EMSErrorsPower[17],
-                        //     ErrorClass.EMSErrors[17], tempError);
-                        IsError[1] = tempError;
+                    }                 
+                }
+                else
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[1] &= 0xFEFF;
                     }
                 }
 
@@ -2612,7 +2580,7 @@ namespace EMS
         override public void GetDataFromEqipment()
         {
             string strTemp = "";
-            bool tempError = false;
+
             if (GetSysData(3, ref strTemp))
             {
                 SmokeData = int.Parse(strTemp); //烟感100 - 10000ppm
@@ -2622,38 +2590,23 @@ namespace EMS
                     if (GetSysData(3, ref strTemp))
                     {
                         SmokeData = int.Parse(strTemp); //烟感100 - 10000ppm
-                        if ( (SmokeData > 500) && (frmMain.Selffrm.AllEquipment.TempHum.TempData > 40) )
+                        if ((SmokeData > 500) && (frmMain.Selffrm.AllEquipment.TempHum.TempData > 40))
                         {
-                            tempError = true;
+                            lock (Parent.EMSError)
+                            {
+                                Parent.EMSError[1] |= 0x4;
+                            }
                         }
                     }
-                    //DBConnection.RecordLOG("系统", "烟感过高", );
                 }
-                if(tempError!=IsError)
+                else 
                 {
-                    if (tempError)
+                    lock (Parent.EMSError)
                     {
-                        //frmSet.PCSMOff();
-                        frmSet.Err3off();
-                        //SysIO.SetGPIOState(11, 0);
-                        lock (Parent.ErrorState)
-                        {
-                            Parent.ErrorState[2] = true;
-                        }
-                        lock (Parent.EMSError)
-                        {
-                            Parent.EMSError[1] &= 0xFFFB;
-                            Parent.EMSError[1] |= 0x4;
-                        }
+                        Parent.EMSError[1] &= 0xFFFB;
                     }
-                    else
-                        Parent.EMSError[1] &= 0xFFFB; 
-
-                      RecodError("烟感传感器", iot_code, 16, ErrorClass.EMSErrorsPower[16], 
-                          ErrorClass.EMSErrors[16] , tempError);
-
-                    IsError = tempError; 
-                } 
+                }
+ 
             }
             else
                 Prepared = false;
@@ -2679,46 +2632,27 @@ namespace EMS
                 Prepared = true;
                 if (CoData > 500)//100-300-500
                 {
+                    //重复采集避免误采
                     if (GetSysData(4, ref strTemp))
                     {
                         CoData = Math.Round(float.Parse(strTemp), 3);  //一氧化碳浓度
                         if (CoData > 500)
                         {
-                            tempError = true;
-                            //Parent.ExcPCSPowerOff();
-                            //SysIO.SetGPIOState(11,0); 
-                            //Parent.ErrorState[2] = true;
-                        }
-                    } 
-                }
-                if (tempError != IsError)
-                {
-                    if (tempError)
-                    {
-                        if (tempError)
-                        {
-                            //frmSet.PCSMOff();
-                            frmSet.Err3off();
-                            //SysIO.SetGPIOState(11, 0);
-                            lock (Parent.ErrorState)
-                            {
-                                Parent.ErrorState[2] = true;
-                            }
                             lock (Parent.EMSError)
                             {
-                                Parent.EMSError[1] &= 0xBFFF;
                                 Parent.EMSError[1] |= 0x4000;
                             }
                         }
-                        else
-                            Parent.EMSError[1] &= 0xBFFF;
-                        //DBConnection.RecordLOG("系统", "一氧化碳传感器", "一氧化碳过高");
-                    }
-                       // RecodError("一氧化碳传感器", iot_code, 18, ErrorClass.EMSErrorsPower[18],
-                       //     ErrorClass.EMSErrors[18], tempError);
-                       IsError = tempError;
                     }
                 }
+                else
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[1] &= 0xBFFF;
+                    }
+                }
+            }
             else
                 Prepared = false;
         }
@@ -6152,7 +6086,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Develop1.0";
+        public string EMSVersion { get; set; } = "EMS240815Master2.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6597,15 +6531,16 @@ namespace EMS
                                             TempControl = (TempControlClass)oneEquipment;
                                             TempControl_Version = oneEquipment.LoadVersionFromFile();
                                             break;
-                                        case 8://水浸传感器
-                                            oneEquipment = new WaterloggingClass();
+                                        case 8://水浸传感器                                         
                                             if (WaterLog1 == null)
                                             {
+                                                oneEquipment = new WaterloggingClass(1);
                                                 WaterLog1 = (WaterloggingClass)oneEquipment;
                                                 Waterlogging_Version = oneEquipment.LoadVersionFromFile();
                                             }
                                             else
                                             {
+                                                oneEquipment = new WaterloggingClass(2);
                                                 WaterLog2 = (WaterloggingClass)oneEquipment;
                                                 Waterlogging_Version = oneEquipment.LoadVersionFromFile();
                                             }
@@ -8174,20 +8109,8 @@ namespace EMS
                         //如果主机是单机  
                         if (frmSet.config.SysCount == 1)
                         {
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-
-                                //记录客户当月最大需量
-                                frmSet.Set_Cloudlimits();
-                            }
-
-                            //限制客户当月最大需量低于100时，不进行充放
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
+                            //记录需量
+                            RecordPUM();
 
                             //单机防逆流
                             SingleReflux();
@@ -8195,21 +8118,9 @@ namespace EMS
                         else
                         {
                             AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
-                                                     
-                            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
-                            if (Client_PUMdemand_now > Client_PUMdemand_Max)
-                            {
-                                Client_PUMdemand_Max = Client_PUMdemand_now;
-                                //记录客户当月最大需量
-                                frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
-                                frmSet.Set_HistoryData();
-                            }
 
-                            //限制客户当月最大需量低于100时，不进行充放
-                            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-                            {
-                                continue;
-                            }
+                            //记录需量
+                            RecordPUM();
 
                             //多机防逆流
                             MutiReflux();
@@ -8222,7 +8133,29 @@ namespace EMS
                 }
             }
         }
+
+        private void RecordPUM()
+        {
+            Client_PUMdemand_now = E1_PUMdemand_now - E2_PUMdemand_now;
+            if (Client_PUMdemand_now > Client_PUMdemand_Max)
+            {
+                Client_PUMdemand_Max = Client_PUMdemand_now;
+                //记录客户当月最大需量
+                frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
+                frmSet.Set_HistoryData();
+            }
+
+/*            //限制客户当月最大需量低于100时，不进行充放
+            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
+            {
+                continue;
+            }*/
+        }
+
+
+        
         //Com2 readThread2
+
 
         public void AutoReadDataCom2()
         {
@@ -8293,32 +8226,12 @@ namespace EMS
                 if (WaterLog1 != null)
                 {
                     WaterLog1.GetDataFromEqipment();
-                    if (WaterLog1.WaterlogData != 0)
-                    {
-                        lock (EMSError)
-                        {
-                            EMSError[1] &= 0x7FFF;
-                            EMSError[1] |= 0x8000;
-                        }
-                    }
-                    else
-                        EMSError[1] &= 0x7FFF;
                     Fire.Waterlogging1 = WaterLog1.WaterlogData;
                 }
                 //GetBaseEquipment();
                 if (WaterLog2 != null)
                 {
                     WaterLog2.GetDataFromEqipment();
-                    if (WaterLog2.WaterlogData != 0)
-                    {
-                        lock (EMSError)
-                        {
-                            EMSError[2] &= 0xFFFE;
-                            EMSError[2] |= 0x0001;
-                        }
-                    }
-                    else
-                        EMSError[2] &= 0xFFFE;
                     Fire.Waterlogging2 = WaterLog2.WaterlogData;
                 }
                 GetBaseEquipment();
@@ -8453,6 +8366,8 @@ namespace EMS
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
                                     {                                    
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
+                                        
+                                        
                                         if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
                                             frmMain.Selffrm.AllEquipment.init_LiquidCool();
@@ -8545,7 +8460,8 @@ namespace EMS
 
                    // Console.WriteLine("*");
                     //Console.WriteLine("#********* IEC104***  end   **** IEC104**********#" + (endTime - startTime).TotalSeconds);
-                    //PCS的DSP2 11.27
+                    //PCS的
+                    //2 11.27
                     if (DSP2 != null)
                     {
                         DSP2.GetDataFromEqipment();
