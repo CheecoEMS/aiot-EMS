@@ -132,7 +132,7 @@ namespace EMS
         public static bool LoadHistoryDataFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 FROM HistoricalData;";
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P,DaliyE2PKWH_G,DaliyE2OKWH_Z,DaliyE2OKWH_J,DaliyE2OKWH_F,DaliyE2OKWH_P,DaliyE2OKWH_G FROM HistoricalData;";
 
             try 
             {
@@ -145,10 +145,21 @@ namespace EMS
                         {
                             if (rd != null && rd.HasRows && rd.Read())
                             {
-                                historyDatas.E1PUMdemandMaxOld = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                historyDatas.E1PUMdemandMaxOld     = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
                                 historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                                historyDatas.ClientPUMdemandMax = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
-                                historyDatas.ErrorState2 = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                historyDatas.ClientPUMdemandMax    = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
+                                historyDatas.ErrorState2           = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                historyDatas.DaliyE2PKWH_Z = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                historyDatas.DaliyE2PKWH_J = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                                historyDatas.DaliyE2PKWH_F = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                historyDatas.DaliyE2PKWH_P = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                historyDatas.DaliyE2PKWH_G = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                                historyDatas.DaliyE2OKWH_Z = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                historyDatas.DaliyE2OKWH_J = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                                historyDatas.DaliyE2OKWH_F = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
+                                historyDatas.DaliyE2OKWH_P = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
+                                historyDatas.DaliyE2OKWH_G = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
+
 
                                 result = true;
                             }
@@ -182,6 +193,16 @@ namespace EMS
                 + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
                 + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
                 + "', ErrorState2 ='" + frmSet.historyDatas.ErrorState2.ToString()
+                + "', DaliyE2PKWH_Z ='" + frmSet.historyDatas.DaliyE2PKWH_Z.ToString()
+                + "', DaliyE2PKWH_J ='" + frmSet.historyDatas.DaliyE2PKWH_J.ToString()
+                + "', DaliyE2PKWH_F ='" + frmSet.historyDatas.DaliyE2PKWH_F.ToString()
+                + "', DaliyE2PKWH_P ='" + frmSet.historyDatas.DaliyE2PKWH_P.ToString()
+                + "', DaliyE2PKWH_G ='" + frmSet.historyDatas.DaliyE2PKWH_G.ToString()
+                + "', DaliyE2OKWH_Z ='" + frmSet.historyDatas.DaliyE2OKWH_Z.ToString()
+                + "', DaliyE2OKWH_J ='" + frmSet.historyDatas.DaliyE2OKWH_J.ToString()
+                + "', DaliyE2OKWH_F ='" + frmSet.historyDatas.DaliyE2OKWH_F.ToString()
+                + "', DaliyE2OKWH_P ='" + frmSet.historyDatas.DaliyE2OKWH_P.ToString()
+                + "', DaliyE2OKWH_G ='" + frmSet.historyDatas.DaliyE2OKWH_G.ToString()
                 + "';";
 
             bool result = false;
@@ -2094,6 +2115,17 @@ namespace EMS
             public volatile int ClientPUMdemandMaxOld;
             public volatile int ClientPUMdemandMax;
             public volatile int ErrorState2;
+            public volatile int DaliyE2PKWH_Z;
+            public volatile int DaliyE2PKWH_J;
+            public volatile int DaliyE2PKWH_F;
+            public volatile int DaliyE2PKWH_P;
+            public volatile int DaliyE2PKWH_G;
+            public volatile int DaliyE2OKWH_Z;
+            public volatile int DaliyE2OKWH_J;
+            public volatile int DaliyE2OKWH_F;
+            public volatile int DaliyE2OKWH_P;
+            public volatile int DaliyE2OKWH_G;
+
         }
 
         public class CloudLimitClass

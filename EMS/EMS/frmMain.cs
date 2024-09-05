@@ -461,6 +461,10 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
+                //校验电表数据
+                Selffrm.AllEquipment.Power_CRC();
+                
+
 
                 //校准电表日期
                 frmMain.Selffrm.AllEquipment.MeterCalibration();
@@ -617,8 +621,11 @@ namespace EMS
         }
         static void Public_TimerCallback(Object state)
         {
+            //保存今日充放电量
+            frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
             //如果月份更新：
-            if(frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+            if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
             {
                 frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
                 frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
@@ -639,14 +646,18 @@ namespace EMS
             {
                 //删除180天前的数据
                 frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
-                //保存当天收益到数据库FormatException ex)
-                frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
-                //当日收益发送到云
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
-                                                                                                               //更新日期
-                frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
-                frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                { 
+                    //保存当天收益到数据库FormatException ex)
+                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                    //当日收益发送到云
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
+                                                                                                                   //更新日期
+                    frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                    //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
+                    frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                }
                 //校准电表日期
                 frmMain.Selffrm.AllEquipment.MeterCalibration();
                 //每晚00：00更新策略

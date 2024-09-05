@@ -1416,7 +1416,7 @@ namespace EMS
                         new Column { Name = "iPCSfactory", Type = "int", IsNullable = true, Key = "" },
                         new Column { Name = "BMSVerb", Type = "int", IsNullable = true, Key = ""  , Comment = "BMS供应商版本"},
                         new Column { Name = "PCSForceRun", Type = "int", IsNullable = true, Key = "" },
-                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = ""  , Comment = "EMS工作状态"},                     
+                        new Column { Name = "EMSstatus", Type = "int", IsNullable = true, Key = ""  , Comment = "EMS工作状态"},
                         new Column { Name = "GPIOSelect", Type = "int", IsNullable = true, Key = ""  , Comment = "IO口配置"},
                         new Column { Name = "MasterIp", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主机IP地址" },
                         new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" },
@@ -1914,7 +1914,7 @@ namespace EMS
                     "pncontroler", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },                       
+                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
                         new Column { Name = "controlID", Type = "int", IsNullable = true, Key = "" , Comment = "调度编号"},
                         new Column { Name = "passTime", Type = "datetime", IsNullable = true, Key = "" , Comment = "下达时间"},
                         new Column { Name = "cModel", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "命令模式"},
@@ -1941,7 +1941,19 @@ namespace EMS
                         new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
-                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" }
+                        new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" },
+                        new Column { Name = "DaliyE2PKWH_Z", Type = "int", IsNullable = true, Key = "" , Comment = "今日总充电量" },
+                        new Column { Name = "DaliyE2PKWH_J", Type = "int", IsNullable = true, Key = "" , Comment = "今日尖充电量" },
+                        new Column { Name = "DaliyE2PKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰充电量" },
+                        new Column { Name = "DaliyE2PKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平充电量" },
+                        new Column { Name = "DaliyE2PKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷充电量" },
+                        new Column { Name = "DaliyE2OKWH_Z", Type = "int", IsNullable = true, Key = "" , Comment = "今日总放电量" },
+                        new Column { Name = "DaliyE2OKWH_J", Type = "int", IsNullable = true, Key = "" , Comment = "今日尖放电量" },
+                        new Column { Name = "DaliyE2OKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰放电量" },
+                        new Column { Name = "DaliyE2OKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
+                        new Column { Name = "DaliyE2OKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" }
+
+
                     }
                 }
                 // Add more tables as needed
