@@ -218,7 +218,7 @@ namespace EMS
         {
             bool result = false;
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
-                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper FROM CloudLimits;";
+                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm FROM CloudLimits;";
 
             try
             {
@@ -247,6 +247,8 @@ namespace EMS
                                 cloudLimits.FrigOpenLower = rd.IsDBNull(13) ? 30 : rd.GetInt32(13);
                                 cloudLimits.FrigOffLower = rd.IsDBNull(14) ? 10 : rd.GetInt32(14);
                                 cloudLimits.FrigOffUpper = rd.IsDBNull(15) ? 25 : rd.GetInt32(15);
+                                cloudLimits.BoxHTemperAlarm =  rd.IsDBNull(16) ? 40 : rd.GetInt32(16);
+                                cloudLimits.BoxLTemperAlarm = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
 
                                 result = true;
                             }
@@ -292,6 +294,8 @@ namespace EMS
                 + "', FrigOpenLower = '" + frmSet.cloudLimits.FrigOpenLower.ToString()
                 + "', FrigOffLower = '" + frmSet.cloudLimits.FrigOffLower.ToString()
                 + "', FrigOffUpper = '" + frmSet.cloudLimits.FrigOffUpper.ToString()
+                + "', BoxHTemperAlarm = '" + frmSet.cloudLimits.BoxHTemperAlarm.ToString()
+                + "', BoxLTemperAlarm = '" + frmSet.cloudLimits.BoxLTemperAlarm.ToString()
                 + "';";
 
             bool result = false;
@@ -2110,10 +2114,12 @@ namespace EMS
             public volatile int PumScale;
             public volatile int AllUkvaWindowSize;
             public volatile int PumTime;
-            public volatile int BmsDerateRatio; // double
+            public volatile int BmsDerateRatio;
             public volatile int FrigOpenLower;
             public volatile int FrigOffLower;
             public volatile int FrigOffUpper;
+            public volatile int BoxHTemperAlarm;
+            public volatile int BoxLTemperAlarm;
         }
 
 

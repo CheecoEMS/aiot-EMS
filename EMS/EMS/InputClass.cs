@@ -2531,11 +2531,11 @@ namespace EMS
                 TempData = Math.Round(float.Parse(strTemp), 3); //温度
                 bPrepared = true;
                 
-                if (TempData>40)
+                if (TempData > frmSet.cloudLimits.BoxHTemperAlarm)
                 {
                     GetSysData(1, ref strTemp);
                     TempData = Math.Round(float.Parse(strTemp), 3); //温度
-                    if (TempData > 40)
+                    if (TempData > frmSet.cloudLimits.BoxHTemperAlarm)
                     {
                         lock (Parent.EMSError)
                         {
@@ -2552,11 +2552,11 @@ namespace EMS
                 }
 
 
-                if (TempData <0)
+                if (TempData < frmSet.cloudLimits.BoxLTemperAlarm)
                 {
                     GetSysData(1, ref strTemp);
                     TempData = Math.Round(float.Parse(strTemp), 3); //温度
-                    if (TempData <0)
+                    if (TempData < frmSet.cloudLimits.BoxLTemperAlarm)
                     {
                         lock (Parent.EMSError)
                         {

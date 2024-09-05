@@ -1719,7 +1719,9 @@ namespace EMS
                         new Column { Name = "BmsDerateRatio", Type = "int", IsNullable = true, Key = "", Comment = "BMS触发1级告警致功率降额比" },
                         new Column { Name = "FrigOpenLower", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备开启下限" },
                         new Column { Name = "FrigOffLower", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备关闭启下限" },
-                        new Column { Name = "FrigOffUpper", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备关闭启上限" }
+                        new Column { Name = "FrigOffUpper", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备关闭启上限" },
+                        new Column { Name = "BoxHTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内高温告警值" },
+                        new Column { Name = "BoxLTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内低温告警值" }
                     }
                 },
                 {
