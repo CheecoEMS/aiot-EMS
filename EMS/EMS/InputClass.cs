@@ -9102,16 +9102,16 @@ namespace EMS
             {
                 if (Elemeter2.PUkwh[0] < SE2PKWH[0] || Elemeter2.OUkwh[0] < SE2OKWH[0])  //判断总正总负电能是否小于上次电能
                 {
-                    SE2PKWH[0] = -frmSet.historyDatas.DaliyE2PKWH_Z;
-                    SE2PKWH[1] = -frmSet.historyDatas.DaliyE2PKWH_J;
-                    SE2PKWH[2] = -frmSet.historyDatas.DaliyE2PKWH_F;
-                    SE2PKWH[3] = -frmSet.historyDatas.DaliyE2PKWH_P;
-                    SE2PKWH[4] = -frmSet.historyDatas.DaliyE2PKWH_G;
-                    SE2OKWH[0] = -frmSet.historyDatas.DaliyE2OKWH_Z;
-                    SE2OKWH[1] = -frmSet.historyDatas.DaliyE2OKWH_J;
-                    SE2OKWH[2] = -frmSet.historyDatas.DaliyE2OKWH_F;
-                    SE2OKWH[3] = -frmSet.historyDatas.DaliyE2OKWH_P;
-                    SE2OKWH[4] = -frmSet.historyDatas.DaliyE2OKWH_G;
+                    SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
+                    SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
+                    SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
+                    SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
+                    SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
+                    SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
+                    SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
+                    SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
+                    SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
+                    SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
                 }
             }
         }
