@@ -8935,10 +8935,13 @@ namespace EMS
                         Elemeter2.GetDataFromEqipment();
                     }
 
+
+
                     if (Elemeter3 != null)
                     {
                         Elemeter3.GetDataFromEqipment();
                     }
+
 
                     WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
                     return true;
@@ -9059,6 +9062,60 @@ namespace EMS
             Profit2Cloud.DaliyProfit = Profit;
             return true;
         }
+
+
+
+
+
+        /// <summary>
+        /// 放public定时器内存储电表2的当前值
+        /// </summary>
+        /// <param name="CalculateNowPower"></param>
+        public bool CalculateNowPower()
+        {
+
+            if (Elemeter2 == null )
+                return false;
+            //计算尖峰平谷数据的当天充放电量---电表2为计量表
+            if (Elemeter2.Prepared)
+            {
+                frmSet.historyDatas.DaliyE2PKWH_Z = (int)(Elemeter2.PUkwh[0] - SE2PKWH[0]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_J = (int)(Elemeter2.PUkwh[1] - SE2PKWH[1]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_F = (int)(Elemeter2.PUkwh[2] - SE2PKWH[2]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_P = (int)(Elemeter2.PUkwh[3] - SE2PKWH[3]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_G = (int)(Elemeter2.PUkwh[4] - SE2PKWH[4]); //当前表值--当天开始的值
+
+                frmSet.historyDatas.DaliyE2OKWH_Z = (int)(Elemeter2.OUkwh[0] - SE2OKWH[0]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_J = (int)(Elemeter2.OUkwh[1] - SE2OKWH[1]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_F = (int)(Elemeter2.OUkwh[2] - SE2OKWH[2]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_P = (int)(Elemeter2.OUkwh[3] - SE2OKWH[3]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_G = (int)(Elemeter2.OUkwh[4] - SE2OKWH[4]); //当前表值--当天开始的值
+
+                frmSet.Set_HistoryData();
+            }
+            return true;
+        }
+
+        public void Power_CRC()
+        {
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+            {
+                if (Elemeter2.PUkwh[0] < SE2PKWH[0] || Elemeter2.OUkwh[0] < SE2OKWH[0])  //判断总正总负电能是否小于上次电能
+                {
+                    SE2PKWH[0] = -frmSet.historyDatas.DaliyE2PKWH_Z;
+                    SE2PKWH[1] = -frmSet.historyDatas.DaliyE2PKWH_J;
+                    SE2PKWH[2] = -frmSet.historyDatas.DaliyE2PKWH_F;
+                    SE2PKWH[3] = -frmSet.historyDatas.DaliyE2PKWH_P;
+                    SE2PKWH[4] = -frmSet.historyDatas.DaliyE2PKWH_G;
+                    SE2OKWH[0] = -frmSet.historyDatas.DaliyE2OKWH_Z;
+                    SE2OKWH[1] = -frmSet.historyDatas.DaliyE2OKWH_J;
+                    SE2OKWH[2] = -frmSet.historyDatas.DaliyE2OKWH_F;
+                    SE2OKWH[3] = -frmSet.historyDatas.DaliyE2OKWH_P;
+                    SE2OKWH[4] = -frmSet.historyDatas.DaliyE2OKWH_G;
+                }
+            }
+        }
+
 
         //日期更换时候保存当天数据
         public void SaveDataInoneDay(string astrDate)
