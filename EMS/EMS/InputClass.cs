@@ -4155,8 +4155,7 @@ namespace EMS
             }
 
             //设备掉电ems告警 
-//            if (aV < 10 && bV < 10 && cV < 10 && hz!= 0)
-            if(test == 1)
+            if (aV < 10 && bV < 10 && cV < 10 )
             {
                 //判断条件 要在明确一下
                 if (frmMain.Selffrm.AllEquipment.GridKVA > 7)  //判断是并网柜侧断电还是客户侧断电
