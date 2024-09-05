@@ -77,7 +77,7 @@ namespace EMS
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
         private static System.Threading.Timer Heartbeat_Timer;
         private static System.Threading.Timer Led_Timer;
-
+        private static System.Threading.Timer LiquidCold_Timer;
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -546,12 +546,17 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
-
+                //led定时器
                 if (frmMain.Selffrm.AllEquipment.Led != null)
                 {
                     InitializeLed_Timer();
                 }
-
+                //液冷心跳定时器
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;
+                    InitializeLiquidCold_HeartBeat_Timer();
+                }
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
                 frmFlash.AddPostion(10);
@@ -701,6 +706,11 @@ namespace EMS
                     if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                     {
                         frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                        //9-4 新增逻辑 液冷机开机指令时直接再做个温控参数配置下发，用来保证运行的控制参数是正确的
+                        frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+
+
+
                     }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
                     else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower))
                     {
@@ -858,19 +868,26 @@ namespace EMS
 
         static void InitializeLed_Timer()
         {
-
             Led_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
         }
         static void LedLoop_timerCallback(Object state)
         {
-
-
-            //pid.PID_calc(,);
-
             //LED控制
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
                 frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+            }
+        }
+        static void InitializeLiquidCold_HeartBeat_Timer()
+        {
+            LiquidCold_Timer = new System.Threading.Timer(InitializeLiquidCold_HeartBeat_Timer, null, 0, 25000);
+        }
+        static void InitializeLiquidCold_HeartBeat_Timer(Object state)
+        {
+            //LED控制
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.GetOutwaterTempFromEquipment_Heartbeat();
             }
         }
 

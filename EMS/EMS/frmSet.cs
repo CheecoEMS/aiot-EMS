@@ -2054,6 +2054,7 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
                 {
                     frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);
+                    frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
                 }
             }
             catch { }

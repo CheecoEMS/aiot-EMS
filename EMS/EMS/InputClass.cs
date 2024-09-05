@@ -1385,7 +1385,14 @@ namespace EMS
             SetLEDError(Led_blink);
             SetButteryPercentBlink();
         }
-
+        // 布尔类型转换为整型
+        public static int BoolToInt(object obj)
+        {
+            if (Convert.ToBoolean(obj) == true)
+                return 1;
+            else
+                return 0;
+        }
 
         public void Led_Control_Loop()
         {
@@ -1398,7 +1405,7 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
                 else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
 
-                errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.LedErrorState);
+                errorclass = Convert.ToInt16(BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[2])*4+ BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[1])*2+ BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[0]));
                 if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
                 else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
 
@@ -1944,12 +1951,7 @@ namespace EMS
         {
             strCommandFile = "LiquidCool.txt";
         }
-        public void init_LiquidCool() //初始化
-        {
-            {
-                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-            }
-        }
+
         //导入配置
         public bool ExecCommand()
         {
@@ -2004,6 +2006,19 @@ namespace EMS
                     SetSysData(25, 0xff00, true);//01/05 
                 }*/
 
+
+        public void GetOutwaterTempFromEquipment_Heartbeat()
+        {
+            string strData = "";
+            string strTemp = "";
+            bool bPrepared = false;
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                GetSysData(25, ref strData);
+                log.Warn("液冷机:  " + strData);
+                //OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
+            }
+        }
 
         public void GetSetDataFromEquipment()
         {
@@ -3437,6 +3452,7 @@ namespace EMS
         public string SoftwareVersion { get; set; }
         public string HardwareVersion { get; set; }
 
+        public int test = 0 ;
 
 
         public PCSClass(int aPCS)
@@ -4137,6 +4153,27 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.runState = 1;//设置运行状态为故障
                 }
             }
+
+            //设备掉电ems告警 
+//            if (aV < 10 && bV < 10 && cV < 10 && hz!= 0)
+            if(test == 1)
+            {
+                //判断条件 要在明确一下
+                if (frmMain.Selffrm.AllEquipment.GridKVA > 7)  //判断是并网柜侧断电还是客户侧断电
+                {
+                    Parent.EMSError[3] |= 0x04;  //并网柜侧断电
+                }
+                else
+                {
+                    Parent.EMSError[3] |= 0x08;  //客户侧断电
+                }
+            }
+            else 
+            {
+                Parent.EMSError[3] &= 0xFFF3;   //将并网柜侧以及客户侧断电掉电告警清除
+            }
+
+
 
 
             //处理故障
@@ -6345,6 +6382,7 @@ namespace EMS
                                 if (frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                                 {
                                     frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                                    frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
                                 }
                             }
 
@@ -6655,7 +6693,6 @@ namespace EMS
 
         public void init_LiquidCool() //初始化
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
             {
                 frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
             }

@@ -297,8 +297,10 @@ namespace EMS
             switch (item)
             { 
                 case 0:
+
                     break;
                 case 1:
+                    frmMain.Selffrm.AllEquipment.PCSList[0].test = 1;
                     break;
                 default: 
                     break;
