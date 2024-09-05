@@ -1385,7 +1385,14 @@ namespace EMS
             SetLEDError(Led_blink);
             SetButteryPercentBlink();
         }
-
+        // 布尔类型转换为整型
+        public static int BoolToInt(object obj)
+        {
+            if (Convert.ToBoolean(obj) == true)
+                return 1;
+            else
+                return 0;
+        }
 
         public void Led_Control_Loop()
         {
@@ -1398,7 +1405,7 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.LedErrorState[1] == true) frmMain.Selffrm.AllEquipment.Led_Error[1] = true; // 2 级告警
                 else frmMain.Selffrm.AllEquipment.Led_Error[1] = false;
 
-                errorclass = Convert.ToInt16(frmMain.Selffrm.AllEquipment.LedErrorState);
+                errorclass = Convert.ToInt16(BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[2])*4+ BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[1])*2+ BoolToInt(frmMain.Selffrm.AllEquipment.LedErrorState[0]));
                 if (errorclass == 0) frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
                 else frmMain.Selffrm.AllEquipment.Led_ShowError = (errorclass > 3) ? 2 : 1;
 
@@ -2009,7 +2016,7 @@ namespace EMS
             {
                 GetSysData(25, ref strData);
                 log.Warn("液冷机:  " + strData);
-                OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
+                //OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
             }
         }
 
