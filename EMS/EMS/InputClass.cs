@@ -2010,90 +2010,81 @@ namespace EMS
         public void GetOutwaterTempFromEquipment_Heartbeat()
         {
             string strData = "";
-            string strTemp = "";
-            bool bPrepared = false;
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                GetSysData(25, ref strData);
-                log.Warn("液冷机:  " + strData);
-                //OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
-            }
+            GetSysData(25, ref strData);
         }
 
         public void GetSetDataFromEquipment()
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            string strData = "";
+            string strTemp = "";
+            bool bPrepared = false;
+            //读取设备信息
+            if (GetSysData(36, ref strData))
             {
-                string strData = "";
-                string strTemp = "";
-                bool bPrepared = false;
-                //读取设备信息
-                if (GetSysData(36, ref strData))
+                bPrepared = true;
+                if (Get3strData(28, ref strData, ref strTemp))
                 {
-                    bPrepared = true;
-                    if (Get3strData(28, ref strData, ref strTemp))
-                    {
-                        state = Convert.ToInt32(strTemp);
-                    }
-                    if (Get3strData(29, ref strData, ref strTemp))
-                    {
-                        LCModel = Convert.ToInt32(strTemp);
-                    }
-                    if (Get3strData(30, ref strData, ref strTemp))
-                    {
-                        TemperSelect =  Convert.ToInt32(strTemp);
-                    }
-
+                    state = Convert.ToInt32(strTemp);
                 }
-                //读取设备信息
-                if (GetSysData(37, ref strData))
+                if (Get3strData(29, ref strData, ref strTemp))
                 {
-                    bPrepared = true;
-                    if (Get3strData(31, ref strData, ref strTemp))
-                    {
-                        CoolTemp = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(32, ref strData, ref strTemp))
-                    {
-                        HotTemp = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(33, ref strData, ref strTemp))
-                    {
-                        CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(34, ref strData, ref strTemp))
-                    {
-                        HotTempReturn = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(35, ref strData, ref strTemp))
-                    {
-                        WaterPump =  Convert.ToInt32(strTemp);
-                    }
-
+                    LCModel = Convert.ToInt32(strTemp);
+                }
+                if (Get3strData(30, ref strData, ref strTemp))
+                {
+                    TemperSelect =  Convert.ToInt32(strTemp);
                 }
 
-                Prepared = bPrepared;
-                if (!Prepared)
+            }
+            //读取设备信息
+            if (GetSysData(37, ref strData))
+            {
+                bPrepared = true;
+                if (Get3strData(31, ref strData, ref strTemp))
                 {
-                    if (count < 10)
-                    {
-                        count++;
-                    }
-                    if (count > 8)
-                    {
-                        lock (Parent.EMSError)
-                        {
-                            Parent.EMSError[0] &= 0xDFFF;
-                            Parent.EMSError[0] |= 0x2000;
-                        }
-                    }
+                    CoolTemp = Math.Round(float.Parse(strTemp), 1);
                 }
-                else
+                if (Get3strData(32, ref strData, ref strTemp))
                 {
-                    Parent.EMSError[0] &= 0xDFFF;
-                    count = 0;
+                    HotTemp = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(33, ref strData, ref strTemp))
+                {
+                    CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(34, ref strData, ref strTemp))
+                {
+                    HotTempReturn = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(35, ref strData, ref strTemp))
+                {
+                    WaterPump =  Convert.ToInt32(strTemp);
+                }
+
+            }
+
+            Prepared = bPrepared;
+            if (!Prepared)
+            {
+                if (count < 10)
+                {
+                    count++;
+                }
+                if (count > 8)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xDFFF;
+                        Parent.EMSError[0] |= 0x2000;
+                    }
                 }
             }
+            else
+            {
+                Parent.EMSError[0] &= 0xDFFF;
+                count = 0;
+            }
+            
         }
 
         override public void GetDataFromEqipment()
@@ -6122,7 +6113,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master2.0";
+        public string EMSVersion { get; set; } = "EMS240815Master3.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";

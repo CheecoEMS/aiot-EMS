@@ -719,9 +719,6 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
                         //9-4 新增逻辑 液冷机开机指令时直接再做个温控参数配置下发，用来保证运行的控制参数是正确的
                         frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-
-
-
                     }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
                     else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower))
                     {
