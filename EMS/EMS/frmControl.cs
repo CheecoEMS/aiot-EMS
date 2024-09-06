@@ -5,22 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Threading;
-using Org.BouncyCastle.Tsp;
 using log4net;
-using System.Runtime.InteropServices;
 using System.IO;
-using Mysqlx.Notice;
-using System.Diagnostics;
-using Org.BouncyCastle.Utilities;
-using System.Collections;
-using System.Web.UI.WebControls;
-using MySqlX.XDevAPI.Common;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using Modbus;
+
 
 namespace EMS
 {
@@ -309,8 +297,10 @@ namespace EMS
             switch (item)
             { 
                 case 0:
+
                     break;
                 case 1:
+                    frmMain.Selffrm.AllEquipment.PCSList[0].test = 1;
                     break;
                 default: 
                     break;

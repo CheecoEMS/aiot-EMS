@@ -113,6 +113,8 @@ namespace Modbus
         private static ILog log = LogManager.GetLogger("SocketWrapper");
         private readonly object socketLock = new object();
         public volatile int Max_Size = 1024;
+        private volatile bool sendRequested = false;
+        private volatile bool Receive_Complete = true;
 
         public SocketWrapper(Socket socket)
         {
@@ -151,12 +153,19 @@ namespace Modbus
             }
         }
 
+        public void RequestSend()
+        {
+            //log.Warn(" 标记发送请求已发出  ");
+            sendRequested = true; // 标记发送请求已发出
+        }
         public bool Send(byte[] data)
         {
+            RequestSend();
             lock (socketLock)
             {
                 try
                 {
+                    sendRequested = false; // 发送开始，清除标志
                     int res = 0;
                     if (socket != null)
                     {
@@ -184,6 +193,83 @@ namespace Modbus
         }
 
         public byte[] Receive()
+        {
+            byte[] buffer = new byte[Max_Size];
+            byte[] Rec_buffer = new byte[0];
+
+            while (true)
+            {
+                lock (socketLock)
+                {
+                    try
+                    {
+                        if (socket != null && socket.Poll(1000, SelectMode.SelectRead)) // 轮询检查是否有数据可读
+                        {
+                            int receiveNumber = socket.Receive(buffer);
+                            if (receiveNumber > 0)
+                            {
+                                if (Receive_CRC(buffer, receiveNumber) == true)
+                                {
+                                    return Rec_buffer.Concat(buffer.Take(receiveNumber)).ToArray();
+                                    //return buffer.Take(receiveNumber).ToArray();
+                                }
+                                else 
+                                {
+                                    Rec_buffer.Concat(buffer.Take(receiveNumber)).ToArray();
+                                }
+                            }
+                        }
+                        if (sendRequested && Receive_Complete)
+                        {
+                            //log.Warn(" 退出循环，释放锁 ");
+                            break; // 退出循环，释放锁
+                        }
+                    }
+                    catch (SocketException ex)
+                    {
+                        DestorySocket(socket);
+                        return null;
+                    }
+                }
+            }
+            return null; // 如果循环结束且没有数据，返回 null
+        }
+
+
+        public bool Receive_CRC(byte[] buffer, int receiveNumber)
+        {
+            int num = 0;
+            int all_num = 0;
+            int num_s = 0;
+            int num_I = 0;
+            int ii = 0;
+            for (int i = 0; all_num < receiveNumber; i++)
+            {
+                num = buffer[all_num + 1];
+                switch (num)
+                {
+                    case 4:  num_s++; break;
+                    default: num_I++; break;
+                }
+                all_num += num + 2;
+                ii = i;
+            }
+            if (all_num == receiveNumber)
+            {
+                Receive_Complete = true;
+                log.Warn($"all : {all_num} 报文数量: {ii+1} S_num: {num_s} other_num: {num_I}");
+                return true;
+            }
+            else
+            {
+                Receive_Complete = false;
+                log.Warn($"ERROR");
+                return false;
+            }
+        }
+
+
+        public byte[] Receive_NonBlock()
         {
             byte[] buffer = new byte[Max_Size];
             lock (socketLock)
@@ -442,12 +528,14 @@ namespace Modbus
         {
             if (socketCTS_2404 != null)
             {
+                log.Warn("socketCTS_2404  ----  Close");
                 socketCTS_2404.CloseCTS(); // 请求取消当前的接收数据操作  
                 WaitThreadEnd(Receive2404Thread);// 等待接收线程终止
             }
 
             if (socketWrapper_2404 != null)
             {
+                log.Warn("socketWrapper_2404  ----  Close");
                 socketWrapper_2404.CloseSocket();
                 socketWrapper_2404 = null;
             }
@@ -578,23 +666,28 @@ namespace Modbus
                 try
                 {
                    
-
+                    log.Warn("      ########################  初始化   end ? ######################## ");
                     Socket acceptSocket = ServerSocket_2404.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
                                                                      //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
-
+                    log.Warn("      ########################  start   ######################## ");
+                    log.Warn("  accept  accept()阻塞方法接收客户端的连接 ");
                     CheckBackground();//检查是否存在资源未释放
-                    
+                    log.Warn("  CheckBackground()----检查是否存在资源未释放  -ok ");
                     socketWrapper_2404 = new SocketWrapper(acceptSocket);
+                    acceptSocket.Blocking = false; // 设置为非阻塞模式
+                    log.Warn("  新建 wrapper ");
 
                     CancellationTokenSource aCts = new CancellationTokenSource();
                     socketCTS_2404 = new SocketCTS(aCts);
 
                     if (socketWrapper_2404 != null)
                     {
+                        log.Warn("  socketWrapper_2404 != null ");
                         // 初始化
                         CancellationToken cancelReceiveToken = socketCTS_2404.GetCTSToken();
                         if (cancelReceiveToken != CancellationToken.None)
                         {
+                            log.Warn(" 初始化   -  StartReceive2404 ");
                             StartReceive2404(cancelReceiveToken);
                         }
                     }
@@ -630,7 +723,11 @@ namespace Modbus
             }
         }
 
-
+        public bool GetConnectStatus()
+        {
+            if (socketWrapper_2404 != null) return true;
+            else return false;
+        }
 
         //104数据发送
         public bool SendMsg_byte(byte[] msg)
@@ -645,12 +742,14 @@ namespace Modbus
                     }
                     else
                     {
+                        log.Warn("send false ---    关闭cts ");
                         socketCTS_2404.CloseCTS();
                         return false;
                     }
                 }
                 else
                 {
+                    log.Warn("socketWrapper_2404 == null 关闭cts ");
                     socketCTS_2404.CloseCTS();
                     return false;
                 }          
@@ -658,6 +757,7 @@ namespace Modbus
             catch (Exception ex)
             {
                 socketCTS_2404.CloseCTS();
+                log.Warn("  关闭cts " + ex.Message);
                 log.Error("SendMsg_byte: " + ex.Message);
                 return false;
             }
@@ -670,7 +770,9 @@ namespace Modbus
             {
                 try
                 {
+                    //log.Warn("**************  reveive  -- start *************    " );
                     byte[] recdata = socketWrapper_2404.Receive();
+                    //log.Warn("**************  reveive   --ok    *************    ");
                     if (recdata != null)
                     {
                         if (OnReceiveDataEvent2 != null)
@@ -680,12 +782,14 @@ namespace Modbus
                 catch (SocketException ex)
                 {
                     log.Error("Server ReceiveData is false: " + ex.Message);
+                    log.Warn("Server ReceiveData is false: " + ex.Message);
                     socketCTS_2404.CloseCTS();//通知接受线程终止 
                 }
                 catch (Exception ex)
                 {
                     socketCTS_2404.CloseCTS(); ;//通知接受线程终止
                     log.Error("Server ReceiveData is false: " + ex.Message);
+                    log.Warn("Server ReceiveData is false: " + ex.Message);
                 }
             }
             //释放cts资源（唯一）
@@ -905,7 +1009,7 @@ namespace Modbus
             bool bResult = false;
             try
             {
-                byte[] buffer = client.Receive();
+                byte[] buffer = client.Receive_NonBlock();
                 if (buffer != null)
                 {
                     Array.Copy(buffer, 0, response, 0, response.Length);
@@ -1030,7 +1134,7 @@ namespace Modbus
             bool bResult = false;
             try
             {
-                byte[] buffer = client.Receive();
+                byte[] buffer = client.Receive_NonBlock();
                 if (buffer != null)
                 {
                     Array.Copy(buffer, 0, response, 0, response.Length);
@@ -1211,7 +1315,7 @@ namespace Modbus
             {
                 try
                 {
-                    byte[] recdata = socketWrapper.Receive();
+                    byte[] recdata = socketWrapper.Receive_NonBlock();
                     if (recdata != null)
                     {
                         if (OnReceiveDataEvent2 != null)

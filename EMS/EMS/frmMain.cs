@@ -8,13 +8,7 @@ using System.Windows.Forms;
 using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 using log4net;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Net;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
+using static IEC104.CIEC104Slave;
 
 //351200 
 
@@ -55,6 +49,9 @@ namespace EMS
         public Displaydelegate disp_delegate;
         private delegate void UpdateChart(Chart aOneChart, bool aCleanAllSeries);
 
+        public IEC104_delegate iec104_delegate = abc;
+        public static void abc() { }
+
         //8.18
         //public ThreadPoolClass ThreadPool = new ThreadPoolClass();
 
@@ -65,6 +62,8 @@ namespace EMS
         public TCPClientClass TCPCloud = new TCPClientClass();
         public TCPServerClass TCPserver = new TCPServerClass();
         public CIEC104Slave   Slave104 = new CIEC104Slave();
+        //test 
+
         //private delegate void TCPserver.OnReceiveDataEventDelegate(int DataSourceType, byte[] aByteData);//建立事件委
 
         //12.5
@@ -78,7 +77,7 @@ namespace EMS
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
         private static System.Threading.Timer Heartbeat_Timer;
         private static System.Threading.Timer Led_Timer;
-
+        private static System.Threading.Timer LiquidCold_Timer;
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -86,6 +85,11 @@ namespace EMS
         //对接主从通讯
         public TCPServerClass ModbusTcpServer = new TCPServerClass();
         public TCPClientClass ModbusTcpClient = new TCPClientClass();
+
+
+        public DateTime receive_time_start ;
+        public DateTime receive_time_end ;
+        public DateTime receive_time_send;
 
 
         static public PID pid = new PID();
@@ -97,7 +101,9 @@ namespace EMS
             Text = "EMS system";
 
             //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
-            TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+              TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+            //socketWrapper.OnReceiveDataEvent2 += new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+
             //tcp
             ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
 
@@ -197,8 +203,8 @@ namespace EMS
         {
             //do+委托
             string hexString = BitConverter.ToString(msg);
+            receive_time_start = DateTime.Now;
             //"收到TCP消息：" + hexString
-
             Slave104.iec104_packet_parser(msg);
 
         }
@@ -349,19 +355,17 @@ namespace EMS
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";
+                log.Warn("CHEECO-START");
 
-                //读取配置文件
-                //frmSet.LoadSetInf();
-
-                //连接数据库
+                ////连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
-
                 DBConnection.CheckTables();
                 frmSet.LoadCloudLimitsFromMySQL();
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
+
                 //获取历史需量
                 if (frmSet.config.IsMaster == 1)
                 {
@@ -457,6 +461,10 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
+                //校验电表数据
+                Selffrm.AllEquipment.Power_CRC();
+                
+
 
                 //校准电表日期
                 frmMain.Selffrm.AllEquipment.MeterCalibration();
@@ -482,6 +490,14 @@ namespace EMS
                 {
                     frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
                     frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
+
+
+                    //IEC104EVENT eventHandler = new IEC104EVENT();
+                    //IEC104_delegate iec104_delegate = frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+
+
+                    // frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
+                    frmMain.Selffrm.Slave104.IEC104_Init();
                 }
 
                 //使用TCP/IP通讯方式
@@ -534,12 +550,17 @@ namespace EMS
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
-
+                //led定时器
                 if (frmMain.Selffrm.AllEquipment.Led != null)
                 {
                     InitializeLed_Timer();
                 }
-
+                //液冷心跳定时器
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;
+                    InitializeLiquidCold_HeartBeat_Timer();
+                }
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
 
                 frmFlash.AddPostion(10);
@@ -600,15 +621,18 @@ namespace EMS
         }
         static void Public_TimerCallback(Object state)
         {
+            //保存今日充放电量
+            frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
             //如果月份更新：
-            if(frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+            if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
             {
                 frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
                 frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
                 frmSet.historyDatas.ClientPUMdemandMax = 0;
                 frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
 
-                frmSet.LoadHistoryDataFromMySQL();
+                frmSet.Set_HistoryData();
                 frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
             }
 
@@ -622,14 +646,18 @@ namespace EMS
             {
                 //删除180天前的数据
                 frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
-                //保存当天收益到数据库FormatException ex)
-                frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
-                //当日收益发送到云
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
-                                                                                                               //更新日期
-                frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
-                frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                { 
+                    //保存当天收益到数据库FormatException ex)
+                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                    //当日收益发送到云
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
+                                                                                                                   //更新日期
+                    frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                    //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
+                    frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                }
                 //校准电表日期
                 frmMain.Selffrm.AllEquipment.MeterCalibration();
                 //每晚00：00更新策略
@@ -689,6 +717,11 @@ namespace EMS
                     if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                     {
                         frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
+                        //9-4 新增逻辑 液冷机开机指令时直接再做个温控参数配置下发，用来保证运行的控制参数是正确的
+                        frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+
+
+
                     }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
                     else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower))
                     {
@@ -743,123 +776,129 @@ namespace EMS
 
         static void UI_timerCallback(Object state)
         {
-            Task.Run(() =>
+
+            // 和页面按钮有关
+            if (!frmMain.Selffrm.BeFoused)
+                return;
+
+            // 单个数据
+            if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
             {
-                // 和页面按钮有关
-                if (!frmMain.Selffrm.BeFoused)
-                    return;
-
-                // 单个数据
-                if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+                string strCap = "手动";
+                if (TacticsList.TacticsOn)
                 {
-                    string strCap = "手动";
-                    if (TacticsList.TacticsOn)
-                    {
-                        strCap = "策略";
-                    }
-                    else if (frmSet.config.PCSGridModel == 1)
-                    {
-                        strCap = "离网";
-                    }
-                    else if (frmSet.config.SysMode == 2)
-                    {
-                        strCap = "网控";
-                    }
-
-                    double allUkva = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva;
-                    string stateText, powerText;
-                    if (allUkva > 0.5)
-                    {
-                        stateText = strCap + "放电";
-                        powerText = allUkva.ToString("F1") + "kw";
-                    }
-                    else if (allUkva < -0.5)
-                    {
-                        stateText = strCap + "充电";
-                        powerText = allUkva.ToString("F1") + "kw";
-                    }
-                    else
-                    {
-                        stateText = strCap + "待机";
-                        powerText = "0.0kw";
-                    }
-
-                    if (frmMain.Selffrm.labState.IsHandleCreated && frmMain.Selffrm.labPCSuKW.IsHandleCreated)
-                    {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labState.Text = stateText;
-                            frmMain.Selffrm.labPCSuKW.Text = powerText;
-                        }));
-                    }
+                    strCap = "策略";
+                }
+                else if (frmSet.config.PCSGridModel == 1)
+                {
+                    strCap = "离网";
+                }
+                else if (frmSet.config.SysMode == 2)
+                {
+                    strCap = "网控";
                 }
 
-                // 温度
-                if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                double allUkva = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva;
+                string stateText, powerText;
+                if (allUkva > 0.5)
                 {
-                    double indoorTemp = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp;
-                    if (frmMain.Selffrm.labACState.IsHandleCreated)
-                    {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labACState.Text = indoorTemp.ToString() + "℃";
-                        }));
-                    }
+                    stateText = strCap + "放电";
+                    powerText = allUkva.ToString("F1") + "kw";
+                }
+                else if (allUkva < -0.5)
+                {
+                    stateText = strCap + "充电";
+                    powerText = allUkva.ToString("F1") + "kw";
+                }
+                else
+                {
+                    stateText = strCap + "待机";
+                    powerText = "0.0kw";
                 }
 
-                // SOC
-                double BMSSOC = frmMain.Selffrm.AllEquipment.BMSSOC;
-                if (frmMain.Selffrm.labSOC.IsHandleCreated && frmMain.Selffrm.vpbSOC.IsHandleCreated)
+                if (frmMain.Selffrm.labState.IsHandleCreated && frmMain.Selffrm.labPCSuKW.IsHandleCreated)
                 {
                     frmMain.Selffrm.Invoke((Action)(() =>
                     {
-                        frmMain.Selffrm.labSOC.Text = BMSSOC.ToString() + "%";
-                        frmMain.Selffrm.vpbSOC.Value = (int)BMSSOC;
+                        frmMain.Selffrm.labState.Text = stateText;
+                        frmMain.Selffrm.labPCSuKW.Text = powerText;
                     }));
                 }
+            }
 
-                // 电表数据
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            // 温度
+            if (frmMain.Selffrm.AllEquipment.TempControl != null)
+            {
+                double indoorTemp = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp;
+                if (frmMain.Selffrm.labACState.IsHandleCreated)
                 {
-                    double GridKVA = frmMain.Selffrm.AllEquipment.GridKVA;
-                    double PCSOKWH = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
-                    double PCSPKWH = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
-                    double E2OKWH = frmMain.Selffrm.AllEquipment.E2OKWH[0];
-                    double E2PKWH = frmMain.Selffrm.AllEquipment.E2PKWH[0];
-                    if (frmMain.Selffrm.labGridkva.IsHandleCreated &&
-                        frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
-                        frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                    frmMain.Selffrm.Invoke((Action)(() =>
                     {
-                        frmMain.Selffrm.Invoke((Action)(() =>
-                        {
-                            frmMain.Selffrm.labGridkva.Text = GridKVA.ToString("F3");
-                            frmMain.Selffrm.labPCSOKWH.Text = PCSOKWH.ToString("F3");
-                            frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
-                            frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
-                            frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
-                        }));
-                    }
+                        frmMain.Selffrm.labACState.Text = indoorTemp.ToString() + "℃";
+                    }));
                 }
-            });
+            }
+
+            // SOC
+            double BMSSOC = frmMain.Selffrm.AllEquipment.BMSSOC;
+            if (frmMain.Selffrm.labSOC.IsHandleCreated && frmMain.Selffrm.vpbSOC.IsHandleCreated)
+            {
+                frmMain.Selffrm.Invoke((Action)(() =>
+                {
+                    frmMain.Selffrm.labSOC.Text = BMSSOC.ToString() + "%";
+                    frmMain.Selffrm.vpbSOC.Value = (int)BMSSOC;
+                }));
+            }
+
+            // 电表数据
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            {
+                double GridKVA = frmMain.Selffrm.AllEquipment.GridKVA;
+                double PCSOKWH = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                double PCSPKWH = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                double E2OKWH = frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                double E2PKWH = frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                if (frmMain.Selffrm.labGridkva.IsHandleCreated &&
+                    frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                {
+                    frmMain.Selffrm.Invoke((Action)(() =>
+                    {
+                        frmMain.Selffrm.labGridkva.Text = GridKVA.ToString("F3");
+                        frmMain.Selffrm.labPCSOKWH.Text = PCSOKWH.ToString("F3");
+                        frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
+                        frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
+                        frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
+                    }));
+                }
+            }
+            
         }
 
         static void InitializeLed_Timer()
         {
-
             Led_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
         }
         static void LedLoop_timerCallback(Object state)
         {
-
-
-            //pid.PID_calc(,);
-
             //LED控制
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
                 frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+            }
+        }
+        static void InitializeLiquidCold_HeartBeat_Timer()
+        {
+            LiquidCold_Timer = new System.Threading.Timer(InitializeLiquidCold_HeartBeat_Timer, null, 0, 25000);
+        }
+        static void InitializeLiquidCold_HeartBeat_Timer(Object state)
+        {
+            //LED控制
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.LiquidCool.GetOutwaterTempFromEquipment_Heartbeat();
             }
         }
 
