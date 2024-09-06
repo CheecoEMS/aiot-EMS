@@ -770,7 +770,7 @@ namespace EMS
         {
             switch (config.GPIOSelect)
             {
-                case 0:
+                case 0://FA,FB 无RTC
                     frmSet.Init0_GPIO();
                     frmSet.SetGPIOState(0, 3);  //急停
                     frmSet.SetGPIOState(1, 3);  //消防
@@ -786,9 +786,9 @@ namespace EMS
                     frmSet.SetGPIOState(10, 1);  //2 error
                     frmSet.SetGPIOState(11, 1); //3 error
                   //frmSet.SetGPIOState(12, 1);
-                    frmSet.SetGPIOState(15, 1);//EMS LED
+                    frmSet.SetGPIOState(15, 0);//EMS LED
                     break;
-                case 1:
+                case 1://液冷
                     frmSet.Init1_GPIO();
                     frmSet.SetGPIOState(0, 2);//消防
                     frmSet.SetGPIOState(1, 2);//急停
@@ -808,7 +808,7 @@ namespace EMS
                     frmSet.SetGPIOState(14, 1);
                     frmSet.SetGPIOState(15, 0);//EMS LED
                     break;
-                case 2:
+                case 2://FB +RTC
                     frmSet.Init2_GPIO();
                     frmSet.SetGPIOState(0, 2);//消防
                     frmSet.SetGPIOState(1, 2);//急停
