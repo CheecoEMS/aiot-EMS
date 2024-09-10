@@ -208,20 +208,6 @@ namespace EMS
             Slave104.iec104_packet_parser(msg);
 
         }
-
-
-
-        //处理接收到的104报文协议
-        private void OnReceive104CMD(System.Net.Sockets.Socket sender, string strData, string strFromIP, int iPort)
-        {
-            //do+委托
-            byte[] msg = Encoding.ASCII.GetBytes(strData);
-
-            //string hexString = BitConverter.ToString(msg);
-
-            Slave104.iec104_packet_parser(msg);
-
-        }
   
         //人员的权限管理
         public void SetFormPower(int aPower)
@@ -463,7 +449,7 @@ namespace EMS
                 }
                 //校验电表数据
                 Selffrm.AllEquipment.Power_CRC();
-                
+
 
 
                 //校准电表日期
@@ -558,7 +544,7 @@ namespace EMS
                 //液冷心跳定时器
                 if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                 {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;
+                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
                     InitializeLiquidCold_HeartBeat_Timer();
                 }
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();

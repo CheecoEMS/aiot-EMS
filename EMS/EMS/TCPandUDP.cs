@@ -113,7 +113,7 @@ namespace Modbus
         private static ILog log = LogManager.GetLogger("SocketWrapper");
         private readonly object socketLock = new object();
         public volatile int Max_Size = 1024;
-        private volatile bool sendRequested = false;
+        private volatile bool sendRequested = false;//发送请求 获取（已被占用的）锁
         private volatile bool Receive_Complete = true;
 
         public SocketWrapper(Socket socket)
@@ -160,7 +160,7 @@ namespace Modbus
         }
         public bool Send(byte[] data)
         {
-            RequestSend();
+            RequestSend();//等待获取锁资源
             lock (socketLock)
             {
                 try
@@ -203,12 +203,12 @@ namespace Modbus
                 {
                     try
                     {
-                        if (socket != null && socket.Poll(1000, SelectMode.SelectRead)) // 轮询检查是否有数据可读
+                        if (socket != null && socket.Poll(1000, SelectMode.SelectRead)) // 轮询检查是否有数据可读：非阻塞
                         {
                             int receiveNumber = socket.Receive(buffer);
                             if (receiveNumber > 0)
                             {
-                                if (Receive_CRC(buffer, receiveNumber) == true)
+                                if (Receive_CRC(buffer, receiveNumber) == true)//判断是否接收所有数据
                                 {
                                     return Rec_buffer.Concat(buffer.Take(receiveNumber)).ToArray();
                                     //return buffer.Take(receiveNumber).ToArray();
@@ -219,7 +219,7 @@ namespace Modbus
                                 }
                             }
                         }
-                        if (sendRequested && Receive_Complete)
+                        if (sendRequested && Receive_Complete)//监测到发送请求锁，若已经接收所有数据或无数据接收，则释放锁
                         {
                             //log.Warn(" 退出循环，释放锁 ");
                             break; // 退出循环，释放锁
@@ -235,7 +235,7 @@ namespace Modbus
             return null; // 如果循环结束且没有数据，返回 null
         }
 
-
+        //校验是否完全接收数据
         public bool Receive_CRC(byte[] buffer, int receiveNumber)
         {
             int num = 0;
@@ -268,7 +268,7 @@ namespace Modbus
             }
         }
 
-
+        //接收带阻塞：适用于接收方只在接收发送方数据后，才做返回消息
         public byte[] Receive_NonBlock()
         {
             byte[] buffer = new byte[Max_Size];

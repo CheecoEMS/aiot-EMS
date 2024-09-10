@@ -119,9 +119,12 @@ namespace IEC104
 
         public static APDU app;
 
-
+        /* 
+         * 值变化触发
+         */
         private int _ErrorState_104;
         public int ErrorState_104 { get { return _ErrorState_104; } set { if (_ErrorState_104 != value) { _ErrorState_104 = value; } } }
+        
         private int _RunState_104;
         public int RunState_104 { get { return _RunState_104; } set { if (_RunState_104 != value) { _RunState_104 = value;  } } }
         
@@ -129,7 +132,7 @@ namespace IEC104
         public int EState_104 { get { return _EState_104; } set { if (_EState_104 != value) { _EState_104 = value;  } } }
        
 
-        public  bool HostStart_104 { get { return _HostStart_104; } set { if (_HostStart_104 != value) {  _HostStart_104 = value; CIEC104Slave.ReturnSoleYXData(0X1E); } } }
+        public  bool HostStart_104 { get { return _HostStart_104; } set { if (_HostStart_104 != value) {  _HostStart_104 = value; CIEC104Slave.ReturnSoleYXData(0X1E); } } }//遥控0点位变化
         private  bool _HostStart_104;
 
         public  double  aC_104 { get { return _aC_104; } set { if (_aC_104 != value) {_aC_104 = value; CIEC104Slave.ReturnSoleYCData();  } } }
@@ -152,7 +155,7 @@ namespace IEC104
 
         public  void IEC104_Init()
         {
-            app.Isconnect = false;
+            app.Isconnect = false;//顺序标识位：优先响应从站的指令，回复结束后，可以进行变化上送
             app.apci.start = 100;
             app.YC_rawdata = new float[25];
             app.YC_perv_rawdata = new float[25];
@@ -337,20 +340,14 @@ namespace IEC104
         }
 
         /**************************生成发送序号和接收序号*******************/
-        public static void Build_SR_num(byte[] bytes)
-        {
-            //序号递增+1
-            int num = 0;
-            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16) / 2 + 1) * 2;
-            Array.Copy(BitConverter.GetBytes(num), 0, bytes, 0, 2);
-
-        }
         public static void Build_R_num(byte[] bytes)
         {
             //序号递增+1
             int num = 0;
-            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16) / 2 + 1) * 2;
+            num = ((Convert.ToInt32(bytes[0]) + Convert.ToInt32(bytes[1]) * 16 * 16) / 2 + 1) * 2;//接收序号 和 发送序号 最后一位都是默认0 所以值都左移1位
             Array.Copy(BitConverter.GetBytes(num), 0, bytes, 0, 2);
+            
+            //保存接收序列号，在主站主动发送时，此序列号+1 作为接收序列号
             app.apci.RX_field3 = bytes[0];
             app.apci.RX_field4 = bytes[1];
         }
@@ -1098,9 +1095,7 @@ namespace IEC104
             }
             else if ((data[2] & 0x01) == 0x01)
             {
-                // s 帧
-                //iEC104.txcheck = ((data[4]>>1)|(data[5]<<7));
-                //log.Debug("是S帧");
+                //解决一包消息含多帧：找到I帧或U帧则裁剪出来，进行处理，对于S帧，直接丢弃
                 if (data.Length > 6)
                 {
                     byte[] _data = new byte[data.Length - 6];
@@ -1113,6 +1108,7 @@ namespace IEC104
                         else { break; }
                     }
 
+                    //首次找到 非S帧，进行裁切处理。丢弃此帧后的所有数据
                     if ((_data[2] & 0x01) != 0x01)
                     {
                         Console.WriteLine("************** S+I ***************** S+I **************** S+I *************");
@@ -1193,7 +1189,7 @@ namespace IEC104
             Get_Rawdata(Convert.ToBoolean(arr[4]), ref app.YX_rawdata, ref count);             //PCS通信
             Get_Rawdata(Convert.ToBoolean(arr[5]), ref app.YX_rawdata, ref count);             //告警总
 
-
+            //通过对比当前遥信全量数据和过去遥信全量数据，捕获变化的遥信点位
             for (int i = 0; i < app.YX_rawdata.Length; i++)
             {
                 if (app.YX_rawdata[i] != app.YX_perv_rawdata[i])
@@ -1229,6 +1225,7 @@ namespace IEC104
             message[1] = (byte)(Index - 2);
             message[7] = (byte)(dif_count);
 
+            //裁切：去掉末尾无含义的字符0
             Array.Resize(ref message, Index);
 
 
@@ -1390,7 +1387,7 @@ namespace IEC104
             log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& end");
 
         }
-        //记录发送序号
+        //为主站主动发送，记录发送序号
         public static void Record_Order(byte TX_field1, byte TX_field2)
         {
             UInt16 temp = (ushort)(TX_field1 | (TX_field2 << 8));
@@ -1423,12 +1420,12 @@ namespace IEC104
                 endTime = DateTime.Now;
                 Console.WriteLine("$");
                 Console.WriteLine("$********* 变化 1 **********$" + (endTime - startTime).TotalSeconds);
-                ReturnSoleYXData(0x01);
+                ReturnSoleYXData(0x01);//不带时标
                if (app.Isconnect != true) return;
                 endTime = DateTime.Now;
                 Console.WriteLine("$");
                 Console.WriteLine("$********* 变化  2 **********$" + (endTime - startTime).TotalSeconds);
-                ReturnSoleYXData(0X1E);
+                ReturnSoleYXData(0X1E);//带时标
                 endTime = DateTime.Now;
                 Console.WriteLine("$");
                 Console.WriteLine("$********* 变化 3 **********$" + (endTime - startTime).TotalSeconds);
