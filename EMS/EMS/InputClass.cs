@@ -4134,11 +4134,11 @@ namespace EMS
                 }
             }
 
-            //设备掉电ems告警 
+            //设备掉电ems告警 : 仅限风冷
             if (aV < 10 && bV < 10 && cV < 10 )
             {
                 //判断条件 要在明确一下
-                if (frmMain.Selffrm.AllEquipment.GridKVA > 7)  //判断是并网柜侧断电还是客户侧断电
+                if (frmMain.Selffrm.AllEquipment.Elemeter1List[0] != null && frmMain.Selffrm.AllEquipment.Elemeter1List[0].Prepared)  //判断是并网柜侧断电还是客户侧断电
                 {
                     Parent.EMSError[3] |= 0x04;  //并网柜侧断电
                 }
