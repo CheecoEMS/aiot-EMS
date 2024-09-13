@@ -153,14 +153,14 @@ namespace Modbus
             }
         }
 
-        public void RequestSend()
+        public void RequestLock()
         {
             //log.Warn(" 标记发送请求已发出  ");
             sendRequested = true; // 标记发送请求已发出
         }
         public bool Send(byte[] data)
         {
-            RequestSend();//等待获取锁资源
+            RequestLock();//等待获取锁资源
             lock (socketLock)
             {
                 try
@@ -530,6 +530,10 @@ namespace Modbus
             {
                 log.Warn("socketCTS_2404  ----  Close");
                 socketCTS_2404.CloseCTS(); // 请求取消当前的接收数据操作  
+                if (socketWrapper_2404 != null)
+                {
+                    socketWrapper_2404.RequestLock();
+                }
                 WaitThreadEnd(Receive2404Thread);// 等待接收线程终止
             }
 
