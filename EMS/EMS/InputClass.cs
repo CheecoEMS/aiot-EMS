@@ -5261,7 +5261,7 @@ namespace EMS
                         sKey = (ushort)(1 << j);
                         iData = sOldData & sKey;
                         if ((iData > 0) && (ErrorClass.BMSErrorsPower[16 * i + j] > 0))//更新故障信息
-                            RecodError("BMS", iot_code, 16 * i + j, ErrorClass.BMSErrorsPower[16 * i + j], ErrorClass.BMSErrors[16 * i + j], (sData & sKey) > 1);
+                            RecodError("BMS", iot_code, 16 * i + j, ErrorClass.BMSErrorsPower[16 * i + j], ErrorClass.BMSErrors[16 * i + j], (sData & sKey) > 0);
                     }
                 }
                 OldError[i] = Error[i];
@@ -6005,7 +6005,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master4.0";
+        public string EMSVersion { get; set; } = "EMS240815Master5.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
