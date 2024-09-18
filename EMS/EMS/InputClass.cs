@@ -1044,16 +1044,16 @@ namespace EMS
             {
                 lock (this.m485.sp)
                 {
-                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, false);
-                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, false);
-                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, false);
-                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, false);
+                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, false);//设置温度启动值（硬件不支持）
+                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, false);//设置温度停止值（硬件不支持）
+                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, false);//设置湿度启动值
+                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, false);//设置湿度停止值
                     if ((short)frmSet.componentSettings.DHSetRunStatus == 0)
                     {
-                        SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);
+                        SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);//开启手动模式
                     }
                     else {
-                        SetSysData(11, 0X00FF, false);
+                        SetSysData(11, 0X00FF, false);//开启自动模式
                     }
                 }
                 return true;
@@ -1062,84 +1062,65 @@ namespace EMS
             { return false; }
 
         }
-
-        public void GetSetDataFromEquipment()
-        { 
-            
-        }
-
 
         override public void GetDataFromEqipment()
         {
-            if (frmMain.Selffrm.AllEquipment.Dehumidifier != null)
-            {
-                string strData = "";
-                bool bPrepared = false;
-                bool tempError = false;
-                string strTemp = "";
+            string strData = "";
+            bool bPrepared = false;
+            bool tempError = false;
+            string strTemp = "";
 
-                if (GetSysData(12, ref strData))
-                {
-                    bPrepared = true;
-                    if (Get3strData(0, ref strData, ref strTemp))
-                    {
-                        TempData = Convert.ToInt32(strTemp)/10.0;            //温度
-                    }
-                    if (Get3strData(1, ref strData, ref strTemp))
-                    {
-                        HumidityData = Convert.ToInt32(strTemp)/10.0;            //湿度
-                    }
-                    if (Get3strData(2, ref strData, ref strTemp))
-                    {
-                        WorkStatus = Convert.ToInt32(strTemp);            //工作状态   
-                    }
-                    if (Get3strData(3, ref strData, ref strTemp))
-                    {
-                        TempData_Boot = Convert.ToInt32(strTemp);            //温度启动值
-                    }
-                    if (Get3strData(4, ref strData, ref strTemp))
-                    {
-                        TempData_Stop = Convert.ToInt32(strTemp);            //温度停止值
-                    }
-                    if (Get3strData(5, ref strData, ref strTemp))
-                    {
-                        HumidityData_Boot = Convert.ToInt32(strTemp);        //湿度启动值
-                    }
-                    if (Get3strData(6, ref strData, ref strTemp))
-                    {
-                        HumidityData_Stop = Convert.ToInt32(strTemp);        //湿度停止值
-                    }
-                }
-                Prepared = bPrepared;
-            }
-        }
-        public bool SetSysData()
-        {
-            try
+            if (GetSysData(12, ref strData))
             {
+                bPrepared = true;
+                if (Get3strData(0, ref strData, ref strTemp))
                 {
-                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, true);
-                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, true);
-                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, true);
-                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, true);
+                    TempData = Convert.ToInt32(strTemp)/10.0;            //温度
                 }
-                return true;
+                if (Get3strData(1, ref strData, ref strTemp))
+                {
+                    HumidityData = Convert.ToInt32(strTemp)/10.0;            //湿度
+                }
+                if (Get3strData(2, ref strData, ref strTemp))
+                {
+                    WorkStatus = Convert.ToInt32(strTemp);            //工作状态   
+                }
+                if (Get3strData(3, ref strData, ref strTemp))
+                {
+                    TempData_Boot = Convert.ToInt32(strTemp);            //温度启动值
+                }
+                if (Get3strData(4, ref strData, ref strTemp))
+                {
+                    TempData_Stop = Convert.ToInt32(strTemp);            //温度停止值
+                }
+                if (Get3strData(5, ref strData, ref strTemp))
+                {
+                    HumidityData_Boot = Convert.ToInt32(strTemp);        //湿度启动值
+                }
+                if (Get3strData(6, ref strData, ref strTemp))
+                {
+                    HumidityData_Stop = Convert.ToInt32(strTemp);        //湿度停止值
+                }
             }
-            catch
-            { return false; }
+            Prepared = bPrepared;
+            
         }
 
     }
     //5.05 新增led
     public class LEDClass : BaseEquipmentClass
     {
-        public int Led_on  = 0xFFFF;
-        public int Led_blink = 0xCCCC;
-        public int Led_off  = 0x0000;
+        public int Led_on  = 0xFFFF;//常亮
+        public int Led_blink = 0xCCCC;//闪烁
+        public int Led_off  = 0x0000;//关闭
         public LEDClass()
         {
             strCommandFile = "LED.txt";
         }
+
+        /*
+         * 灯板状态指示灯：绿：运行 黄：告警 红：故障
+         */
         public void SetLEDRun(int Op)
         {
             SetSysData(0, Op, true);
@@ -1152,10 +1133,10 @@ namespace EMS
         {
             SetSysData(2, Op, true);
         }
-        public void Set_LED(int num, int Op)
-        {
-            SetSysData(num, Op, true);
-        }
+
+        /*
+         * 灯板电量指示灯分为5格
+         */
         public void SetLEDE1(int Op)
         {
             SetSysData(3, Op, true);
@@ -1176,10 +1157,14 @@ namespace EMS
         {
             SetSysData(7, Op, true);
         }
+
+        //暂停：蜂鸣器
         public void SetBuzzer(int Op)
         {
             SetSysData(8, Op, true);
         }
+
+
         public void SetButteryPercentOff()      //灯板电量指示灯全部关闭
         {
             SetLEDE1(Led_off);
@@ -1254,7 +1239,7 @@ namespace EMS
 
 
         }
-        public void SetChargeButteryPercent(int Op)  //灯板显示充电电量
+        public void SetChargeButteryPercent(int Op)  //灯板显示充放电电量（顶格电量指示灯闪烁）
         {
             switch (Op)
             {
@@ -1414,7 +1399,7 @@ namespace EMS
                 else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
 
                 //LED获取当前电量等级
-                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;
+                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;//Eg: soc为5%，显示1格
 
                 log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}");
 
@@ -1422,6 +1407,7 @@ namespace EMS
 
                 if (frmMain.Selffrm.AllEquipment.Prev_Led_Show_status != frmMain.Selffrm.AllEquipment.Led_Show_status)//运行状态改变
                 {
+                    //设置状态指示灯
                     if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //获取待机状态
                     {
                         switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
@@ -1452,6 +1438,8 @@ namespace EMS
                                 break;
                         }
                     }
+
+                    //设置电量指示灯
                     switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
                     {
                         case 0:
@@ -1959,13 +1947,13 @@ namespace EMS
             {
                 lock (this.m485.sp)
                 {
-                    SetSysData(1, frmSet.componentSettings.LCModel, false);
-                    SetSysData(2, frmSet.componentSettings.LCTemperSelect, false);
-                    SetSysData(3, (short)frmSet.componentSettings.LCSetCoolTemp, false);
-                    SetSysData(4, (short)frmSet.componentSettings.LCSetHotTemp, false);
-                    SetSysData(5, (short)frmSet.componentSettings.LCCoolTempReturn, false);
-                    SetSysData(6, (short)frmSet.componentSettings.LCHotTempReturn, false);
-                    SetSysData(7, frmSet.componentSettings.LCWaterPump, false);
+                    SetSysData(1, frmSet.componentSettings.LCModel, false);//模式选择
+                    SetSysData(2, frmSet.componentSettings.LCTemperSelect, false);//控制温度选择
+                    SetSysData(3, (short)frmSet.componentSettings.LCSetCoolTemp, false);//水温制冷点
+                    SetSysData(4, (short)frmSet.componentSettings.LCSetHotTemp, false);//水温制热点
+                    SetSysData(5, (short)frmSet.componentSettings.LCCoolTempReturn, false);//制冷回差
+                    SetSysData(6, (short)frmSet.componentSettings.LCHotTempReturn, false);//制热回差
+                    SetSysData(7, frmSet.componentSettings.LCWaterPump, false);//水泵档位选择
                 }
                 return true;
             }
@@ -2007,93 +1995,85 @@ namespace EMS
                 }*/
 
 
+        //液冷机心跳：30s内若无心跳(一条通信问询)，则液冷机自动初始化默认参数
         public void GetOutwaterTempFromEquipment_Heartbeat()
         {
             string strData = "";
-            string strTemp = "";
-            bool bPrepared = false;
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-            {
-                GetSysData(25, ref strData);
-                log.Warn("液冷机:  " + strData);
-                //OutwaterTemp = Math.Round(float.Parse(strData), 1);//出水温度 
-            }
+            GetSysData(25, ref strData);
         }
 
         public void GetSetDataFromEquipment()
         {
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            string strData = "";
+            string strTemp = "";
+            bool bPrepared = false;
+            //读取设备信息
+            if (GetSysData(36, ref strData))
             {
-                string strData = "";
-                string strTemp = "";
-                bool bPrepared = false;
-                //读取设备信息
-                if (GetSysData(36, ref strData))
+                bPrepared = true;
+                if (Get3strData(28, ref strData, ref strTemp))
                 {
-                    bPrepared = true;
-                    if (Get3strData(28, ref strData, ref strTemp))
-                    {
-                        state = Convert.ToInt32(strTemp);
-                    }
-                    if (Get3strData(29, ref strData, ref strTemp))
-                    {
-                        LCModel = Convert.ToInt32(strTemp);
-                    }
-                    if (Get3strData(30, ref strData, ref strTemp))
-                    {
-                        TemperSelect =  Convert.ToInt32(strTemp);
-                    }
-
+                    state = Convert.ToInt32(strTemp);
                 }
-                //读取设备信息
-                if (GetSysData(37, ref strData))
+                if (Get3strData(29, ref strData, ref strTemp))
                 {
-                    bPrepared = true;
-                    if (Get3strData(31, ref strData, ref strTemp))
-                    {
-                        CoolTemp = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(32, ref strData, ref strTemp))
-                    {
-                        HotTemp = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(33, ref strData, ref strTemp))
-                    {
-                        CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(34, ref strData, ref strTemp))
-                    {
-                        HotTempReturn = Math.Round(float.Parse(strTemp), 1);
-                    }
-                    if (Get3strData(35, ref strData, ref strTemp))
-                    {
-                        WaterPump =  Convert.ToInt32(strTemp);
-                    }
-
+                    LCModel = Convert.ToInt32(strTemp);
+                }
+                if (Get3strData(30, ref strData, ref strTemp))
+                {
+                    TemperSelect =  Convert.ToInt32(strTemp);
                 }
 
-                Prepared = bPrepared;
-                if (!Prepared)
+            }
+            //读取设备信息
+            if (GetSysData(37, ref strData))
+            {
+                bPrepared = true;
+                if (Get3strData(31, ref strData, ref strTemp))
                 {
-                    if (count < 10)
-                    {
-                        count++;
-                    }
-                    if (count > 8)
-                    {
-                        lock (Parent.EMSError)
-                        {
-                            Parent.EMSError[0] &= 0xDFFF;
-                            Parent.EMSError[0] |= 0x2000;
-                        }
-                    }
+                    CoolTemp = Math.Round(float.Parse(strTemp), 1);
                 }
-                else
+                if (Get3strData(32, ref strData, ref strTemp))
                 {
-                    Parent.EMSError[0] &= 0xDFFF;
-                    count = 0;
+                    HotTemp = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(33, ref strData, ref strTemp))
+                {
+                    CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(34, ref strData, ref strTemp))
+                {
+                    HotTempReturn = Math.Round(float.Parse(strTemp), 1);
+                }
+                if (Get3strData(35, ref strData, ref strTemp))
+                {
+                    WaterPump =  Convert.ToInt32(strTemp);
+                }
+
+            }
+
+            Prepared = bPrepared;
+            if (!Prepared)
+            {
+                if (count < 10)
+                {
+                    count++;
+                }
+                if (count > 8)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xDFFF;
+                        Parent.EMSError[0] |= 0x2000;
+                    }
                 }
             }
+            else
+            {
+                Parent.EMSError[0] &= 0xDFFF;
+                count = 0;
+            }
+            
         }
 
         override public void GetDataFromEqipment()
@@ -4154,11 +4134,11 @@ namespace EMS
                 }
             }
 
-            //设备掉电ems告警 
+            //设备掉电ems告警 : 仅限风冷
             if (aV < 10 && bV < 10 && cV < 10 )
             {
                 //判断条件 要在明确一下
-                if (frmMain.Selffrm.AllEquipment.GridKVA > 7)  //判断是并网柜侧断电还是客户侧断电
+                if (frmMain.Selffrm.AllEquipment.Elemeter1List[0] != null && frmMain.Selffrm.AllEquipment.Elemeter1List[0].Prepared)  //判断是并网柜侧断电还是客户侧断电
                 {
                     Parent.EMSError[3] |= 0x04;  //并网柜侧断电
                 }
@@ -4746,6 +4726,20 @@ namespace EMS
                 SetSysData(37, 0x000,true);// 关闭
         }
 
+        /***************************************************************************************************/
+        /// <summary>
+        /// 电芯温度，定制的BMS温度部分
+        /// </summary>
+        /// <param name="aCellTemps"></param>
+        /// <param name="aData"></param>
+        /// 
+
+        /*  保存BMS温度
+         *  168电池温度采集点数量：12个PACK 每个PACK包含14个电芯温度采集，每组PACK温度组末尾 + 正极柱温度(14) + 负极柱温度(15)
+         *  160电池温度采集点数量：5个PACK 每个PACK包含28个电芯温度采集， 每组PACK温度组末尾 + 正极柱温度(28) + 负极柱温度(29) + 出水口温度(30) + 进水口温度(31)
+         *
+         */
+
 
         private void UpdateCellTemp(double[] aCellTemps, int Group, string aData)
         {
@@ -4754,7 +4748,7 @@ namespace EMS
                 case 1:
                     switch (frmSet.config.CellTNum)
                     {
-                        case 168:
+                        case 168://风冷
                             if (Group == 1)
                             {
                                 UpdateCellTemp_168(aCellTemps, 0, aData);
@@ -4764,7 +4758,7 @@ namespace EMS
                                 UpdateCellTemp_168(aCellTemps, 120, aData);
                             }
                             break;
-                        case 160:
+                        case 160://液冷
                             if (Group == 1)
                             {
                                 UpdateCellTemp_160(aCellTemps, 0, aData);
@@ -4805,84 +4799,6 @@ namespace EMS
             }
         }
 
-            /// <summary>
-            /// 内嵌式电芯温度，质检院BMs和以前3台设备的BMS
-            /// </summary>
-            /// <param name="aCellTemps"></param>
-            /// <param name="aData"></param>
-        private void UpdateCellTemp0(double[] aCellTemps, int aStart, string aData)
-        {
-            int iStartIndex = 0;
-            double dTemp;
-            if (aStart > 0)
-                iStartIndex = 6;
-
-            for (int i = 0; i < 6; i++)
-            {
-                //1-10
-                for (int j = 0; j < 5; j++)
-                {
-                    dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    aCellTemps[aStart + i * 20 + 2 * j] = Math.Round(dTemp, 1);
-                    aCellTemps[aStart + i * 20 + 2 * j + 1] = aCellTemps[aStart + i * 20 + 2 * j];
-                }
-                //6负基板
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 2] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-                //7过桥
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 4] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-                //8负总接线柱
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 3] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-                //11-20
-                for (int j = 0; j < 5; j++)
-                {
-                    dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    // aCellTemps[aStart + i * 20 + 2 * j + 10] = Math.Round(dTemp, 1);
-                    // aCellTemps[aStart + i * 20 + 2 * j + 11] = aCellTemps[aStart + i * 20 + 2 * j + 10];
-                    aCellTemps[aStart + i * 20 - 2 * j + 18] = Math.Round(dTemp, 1);
-                    aCellTemps[aStart + i * 20 - 2 * j + 19] = Math.Round(dTemp, 1);
-                }
-                //14 正基板
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 0] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-                //15 过桥
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 5] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-                //16 正总接线柱
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                PackTemp[iStartIndex + i, 1] = Math.Round(dTemp, 1);
-                aData = aData.Substring(4, aData.Length - 4);
-
-            }
-            //int aStart
-            //for (int i = 0; i < 120; i++)//aCellTemps.Length
-            //{
-            //    if (aData.Length >= 4)
-            //    {
-            //        aCellTemps[i+ aStart] = (float)(Convert.ToInt32("0X"+aData.Substring(0, 4),16) * 0.1);
-            //        aData = aData.Substring(4, aData.Length - 4);
-            //    }
-            //    else
-            //    {
-            //        aCellTemps[i] = 0;
-            //    }
-            //} 
-        }
-
-        /// <summary>
-        /// 电芯温度，定制的BMS温度部分
-        /// </summary>
-        /// <param name="aCellTemps"></param>
-        /// <param name="aData"></param>
         private void UpdateCellTemp_168(double[] aCellTemps, int aStart, string aData)
         { 
             double dTemp;  
@@ -4927,9 +4843,26 @@ namespace EMS
         //正接线柱的温度
         private void UpdatePTemp(double[] aCellTemps, string aData)
         {
-            switch (frmSet.config.BMSVerb)
+            switch (frmSet.config.BMSVerb)//选择BMS的厂商
             {
-                case 1:
+                case 1://协能
+                    switch (frmSet.config.CellTNum)//选择温度采集点数量 168：风冷 160：液冷
+                    {
+                        case 168:
+                            UpdatePTemp_168(aCellTemps, aData);
+                            break;
+                        case 160:
+                            UpdatePTemp_160(aCellTemps, aData);
+                            break;
+                        default:
+                            {
+                                UpdatePTemp_168(aCellTemps, aData);
+                            }
+                            break;
+                    }
+                    break;
+
+                default://默认协能
                     switch (frmSet.config.CellTNum)
                     {
                         case 168:
@@ -5001,49 +4934,6 @@ namespace EMS
         }
 
         /******************************** 液冷 ********************************/
-        //正接线柱的温度_liquidcool
-        private void UpdatePTemp_liquidcool(double[] aCellTemps, string aData)
-        {
-            double dTemp;
-            for (int i = 0; i < 5; i++)
-            {
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                aData = aData.Substring(4, aData.Length - 4);
-                aCellTemps[i * 48 + 28] = Math.Round(dTemp, 1);
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                aData = aData.Substring(4, aData.Length - 4);
-                aCellTemps[i * 48 + 30] = Math.Round(dTemp, 1);
-            }
-        }
-        //负接线柱的温度_liquidcool
-        private void UpdateOTemp_liquidcool(double[] aCellTemps, string aData)
-        {
-            double dTemp;
-            for (int i = 0; i < 5; i++)
-            {
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                aData = aData.Substring(4, aData.Length - 4);
-                aCellTemps[i * 48 + 29] = Math.Round(dTemp, 1);
-                dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                aData = aData.Substring(4, aData.Length - 4);
-                aCellTemps[i * 48 + 31] = Math.Round(dTemp, 1);
-            }
-        }
-        private void UpdateCellTemp_liquidcool(double[] aCellTemps, int aStart, string aData)
-        {
-            double dTemp;
-            for (int i = 0; i < 3; i++)
-            {
-                //1-10
-                for (int j = 0; j < 28; j++)
-                {
-                    dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    aCellTemps[aStart + i * 48 + j] = Math.Round(dTemp, 1);
-                }
-
-            }
-        }
         private void UpdateCellTemp_160(double[] aCellTemps, int aStart, string aData)
         {
             try
@@ -5064,6 +4954,8 @@ namespace EMS
             catch    {  }
         }
         /******************************** 液冷 ********************************/
+
+        /**************************************************************************************************************************/
 
         /// <summary>
         /// 电芯的电压
@@ -5369,22 +5261,12 @@ namespace EMS
                         sKey = (ushort)(1 << j);
                         iData = sOldData & sKey;
                         if ((iData > 0) && (ErrorClass.BMSErrorsPower[16 * i + j] > 0))//更新故障信息
-                            RecodError("BMS", iot_code, 16 * i + j, ErrorClass.BMSErrorsPower[16 * i + j], ErrorClass.BMSErrors[16 * i + j], (sData & sKey) > 1);
+                            RecodError("BMS", iot_code, 16 * i + j, ErrorClass.BMSErrorsPower[16 * i + j], ErrorClass.BMSErrors[16 * i + j], (sData & sKey) > 0);
                     }
                 }
                 OldError[i] = Error[i];
             }
 
-        }
-
-        public static void Delay(int mm)
-        {
-            DateTime current = DateTime.Now;
-            while (current.AddMilliseconds(mm) > DateTime.Now)
-            {
-                Application.DoEvents();
-            }
-            return;
         }
 
         public void GetErrorFromEquipment()
@@ -5931,8 +5813,9 @@ namespace EMS
         public TempHumClass TempHum;
         public SmokeClass Smoke;
         public CoClass co;
-        //5.05_swp
+        //灯板：5.05_swp
         public LEDClass Led;
+        //除湿机
         public DehumidifierClass Dehumidifier;
         //用户侧电表（关口表）
         public List<Elemeter1Class> Elemeter1List = new List<Elemeter1Class>();
@@ -6122,7 +6005,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master2.0";
+        public string EMSVersion { get; set; } = "EMS240815Master5.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7213,6 +7096,7 @@ namespace EMS
             log.Debug("超限防逆需量上限：" + frmSet.cloudLimits.MaxGridKW  + " "
                 +"超限防逆电网功率下限：" +  frmSet.cloudLimits.MinGridKW + " "
                 +"超限防逆电网功率：" +  GridKVA + " "
+                +"超限防逆电网平均功率：" +  GridKVA_window + " "
                 +"超限防逆计算差值: " + dValue + " "
                 +"超限防逆计算修正比: " + dRate + " "
                 +"超限防逆PCS充放电模式：" + wTypeActive + " "
@@ -7696,6 +7580,7 @@ namespace EMS
             log.Debug("超限防逆上限：" + frmSet.cloudLimits.MaxGridKW + " "
                 +"超限防逆下限：" + frmSet.cloudLimits.MinGridKW + " "
                 +"超限防逆电网功率：" +  GridKVA + " "
+                +"超限防逆电网平均功率：" +  GridKVA_window + " "
                 +"超限防逆计算差值: " + dValue + " "
                 +"超限防逆计算修正比: " + dRate + " "
                 +"超限防逆PCS充放电模式：" + wTypeActive + " "
