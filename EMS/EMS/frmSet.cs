@@ -710,8 +710,8 @@ namespace EMS
 
         public List<ModbusCommand> VersionList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
 
-
-        public static UInt32[] GPOIAddr ={   //原版
+        /*Fix:地址待可以归一*/
+        public static UInt32[] GPOIAddr ={   
             0xFED0E178,//消防
             0xFED0E278,//急停
             0xFED0E1C8,
@@ -731,7 +731,7 @@ namespace EMS
             0xFED0E3A8,
         };
 
-        public static UInt32[] GPOIAddr2 ={  //修改版
+        public static UInt32[] GPOIAddr2 ={ 
             0xFED0E178,//0 消防            
             0xFED0E278,//1 急停
             0xFED0E1C8,//2 门禁
@@ -770,8 +770,10 @@ namespace EMS
         {
             switch (config.GPIOSelect)
             {
-                case 0:
+                case 0://FA,FB 无RTC: 初始化：输入、输出 电平置高
                     frmSet.Init0_GPIO();
+
+                    /*Fix:冗余*/
                     frmSet.SetGPIOState(0, 3);  //急停
                     frmSet.SetGPIOState(1, 3);  //消防
                     frmSet.SetGPIOState(2, 3);  
@@ -786,10 +788,12 @@ namespace EMS
                     frmSet.SetGPIOState(10, 1);  //2 error
                     frmSet.SetGPIOState(11, 1); //3 error
                   //frmSet.SetGPIOState(12, 1);
-                    frmSet.SetGPIOState(15, 1);//EMS LED
+                    frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）
                     break;
-                case 1:
+                case 1://液冷 初始化：输入、输出 电平置低
                     frmSet.Init1_GPIO();
+
+                    /*Fix:冗余*/
                     frmSet.SetGPIOState(0, 2);//消防
                     frmSet.SetGPIOState(1, 2);//急停
                     frmSet.SetGPIOState(2, 2);//门禁
@@ -805,11 +809,13 @@ namespace EMS
                     frmSet.SetGPIOState(11, 0); //3 error
                     frmSet.SetGPIOState(12, 0);
                     frmSet.SetGPIOState(13, 0);
-                    frmSet.SetGPIOState(14, 1);
-                    frmSet.SetGPIOState(15, 0);//EMS LED
+                    frmSet.SetGPIOState(14, 1);//EMS LED （特殊：初始化置高开启灯）
+                    frmSet.SetGPIOState(15, 0);
                     break;
-                case 2:
+                case 2://FB +RTC
                     frmSet.Init2_GPIO();
+
+                    /*Fix:冗余*/
                     frmSet.SetGPIOState(0, 2);//消防
                     frmSet.SetGPIOState(1, 2);//急停
                     frmSet.SetGPIOState(2, 2);
@@ -826,7 +832,7 @@ namespace EMS
                     frmSet.SetGPIOState(12, 0);
                     frmSet.SetGPIOState(13, 0);
                     frmSet.SetGPIOState(14, 0);
-                    frmSet.SetGPIOState(15, 1);//EMS LED
+                    frmSet.SetGPIOState(15, 1);//EMS LED （特殊：初始化置高开启灯）
                     break;
             }
         }
@@ -1032,20 +1038,20 @@ namespace EMS
             return bResult;
         }
 
-
+        //监测触发BMS发生二级告警， 控制告警指示灯：（0：关闭 1：开启）
         public static void BMS2warningGPIO(int option) 
         {
             if(option == 0)
             switch (config.GPIOSelect)
             {
                 case 0:
-                    frmSet.SetGPIOState(10, 1);
+                    frmSet.SetGPIOState(10, 1);//FA 无RTC
                     break;
                 case 1:
                    // frmSet.SetGPIOState(10, 1);
                     break;
                 case 2:
-                    frmSet.SetGPIOState(10, 0);
+                    frmSet.SetGPIOState(10, 0);//FB + RTC
                     break;
             }
             else 
@@ -1062,6 +1068,8 @@ namespace EMS
                     break;
             }
         }
+
+        //控制故障指示灯 ：（0：关闭 ， 1：开启）
         public static void ErrorGPIO(int option)
         {
             if (option == 0)
@@ -1091,6 +1099,8 @@ namespace EMS
                         break;
                 }
         }
+
+        //控制运行指示灯： （0：关闭 ， 1：开启）
         public static void RunStateGPIO(int option)
         {
             if (option == 0)
@@ -1121,6 +1131,7 @@ namespace EMS
                 }
         }
 
+        //控制电源指示灯
         public static void PowerGPIO(int option)
         {
             if (option == 0)
@@ -2102,7 +2113,8 @@ namespace EMS
 
         private void btnDHRead_Click(object sender, EventArgs e)
         {
-            frmMain.Selffrm.AllEquipment.Dehumidifier.GetDataFromEqipment();
+            if (frmMain.Selffrm.AllEquipment.Dehumidifier != null)
+                frmMain.Selffrm.AllEquipment.Dehumidifier.GetDataFromEqipment();
         }
 
         //读取数据库，刷新策略时段
@@ -2197,7 +2209,7 @@ namespace EMS
             public string ConnectStatus { get; set; }
 
             public int CellVNum { get; set; }
-            public int CellTNum { get; set; }
+            public int CellTNum { get; set; } //168：风冷 160：液冷
         }
 
         public class ComponentSettingsClass
