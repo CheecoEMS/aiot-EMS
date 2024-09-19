@@ -37,7 +37,6 @@ namespace EMS
         //策略列表
         List<BalaTacticsClass> BalaTacticsList = new List<BalaTacticsClass>();
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
-        public bool BalaHasOn = false;  //策略标识符
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
         private static ILog log = LogManager.GetLogger("BalaTacticsClass");
@@ -120,7 +119,7 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread ClientRecThread = new Thread(CheckBalaTactics);
                 ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Lowest;
+                ClientRecThread.Priority = ThreadPriority.Normal;
                 ClientRecThread.Start();
             }
             catch
@@ -141,6 +140,10 @@ namespace EMS
                     continue;
                 else if (frmSet.config.UseBalaTactics == 0)
                 {
+                    if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                    }
                     Thread.Sleep(60000);
                     continue;
                 }
@@ -158,8 +161,6 @@ namespace EMS
                         sleepCount = 5000;
                         continue;
                     }
-
-
                     //判断时间所在的区间和工作内容
                     int i = 0;
                     for (i = 0; i < BalaTacticsList.Count; i++)
@@ -218,7 +219,7 @@ namespace EMS
                         sleepCount = 60000;
                     }
                     else
-                    {
+                    {                      
                         //运行策略 
                         if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
                         {

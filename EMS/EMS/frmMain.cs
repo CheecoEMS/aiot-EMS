@@ -376,6 +376,12 @@ namespace EMS
                 {
                     frmMain.Selffrm.AllEquipment.init_LiquidCool();
                 }
+                //初始化BMS功能等级
+                if (frmMain.Selffrm.AllEquipment.BMS != null)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.CheckFunctionLevel();
+                }
+                
 
 
                 //配置DofD电能历史文件的路径

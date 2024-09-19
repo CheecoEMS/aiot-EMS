@@ -1,6 +1,8 @@
 ﻿using log4net;
+using log4net.Core;
 using Modbus;
 using MySql.Data.MySqlClient;
+using Mysqlx.Prepare;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,6 +10,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -4514,8 +4517,11 @@ namespace EMS
         public ushort[] OldError = { 0, 0, 0, 0, 0 };
 
         public double[] HVBoxTemps { get; set; } = new double[4];//高压箱的温度
-        public double[] CellTemps { get; set; } = new double[240];//
-        public double[] CellVs { get; set; } = new double[240];//
+        //public double[] CellTemps { get; set; } = new double[240];//
+        public double[] CellTemps { get; set; } = new double[300];//
+        //public double[] CellVs { get; set; } = new double[240];//
+        public double[] CellVs { get; set; } = new double[300];//
+
         public double[,] PackTemp = new double[12, 6];//每个pack有正极板，正极总线，负极板，负极接线柱，过桥板1，2
 
         //8.3
@@ -4537,6 +4543,18 @@ namespace EMS
 
         public double BMSCap { get; set; } // BMS当前容量 
 
+        
+
+        private int ProjectNumber;//项目版本号
+        private int MajorVersionNumber;//主版本号
+        private int SubversionVersionNumber;//子版本号
+        private int CorrectionVersionNumber;//修正版本号
+        private string BmsHardware; //BMS硬件的软件版本号
+
+        private string[] Level_1_Version = { "13.81.9.5","1.8.4.19","1.8.4.28"};
+        public int FunctionLevel = 0;//功能等级
+
+
         private static ILog log = LogManager.GetLogger("BMSClass");
 
 
@@ -4548,15 +4566,62 @@ namespace EMS
             strCommandFile = "BMS.txt";
         }
 
+        //根据bms的版本信息，决定开放的工程
+        public void CheckFunctionLevel()
+        {
+            string strTemp = "";
+            string strData = "";
+            bool bPrepared = false;
+
+            //BMS版本信息
+            if (GetSysData(140, ref strTemp))
+            {
+                bPrepared = true;
+                if (Get3strData(136, ref strTemp, ref strData))
+                    ProjectNumber = int.Parse(strData);
+                if (Get3strData(137, ref strTemp, ref strData))
+                    MajorVersionNumber = int.Parse(strData);
+                if (Get3strData(138, ref strTemp, ref strData))
+                    SubversionVersionNumber = int.Parse(strData);
+                if (Get3strData(139, ref strTemp, ref strData))
+                    CorrectionVersionNumber = int.Parse(strData);
+
+                BmsHardware = ProjectNumber.ToString()+"."+MajorVersionNumber.ToString()+"."+SubversionVersionNumber.ToString()+"."+CorrectionVersionNumber.ToString();
+                for (int i = 0; i < Level_1_Version.Count(); ++i)
+                {
+                    if (BmsHardware == Level_1_Version[i])
+                    {
+                        FunctionLevel = 1;
+                        log.Error("BMS等级: 1");
+                    }
+                }
+            }
+        }
+
+
+        /****************************************************************
+        *
+        *
+        *                        Level 1 Function
+        *
+        /****************************************************************/
+
+        /******************************
+        *
+        *           均衡
+        *
+        /******************************/
+
         public void ClearBmsBala()
         {
             for (int i = 0; i < 25; i++)
             {
                 BalaSwitch[i] = 0;
-                SetSysData(i + 60, BalaSwitch[i], false);                    
+                SetSysData(i + 60, BalaSwitch[i], false);
             }
+            //更新均衡运行标志位
+            GetBalaInfo();
         }
-
 
         public void StartBmsBala()
         {
@@ -4571,59 +4636,56 @@ namespace EMS
             ushort[] NewBalaSwitch = new ushort[25];
 
 
-                foreach (double i in frmMain.Selffrm.AllEquipment.balaCellID)
+            foreach (double i in frmMain.Selffrm.AllEquipment.balaCellID)
+            {
+                index = i;
+
+                bit = index % 16;
+
+                //被动均衡开关序号
+                if (bit ==0)
                 {
-                    index = i;
+                    num = index / 16 - 1;
+                }
+                else
+                    num = index / 16;
 
-                    bit = index % 16;
+                //电池序号 1-16
 
-                    //被动均衡开关序号
-                    if (bit ==0)
-                    {
-                        num = index / 16 - 1;
-                    }
-                    else
-                        num = index / 16;
+                if (bit == 0)
+                {
+                    bit = 15;
+                }
+                else
+                    bit -= 1;
 
-                    //电池序号 1-16
-
-                    if (bit == 0)
-                    {
-                        bit = 15;
-                    }
-                    else
-                        bit -= 1;
-                    
-                    //均衡开关地址置位
-                    bala = (ushort)(1<<(int)bit);
-                    if (NewBalaSwitch[(int)num] == 0)
-                    {
-                        bala |= BalaSwitch[(int)num];
-                        NewBalaSwitch[(int)num] = bala;
-                    }
-                    else
-                    {
-                        NewBalaSwitch[(int)num] |= bala;
-                    }
-                       
-                    
+                //均衡开关地址置位
+                bala = (ushort)(1<<(int)bit);
+                if (NewBalaSwitch[(int)num] == 0)
+                {
+                    bala |= BalaSwitch[(int)num];
+                    NewBalaSwitch[(int)num] = bala;
+                }
+                else
+                {
+                    NewBalaSwitch[(int)num] |= bala;
                 }
 
-                //开启或关闭均衡开关
-                for (int i = 0; i < 25; i++)
+
+            }
+
+            //开启或关闭均衡开关
+            for (int i = 0; i < 25; i++)
+            {
+                if (NewBalaSwitch[i] != 0)
                 {
-                    if (NewBalaSwitch[i] != 0)
-                    {
-                        SetSysData(i + 60, NewBalaSwitch[i], false);
-                    }
+                    SetSysData(i + 60, NewBalaSwitch[i], false);
                 }
+            }
 
-                
-
-            
+            //更新均衡运行标志位
+            GetBalaInfo();
         }
-
-
 
         //9.8 设置BMS均衡开关
         //aData : 开关  ; index : 电池序号（1~240）
@@ -4635,8 +4697,8 @@ namespace EMS
             bit = index % 16;
 
             //被动均衡开关序号
-            if (bit ==0 )
-            { 
+            if (bit ==0)
+            {
                 num = index / 16 - 1;
             }
             else
@@ -4656,17 +4718,115 @@ namespace EMS
             if (aData == 1)
             {
                 bala = (ushort)(1<<(int)bit);
-                bala |= BalaSwitch[(int)num]; 
-                SetSysData((int)num + 60 , bala, false);
+                bala |= BalaSwitch[(int)num];
+                SetSysData((int)num + 60, bala, false);
             }
             else if (aData == 0)
             {
                 bala = (ushort)((1<<(int)bit)-1);
                 bala &= BalaSwitch[(int)num];
-                SetSysData((int)num + 60 , bala, false);
+                SetSysData((int)num + 60, bala, false);
             }
 
         }
+
+
+        public void GetBalaInfo()
+        {
+            string strTemp = "";
+            string strData = "";
+            bool bPrepared = false;
+
+            //读取被动均衡开关状态
+            if (GetSysData(110, ref strTemp))
+            {
+                bPrepared = true;
+                if (Get3strData(85, ref strTemp, ref strData))
+                    BalaSwitch[0] = Convert.ToUInt16(strData);
+                if (Get3strData(86, ref strTemp, ref strData))
+                    BalaSwitch[1] = Convert.ToUInt16(strData);
+                if (Get3strData(87, ref strTemp, ref strData))
+                    BalaSwitch[2] = Convert.ToUInt16(strData);
+                if (Get3strData(88, ref strTemp, ref strData))
+                    BalaSwitch[3] = Convert.ToUInt16(strData);
+                if (Get3strData(89, ref strTemp, ref strData))
+                    BalaSwitch[4] = Convert.ToUInt16(strData);
+                if (Get3strData(90, ref strTemp, ref strData))
+                    BalaSwitch[5] = Convert.ToUInt16(strData);
+                if (Get3strData(91, ref strTemp, ref strData))
+                    BalaSwitch[6] = Convert.ToUInt16(strData);
+                if (Get3strData(92, ref strTemp, ref strData))
+                    BalaSwitch[7] = Convert.ToUInt16(strData);
+                if (Get3strData(93, ref strTemp, ref strData))
+                    BalaSwitch[8] = Convert.ToUInt16(strData);
+                if (Get3strData(94, ref strTemp, ref strData))
+                    BalaSwitch[9] = Convert.ToUInt16(strData);
+                if (Get3strData(95, ref strTemp, ref strData))
+                    BalaSwitch[10] = Convert.ToUInt16(strData);
+                if (Get3strData(96, ref strTemp, ref strData))
+                    BalaSwitch[11] = Convert.ToUInt16(strData);
+                if (Get3strData(97, ref strTemp, ref strData))
+                    BalaSwitch[12] = Convert.ToUInt16(strData);
+                if (Get3strData(98, ref strTemp, ref strData))
+                    BalaSwitch[13] = Convert.ToUInt16(strData);
+                if (Get3strData(99, ref strTemp, ref strData))
+                    BalaSwitch[14] = Convert.ToUInt16(strData);
+                if (Get3strData(100, ref strTemp, ref strData))
+                    BalaSwitch[15] = Convert.ToUInt16(strData);
+                if (Get3strData(101, ref strTemp, ref strData))
+                    BalaSwitch[16] = Convert.ToUInt16(strData);
+                if (Get3strData(102, ref strTemp, ref strData))
+                    BalaSwitch[17] = Convert.ToUInt16(strData);
+                if (Get3strData(103, ref strTemp, ref strData))
+                    BalaSwitch[18] = Convert.ToUInt16(strData);
+                if (Get3strData(104, ref strTemp, ref strData))
+                    BalaSwitch[19] = Convert.ToUInt16(strData);
+                if (Get3strData(105, ref strTemp, ref strData))
+                    BalaSwitch[20] = Convert.ToUInt16(strData);
+                if (Get3strData(106, ref strTemp, ref strData))
+                    BalaSwitch[21] = Convert.ToUInt16(strData);
+                if (Get3strData(107, ref strTemp, ref strData))
+                    BalaSwitch[22] = Convert.ToUInt16(strData);
+                if (Get3strData(108, ref strTemp, ref strData))
+                    BalaSwitch[23] = Convert.ToUInt16(strData);
+                if (Get3strData(109, ref strTemp, ref strData))
+                    BalaSwitch[24] = Convert.ToUInt16(strData);
+
+            }
+            //10.16判断均衡运行状态
+            for (int i = 0; i < 25; ++i)
+            {
+                if (BalaSwitch[i] != 0)
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        //更新均衡运行状态
+                        frmMain.Selffrm.AllEquipment.BalaRun = 1;
+                        break;
+                    }
+                }
+                else
+                {
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        //更新均衡运行状态
+                        frmMain.Selffrm.AllEquipment.BalaRun = 0;
+                    }
+                }
+            }
+        }
+
+
+
+        /****************************************************************
+        *
+        *
+        *                        Level 0 Function
+        *
+        /****************************************************************/
+
+
+
 
         //8.2设置BMS过压告警和恢复
         public void SetBmsPV1(int aData)
@@ -4956,7 +5116,6 @@ namespace EMS
         /******************************** 液冷 ********************************/
 
         /**************************************************************************************************************************/
-
         /// <summary>
         /// 电芯的电压
         /// </summary>
@@ -4967,19 +5126,49 @@ namespace EMS
         {
             string strData = "";
             double dTemp;
-            for (int i = 0; i < 120; i++)//aCellTemps.Length
+            switch (frmSet.config.BMSVerb)
             {
-                if (aData.Length >= 4)
-                {
-                    strData = "0x" + aData.Substring(0, 4);
-                    aData = aData.Substring(4, aData.Length - 4);
-                    dTemp = (float)(Convert.ToInt32(strData, 16) * 0.001);
-                    aCellV[i + aStart] = Math.Round(dTemp, 3);
-                }
-                else
-                {
-                    aCellV[i] = 0;
-                }
+                case 1:
+                    switch (frmSet.config.CellVNum)
+                    {
+                        case 240:
+                            for (int i = 0; i < 120; i++)//aCellTemps.Length
+                            {
+                                if (aData.Length >= 4)
+                                {
+                                    strData = "0x" + aData.Substring(0, 4);
+                                    aData = aData.Substring(4, aData.Length - 4);
+                                    dTemp = (float)(Convert.ToInt32(strData, 16) * 0.001);
+                                    aCellV[i + aStart] = Math.Round(dTemp, 3);
+                                }
+                                else
+                                {
+                                    aCellV[i] = 0;
+                                }
+                            }
+
+                            break;
+
+                        case 260:
+                            for (int i = 0; i < 130; i++)//aCellTemps.Length
+                            {
+                                if (aData.Length >= 4)
+                                {
+                                    strData = "0x" + aData.Substring(0, 4);
+                                    aData = aData.Substring(4, aData.Length - 4);
+                                    dTemp = (float)(Convert.ToInt32(strData, 16) * 0.001);
+                                    aCellV[i + aStart] = Math.Round(dTemp, 3);
+                                }
+                                else
+                                {
+                                    aCellV[i] = 0;
+                                }
+                            }
+
+                            break;
+
+                    }
+                    break;
             }
         }
 
@@ -5044,91 +5233,6 @@ namespace EMS
             BMSCap = (frmSet.config.SysSelfPower * frmMain.Selffrm.AllEquipment.BMS.soc * frmMain.Selffrm.AllEquipment.BMS.soh / 10000);
         }
 
-        public void GetBalaInfo()
-        {
-            string strTemp = "";
-            string strData = "";
-            bool bPrepared = false;
-
-            //读取被动均衡开关状态
-            if (GetSysData(110, ref strTemp))
-            {
-                bPrepared = true;
-                if (Get3strData(85, ref strTemp, ref strData))
-                    BalaSwitch[0] = Convert.ToUInt16(strData);
-                if (Get3strData(86, ref strTemp, ref strData))
-                    BalaSwitch[1] = Convert.ToUInt16(strData);
-                if (Get3strData(87, ref strTemp, ref strData))
-                    BalaSwitch[2] = Convert.ToUInt16(strData);
-                if (Get3strData(88, ref strTemp, ref strData))
-                    BalaSwitch[3] = Convert.ToUInt16(strData);
-                if (Get3strData(89, ref strTemp, ref strData))
-                    BalaSwitch[4] = Convert.ToUInt16(strData);
-                if (Get3strData(90, ref strTemp, ref strData))
-                    BalaSwitch[5] = Convert.ToUInt16(strData);
-                if (Get3strData(91, ref strTemp, ref strData))
-                    BalaSwitch[6] = Convert.ToUInt16(strData);
-                if (Get3strData(92, ref strTemp, ref strData))
-                    BalaSwitch[7] = Convert.ToUInt16(strData);
-                if (Get3strData(93, ref strTemp, ref strData))
-                    BalaSwitch[8] = Convert.ToUInt16(strData);
-                if (Get3strData(94, ref strTemp, ref strData))
-                    BalaSwitch[9] = Convert.ToUInt16(strData);
-                if (Get3strData(95, ref strTemp, ref strData))
-                    BalaSwitch[10] = Convert.ToUInt16(strData);
-                if (Get3strData(96, ref strTemp, ref strData))
-                    BalaSwitch[11] = Convert.ToUInt16(strData);
-                if (Get3strData(97, ref strTemp, ref strData))
-                    BalaSwitch[12] = Convert.ToUInt16(strData);
-                if (Get3strData(98, ref strTemp, ref strData))
-                    BalaSwitch[13] = Convert.ToUInt16(strData);
-                if (Get3strData(99, ref strTemp, ref strData))
-                    BalaSwitch[14] = Convert.ToUInt16(strData);
-                if (Get3strData(100, ref strTemp, ref strData))
-                    BalaSwitch[15] = Convert.ToUInt16(strData);
-                if (Get3strData(101, ref strTemp, ref strData))
-                    BalaSwitch[16] = Convert.ToUInt16(strData);
-                if (Get3strData(102, ref strTemp, ref strData))
-                    BalaSwitch[17] = Convert.ToUInt16(strData);
-                if (Get3strData(103, ref strTemp, ref strData))
-                    BalaSwitch[18] = Convert.ToUInt16(strData);
-                if (Get3strData(104, ref strTemp, ref strData))
-                    BalaSwitch[19] = Convert.ToUInt16(strData);
-                if (Get3strData(105, ref strTemp, ref strData))
-                    BalaSwitch[20] = Convert.ToUInt16(strData);
-                if (Get3strData(106, ref strTemp, ref strData))
-                    BalaSwitch[21] = Convert.ToUInt16(strData);
-                if (Get3strData(107, ref strTemp, ref strData))
-                    BalaSwitch[22] = Convert.ToUInt16(strData);
-                if (Get3strData(108, ref strTemp, ref strData))
-                    BalaSwitch[23] = Convert.ToUInt16(strData);
-                if (Get3strData(109, ref strTemp, ref strData))
-                    BalaSwitch[24] = Convert.ToUInt16(strData);
-
-            }
-            //10.16判断均衡运行状态
-            for (int i = 0; i < 25; ++i)
-            {
-                if (BalaSwitch[i] != 0)
-                {
-                    lock (frmMain.Selffrm.AllEquipment)
-                    {
-                        //更新均衡运行状态
-                        frmMain.Selffrm.AllEquipment.BalaRun = 1;
-                        frmMain.BalaTacticsList.BalaHasOn = true;
-                        break;
-                    }
-                }
-                else
-                {
-                    lock (frmMain.Selffrm.AllEquipment)
-                    {
-                        //更新均衡运行状态
-                        frmMain.Selffrm.AllEquipment.BalaRun = 0;
-                    }
-                }
-            }
-        }
 
 
         public void GetBaseInfo()
@@ -5170,16 +5274,35 @@ namespace EMS
             }
 
             //电池信息读取
-            if (GetSysData(33, ref strTemp))
+            switch (frmSet.config.CellVNum)
             {
-                bPrepared = true;
-                UpdateCellV(CellVs, 0, strTemp);//CellList
+                case 240:
+                    if (GetSysData(33, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 0, strTemp);//CellList
+                    }
+                    if (GetSysData(34, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 120, strTemp);
+                    }
+                    break;
+
+                case 260:
+                    if (GetSysData(113, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 0, strTemp);//CellList
+                    }
+                    if (GetSysData(114, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 130, strTemp);
+                    }
+                    break;
             }
-            if (GetSysData(34, ref strTemp))
-            {
-                bPrepared = true;
-                UpdateCellV(CellVs, 120, strTemp);
-            }
+
             //温度
             if (GetSysData(35, ref strTemp))
             {
@@ -6005,7 +6128,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master5.0";
+        public string EMSVersion { get; set; } = "EMS241015Devlop1.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6735,6 +6858,10 @@ namespace EMS
                 AutoReadDataCom2();//表2、3、4，空调,液冷机
                 AutoReadDataCom4(); //PCS 
                 AutoReadE1();//表1
+                if (frmMain.BalaTacticsList != null && BMS != null && BMS.FunctionLevel > 0)//均衡
+                {
+                    frmMain.BalaTacticsList.AutoCheckBalaTactics();
+                }
 
             }
             catch (Exception ex)

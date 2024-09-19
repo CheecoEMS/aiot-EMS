@@ -275,21 +275,43 @@ namespace EMS
                     tbAllZ.ForeColor = (oneBMS.SwitchState & 4) > 0 ? Color.Green : Color.Red;
 
                     //CellClass ontCell;
-                    for (int i = 0; i < 240; i++)
+                    switch (frmSet.config.CellVNum)
                     {
-                        if (listView1.Items.Count <= i)
-                        {
-                            this.listView1.Items.Add((i + 1).ToString());
-                            this.listView1.Items[i].SubItems.Add(oneBMS.CellVs[i].ToString());
-                            this.listView1.Items[i].SubItems.Add(oneBMS.CellTemps[i].ToString());
-                        }
-                        else
-                        {
-                            this.listView1.Items[i].SubItems[1].Text = oneBMS.CellVs[i].ToString();
-                            this.listView1.Items[i].SubItems[2].Text = oneBMS.CellTemps[i].ToString();
-                        }
+                        case 240:
+                            for (int i = 0; i < 240; i++)
+                            {
+                                if (listView1.Items.Count <= i)
+                                {
+                                    this.listView1.Items.Add((i + 1).ToString());
+                                    this.listView1.Items[i].SubItems.Add(oneBMS.CellVs[i].ToString());
+                                    this.listView1.Items[i].SubItems.Add(oneBMS.CellTemps[i].ToString());
+                                }
+                                else
+                                {
+                                    this.listView1.Items[i].SubItems[1].Text = oneBMS.CellVs[i].ToString();
+                                    this.listView1.Items[i].SubItems[2].Text = oneBMS.CellTemps[i].ToString();
+                                }
+                            }
+                            break;
 
+                        case 260:
+                            for (int i = 0; i < 260; i++)
+                            {
+                                if (listView1.Items.Count <= i)
+                                {
+                                    this.listView1.Items.Add((i + 1).ToString());
+                                    this.listView1.Items[i].SubItems.Add(oneBMS.CellVs[i].ToString());
+                                    this.listView1.Items[i].SubItems.Add(oneBMS.CellTemps[i].ToString());
+                                }
+                                else
+                                {
+                                    this.listView1.Items[i].SubItems[1].Text = oneBMS.CellVs[i].ToString();
+                                    this.listView1.Items[i].SubItems[2].Text = oneBMS.CellTemps[i].ToString();
+                                }
+                            }
+                            break;
                     }
+
                     break;
                 case 4:
                     break;
