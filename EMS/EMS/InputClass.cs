@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using DotNetty.Common.Utilities;
+using log4net;
 using log4net.Core;
 using Modbus;
 using MySql.Data.MySqlClient;
@@ -9,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
@@ -2673,7 +2675,19 @@ namespace EMS
         //2.21
         public double PUMdemand_now { get; set; }   //当前正向有功最大需量
 
-       
+        public double Re_PUMdemand_Max { get; set; }         //当月反向有功最大需量
+        //2.21
+        public double Re_PUMdemand_now { get; set; }   //当前反向有功最大需量
+
+        public string PUMdemand_Max_Time { get; set; }  //当月正向有功最大需量发生时间
+        public string Re_PUMdemand_Max_Time { get; set; }   //当月反向有功最大需量发生时间
+
+        private int month;
+        private int day;
+        private int hour;
+        private int minute;
+
+
         private static ILog log = LogManager.GetLogger("Elemeter1Class");
         public Elemeter1Class()
         {
@@ -2764,6 +2778,7 @@ namespace EMS
         {  
             bool bPrepared = false;
             string strTemp = "";
+            string strData = "";
             if (GetSysData(41, ref strTemp))
             {
                 AllAAkva = Math.Round(float.Parse(strTemp), 3); //可视功率
@@ -2792,7 +2807,7 @@ namespace EMS
             }
 
             //9.4 读取当月正向有功最大需量
-            if (GetSysData(67, ref strTemp))
+/*            if (GetSysData(67, ref strTemp))
             {
                 PUMdemand_Max = Math.Round(float.Parse(strTemp), 3) ;
                 PUMdemand_Max = PUMdemand_Max * 0.001 * pc;
@@ -2805,8 +2820,64 @@ namespace EMS
                 PUMdemand_now = Math.Round(float.Parse(strTemp), 3);
                 PUMdemand_now = PUMdemand_now * 0.001 * pc;
                 bPrepared = true;
+            }*/
+
+            if (GetSysData(80, ref strTemp))//读取当前正向反向有功需量
+            {
+                bPrepared = true;
+                if (Get3strData(68, ref strTemp, ref strData))
+                {
+                    PUMdemand_now = Math.Round(float.Parse(strData), 2);
+                    PUMdemand_now = PUMdemand_now * 0.001 * pc;
+                }
+                if (Get3strData(79, ref strTemp, ref strData))
+                {
+                    Re_PUMdemand_now = Math.Round(float.Parse(strData), 2);
+                    Re_PUMdemand_now  = Re_PUMdemand_now * 0.001 * pc;
+                }
             }
-          
+
+            if (GetSysData(81, ref strTemp))//读取当月正向反向有功需量及时间
+            {
+                bPrepared = true;
+                if (Get3strData(67, ref strTemp, ref strData))
+                {
+                    PUMdemand_Max = Math.Round(float.Parse(strData), 2);
+                    PUMdemand_Max = PUMdemand_Max * 0.001 * pc;
+                }
+                if (Get3strData(74, ref strTemp, ref strData))
+                {
+                    minute =  Convert.ToInt32(strData.Substring(0, 2), 16);                
+                    hour   =  Convert.ToInt32(strData.Substring(2, 2), 16);
+                }
+                if (Get3strData(75, ref strTemp, ref strData))
+                {
+                    day =  Convert.ToInt32(strData.Substring(0, 2), 16);
+                    month   = Convert.ToInt32(strData.Substring(2, 2), 16);
+                }
+                
+                PUMdemand_Max_Time = $"{month}月{day}日{hour}时{minute}分";
+                
+                if (Get3strData(76, ref strTemp, ref strData))
+                {
+                    Re_PUMdemand_Max = Math.Round(float.Parse(strData), 2);
+                    Re_PUMdemand_Max  = Re_PUMdemand_Max * 0.001 * pc;
+                }
+                if (Get3strData(77, ref strTemp, ref strData))
+                {
+                    minute =  Convert.ToInt32(strData.Substring(0, 2), 16);
+                    hour   =  Convert.ToInt32(strData.Substring(2, 2), 16);
+                }
+                if (Get3strData(78, ref strTemp, ref strData))
+                {
+                    day =  Convert.ToInt32(strData.Substring(0, 2), 16);
+                    month   = Convert.ToInt32(strData.Substring(2, 2), 16);
+                }
+                Re_PUMdemand_Max_Time = $"{month}月{day}日{hour}时{minute}分";
+            }
+
+
+
             Prepared = bPrepared;
             if (!Prepared)
             {
@@ -6148,8 +6219,10 @@ namespace EMS
         public string Dehumidifier_Version { get; set; } = "";
 
         //
-    
+        public long SignalDelay { get; set; } //延迟
+        public long SignalDelayJitter { get; set; } //信号延迟抖动
 
+        NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 
         public AllEquipmentClass()
         {
@@ -6174,6 +6247,47 @@ namespace EMS
             //    }
             //  //free onePark;
             //}
+        }
+
+        public void TestSignalStrength()
+        {
+            foreach (NetworkInterface networkInterface in interfaces)
+            {
+                // 排除非物理接口和回环接口
+                if (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ppp ||
+                    networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                    networkInterface.OperationalStatus != OperationalStatus.Up)
+                {
+                    continue;
+                }
+
+/*                log.Error("接口名称:"+ networkInterface.Name);
+                log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
+                log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
+
+                // 获取Ping类实例并设置Ping选项
+                Ping pingSender = new Ping();
+                PingOptions options = new PingOptions();
+                options.DontFragment = true;
+
+                // 设置Ping数据包的大小
+                byte[] buffer = new byte[32];
+                int timeout = 1000;
+
+                // Ping目标地址并获取延迟信息
+                PingReply reply = pingSender.Send("admin.eaiot.cloud", timeout, buffer, options);
+                if (reply.Status == IPStatus.Success)
+                {
+                    SignalDelay =  reply.RoundtripTime;
+                    SignalDelayJitter =  reply.Options.Ttl;
+/*                    log.Error("延迟:"+ reply.RoundtripTime+"ms");
+                    log.Error("延迟抖动"+ reply.Options.Ttl+"ms");*/
+                }
+                else
+                {
+                    log.Error("Ping失败"+ reply.Status);
+                }
+            }
         }
 
         public void MeterCalibration()

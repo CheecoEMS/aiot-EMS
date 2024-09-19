@@ -720,11 +720,10 @@ namespace EMS
                         }
                     }
                 }
-
-
-
-
             }
+
+            //获取信号数据
+            frmMain.Selffrm.AllEquipment.TestSignalStrength();
         }
         static void InitializeTacitc_Timer()
         {
