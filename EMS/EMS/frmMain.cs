@@ -850,7 +850,10 @@ namespace EMS
                     frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
                     frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
                     frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
-                    frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                    frmMain.Selffrm.labE2OKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labelDelay.IsHandleCreated &&
+                    frmMain.Selffrm.labelJitter.IsHandleCreated )
+
                 {
                     frmMain.Selffrm.Invoke((Action)(() =>
                     {
@@ -859,6 +862,8 @@ namespace EMS
                         frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
                         frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
                         frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
+                        frmMain.Selffrm.labelDelay.Text = frmMain.Selffrm.AllEquipment.SignalDelay.ToString("F3");
+                        frmMain.Selffrm.labelJitter.Text = frmMain.Selffrm.AllEquipment.SignalDelayJitter.ToString("F3");
                     }));
                 }
             }

@@ -1721,7 +1721,9 @@ namespace EMS
                         new Column { Name = "FrigOffLower", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备关闭启下限" },
                         new Column { Name = "FrigOffUpper", Type = "int", IsNullable = true, Key = "", Comment = "制冷设备关闭启上限" },
                         new Column { Name = "BoxHTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内高温告警值" },
-                        new Column { Name = "BoxLTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内低温告警值" }
+                        new Column { Name = "BoxLTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内低温告警值" },
+                        new Column { Name = "SignalDelayAlarm", Type = "int", IsNullable = true, Key = "", Comment = "4G信号延迟上限值" },
+                        new Column { Name = "SignalDelayCount", Type = "int", IsNullable = true, Key = "", Comment = "4G信号延迟触发次数" }
                     }
                 },
                 {

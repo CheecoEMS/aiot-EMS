@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Windows.Forms;
+using static Mysqlx.Expect.Open.Types.Condition.Types;
 
 namespace EMS
 {
@@ -6222,6 +6223,10 @@ namespace EMS
         public long SignalDelay { get; set; } //延迟
         public long SignalDelayJitter { get; set; } //信号延迟抖动
 
+        private int delayExceedCount = 0;
+        private int delayBelowCount = 0;
+        private bool SignalAlarmActive = false;  // Track if the alarm is currently active
+
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 
         public AllEquipmentClass()
@@ -6261,9 +6266,9 @@ namespace EMS
                     continue;
                 }
 
-/*                log.Error("接口名称:"+ networkInterface.Name);
-                log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
-                log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
+                /*                log.Error("接口名称:"+ networkInterface.Name);
+                                log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
+                                log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
 
                 // 获取Ping类实例并设置Ping选项
                 Ping pingSender = new Ping();
@@ -6280,15 +6285,47 @@ namespace EMS
                 {
                     SignalDelay =  reply.RoundtripTime;
                     SignalDelayJitter =  reply.Options.Ttl;
-/*                    log.Error("延迟:"+ reply.RoundtripTime+"ms");
-                    log.Error("延迟抖动"+ reply.Options.Ttl+"ms");*/
+                    /*                    log.Error("延迟:"+ reply.RoundtripTime+"ms");
+                                        log.Error("延迟抖动"+ reply.Options.Ttl+"ms");*/
                 }
                 else
                 {
                     log.Error("Ping失败"+ reply.Status);
                 }
+
+                //延迟过高触发2级别告警
+                if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
+                {
+                    delayExceedCount++;
+                    delayBelowCount = 0;  // Reset the below delay counter
+
+                    if (delayExceedCount >=  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
+                    {
+                        lock (EMSError)
+                        {
+                            EMSError[0] |= 0x4000;
+                            SignalAlarmActive = true;  // Mark the alarm as active
+                        }
+                    }
+                }
+                else
+                {
+                    delayBelowCount++;
+                    delayExceedCount = 0;  // Reset the exceed delay counter
+
+                    if (delayBelowCount >= frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                    {
+                        lock (EMSError)
+                        {
+                            EMSError[0] &= 0xBFFF;
+                            SignalAlarmActive = false;  // Mark the alarm as inactive
+                        }
+                    }
+                }
             }
+
         }
+        
 
         public void MeterCalibration()
         {
@@ -8499,7 +8536,7 @@ namespace EMS
 
                         //frmMain.Selffrm.Slave104.OnPropertyChanged();
                     }
-                    
+
                     //均衡操作
                     //StartStopBMSBala();
                     //Thread.Sleep(10);
@@ -8517,7 +8554,7 @@ namespace EMS
                         {
                             sData = EMSError[i];
                             sOldData = OldEMSError[i];
-                            
+
                             if (sData != sOldData)
                             {
                                 sOldData = (ushort)(sOldData ^ sData);
@@ -8526,10 +8563,11 @@ namespace EMS
                                     sKey = (ushort)(1 << j);//  1的二进制数左移J位
                                     iData = sOldData & sKey; //一次处理1个变化的数据位 ： iData > 0 说明第J位数据发生变化
                                     if ((iData > 0) && (ErrorClass.EMSErrorsPower[16 * i + j] > 0))
-                                    {                                    
+                                    {
+                                        log.Debug("1" +  ErrorClass.EMSErrors[16 * i + j]);
                                         BMS.RecodError("EMS", iot_code, 16 * i + j, ErrorClass.EMSErrorsPower[16 * i + j], ErrorClass.EMSErrors[16 * i + j], (sData & sKey) > 0);
-                                        
-                                        
+
+
                                         if ((iData > 0) && (16 * i+j == 13))//通讯故障恢复,重新初始化液冷机
                                         {
                                             frmMain.Selffrm.AllEquipment.init_LiquidCool();
@@ -8540,6 +8578,8 @@ namespace EMS
                             OldEMSError[i] = EMSError[i];
                         }
                     }
+
+
                     //endTime = DateTime.Now;
                     //Console.WriteLine("#********* BMS DONE******* BMS DONE**********#" + (endTime - startTime).TotalSeconds);
                 }
