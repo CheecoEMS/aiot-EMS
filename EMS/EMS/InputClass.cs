@@ -5948,8 +5948,8 @@ namespace EMS
 
         //2.21
         public double GridKVA_window;
-        public Queue<double> AllUkvaWindow = new Queue<double>();
         public double AllUkvaSum = 0;
+        public Queue<double> AllUkvaWindow = new Queue<double>();
         public volatile int AllUkvaWindowSize = 4; // 1分钟的窗口大小，每秒一个值
 
         public double WorkKVA { get; set; } = 0;    //实时数据负载功率==电网+pcs功率（放电）、、、、电网+充电功率
@@ -6005,7 +6005,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master5.0";
+        public string EMSVersion { get; set; } = "EMS240815Master6.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6082,41 +6082,28 @@ namespace EMS
         }
 
 
-        public void AddValue(double value)
+        public double GetGridKVA_window(double newValue)
         {
-            AllUkvaWindow.Enqueue(value);
-            AllUkvaSum += value;
-
+            AllUkvaWindow.Enqueue(newValue);
             if (AllUkvaWindow.Count > frmSet.cloudLimits.AllUkvaWindowSize)
             {
-                AllUkvaSum -= AllUkvaWindow.Dequeue();
+                if (AllUkvaWindow.Count > 0)
+                {
+                    AllUkvaWindow.Dequeue();
+                }
             }
-        }
 
-        public void clearAllUkvaWindow()
-        {
-            while (AllUkvaWindow.Count > 0)
+            double sum = 0;
+            foreach (var value in AllUkvaWindow)
             {
-                AllUkvaWindow.Dequeue();
+                sum += value;
             }
-        }
 
-        public double GetAverage()
-        {
-            return AllUkvaSum / AllUkvaWindow.Count;
+            double average = sum / AllUkvaWindow.Count;
+            return average;
         }
 
 
-        public static ulong SetCpuID(int lpIdx)
-        {
-            ulong cpuLogicalProcessorId = 0;
-            if (lpIdx < 0 || lpIdx >= System.Environment.ProcessorCount)
-            {
-                lpIdx = 0;
-            }
-            cpuLogicalProcessorId |= 1UL << lpIdx;
-            return cpuLogicalProcessorId;
-        }
 
         //液冷设置
         public void LCIni()
@@ -6910,20 +6897,18 @@ namespace EMS
                     }                  
                     E1_PUMdemand_now = tempPUMdemand_now;
 
-                    //若电表失联，清空数据
-                    if (Elemeter1List[0].Prepared)
+                    
+                    if (Elemeter1List[0].Prepared)//若电表通讯正常，则计算电网平均功率
                     {
                         GridKVA = tempGridKVA;
-                        AddValue(GridKVA);
-                        GridKVA_window = GetAverage();
+                        GridKVA_window = GetGridKVA_window(GridKVA);
                     }
-                    else
+                    else//若电表失联，清空数据
                     {
                         //电网功率清零
                         GridKVA = 0;
-                        clearAllUkvaWindow();
+                        AllUkvaWindow.Clear();
                         GridKVA_window = 0;
-
                         //电网需量清零
                         E1_PUMdemand_now = 0;
                     }
