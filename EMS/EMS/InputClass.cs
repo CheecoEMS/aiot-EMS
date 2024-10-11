@@ -6005,7 +6005,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master6.0";
+        public string EMSVersion { get; set; } = "EMS240815Master7.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7880,68 +7880,60 @@ namespace EMS
                         //判断是否超时控制，如果超时就停机等待
                         if (frmSet.config.ConnectStatus == "tcp")
                         {
-                            if (frmMain.Selffrm.ModbusTcpClient.Connected)
-                            {
-                                //连接情况
-                                if (NetConnect)
+                            if (frmMain.Selffrm.ModbusTcpClient.Connected && NetConnect)
+                            {                        
+                                //超时未收到控制
+                                //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
+                                if (Clock_Watch.MeasureIntervalInSeconds() > 30)
                                 {
-                                    //超时未收到控制
-                                    //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
-                                    if (Clock_Watch.MeasureIntervalInSeconds() > 30)
+                                    //关闭PCS
+                                    frmSet.PCSMOff();
+                                    if (PCSList.Count > 0)
                                     {
-                                        //关闭PCS
-                                        frmSet.PCSMOff();
-                                        if (PCSList.Count > 0)
+                                        if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
                                         {
-                                            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                            {
-                                                log.Error("主从脱钩,关闭pcs");
-                                                PCSList[0].ExcSetPCSPower(false);
-                                            }
-                                        }
-                                        //关闭空调（液冷机）
-                                        if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                            }
-                                        }
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                            }
-                                        }
-                                        NetControl = false;
-                                        NetConnect = false;
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                        //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        //已接收控制指令
-                                        if (NetControl)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                                            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
+                                            log.Error("主从脱钩,关闭pcs");
+                                            PCSList[0].ExcSetPCSPower(false);
                                         }
                                     }
+                                    //关闭空调（液冷机）
+                                    if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                                    {
+                                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
+                                        }
+                                    }
+                                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                                    {
+                                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                                        }
+                                    }
+                                    NetControl = false;
+                                    NetConnect = false;
+                                    frmMain.Selffrm.ModbusTcpClient.Connected = false;
+                                    //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                                    continue;
                                 }
                                 else
                                 {
-                                    //10s未接收到主机消息，则判断主从通讯断开
-                                    if (NetCtlTime.AddSeconds(10)<DateTime.Now)
+                                    //已接收控制指令
+                                    if (NetControl)
                                     {
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
+                                        frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+                                        ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                                     }
                                 }
                             }
                             else//客户端发送报文失败，重连
                             {
                                 log.Debug("重连");
+
+                                NetControl = false;
+                                NetConnect = false;
+                                frmMain.Selffrm.ModbusTcpClient.Connected = false;
                                 //若刚开启EMS，pcs已经在工作，则必须立即停止
                                 if (PCSList.Count > 0)
                                 {

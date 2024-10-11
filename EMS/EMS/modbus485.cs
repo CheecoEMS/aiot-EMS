@@ -1,8 +1,10 @@
 using EMS;
 using log4net;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Threading;
 
 namespace Modbus
 {
@@ -137,7 +139,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG(ex.ToString());
+                    log.Error(ex.ToString());
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -179,58 +181,148 @@ namespace Modbus
         }
         #endregion
 
-
-        /// <summary>
-        /// 读取返回数据
-        /// </summary>
-        /// <param name="response"></param>
-        #region //Get Response
         private bool GetResponse(ref byte[] response)
         {
             bool bResult = false;
             try
             {
                 int i = 0;
-                while (sp.BytesToRead >= 0)
+                // 等待一小段时间，确保数据已经写入
+                System.Threading.Thread.Sleep(50); // 适当延迟，等待设备响应
+
+                // 检查是否有数据可读，避免死循环
+                while (sp.BytesToRead > 0 && i < response.Length)
                 {
                     response[i] = (byte)(sp.ReadByte());
                     i++;
-                    if (i >= response.Length)
-                        break;
                 }
-                //sp.Read(response, 0, response.Length);
-                bResult = true;
+
+                // 判断是否读取到数据
+                bResult = (i > 0); // 如果有数据被读取，则返回 true
             }
-            catch //(Exception ex)
+            catch (TimeoutException) // 捕获读取超时异常
             {
-                bResult = false;
-                //frmMain.ShowDebugMSG(ex.ToString());
+                throw new TimeoutException("GetResponse TimeoutException"); // 抛出异常，由外部捕获
+            }
+            catch (ObjectDisposedException) // 捕获对象释放异常
+            {
+                throw new ObjectDisposedException("GetResponse ObjectDisposedException"); // 抛出异常，由外部捕获
+            }
+            catch (Exception ex) // 捕获其他异常
+            {
+                throw new Exception("GetResponse Exception: " + ex.Message); // 抛出异常，由外部捕获
             }
             return bResult;
         }
-        #endregion
 
         private bool GetComFreeData(byte[] aMessage, ref byte[] aResponse)
         {
             bool bResult = false;
-            for (int i = 0; i < 10; i++) //qiao
+            if (sp == null || !sp.IsOpen) // 检查串口是否已打开
             {
-                //Clear in/out buffers:
-                sp.DiscardOutBuffer();
-                sp.DiscardInBuffer();
-                sp.Write(aMessage, 0, aMessage.Length);
-                if (GetResponse(ref aResponse))
+                log.Error("串口对象未打开或已被释放");
+                return false;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                try
                 {
-                    bResult = true;
-                    break;
+                    // 清空缓冲区，防止上一次的数据干扰本次操作
+                    sp.DiscardOutBuffer();
+                    sp.DiscardInBuffer();
+
+                    // 发送请求数据
+                    sp.Write(aMessage, 0, aMessage.Length);
+
+                    // 尝试读取响应数据
+                    if (GetResponse(ref aResponse))
+                    {
+                        bResult = true;
+                        break;
+                    }
+                    else
+                    {
+                        bResult = false;
+                    }
+
+                    // 增加延时，防止频繁通信
+                    System.Threading.Thread.Sleep(100);
                 }
-                else
+                catch (TimeoutException ex) // 捕获 GetResponse 抛出的超时异常
                 {
+                    log.Error($"GetComFreeData TimeoutException: {ex.Message}");
+                    bResult = false;
+                }
+                catch (ObjectDisposedException ex) // 捕获 GetResponse 抛出的对象释放异常
+                {
+                    log.Error($"GetComFreeData ObjectDisposedException: {ex.Message}");
+                    bResult = false;
+                    break; // 如果串口对象被释放，则无需重试，直接退出
+                }
+                catch (Exception ex) // 捕获所有其他异常
+                {
+                    log.Error($"GetComFreeData Exception: {ex.Message}");
                     bResult = false;
                 }
             }
             return bResult;
         }
+
+
+
+
+        /*        /// <summary>
+                /// 读取返回数据
+                /// </summary>
+                /// <param name="response"></param>
+                #region //Get Response
+                private bool GetResponse(ref byte[] response)
+                {
+                    bool bResult = false;
+                    try
+                    {
+                        int i = 0;
+                        while (sp.BytesToRead >= 0)
+                        {
+                            response[i] = (byte)(sp.ReadByte());
+                            i++;
+                            if (i >= response.Length)
+                                break;
+                        }
+                        //sp.Read(response, 0, response.Length);
+                        bResult = true;
+                    }
+                    catch //(Exception ex)
+                    {
+                        bResult = false;
+                        //frmMain.ShowDebugMSG(ex.ToString());
+                    }
+                    return bResult;
+                }
+                #endregion
+
+                private bool GetComFreeData(byte[] aMessage, ref byte[] aResponse)
+                {
+                    bool bResult = false;
+                    for (int i = 0; i < 10; i++) //qiao
+                    {
+                        //Clear in/out buffers:
+                        sp.DiscardOutBuffer();
+                        sp.DiscardInBuffer();
+                        sp.Write(aMessage, 0, aMessage.Length);
+                        if (GetResponse(ref aResponse))
+                        {
+                            bResult = true;
+                            break;
+                        }
+                        else
+                        {
+                            bResult = false;
+                        }
+                    }
+                    return bResult;
+                }*/
 
 
         private bool GetComDada(byte[] aMessage, ref byte[] aResponse, bool bLocksp = true)
