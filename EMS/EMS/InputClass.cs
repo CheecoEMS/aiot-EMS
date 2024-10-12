@@ -7881,7 +7881,7 @@ namespace EMS
                         if (frmSet.config.ConnectStatus == "tcp")
                         {
                             if (frmMain.Selffrm.ModbusTcpClient.Connected && NetConnect)
-                            {                        
+                            {
                                 //超时未收到控制
                                 //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
                                 if (Clock_Watch.MeasureIntervalInSeconds() > 30)

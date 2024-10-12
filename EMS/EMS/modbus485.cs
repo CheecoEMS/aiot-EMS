@@ -1,10 +1,8 @@
 using EMS;
 using log4net;
-using MySqlX.XDevAPI.Common;
 using System;
 using System.Diagnostics;
 using System.IO.Ports;
-using System.Threading;
 
 namespace Modbus
 {
@@ -139,7 +137,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex.ToString());
+                    frmMain.ShowDebugMSG(ex.ToString());
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -181,24 +179,27 @@ namespace Modbus
         }
         #endregion
 
+
+        /// <summary>
+        /// 读取返回数据
+        /// </summary>
+        /// <param name="response"></param>
+        #region //Get Response
         private bool GetResponse(ref byte[] response)
         {
             bool bResult = false;
             try
             {
                 int i = 0;
-                // 等待一小段时间，确保数据已经写入
-                System.Threading.Thread.Sleep(50); // 适当延迟，等待设备响应
-
-                // 检查是否有数据可读，避免死循环
-                while (sp.BytesToRead > 0 && i < response.Length)
+                while (sp.BytesToRead >= 0)
                 {
                     response[i] = (byte)(sp.ReadByte());
                     i++;
+                    if (i >= response.Length)
+                        break;
                 }
-
-                // 判断是否读取到数据
-                bResult = (i > 0); // 如果有数据被读取，则返回 true
+                //sp.Read(response, 0, response.Length);
+                bResult = true;
             }
             catch (TimeoutException) // 捕获读取超时异常
             {
@@ -215,16 +216,19 @@ namespace Modbus
             return bResult;
         }
 
+        #endregion
+
         private bool GetComFreeData(byte[] aMessage, ref byte[] aResponse)
         {
             bool bResult = false;
+
             if (sp == null || !sp.IsOpen) // 检查串口是否已打开
             {
                 log.Error("串口对象未打开或已被释放");
                 return false;
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++) //qiao
             {
                 try
                 {
@@ -251,7 +255,8 @@ namespace Modbus
                 }
                 catch (TimeoutException ex) // 捕获 GetResponse 抛出的超时异常
                 {
-                    log.Error($"GetComFreeData TimeoutException: {ex.Message}");
+                    //log.Error($"GetComFreeData TimeoutException: {ex.Message}");
+                    //log.Error($"Raw Message Hex: {BitConverter.ToString(aMessage)}");
                     bResult = false;
                 }
                 catch (ObjectDisposedException ex) // 捕获 GetResponse 抛出的对象释放异常
@@ -268,61 +273,6 @@ namespace Modbus
             }
             return bResult;
         }
-
-
-
-
-        /*        /// <summary>
-                /// 读取返回数据
-                /// </summary>
-                /// <param name="response"></param>
-                #region //Get Response
-                private bool GetResponse(ref byte[] response)
-                {
-                    bool bResult = false;
-                    try
-                    {
-                        int i = 0;
-                        while (sp.BytesToRead >= 0)
-                        {
-                            response[i] = (byte)(sp.ReadByte());
-                            i++;
-                            if (i >= response.Length)
-                                break;
-                        }
-                        //sp.Read(response, 0, response.Length);
-                        bResult = true;
-                    }
-                    catch //(Exception ex)
-                    {
-                        bResult = false;
-                        //frmMain.ShowDebugMSG(ex.ToString());
-                    }
-                    return bResult;
-                }
-                #endregion
-
-                private bool GetComFreeData(byte[] aMessage, ref byte[] aResponse)
-                {
-                    bool bResult = false;
-                    for (int i = 0; i < 10; i++) //qiao
-                    {
-                        //Clear in/out buffers:
-                        sp.DiscardOutBuffer();
-                        sp.DiscardInBuffer();
-                        sp.Write(aMessage, 0, aMessage.Length);
-                        if (GetResponse(ref aResponse))
-                        {
-                            bResult = true;
-                            break;
-                        }
-                        else
-                        {
-                            bResult = false;
-                        }
-                    }
-                    return bResult;
-                }*/
 
 
         private bool GetComDada(byte[] aMessage, ref byte[] aResponse, bool bLocksp = true)

@@ -157,7 +157,7 @@ namespace EMS
                     //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
                     frmMain.Selffrm.ModbusTcpClient.SendMSG(aByteData);
                     break;
-                case 0x20://读取设备ID  
+                case 0x20://读取设备ID
                     AllEquipment.NetConnect = true;
                     data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
                     message = ModbusBase.BuildCloundMSG((byte)frmSet.config.i485Addr, 0x20, 1, data);

@@ -1464,7 +1464,7 @@ namespace EMS
                     }
                     break;
                 case 0x6002://实际功率 
-                    //log.Debug("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
+                    //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         frmMain.Selffrm.AllEquipment.HostStart = true;
