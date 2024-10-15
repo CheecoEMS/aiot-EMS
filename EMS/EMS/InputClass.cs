@@ -7655,7 +7655,7 @@ namespace EMS
                                     //强制放电
                                     wTypeActive = "放电";
                                     PCSScheduleKVA = 20;
-                                    AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                                    AllPCSScheduleKVA = PCSScheduleKVA* (frmSet.config.SysCount);
                                     dRate = 1;
                                     start_Time = DateTime.Now;
                                     recoverSchedule = false;
@@ -8015,7 +8015,7 @@ namespace EMS
                         }
                         else
                         {
-                            AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                            //AllPCSScheduleKVA = PCSScheduleKVA* (frmSet.config.SysCount);
 
                             //记录需量
                             RecordPUM();

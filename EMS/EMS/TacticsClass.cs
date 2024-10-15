@@ -296,6 +296,7 @@ namespace EMS
                                 frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
                                 //下发的功率值恒为正数
                                 frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
                                 log.Error("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
                                 frmMain.Selffrm.AllEquipment.HostStart = true;
                                 frmMain.Selffrm.AllEquipment.SlaveStart = true;
@@ -327,6 +328,7 @@ namespace EMS
                                 frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
                                 frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
                                 frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
                                 log.Error("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
 
                                 frmMain.Selffrm.AllEquipment.HostStart = true;
