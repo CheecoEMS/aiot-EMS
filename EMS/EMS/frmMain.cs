@@ -527,8 +527,8 @@ namespace EMS
                         frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
-                double[] pidd = new double[3] { 1, 2, 3 };
-                pid.PID_init(1, pidd, 10, 10);
+/*                double[] pidd = new double[3] { 1, 2, 3 };
+                pid.PID_init(1, pidd, 10, 10);*/
 
                 //开启定时器
                 InitializeCloud_timer();

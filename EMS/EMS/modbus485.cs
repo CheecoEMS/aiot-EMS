@@ -1,5 +1,6 @@
 using EMS;
 using log4net;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO.Ports;
@@ -137,7 +138,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG(ex.ToString());
+                    log.Error("打开串口失败：" + ex.ToString() + "| 串口：" + portName);
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -369,12 +370,6 @@ namespace Modbus
             //Send modbus message to Serial Port:
             if (!GetComDada(message, ref response))
                 return false;
-
-            //11.16捕捉PCS故障特加test
-            if (aAddress == 1 && aRegStart == Convert.ToInt32("001B", 16) && aRegLength == Convert.ToInt32("0004", 16))
-            {
-                frmMain.Selffrm.AllEquipment.PCSList[0].WarnMessage = response;
-            }
 
             //Evaluate message:
             if (ModbusBase.CheckResponse(response))

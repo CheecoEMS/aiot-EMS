@@ -100,8 +100,6 @@ namespace EMS
         public List<ModbusCommand> ComList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
         public bool Prepared = false;  //硬件是否通讯连接
 
-        //11.16 记录PCS告警报文
-        public byte[] WarnMessage = new byte[20];
         public int PreparedCount = 0;//记录通信失联次数
         //8.8
         public  static ILog log = LogManager.GetLogger("BaseEquipmentClass");
@@ -171,42 +169,55 @@ namespace EMS
         public void LoadCommandFromFile()
         {
             string version;
-            if (!File.Exists(strCommandFile))
-                return;
-            //读取数据
-            StreamReader srFile = File.OpenText(strCommandFile);
-            try
-            {
-                string strData = srFile.ReadLine();
-                ComList.Clear();
-                while (strData != null)
-                {
-                    strData = strData.Trim();//去掉首尾空格字符
-                    //if ((strData.Substring(0, 1) == "*"))//遇到“*”开头的解释字符读取版本的号
-                    //{
-                    //    version = strData.Substring(1);
-                    //}
+            int maxRetry = 3;  // 最大重试次数
+            int attempt = 0;   // 当前重试次数
 
-                    if ((strData == "") || (strData.Substring(0, 1) == "#")|| (strData.Substring(0, 1) == "*"))//遇到空白行或者 “#”开头的解释字符跳过
+            while (attempt < maxRetry)
+            {
+                try
+                {
+                    attempt++; // 每次开始新尝试时增加计数
+                    if (!File.Exists(strCommandFile))
+                        return;
+
+                    // 读取数据
+                    using (StreamReader srFile = File.OpenText(strCommandFile))
                     {
-                        strData = srFile.ReadLine();
-                        continue;
+                        string strData = srFile.ReadLine();
+                        ComList.Clear();
+
+                        while (strData != null)
+                        {
+                            strData = strData.Trim(); // 去掉首尾空格字符
+
+                            // 遇到空白行、以"#"或"*"开头的行跳过
+                            if ((strData == "") || (strData.Substring(0, 1) == "#") || (strData.Substring(0, 1) == "*"))
+                            {
+                                strData = srFile.ReadLine();
+                                continue;
+                            }
+
+                            ModbusCommand oneCommand = new ModbusCommand();
+                            if (strData2Park(strData, ref oneCommand, this.pc))
+                                ComList.Add(oneCommand);
+
+                            strData = srFile.ReadLine();
+                        }
                     }
 
-                    ModbusCommand oneCommand = new ModbusCommand();
-                    if (strData2Park(strData, ref oneCommand,this.pc))
-                        ComList.Add(oneCommand);
-                    strData = srFile.ReadLine();
+                    // 成功执行后退出循环
+                    break;
                 }
+                catch (Exception ex)
+                {
+                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
 
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-                srFile.Close();
+                    if (attempt >= maxRetry)
+                    {
+                        log.Error("达到最大重试次数，操作终止。");
+                        break;  // 如果达到最大重试次数，退出循环
+                    }
+                }
             }
         }
 
@@ -454,6 +465,7 @@ namespace EMS
             double tempFloat = 0;
             int iTemp;
             string tempStr = "";
+
             if (aDataIndex >= ComList.Count)
                 return false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -5288,7 +5300,6 @@ namespace EMS
 
         override public void GetDataFromEqipment()
         {//bms
-
             string strTemp = "";
             string strData = "";
             bool bPrepared = false;
@@ -6005,7 +6016,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master7.0";
+        public string EMSVersion { get; set; } = "EMS240815Master7.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -8216,9 +8227,7 @@ namespace EMS
             {
                 Thread.Sleep(1000);
                 try
-                {
-
-
+                {                 
                     if (BMS == null)
                     {
                         Thread.Sleep(1000);
