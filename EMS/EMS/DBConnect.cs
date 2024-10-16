@@ -60,6 +60,7 @@ namespace EMS
         static public void StartMysql80()
         {
             string serviceName = "MySQL80";
+            log.Error("StartMysql80");
             StartService(serviceName);
         }
 
@@ -76,7 +77,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting service: {ex.Message}");
+                log.Error($"Error starting service: {ex.Message}");
             }
         }
 
@@ -669,6 +670,7 @@ namespace EMS
 
                 if (!TableStructureMatches(existingColumns, targetColumns))
                 {
+                    log.Error("修改表结构");
                     // Backup the existing table
                     string backupTableName = tableName + "_backup";
                     string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
@@ -708,6 +710,7 @@ namespace EMS
             }
             else
             {
+                log.Error("创建新表");
                 CreateTable(tableName, targetColumns);
             }
         }

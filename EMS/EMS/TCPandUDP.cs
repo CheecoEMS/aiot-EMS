@@ -1016,7 +1016,8 @@ namespace Modbus
                 byte[] buffer = client.Receive_NonBlock();
                 if (buffer != null)
                 {
-                    Array.Copy(buffer, 0, response, 0, response.Length);
+                    //Array.Copy(buffer, 0, response, 0, response.Length);  -- 报错
+                    Array.Copy(buffer, 0, response, 0, Math.Min(buffer.Length, response.Length));
                     bResult = true;
                 }
                 else
@@ -1250,6 +1251,7 @@ namespace Modbus
                 if (socketWrapper != null)
                 {
                     socketWrapper.ConnectServer(ipEndpoint);
+                    Connected = true;
                     // 初始化
                     CancellationToken cancelReceiveToken = socketCTS.GetCTSToken();
                     if (cancelReceiveToken != CancellationToken.None)

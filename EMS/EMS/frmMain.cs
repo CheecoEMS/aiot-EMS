@@ -157,7 +157,8 @@ namespace EMS
                     //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
                     frmMain.Selffrm.ModbusTcpClient.SendMSG(aByteData);
                     break;
-                case 0x20://读取设备ID  
+                case 0x20://读取设备ID
+                    AllEquipment.NetConnect = true;
                     data[0] = (short)SysID; //ilen 是主机端赋予从机的虚拟地址号，返回虚拟地址号和实际设备号
                     message = ModbusBase.BuildCloundMSG((byte)frmSet.config.i485Addr, 0x20, 1, data);
                     //string result = BitConverter.ToString(message);
@@ -526,8 +527,8 @@ namespace EMS
                         frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
-                double[] pidd = new double[3] { 1, 2, 3 };
-                pid.PID_init(1, pidd, 10, 10);
+/*                double[] pidd = new double[3] { 1, 2, 3 };
+                pid.PID_init(1, pidd, 10, 10);*/
 
                 //开启定时器
                 InitializeCloud_timer();

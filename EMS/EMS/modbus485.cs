@@ -1,5 +1,6 @@
 using EMS;
 using log4net;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO.Ports;
@@ -137,7 +138,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG(ex.ToString());
+                    log.Error("打开串口失败：" + ex.ToString() + "| 串口：" + portName);
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -201,31 +202,73 @@ namespace Modbus
                 //sp.Read(response, 0, response.Length);
                 bResult = true;
             }
-            catch //(Exception ex)
+            catch (TimeoutException) // 捕获读取超时异常
             {
-                bResult = false;
-                //frmMain.ShowDebugMSG(ex.ToString());
+                throw new TimeoutException("GetResponse TimeoutException"); // 抛出异常，由外部捕获
+            }
+            catch (ObjectDisposedException) // 捕获对象释放异常
+            {
+                throw new ObjectDisposedException("GetResponse ObjectDisposedException"); // 抛出异常，由外部捕获
+            }
+            catch (Exception ex) // 捕获其他异常
+            {
+                throw new Exception("GetResponse Exception: " + ex.Message); // 抛出异常，由外部捕获
             }
             return bResult;
         }
+
         #endregion
 
         private bool GetComFreeData(byte[] aMessage, ref byte[] aResponse)
         {
             bool bResult = false;
+
+            if (sp == null || !sp.IsOpen) // 检查串口是否已打开
+            {
+                log.Error("串口对象未打开或已被释放");
+                return false;
+            }
+
             for (int i = 0; i < 10; i++) //qiao
             {
-                //Clear in/out buffers:
-                sp.DiscardOutBuffer();
-                sp.DiscardInBuffer();
-                sp.Write(aMessage, 0, aMessage.Length);
-                if (GetResponse(ref aResponse))
+                try
                 {
-                    bResult = true;
-                    break;
+                    // 清空缓冲区，防止上一次的数据干扰本次操作
+                    sp.DiscardOutBuffer();
+                    sp.DiscardInBuffer();
+
+                    // 发送请求数据
+                    sp.Write(aMessage, 0, aMessage.Length);
+
+                    // 尝试读取响应数据
+                    if (GetResponse(ref aResponse))
+                    {
+                        bResult = true;
+                        break;
+                    }
+                    else
+                    {
+                        bResult = false;
+                    }
+
+                    // 增加延时，防止频繁通信
+                    System.Threading.Thread.Sleep(100);
                 }
-                else
+                catch (TimeoutException ex) // 捕获 GetResponse 抛出的超时异常
                 {
+                    //log.Error($"GetComFreeData TimeoutException: {ex.Message}");
+                    //log.Error($"Raw Message Hex: {BitConverter.ToString(aMessage)}");
+                    bResult = false;
+                }
+                catch (ObjectDisposedException ex) // 捕获 GetResponse 抛出的对象释放异常
+                {
+                    log.Error($"GetComFreeData ObjectDisposedException: {ex.Message}");
+                    bResult = false;
+                    break; // 如果串口对象被释放，则无需重试，直接退出
+                }
+                catch (Exception ex) // 捕获所有其他异常
+                {
+                    log.Error($"GetComFreeData Exception: {ex.Message}");
                     bResult = false;
                 }
             }
@@ -327,12 +370,6 @@ namespace Modbus
             //Send modbus message to Serial Port:
             if (!GetComDada(message, ref response))
                 return false;
-
-            //11.16捕捉PCS故障特加test
-            if (aAddress == 1 && aRegStart == Convert.ToInt32("001B", 16) && aRegLength == Convert.ToInt32("0004", 16))
-            {
-                frmMain.Selffrm.AllEquipment.PCSList[0].WarnMessage = response;
-            }
 
             //Evaluate message:
             if (ModbusBase.CheckResponse(response))

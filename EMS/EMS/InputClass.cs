@@ -100,8 +100,6 @@ namespace EMS
         public List<ModbusCommand> ComList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
         public bool Prepared = false;  //硬件是否通讯连接
 
-        //11.16 记录PCS告警报文
-        public byte[] WarnMessage = new byte[20];
         public int PreparedCount = 0;//记录通信失联次数
         //8.8
         public  static ILog log = LogManager.GetLogger("BaseEquipmentClass");
@@ -171,42 +169,55 @@ namespace EMS
         public void LoadCommandFromFile()
         {
             string version;
-            if (!File.Exists(strCommandFile))
-                return;
-            //读取数据
-            StreamReader srFile = File.OpenText(strCommandFile);
-            try
-            {
-                string strData = srFile.ReadLine();
-                ComList.Clear();
-                while (strData != null)
-                {
-                    strData = strData.Trim();//去掉首尾空格字符
-                    //if ((strData.Substring(0, 1) == "*"))//遇到“*”开头的解释字符读取版本的号
-                    //{
-                    //    version = strData.Substring(1);
-                    //}
+            int maxRetry = 3;  // 最大重试次数
+            int attempt = 0;   // 当前重试次数
 
-                    if ((strData == "") || (strData.Substring(0, 1) == "#")|| (strData.Substring(0, 1) == "*"))//遇到空白行或者 “#”开头的解释字符跳过
+            while (attempt < maxRetry)
+            {
+                try
+                {
+                    attempt++; // 每次开始新尝试时增加计数
+                    if (!File.Exists(strCommandFile))
+                        return;
+
+                    // 读取数据
+                    using (StreamReader srFile = File.OpenText(strCommandFile))
                     {
-                        strData = srFile.ReadLine();
-                        continue;
+                        string strData = srFile.ReadLine();
+                        ComList.Clear();
+
+                        while (strData != null)
+                        {
+                            strData = strData.Trim(); // 去掉首尾空格字符
+
+                            // 遇到空白行、以"#"或"*"开头的行跳过
+                            if ((strData == "") || (strData.Substring(0, 1) == "#") || (strData.Substring(0, 1) == "*"))
+                            {
+                                strData = srFile.ReadLine();
+                                continue;
+                            }
+
+                            ModbusCommand oneCommand = new ModbusCommand();
+                            if (strData2Park(strData, ref oneCommand, this.pc))
+                                ComList.Add(oneCommand);
+
+                            strData = srFile.ReadLine();
+                        }
                     }
 
-                    ModbusCommand oneCommand = new ModbusCommand();
-                    if (strData2Park(strData, ref oneCommand,this.pc))
-                        ComList.Add(oneCommand);
-                    strData = srFile.ReadLine();
+                    // 成功执行后退出循环
+                    break;
                 }
+                catch (Exception ex)
+                {
+                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
 
-            }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-            }
-            finally
-            {
-                srFile.Close();
+                    if (attempt >= maxRetry)
+                    {
+                        log.Error("达到最大重试次数，操作终止。");
+                        break;  // 如果达到最大重试次数，退出循环
+                    }
+                }
             }
         }
 
@@ -454,6 +465,7 @@ namespace EMS
             double tempFloat = 0;
             int iTemp;
             string tempStr = "";
+
             if (aDataIndex >= ComList.Count)
                 return false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -5288,7 +5300,6 @@ namespace EMS
 
         override public void GetDataFromEqipment()
         {//bms
-
             string strTemp = "";
             string strData = "";
             bool bPrepared = false;
@@ -5948,8 +5959,8 @@ namespace EMS
 
         //2.21
         public double GridKVA_window;
-        public Queue<double> AllUkvaWindow = new Queue<double>();
         public double AllUkvaSum = 0;
+        public Queue<double> AllUkvaWindow = new Queue<double>();
         public volatile int AllUkvaWindowSize = 4; // 1分钟的窗口大小，每秒一个值
 
         public double WorkKVA { get; set; } = 0;    //实时数据负载功率==电网+pcs功率（放电）、、、、电网+充电功率
@@ -6005,7 +6016,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master5.0";
+        public string EMSVersion { get; set; } = "EMS240815Master7.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6082,41 +6093,28 @@ namespace EMS
         }
 
 
-        public void AddValue(double value)
+        public double GetGridKVA_window(double newValue)
         {
-            AllUkvaWindow.Enqueue(value);
-            AllUkvaSum += value;
-
+            AllUkvaWindow.Enqueue(newValue);
             if (AllUkvaWindow.Count > frmSet.cloudLimits.AllUkvaWindowSize)
             {
-                AllUkvaSum -= AllUkvaWindow.Dequeue();
+                if (AllUkvaWindow.Count > 0)
+                {
+                    AllUkvaWindow.Dequeue();
+                }
             }
-        }
 
-        public void clearAllUkvaWindow()
-        {
-            while (AllUkvaWindow.Count > 0)
+            double sum = 0;
+            foreach (var value in AllUkvaWindow)
             {
-                AllUkvaWindow.Dequeue();
+                sum += value;
             }
-        }
 
-        public double GetAverage()
-        {
-            return AllUkvaSum / AllUkvaWindow.Count;
+            double average = sum / AllUkvaWindow.Count;
+            return average;
         }
 
 
-        public static ulong SetCpuID(int lpIdx)
-        {
-            ulong cpuLogicalProcessorId = 0;
-            if (lpIdx < 0 || lpIdx >= System.Environment.ProcessorCount)
-            {
-                lpIdx = 0;
-            }
-            cpuLogicalProcessorId |= 1UL << lpIdx;
-            return cpuLogicalProcessorId;
-        }
 
         //液冷设置
         public void LCIni()
@@ -6910,20 +6908,18 @@ namespace EMS
                     }                  
                     E1_PUMdemand_now = tempPUMdemand_now;
 
-                    //若电表失联，清空数据
-                    if (Elemeter1List[0].Prepared)
+                    
+                    if (Elemeter1List[0].Prepared)//若电表通讯正常，则计算电网平均功率
                     {
                         GridKVA = tempGridKVA;
-                        AddValue(GridKVA);
-                        GridKVA_window = GetAverage();
+                        GridKVA_window = GetGridKVA_window(GridKVA);
                     }
-                    else
+                    else//若电表失联，清空数据
                     {
                         //电网功率清零
                         GridKVA = 0;
-                        clearAllUkvaWindow();
+                        AllUkvaWindow.Clear();
                         GridKVA_window = 0;
-
                         //电网需量清零
                         E1_PUMdemand_now = 0;
                     }
@@ -7670,7 +7666,7 @@ namespace EMS
                                     //强制放电
                                     wTypeActive = "放电";
                                     PCSScheduleKVA = 20;
-                                    AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                                    AllPCSScheduleKVA = PCSScheduleKVA* (frmSet.config.SysCount);
                                     dRate = 1;
                                     start_Time = DateTime.Now;
                                     recoverSchedule = false;
@@ -7895,68 +7891,60 @@ namespace EMS
                         //判断是否超时控制，如果超时就停机等待
                         if (frmSet.config.ConnectStatus == "tcp")
                         {
-                            if (frmMain.Selffrm.ModbusTcpClient.Connected)
+                            if (frmMain.Selffrm.ModbusTcpClient.Connected && NetConnect)
                             {
-                                //连接情况
-                                if (NetConnect)
+                                //超时未收到控制
+                                //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
+                                if (Clock_Watch.MeasureIntervalInSeconds() > 30)
                                 {
-                                    //超时未收到控制
-                                    //if (NetCtlTime.AddSeconds(30)<DateTime.Now)
-                                    if (Clock_Watch.MeasureIntervalInSeconds() > 30)
+                                    //关闭PCS
+                                    frmSet.PCSMOff();
+                                    if (PCSList.Count > 0)
                                     {
-                                        //关闭PCS
-                                        frmSet.PCSMOff();
-                                        if (PCSList.Count > 0)
+                                        if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
                                         {
-                                            if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun != 255)
-                                            {
-                                                log.Error("主从脱钩,关闭pcs");
-                                                PCSList[0].ExcSetPCSPower(false);
-                                            }
-                                        }
-                                        //关闭空调（液冷机）
-                                        if (frmMain.Selffrm.AllEquipment.TempControl != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
-                                            }
-                                        }
-                                        if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                                            {
-                                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
-                                            }
-                                        }
-                                        NetControl = false;
-                                        NetConnect = false;
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
-                                        //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        //已接收控制指令
-                                        if (NetControl)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
-                                            ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
+                                            log.Error("主从脱钩,关闭pcs");
+                                            PCSList[0].ExcSetPCSPower(false);
                                         }
                                     }
+                                    //关闭空调（液冷机）
+                                    if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                                    {
+                                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);
+                                        }
+                                    }
+                                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                                    {
+                                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
+                                        }
+                                    }
+                                    NetControl = false;
+                                    NetConnect = false;
+                                    frmMain.Selffrm.ModbusTcpClient.Connected = false;
+                                    //SqlExecutor.RecordLOG("网控", "网控超时停止服务", "进入待机状态");
+                                    continue;
                                 }
                                 else
                                 {
-                                    //10s未接收到主机消息，则判断主从通讯断开
-                                    if (NetCtlTime.AddSeconds(10)<DateTime.Now)
+                                    //已接收控制指令
+                                    if (NetControl)
                                     {
-                                        frmMain.Selffrm.ModbusTcpClient.Connected = false;
+                                        frmMain.Selffrm.AllEquipment.PCSTypeActive = "恒功率";
+                                        ExcPCSCommand(wTypeActive, PCSTypeActive, (int)Math.Round(PCSScheduleKVA));
                                     }
                                 }
                             }
                             else//客户端发送报文失败，重连
                             {
                                 log.Debug("重连");
+
+                                NetControl = false;
+                                NetConnect = false;
+                                frmMain.Selffrm.ModbusTcpClient.Connected = false;
                                 //若刚开启EMS，pcs已经在工作，则必须立即停止
                                 if (PCSList.Count > 0)
                                 {
@@ -8038,7 +8026,7 @@ namespace EMS
                         }
                         else
                         {
-                            AllPCSScheduleKVA = PCSScheduleKVA* (EMSList.Count+1);
+                            //AllPCSScheduleKVA = PCSScheduleKVA* (frmSet.config.SysCount);
 
                             //记录需量
                             RecordPUM();
@@ -8239,9 +8227,7 @@ namespace EMS
             {
                 Thread.Sleep(1000);
                 try
-                {
-
-
+                {                 
                     if (BMS == null)
                     {
                         Thread.Sleep(1000);
