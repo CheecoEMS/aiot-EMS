@@ -239,7 +239,7 @@ namespace EMS
         {
             bool result = false;
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
-                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm FROM CloudLimits;";
+                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount FROM CloudLimits;";
 
             try
             {
@@ -270,6 +270,8 @@ namespace EMS
                                 cloudLimits.FrigOffUpper = rd.IsDBNull(15) ? 25 : rd.GetInt32(15);
                                 cloudLimits.BoxHTemperAlarm =  rd.IsDBNull(16) ? 40 : rd.GetInt32(16);
                                 cloudLimits.BoxLTemperAlarm = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
+                                cloudLimits.SignalDelayAlarm = rd.IsDBNull(18) ? 80 : rd.GetInt32(18);
+                                cloudLimits.SignalDelayCount = rd.IsDBNull(19) ? 10 : rd.GetInt32(19);
 
                                 result = true;
                             }
@@ -317,6 +319,8 @@ namespace EMS
                 + "', FrigOffUpper = '" + frmSet.cloudLimits.FrigOffUpper.ToString()
                 + "', BoxHTemperAlarm = '" + frmSet.cloudLimits.BoxHTemperAlarm.ToString()
                 + "', BoxLTemperAlarm = '" + frmSet.cloudLimits.BoxLTemperAlarm.ToString()
+                + "', SignalDelayAlarm = '" + frmSet.cloudLimits.SignalDelayAlarm.ToString()
+                + "', SignalDelayCount = '" + frmSet.cloudLimits.SignalDelayCount.ToString()
                 + "';";
 
             bool result = false;
@@ -2164,6 +2168,8 @@ namespace EMS
             public volatile int FrigOffUpper;
             public volatile int BoxHTemperAlarm;
             public volatile int BoxLTemperAlarm;
+            public volatile int SignalDelayAlarm;
+            public volatile int SignalDelayCount;
         }
 
 

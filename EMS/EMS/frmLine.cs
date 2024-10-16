@@ -63,7 +63,6 @@ namespace EMS
                     {
                         //更新均衡运行状态
                         frmMain.Selffrm.AllEquipment.BalaRun = 1;
-                        frmMain.BalaTacticsList.BalaHasOn = true;
                         break;
                     }
                 }

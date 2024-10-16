@@ -377,6 +377,12 @@ namespace EMS
                 {
                     frmMain.Selffrm.AllEquipment.init_LiquidCool();
                 }
+                //初始化BMS功能等级
+                if (frmMain.Selffrm.AllEquipment.BMS != null)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.CheckFunctionLevel();
+                }
+                
 
 
                 //配置DofD电能历史文件的路径
@@ -715,11 +721,10 @@ namespace EMS
                         }
                     }
                 }
-
-
-
-
             }
+
+            //获取信号数据
+            frmMain.Selffrm.AllEquipment.TestSignalStrength();
         }
         static void InitializeTacitc_Timer()
         {
@@ -846,7 +851,10 @@ namespace EMS
                     frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
                     frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
                     frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
-                    frmMain.Selffrm.labE2OKWH.IsHandleCreated)
+                    frmMain.Selffrm.labE2OKWH.IsHandleCreated &&
+                    frmMain.Selffrm.labelDelay.IsHandleCreated &&
+                    frmMain.Selffrm.labelJitter.IsHandleCreated )
+
                 {
                     frmMain.Selffrm.Invoke((Action)(() =>
                     {
@@ -855,6 +863,8 @@ namespace EMS
                         frmMain.Selffrm.labPCSPKWH.Text = PCSPKWH.ToString("F3");
                         frmMain.Selffrm.labE2PKWH.Text = E2PKWH.ToString("F3");
                         frmMain.Selffrm.labE2OKWH.Text = E2OKWH.ToString("F3");
+                        frmMain.Selffrm.labelDelay.Text = frmMain.Selffrm.AllEquipment.SignalDelay.ToString("F3");
+                        frmMain.Selffrm.labelJitter.Text = frmMain.Selffrm.AllEquipment.SignalDelayJitter.ToString("F3");
                     }));
                 }
             }

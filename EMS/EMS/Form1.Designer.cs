@@ -31,12 +31,12 @@ namespace EMS
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.btnLogin = new System.Windows.Forms.Button();
             this.btnSet = new System.Windows.Forms.Button();
             this.btnAbout = new System.Windows.Forms.Button();
@@ -83,6 +83,7 @@ namespace EMS
             this.label7 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.vpbSOC = new EMS.VProgressBar(this.components);
             this.labSOC = new System.Windows.Forms.Label();
             this.labACState = new System.Windows.Forms.Label();
             this.labPCSuKW = new System.Windows.Forms.Label();
@@ -97,7 +98,12 @@ namespace EMS
             this.ctMain = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panel8 = new System.Windows.Forms.Panel();
             this.pictureBox5 = new System.Windows.Forms.PictureBox();
-            this.vpbSOC = new EMS.VProgressBar(this.components);
+            this.labDelay = new System.Windows.Forms.Label();
+            this.labJitter = new System.Windows.Forms.Label();
+            this.labelDelay = new System.Windows.Forms.Label();
+            this.labelJitter = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.pnButtonTop.SuspendLayout();
@@ -455,6 +461,12 @@ namespace EMS
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.panel1.Controls.Add(this.label24);
+            this.panel1.Controls.Add(this.label23);
+            this.panel1.Controls.Add(this.labelJitter);
+            this.panel1.Controls.Add(this.labelDelay);
+            this.panel1.Controls.Add(this.labJitter);
+            this.panel1.Controls.Add(this.labDelay);
             this.panel1.Controls.Add(this.labE2OKWH);
             this.panel1.Controls.Add(this.labE2PKWH);
             this.panel1.Controls.Add(this.labGridkva);
@@ -741,6 +753,17 @@ namespace EMS
             this.panel4.Size = new System.Drawing.Size(538, 209);
             this.panel4.TabIndex = 75;
             // 
+            // vpbSOC
+            // 
+            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
+            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
+            this.vpbSOC.Name = "vpbSOC";
+            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
+            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.vpbSOC.TabIndex = 84;
+            this.vpbSOC.Value = 50;
+            // 
             // labSOC
             // 
             this.labSOC.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -857,40 +880,40 @@ namespace EMS
             // 
             // ctMain
             // 
-            chartArea1.Name = "ChartArea1";
-            this.ctMain.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.ctMain.Legends.Add(legend1);
+            chartArea2.Name = "ChartArea1";
+            this.ctMain.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.ctMain.Legends.Add(legend2);
             this.ctMain.Location = new System.Drawing.Point(0, 66);
             this.ctMain.Name = "ctMain";
-            series1.BorderWidth = 2;
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.Legend = "Legend1";
-            series1.Name = "策略功率";
-            series2.BorderWidth = 2;
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series2.Color = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
-            series2.Legend = "Legend1";
-            series2.Name = "设备功率";
-            series3.BorderWidth = 2;
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series3.Color = System.Drawing.Color.DarkViolet;
-            series3.Legend = "Legend1";
-            series3.Name = "电网功率";
-            series4.BorderWidth = 2;
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series4.Color = System.Drawing.Color.DarkOrange;
-            series4.Legend = "Legend1";
-            series4.Name = "辅电功率";
-            this.ctMain.Series.Add(series1);
-            this.ctMain.Series.Add(series2);
-            this.ctMain.Series.Add(series3);
-            this.ctMain.Series.Add(series4);
+            series5.BorderWidth = 2;
+            series5.ChartArea = "ChartArea1";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series5.Color = System.Drawing.Color.DodgerBlue;
+            series5.Legend = "Legend1";
+            series5.Name = "策略功率";
+            series6.BorderWidth = 2;
+            series6.ChartArea = "ChartArea1";
+            series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series6.Color = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            series6.Legend = "Legend1";
+            series6.Name = "设备功率";
+            series7.BorderWidth = 2;
+            series7.ChartArea = "ChartArea1";
+            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series7.Color = System.Drawing.Color.DarkViolet;
+            series7.Legend = "Legend1";
+            series7.Name = "电网功率";
+            series8.BorderWidth = 2;
+            series8.ChartArea = "ChartArea1";
+            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series8.Color = System.Drawing.Color.DarkOrange;
+            series8.Legend = "Legend1";
+            series8.Name = "辅电功率";
+            this.ctMain.Series.Add(series5);
+            this.ctMain.Series.Add(series6);
+            this.ctMain.Series.Add(series7);
+            this.ctMain.Series.Add(series8);
             this.ctMain.Size = new System.Drawing.Size(819, 221);
             this.ctMain.TabIndex = 2;
             this.ctMain.Text = "chart1";
@@ -916,16 +939,73 @@ namespace EMS
             this.pictureBox5.TabIndex = 0;
             this.pictureBox5.TabStop = false;
             // 
-            // vpbSOC
+            // labDelay
             // 
-            this.vpbSOC.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
-            this.vpbSOC.Location = new System.Drawing.Point(454, 98);
-            this.vpbSOC.Margin = new System.Windows.Forms.Padding(0);
-            this.vpbSOC.Name = "vpbSOC";
-            this.vpbSOC.Size = new System.Drawing.Size(22, 32);
-            this.vpbSOC.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.vpbSOC.TabIndex = 84;
-            this.vpbSOC.Value = 50;
+            this.labDelay.AutoSize = true;
+            this.labDelay.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labDelay.ForeColor = System.Drawing.Color.Silver;
+            this.labDelay.Location = new System.Drawing.Point(30, 363);
+            this.labDelay.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labDelay.Name = "labDelay";
+            this.labDelay.Size = new System.Drawing.Size(42, 21);
+            this.labDelay.TabIndex = 86;
+            this.labDelay.Text = "延迟";
+            // 
+            // labJitter
+            // 
+            this.labJitter.AutoSize = true;
+            this.labJitter.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labJitter.ForeColor = System.Drawing.Color.Silver;
+            this.labJitter.Location = new System.Drawing.Point(30, 401);
+            this.labJitter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labJitter.Name = "labJitter";
+            this.labJitter.Size = new System.Drawing.Size(42, 21);
+            this.labJitter.TabIndex = 87;
+            this.labJitter.Text = "抖动";
+            // 
+            // labelDelay
+            // 
+            this.labelDelay.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labelDelay.ForeColor = System.Drawing.Color.White;
+            this.labelDelay.Location = new System.Drawing.Point(108, 363);
+            this.labelDelay.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelDelay.Name = "labelDelay";
+            this.labelDelay.Size = new System.Drawing.Size(112, 26);
+            this.labelDelay.TabIndex = 88;
+            this.labelDelay.Text = "0";
+            // 
+            // labelJitter
+            // 
+            this.labelJitter.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.labelJitter.ForeColor = System.Drawing.Color.White;
+            this.labelJitter.Location = new System.Drawing.Point(108, 398);
+            this.labelJitter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelJitter.Name = "labelJitter";
+            this.labelJitter.Size = new System.Drawing.Size(112, 26);
+            this.labelJitter.TabIndex = 89;
+            this.labelJitter.Text = "0";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label23.ForeColor = System.Drawing.Color.Silver;
+            this.label23.Location = new System.Drawing.Point(220, 363);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(32, 21);
+            this.label23.TabIndex = 90;
+            this.label23.Text = "ms";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label24.ForeColor = System.Drawing.Color.Silver;
+            this.label24.Location = new System.Drawing.Point(219, 401);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(32, 21);
+            this.label24.TabIndex = 91;
+            this.label24.Text = "ms";
             // 
             // frmMain
             // 
@@ -1040,6 +1120,12 @@ namespace EMS
         private System.Windows.Forms.DataVisualization.Charting.Chart ctMain;
         private VProgressBar vpbSOC;
         private System.Windows.Forms.Button btnControl;
+        private System.Windows.Forms.Label labDelay;
+        private System.Windows.Forms.Label labJitter;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label labelJitter;
+        private System.Windows.Forms.Label labelDelay;
     }
 }
 
