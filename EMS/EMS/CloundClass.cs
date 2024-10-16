@@ -88,64 +88,71 @@ namespace EMS
 
 
         //限速发送
+        /*        public void SendmqttData()
+                {
+                    log.Info("数据上云获取锁_lockTXT ");
+                    lock (_lockTXT)
+                    {
+
+                        allFiles = GetAllFileNames(DataPath, Filters);
+                        //发送数据
+                        if (allFiles.Length > 0)
+                        {
+                            for (int i = 0; i < allFiles.Length; i += batchSize)
+                            {
+                                string[] batch = allFiles.Skip(i).Take(batchSize).ToArray();
+                                // 逐个发送文件
+                                foreach (string allFiles in batch)
+                                {
+                                    string fileName = Path.GetFileName(allFiles);
+                                    aFileCap = fileName.Substring(1, 3);
+                                    strData = File.ReadAllText(@allFiles);
+                                    Write2Topic(aFileCap, strData);
+                                    File.Delete(allFiles);
+                                }
+                            }
+                        }
+                        //清空数组
+                        allFiles = Array.Empty<string>();
+                    }
+                    log.Info("数据上云释放锁_lockTXT ");
+                }*/
+
         public void SendmqttData()
         {
+            log.Info("数据上云获取锁_lockTXT ");
             lock (_lockTXT)
             {
                 allFiles = GetAllFileNames(DataPath, Filters);
-                //发送数据
+
+                // 发送数据  
                 if (allFiles.Length > 0)
                 {
                     for (int i = 0; i < allFiles.Length; i += batchSize)
                     {
                         string[] batch = allFiles.Skip(i).Take(batchSize).ToArray();
-                        // 逐个发送文件
-                        foreach (string allFiles in batch)
+
+                        // 逐个发送文件  
+                        foreach (string file in batch) // 修改这里的变量名为file  
                         {
-                            string fileName = Path.GetFileName(allFiles);
-                            aFileCap = fileName.Substring(1, 3);
-                            strData = File.ReadAllText(@allFiles);
-                            Write2Topic(aFileCap, strData);
-                            File.Delete(allFiles);
+                            try
+                            {
+                                string fileName = Path.GetFileName(file);
+                                string aFileCap = fileName.Substring(1, 3); // 确保这里的索引和长度是有效的  
+                                string strData = File.ReadAllText(file);
+                                Write2Topic(aFileCap, strData);
+                                File.Delete(file);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error($"处理文件 {file} 时出错: {ex.Message}");
+                            }
                         }
                     }
                 }
-                //清空数组
+
                 allFiles = Array.Empty<string>();
             }
-        }
-        static ulong SetCpuID(int lpIdx)
-        {
-            ulong cpuLogicalProcessorId = 0;
-            if (lpIdx < 0 || lpIdx >= System.Environment.ProcessorCount)
-            {
-                lpIdx = 0;
-            }
-            cpuLogicalProcessorId |= 1UL << lpIdx;
-            return cpuLogicalProcessorId;
-        }
-        //2.21
-        public void AutoCloud()
-        {
-            try
-            {
-                //实例化等待连接的线程
-                Thread mqttThread = new Thread(ListenCloud);
-                mqttThread.IsBackground = true;
-                mqttThread.Priority = ThreadPriority.Highest;
-                mqttThread.Start();
-            }
-            catch
-            {
-
-            }
-        }
-        public void ListenCloud()
-        {
-            //log.Error("ListenCloud");
-            mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
-            while (true) { }
-            
         }
 
 
@@ -158,6 +165,7 @@ namespace EMS
             //上传数据
             if (ConnectToCloud)
             {
+                log.Info("数据上云获取锁_lockPublishTimer ");
                 lock (_lockPublishTimer)
                 {
                     frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
@@ -183,19 +191,22 @@ namespace EMS
             UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
         }
 
-
-        public MqttClient CreateClient()
+        public bool CreateClient()
         {
+            bool res = false;
             INIFile ConfigINI = new INIFile();
             string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
 
             String iotcode = frmSet.config.SysID;
             EMQX_CLIENT_ID = iotcode;
 
-            try
+            log.Info("创建Client获取锁_lockMqtt");
+            lock (_lockMqtt)
             {
-                lock (_lockMqtt)
+                try
                 {
+
+
                     if (mqttClient != null)
                     {
                         if (mqttClient.IsConnected)
@@ -212,15 +223,16 @@ namespace EMS
                                                 60); // keepAlivePeriod 
                     //2.21 暂时注释
                     mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
-                }
 
-                return mqttClient;
+                    res =  true;
+                }
+                catch (Exception ex)
+                {
+                    log.Error("CreateClient fail: " + ex.Message);
+                    res = false;
+                }
             }
-            catch (Exception ex)
-            {
-                log.Error("CreateClient fail: " + ex.Message);
-            }
-            return null;
+            return res;
         }
 
         public void ListernAllTopic()
@@ -239,13 +251,16 @@ namespace EMS
         {
             try
             {
-                CreateClient();
-                ListernAllTopic();
-                FirstRun = true;
-                SendAgain = true;
+                if (CreateClient())
+                {
+                    ListernAllTopic();
+                    FirstRun = true;
+                    SendAgain = true;
+                }
             }
-            catch {
-               // mqttClient.IsConnected = false;
+            catch (Exception ex)
+            {
+                log.Error("mqttConnect: " + ex.Message);
             }
         }
 
@@ -256,9 +271,9 @@ namespace EMS
             {
                 ConnectToCloud = false;
                 //保证定时器已经完成publish动作，释放锁_lockMqtt
+                log.Info("mqtt重启获取锁_lockPublishTimer ");
                 lock (_lockPublishTimer)
                 {
-                    log.Error("mqttReconnect");
                     //停止定时器
                     if (Publish_Timer != null)
                     {
@@ -267,12 +282,12 @@ namespace EMS
                         Publish_Timer = null;
                     }
 
-                    CreateClient();
-                    ListernAllTopic();
-
-                    // 重新启动定时器
-                    InitializePublish_Timer();
-                    SendAgain = true;
+                    if (CreateClient())
+                    {
+                        ListernAllTopic();
+                        InitializePublish_Timer();  // 重新启动定时器
+                        SendAgain = true;
+                    }
                 }
             }
             catch (Exception ex)
@@ -290,15 +305,19 @@ namespace EMS
                 SendAgain = false;
                 HeartbeatID = Guid.NewGuid().ToString();
                 string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
-                    
+
+                log.Info("发送心跳等待锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (mqttClient != null)
                     {
                         try
                         {
+                            log.Info("发送心跳uuid: " + HeartbeatID);
                             mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
                                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
+
+                            log.Info("发送心跳结束");
                         }
                         catch (MqttClientException ex)
                         { 
@@ -309,6 +328,7 @@ namespace EMS
             }
             else
             {
+                log.Error("未监测到心跳返回，触发重连");
                 mqttReconnect();
             }      
         }
@@ -319,10 +339,12 @@ namespace EMS
         /// <param name="content"></param>
         public void Write2Topic(string currentTopic, string content)
         {
-            if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
+            lock (_lockMqtt)
             {
-                lock (_lockMqtt)
+                if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
                 {
+                    log.Info("数据上云获取锁_lockMqtt ");
+
                     try
                     {
                         mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
@@ -331,6 +353,7 @@ namespace EMS
                     {
                         log.Error("Write2Topic: " + ex.Message);
                     }
+
                 }
             }
         }
@@ -342,12 +365,20 @@ namespace EMS
         /// <param name="aTopic"></param>
         public void ListenTopic(string aTopic)
         {
+            log.Info("监听Topic获取锁_lockMqtt");
             lock (_lockMqtt)
             {
-                if (mqttClient != null && !string.IsNullOrEmpty(aTopic))
+                try
                 {
-                    mqttClient.Subscribe(new string[] { aTopic },
-                    new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });//QOS_LEVEL_EXACTLY_ONCE
+                    if (mqttClient != null && !string.IsNullOrEmpty(aTopic))
+                    {
+                        mqttClient.Subscribe(new string[] { aTopic },
+                        new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });//QOS_LEVEL_EXACTLY_ONCE
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("ListenTopic: " + ex.Message);
                 }
             }
         }
@@ -373,6 +404,7 @@ namespace EMS
             if (topic == TacticTopic + "request")
             {
                 Result = GetServerTactics(message);
+                log.Info("接收TacticTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (Result)
@@ -399,11 +431,12 @@ namespace EMS
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
                     }
-                }       
+                }
             }
             else if (topic == PriceTopic + "request")
             {
                 Result = GetServerEPrices(message);
+                log.Info("接收PriceTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (Result)
@@ -435,6 +468,7 @@ namespace EMS
             else if (topic == EMSLimitTopic + "request")
             {
                 Result = GetServerEMSLimit(message);
+                log.Info("接收EMSLimitTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (Result)
@@ -466,6 +500,7 @@ namespace EMS
             else if (topic == AIOTTableTopic + "request")
             {
                 strID = GetAiotTable(message);
+                log.Info("接收AIOTTableTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (mqttClient != null)
@@ -484,6 +519,7 @@ namespace EMS
             else if (topic == BalaTableTopic + "request")
             {
                 strID = GetBalaTable(message);
+                log.Info("接收BalaTableTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (mqttClient != null)
@@ -507,6 +543,7 @@ namespace EMS
             else if (topic == UploadTopic  + "request")
             {
                 Result = DataRetransmission(message);
+                log.Info("接收UploadTopic，获取锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (Result)
@@ -674,6 +711,7 @@ namespace EMS
                 if (!Directory.Exists(aDirection))
                     Directory.CreateDirectory(aDirection);
 
+                log.Info("1数据写入文本获取锁_lockTXT ");
                 lock (_lockTXT)
                 {
                     JObject jsonObject = JObject.Parse(json);
@@ -692,7 +730,6 @@ namespace EMS
             }
         }
 
-
         public static void ConvertToJson(object aObj, string aDirection, string aSavePath)
         {
             try
@@ -702,6 +739,7 @@ namespace EMS
                 if (!Directory.Exists(aDirection))
                     Directory.CreateDirectory(aDirection);
 
+                log.Info("2数据写入文本获取锁_lockTXT ");
                 lock (_lockTXT)
                 {
                     using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
@@ -895,6 +933,7 @@ namespace EMS
             JObject jsonObject = null;
             jsonObject = JObject.Parse(astrData);
             string ID = jsonObject["HeartBeatID"].ToString();
+            log.Info("接收心跳uuid: " + ID);
             if (ID == HeartbeatID)
             {
                 if (!ConnectToCloud)

@@ -341,7 +341,7 @@ namespace EMS
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
-                frmSet.BalaPath = strSysPath + "BalaCell.txt";
+                frmSet.BalaPath = strSysPath + "BalaCell.txt";         
                 log.Warn("CHEECO-START");
 
                 ////连接数据库
@@ -383,8 +383,6 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.BMS.CheckFunctionLevel();
                 }
                 
-
-
                 //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
                 //DownData:向云上传JSON文件
@@ -576,17 +574,18 @@ namespace EMS
 
         static void InitializeHeartbeat_Timer()
         {
-            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 10000);
+            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
         }
         static void Heartbeat_TimerCallback(Object state)
         {
+            log.Info("触发心跳定时器");
             if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
             {
                 frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
             }
             else
             {
-                log.Error("Heartbeat_TimerCallback");
+                log.Error("mqttClient为空，触发重连");
                 frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
             }
         }
@@ -600,7 +599,6 @@ namespace EMS
             if (frmSet.config.SysCount > 1)
             {
                 frmMain.Selffrm.AllEquipment.MutiReflux_Log();
-                frmMain.Selffrm.AllEquipment.ClientControl_Log();
             }
             else
             {

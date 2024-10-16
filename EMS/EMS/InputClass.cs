@@ -14,6 +14,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
+using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 
@@ -2819,22 +2820,6 @@ namespace EMS
                 bPrepared = true;
             }
 
-            //9.4 读取当月正向有功最大需量
-/*            if (GetSysData(67, ref strTemp))
-            {
-                PUMdemand_Max = Math.Round(float.Parse(strTemp), 3) ;
-                PUMdemand_Max = PUMdemand_Max * 0.001 * pc;
-                bPrepared = true;
-            }
-
-            //2.21
-            if (GetSysData(68, ref strTemp))
-            {
-                PUMdemand_now = Math.Round(float.Parse(strTemp), 3);
-                PUMdemand_now = PUMdemand_now * 0.001 * pc;
-                bPrepared = true;
-            }*/
-
             if (GetSysData(80, ref strTemp))//读取当前正向反向有功需量
             {
                 bPrepared = true;
@@ -2888,8 +2873,6 @@ namespace EMS
                 }
                 Re_PUMdemand_Max_Time = $"{month}月{day}日{hour}时{minute}分";
             }
-
-
 
             Prepared = bPrepared;
             if (!Prepared)
@@ -4635,9 +4618,9 @@ namespace EMS
         private int CorrectionVersionNumber;//修正版本号
         private string BmsHardware; //BMS硬件的软件版本号
 
-        private string[] Level_1_Version = { "13.81.9.5","1.8.4.19","1.8.4.28"};
+        List<(string, int)> BmsVersions = new List<(string, int)>();
         public int FunctionLevel = 0;//功能等级
-
+        private static string BmsVersionPath = "";//BMS版本
 
         private static ILog log = LogManager.GetLogger("BMSClass");
 
@@ -4648,19 +4631,21 @@ namespace EMS
         public BMSClass()
         {
             strCommandFile = "BMS.txt";
+            BmsVersionPath =  Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory) + "BmsVersion.txt";
         }
 
         //根据bms的版本信息，决定开放的工程
         public void CheckFunctionLevel()
         {
+            //读取BMS版本列表
+            ReadBmsVersions();
+
             string strTemp = "";
             string strData = "";
-            bool bPrepared = false;
 
             //BMS版本信息
             if (GetSysData(140, ref strTemp))
             {
-                bPrepared = true;
                 if (Get3strData(136, ref strTemp, ref strData))
                     ProjectNumber = int.Parse(strData);
                 if (Get3strData(137, ref strTemp, ref strData))
@@ -4671,32 +4656,79 @@ namespace EMS
                     CorrectionVersionNumber = int.Parse(strData);
 
                 BmsHardware = ProjectNumber.ToString()+"."+MajorVersionNumber.ToString()+"."+SubversionVersionNumber.ToString()+"."+CorrectionVersionNumber.ToString();
-                for (int i = 0; i < Level_1_Version.Count(); ++i)
+
+                
+                foreach (var (version, Level) in BmsVersions)
                 {
-                    if (BmsHardware == Level_1_Version[i])
+                    if (version == BmsHardware)
                     {
-                        FunctionLevel = 1;
-                        log.Error("BMS等级: 1");
+                        FunctionLevel = Level;
+                        break; 
                     }
                 }
+                log.Error("BMS版本号: " + BmsHardware  + "BMS功能等级：" + FunctionLevel);
             }
         }
 
+        public void ReadBmsVersions()
+        {
+            if (File.Exists(BmsVersionPath))
+            {
+                try
+                {
+                    string[] lines = File.ReadAllLines(BmsVersionPath);
 
-        /****************************************************************
-        *
-        *
-        *                        Level 1 Function
-        *
-        /****************************************************************/
+                    foreach (string line in lines)
+                    {
+                        // 假设每行都是 "string,int" 的格式  
+                        string[] parts = line.Split(',');
 
-        /******************************
-        *
-        *           均衡
-        *
-        /******************************/
+                        if (parts.Length == 2)
+                        {
+                            string strValue = parts[0].Trim();
+                            if (int.TryParse(parts[1].Trim(), out int intValue))
+                            {
+                                BmsVersions.Add((strValue, intValue));
+                            }
+                            else
+                            {
+                                // 处理整数解析失败的情况  
+                                log.Error($"Invalid integer in line: {line}");
+                            }
+                        }
+                        else
+                        {
+                            // 处理格式不正确的情况  
+                            log.Error($"Invalid format in line: {line}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"An error occurred while reading the file: {ex.Message}");
+                }
+            }
+            else
+            {
+                log.Error("File not found.");
+            }
+        }
+    
 
-        public void ClearBmsBala()
+    /****************************************************************
+    *
+    *
+    *                        Level 1 Function
+    *
+    /****************************************************************/
+
+    /******************************
+    *
+    *           均衡
+    *
+    /******************************/
+
+    public void ClearBmsBala()
         {
             for (int i = 0; i < 25; i++)
             {
@@ -6211,7 +6243,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master7.1";
+        public string EMSVersion { get; set; } = "EMS240815Master7.2";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6239,6 +6271,7 @@ namespace EMS
         private bool SignalAlarmActive = false;  // Track if the alarm is currently active
 
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
 
         public AllEquipmentClass()
         {
@@ -7865,17 +7898,6 @@ namespace EMS
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
-        public void ClientControl_Log()
-        {
-            if (ChechPower)
-            {
-                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA *  frmMain.Selffrm.AllEquipment.dRate);
-            }
-            else 
-            {
-                log.Info("发送功率: " + frmMain.Selffrm.AllEquipment.PCSScheduleKVA *  1);
-            }
-        }
 
         private void MutiReflux()
         {
