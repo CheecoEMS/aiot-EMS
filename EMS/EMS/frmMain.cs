@@ -479,16 +479,12 @@ namespace EMS
                 //若配置接入104服务
                 if (frmSet.config.Open104 == 1)
                 {
-                    frmMain.Selffrm.TCPserver.TCPServerIni(2404);//配置主站开放2404端口
-                    frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接
-
-
-                    //IEC104EVENT eventHandler = new IEC104EVENT();
-                    //IEC104_delegate iec104_delegate = frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
-
-
-                    // frmMain.Selffrm.Slave104.PropertyChanged += frmMain.Selffrm.Slave104.IEC104_PropertyChanged;
                     frmMain.Selffrm.Slave104.IEC104_Init();
+
+                    if (frmMain.Selffrm.TCPserver.TCPServerIni(2404))//配置主站开放2404端口
+                    {
+                        frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接  
+                    }                    
                 }
 
                 //使用TCP/IP通讯方式
@@ -497,8 +493,10 @@ namespace EMS
                     if (frmSet.config.ConnectStatus == "tcp")
                     {
                         frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                        frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502);
-                        frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
+                        if (frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502))
+                        {
+                            frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
+                        }                
                     }
                     else if (frmSet.config.ConnectStatus == "485")
                     {

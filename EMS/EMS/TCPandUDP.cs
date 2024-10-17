@@ -570,6 +570,7 @@ namespace Modbus
                         //绑定IP
                         ServerSocket_2404.Bind(ServerIPE);
                         ServerSocket_2404.Listen(10);
+                        log.Error("开启监听2404端口");
                         return true;
                     case 502:
                         //实例化TcpSetver对象  
@@ -578,6 +579,7 @@ namespace Modbus
                         //绑定IP
                         ServerSocket_502.Bind(ServerIPE);
                         ServerSocket_502.Listen(10);
+                        log.Error("开启监听502端口");
                         return true;
                     default:
                         return false;
@@ -586,12 +588,12 @@ namespace Modbus
             }
             catch (SocketException ex)
             {
-                log.Error("Init Server false: " + ex.Message);
+                log.Error("Init Server false: " + "Port:"+ aLocadPort + " | " +ex.Message);
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error("Init Server false: " + ex.Message);
+                log.Error("Init Server false: " + "Port:"+ aLocadPort + " | " +ex.Message);
                 return false;
             }
         }

@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -6300,76 +6301,88 @@ namespace EMS
 
         public void TestSignalStrength()
         {
-            foreach (NetworkInterface networkInterface in interfaces)
+            try
             {
-                // 排除非物理接口和回环接口
-                if (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ppp ||
-                    networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
-                    networkInterface.OperationalStatus != OperationalStatus.Up)
+                foreach (NetworkInterface networkInterface in interfaces)
                 {
-                    continue;
-                }
-
-                /*                log.Error("接口名称:"+ networkInterface.Name);
-                                log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
-                                log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
-
-                // 获取Ping类实例并设置Ping选项
-                Ping pingSender = new Ping();
-                PingOptions options = new PingOptions();
-                options.DontFragment = true;
-
-                // 设置Ping数据包的大小
-                byte[] buffer = new byte[32];
-                int timeout = 1000;
-
-                // Ping目标地址并获取延迟信息
-                PingReply reply = pingSender.Send("admin.eaiot.cloud", timeout, buffer, options);
-                if (reply.Status == IPStatus.Success)
-                {
-                    SignalDelay =  reply.RoundtripTime;
-                    SignalDelayJitter =  reply.Options.Ttl;
-                    /*                    log.Error("延迟:"+ reply.RoundtripTime+"ms");
-                                        log.Error("延迟抖动"+ reply.Options.Ttl+"ms");*/
-                }
-                else
-                {
-                    log.Error("Ping失败"+ reply.Status);
-                }
-
-                //延迟过高触发2级别告警
-                if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
-                {
-                    delayExceedCount++;
-                    delayBelowCount = 0;  // Reset the below delay counter
-
-                    if (delayExceedCount >=  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
+                    // 排除非物理接口和回环接口
+                    if (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ppp ||
+                        networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                        networkInterface.OperationalStatus != OperationalStatus.Up)
                     {
-                        lock (EMSError)
+                        continue;
+                    }
+
+                    /*                log.Error("接口名称:"+ networkInterface.Name);
+                                    log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
+                                    log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
+
+                    // 获取Ping类实例并设置Ping选项
+                    Ping pingSender = new Ping();
+                    PingOptions options = new PingOptions();
+                    options.DontFragment = true;
+
+                    // 设置Ping数据包的大小
+                    byte[] buffer = new byte[32];
+                    int timeout = 1000;
+
+                    // Ping目标地址并获取延迟信息
+                    PingReply reply = pingSender.Send("admin.eaiot.cloud", timeout, buffer, options);
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        SignalDelay =  reply.RoundtripTime;
+                        SignalDelayJitter =  reply.Options.Ttl;
+
+                        //延迟过高触发2级别告警
+                        if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
                         {
-                            EMSError[0] |= 0x4000;
-                            SignalAlarmActive = true;  // Mark the alarm as active
+                            if (delayExceedCount < frmSet.cloudLimits.SignalDelayCount)
+                            {
+                                delayExceedCount++;
+                            }
+                            delayBelowCount = 0;  // Reset the below delay counter
+
+                            if (delayExceedCount ==  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
+                            {
+                                lock (EMSError)
+                                {
+                                    EMSError[0] |= 0x4000;
+                                    SignalAlarmActive = true;  // Mark the alarm as active
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (delayBelowCount < frmSet.cloudLimits.SignalDelayCount)
+                            {
+                                delayBelowCount++;
+                            }
+                            delayExceedCount = 0;  // Reset the exceed delay counter
+
+                            if (delayBelowCount == frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                            {
+                                lock (EMSError)
+                                {
+                                    EMSError[0] &= 0xBFFF;
+                                    SignalAlarmActive = false;  // Mark the alarm as inactive
+                                }
+                            }
                         }
                     }
-                }
-                else
-                {
-                    delayBelowCount++;
-                    delayExceedCount = 0;  // Reset the exceed delay counter
-
-                    if (delayBelowCount >= frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                    else
                     {
-                        lock (EMSError)
-                        {
-                            EMSError[0] &= 0xBFFF;
-                            SignalAlarmActive = false;  // Mark the alarm as inactive
-                        }
+                        log.Error("Ping失败"+ reply.Status);
                     }
+
                 }
+            }
+            catch (Exception ex) 
+            {
+                log.Error("Ping异常：" + ex.Message);
             }
 
         }
-        
+
 
         public void MeterCalibration()
         {
