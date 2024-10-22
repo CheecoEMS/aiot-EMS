@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using log4net;
 using System.IO;
-
+using System.Diagnostics;
 
 namespace EMS
 {
@@ -297,7 +297,18 @@ namespace EMS
             switch (item)
             { 
                 case 0:
+                    string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe"; // 替换为您的应用程序的可执行文件路径  
+                    try
+                    {
+                        Process.Start(exePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("无法重启应用程序: " + ex.Message);
+                    }
 
+                    // 退出当前进程  
+                    Environment.Exit(0);
                     break;
                 case 1:
                     frmMain.Selffrm.AllEquipment.PCSList[0].test = 1;

@@ -1958,7 +1958,8 @@ namespace EMS
                         new Column { Name = "DaliyE2OKWH_J", Type = "int", IsNullable = true, Key = "" , Comment = "今日尖放电量" },
                         new Column { Name = "DaliyE2OKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰放电量" },
                         new Column { Name = "DaliyE2OKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
-                        new Column { Name = "DaliyE2OKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" }
+                        new Column { Name = "DaliyE2OKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
+                        new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数" }
 
 
                     }

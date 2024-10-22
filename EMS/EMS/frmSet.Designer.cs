@@ -327,6 +327,7 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
+            this.btnRebootEms = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -559,6 +560,7 @@ namespace EMS
             // plSetMain
             // 
             this.plSetMain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.plSetMain.Controls.Add(this.btnRebootEms);
             this.plSetMain.Controls.Add(this.tcbGPIO);
             this.plSetMain.Controls.Add(this.label99);
             this.plSetMain.Controls.Add(this.tcbPCSForceRun);
@@ -619,7 +621,7 @@ namespace EMS
             // label99
             // 
             this.label99.AutoSize = true;
-            this.label99.Location = new System.Drawing.Point(25, 407);
+            this.label99.Location = new System.Drawing.Point(24, 406);
             this.label99.Name = "label99";
             this.label99.Size = new System.Drawing.Size(71, 16);
             this.label99.TabIndex = 64;
@@ -672,7 +674,7 @@ namespace EMS
             // tbBMSVer
             // 
             this.tbBMSVer.AutoSize = true;
-            this.tbBMSVer.Location = new System.Drawing.Point(390, 339);
+            this.tbBMSVer.Location = new System.Drawing.Point(389, 338);
             this.tbBMSVer.Name = "tbBMSVer";
             this.tbBMSVer.Size = new System.Drawing.Size(63, 16);
             this.tbBMSVer.TabIndex = 60;
@@ -706,6 +708,7 @@ namespace EMS
             this.btnCleanDataBase.TabIndex = 58;
             this.btnCleanDataBase.Text = "删除测试数据";
             this.btnCleanDataBase.UseVisualStyleBackColor = true;
+            this.btnCleanDataBase.Visible = false;
             this.btnCleanDataBase.Click += new System.EventHandler(this.btnCleanDataBase_Click);
             // 
             // tcbiPCSfactory
@@ -728,7 +731,7 @@ namespace EMS
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(25, 339);
+            this.label9.Location = new System.Drawing.Point(24, 338);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(95, 16);
             this.label9.TabIndex = 56;
@@ -737,7 +740,7 @@ namespace EMS
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(264, 261);
+            this.label8.Location = new System.Drawing.Point(263, 260);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(23, 16);
             this.label8.TabIndex = 55;
@@ -797,7 +800,7 @@ namespace EMS
             // label25
             // 
             this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(24, 125);
+            this.label25.Location = new System.Drawing.Point(23, 124);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(95, 16);
             this.label25.TabIndex = 51;
@@ -806,7 +809,7 @@ namespace EMS
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(65, 63);
+            this.label3.Location = new System.Drawing.Point(64, 62);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(55, 16);
             this.label3.TabIndex = 49;
@@ -869,7 +872,7 @@ namespace EMS
             // label58
             // 
             this.label58.AutoSize = true;
-            this.label58.Location = new System.Drawing.Point(622, 261);
+            this.label58.Location = new System.Drawing.Point(621, 260);
             this.label58.Name = "label58";
             this.label58.Size = new System.Drawing.Size(23, 16);
             this.label58.TabIndex = 45;
@@ -878,7 +881,7 @@ namespace EMS
             // label59
             // 
             this.label59.AutoSize = true;
-            this.label59.Location = new System.Drawing.Point(441, 261);
+            this.label59.Location = new System.Drawing.Point(440, 260);
             this.label59.Name = "label59";
             this.label59.Size = new System.Drawing.Size(23, 16);
             this.label59.TabIndex = 44;
@@ -941,7 +944,7 @@ namespace EMS
             // label31
             // 
             this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(623, 135);
+            this.label31.Location = new System.Drawing.Point(622, 134);
             this.label31.Name = "label31";
             this.label31.Size = new System.Drawing.Size(31, 16);
             this.label31.TabIndex = 23;
@@ -950,7 +953,7 @@ namespace EMS
             // label30
             // 
             this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(264, 199);
+            this.label30.Location = new System.Drawing.Point(263, 198);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(31, 16);
             this.label30.TabIndex = 22;
@@ -959,7 +962,7 @@ namespace EMS
             // label28
             // 
             this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(382, 199);
+            this.label28.Location = new System.Drawing.Point(381, 198);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(103, 16);
             this.label28.TabIndex = 20;
@@ -968,7 +971,7 @@ namespace EMS
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(44, 261);
+            this.label7.Location = new System.Drawing.Point(43, 260);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(71, 16);
             this.label7.TabIndex = 16;
@@ -977,7 +980,7 @@ namespace EMS
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(414, 135);
+            this.label1.Location = new System.Drawing.Point(413, 134);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 16);
             this.label1.TabIndex = 13;
@@ -986,7 +989,7 @@ namespace EMS
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(49, 199);
+            this.label4.Location = new System.Drawing.Point(48, 198);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(71, 16);
             this.label4.TabIndex = 3;
@@ -4457,6 +4460,21 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
+            // btnRebootEms
+            // 
+            this.btnRebootEms.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnRebootEms.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnRebootEms.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnRebootEms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRebootEms.ForeColor = System.Drawing.Color.White;
+            this.btnRebootEms.Location = new System.Drawing.Point(494, 535);
+            this.btnRebootEms.Name = "btnRebootEms";
+            this.btnRebootEms.Size = new System.Drawing.Size(125, 44);
+            this.btnRebootEms.TabIndex = 66;
+            this.btnRebootEms.Text = "重启EMS";
+            this.btnRebootEms.UseVisualStyleBackColor = true;
+            this.btnRebootEms.Click += new System.EventHandler(this.RebootEms_Click);
+            // 
             // frmSet
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -4524,7 +4542,6 @@ namespace EMS
 
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TabControl tbAll;
-        private System.Windows.Forms.TabPage plSetMain;
         private System.Windows.Forms.TabPage tpEquipments;
         private System.Windows.Forms.TabPage tpE;
         private System.Windows.Forms.TabPage tbShedule;
@@ -4818,5 +4835,7 @@ namespace EMS
         private System.Windows.Forms.Button btnBMSOn;
         private TouchCombox tcbGPIO;
         private System.Windows.Forms.Label label99;
+        private System.Windows.Forms.TabPage plSetMain;
+        private System.Windows.Forms.Button btnRebootEms;
     }
 }

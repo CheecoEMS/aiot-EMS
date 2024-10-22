@@ -122,6 +122,74 @@ namespace EMS
 
         }
 
+        //系统重启
+        public static void RestartWindows()
+        {
+            if (frmSet.historyDatas != null &&  frmSet.historyDatas.RebootCount > 0)
+            {
+                historyDatas.RebootCount--;
+
+                PowerGPIO(0);
+                Set_Cloudlimits();
+                Set_HistoryData();
+
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                }
+                if (frmMain.Selffrm.AllEquipment != null)
+                {
+                    for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
+                    {
+                        frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
+                    }
+                }
+
+                SysIO.Reboot();
+            }
+        }
+
+        //EMS重启
+        public static void RestartApplication()
+        {
+            if (historyDatas != null &&  historyDatas.RebootCount > 0)
+            {
+                historyDatas.RebootCount--;
+                
+                PowerGPIO(0);
+                Set_Cloudlimits();
+                Set_HistoryData();
+
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                }
+                if (frmMain.Selffrm.AllEquipment != null)
+                {
+                    for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
+                    {
+                        frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
+                    }
+                }
+
+
+                string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
+                try
+                {
+                    Process.Start(exePath);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("无法重启应用程序: " + ex.Message);
+                }
+
+                // 退出当前进程  
+                Environment.Exit(0);
+            }
+        }
+
+
+
         /***********************************************************************************************************************/
 
         /*********************************************
@@ -132,7 +200,8 @@ namespace EMS
         public static bool LoadHistoryDataFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P,DaliyE2PKWH_G,DaliyE2OKWH_Z,DaliyE2OKWH_J,DaliyE2OKWH_F,DaliyE2OKWH_P,DaliyE2OKWH_G FROM HistoricalData;";
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P,DaliyE2PKWH_G,DaliyE2OKWH_Z,DaliyE2OKWH_J,DaliyE2OKWH_F,DaliyE2OKWH_P,DaliyE2OKWH_G, "
+                          + " RebootCount FROM HistoricalData;";
 
             try 
             {
@@ -159,7 +228,7 @@ namespace EMS
                                 historyDatas.DaliyE2OKWH_F = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
                                 historyDatas.DaliyE2OKWH_P = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
                                 historyDatas.DaliyE2OKWH_G = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
-
+                                historyDatas.RebootCount = rd.IsDBNull(14) ? 5 : rd.GetInt32(14);
 
                                 result = true;
                             }
@@ -203,6 +272,7 @@ namespace EMS
                 + "', DaliyE2OKWH_F ='" + frmSet.historyDatas.DaliyE2OKWH_F.ToString()
                 + "', DaliyE2OKWH_P ='" + frmSet.historyDatas.DaliyE2OKWH_P.ToString()
                 + "', DaliyE2OKWH_G ='" + frmSet.historyDatas.DaliyE2OKWH_G.ToString()
+                + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
                 + "';";
 
             bool result = false;
@@ -1349,6 +1419,7 @@ namespace EMS
             cloudLimits.WarnMaxGridKW = (int)tneWarnGridkva.Value;
             //11.13
             cloudLimits.PumScale = (int)tnePUM.Value;
+            cloudLimits.BmsDerateRatio = (int)tneBMSwaValue.Value;
 
             //液冷
             componentSettings.LCModel = tcbLCModel.SelectItemIndex;      //全自动
@@ -2032,13 +2103,14 @@ namespace EMS
             DialogResult aDlgResult = MessageBox.Show("确定要重启系统吗？", "询问", MessageBoxButtons.YesNo);
             if (aDlgResult != DialogResult.Yes)
                 return;
-            SysIO.Reboot();
+            //SysIO.Reboot();
+
+            RestartWindows();
         }
 
         private void btnClose_Click(object sender, EventArgs e)
         {
             PowerGPIO(0);
-            //Set_GlobalSet_State();
             Set_Cloudlimits();
             if (frmMain.Selffrm.AllEquipment.Led != null)
             {
@@ -2145,7 +2217,7 @@ namespace EMS
             public volatile int DaliyE2OKWH_F;
             public volatile int DaliyE2OKWH_P;
             public volatile int DaliyE2OKWH_G;
-
+            public volatile int RebootCount;
         }
 
         public class CloudLimitClass
@@ -2302,5 +2374,9 @@ namespace EMS
             }
         }
 
+        private void RebootEms_Click(object sender, EventArgs e)
+        {
+            RestartApplication();
+        }
     }
 }

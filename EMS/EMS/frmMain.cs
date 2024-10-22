@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 using log4net;
 using static IEC104.CIEC104Slave;
+using System.Diagnostics;
 
 //351200 
 
@@ -353,6 +354,12 @@ namespace EMS
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
 
+                //同步今日剩余重启次数
+                if (frmSet.historyDatas != null)
+                {
+                    frmMain.Selffrm.AllEquipment.RebootCount = frmSet.historyDatas.RebootCount;
+                }
+               
                 //获取历史需量
                 if (frmSet.config.IsMaster == 1)
                 {
@@ -365,7 +372,11 @@ namespace EMS
                 }
 
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
-                frmMain.Selffrm.AllEquipment.LoadSetFromFile();
+                if (!frmMain.Selffrm.AllEquipment.LoadSetFromFile())
+                {
+                    //加载数据库或者协议文件失败，则EMS重启
+                    frmSet.RestartApplication();
+                }
 
 
                 //初始化端口
@@ -452,6 +463,7 @@ namespace EMS
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
                 }
+
                 //校验电表数据
                 Selffrm.AllEquipment.Power_CRC();
 
@@ -564,6 +576,9 @@ namespace EMS
             return Selffrm;
         }
 
+
+
+
         /**********************************/
         /*                                */
         /*            定时器              */
@@ -633,6 +648,13 @@ namespace EMS
 
             if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
             {
+                //重置EMS重启次数
+                if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                {
+                    frmSet.historyDatas.RebootCount = 5;
+                    frmSet.Set_HistoryData();
+                }
+
                 //删除180天前的数据
                 frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
 

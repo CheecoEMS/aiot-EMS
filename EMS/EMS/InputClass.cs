@@ -174,11 +174,12 @@ namespace EMS
         }
 
         //下载command文件
-        public void LoadCommandFromFile()
+        public bool LoadCommandFromFile()
         {
             string version;
             int maxRetry = 3;  // 最大重试次数
             int attempt = 0;   // 当前重试次数
+            bool res = false;
 
             while (attempt < maxRetry)
             {
@@ -186,7 +187,7 @@ namespace EMS
                 {
                     attempt++; // 每次开始新尝试时增加计数
                     if (!File.Exists(strCommandFile))
-                        return;
+                        return false;
 
                     // 读取数据
                     using (StreamReader srFile = File.OpenText(strCommandFile))
@@ -214,19 +215,16 @@ namespace EMS
                     }
 
                     // 成功执行后退出循环
+                    res = true;
                     break;
                 }
                 catch (Exception ex)
                 {
                     log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
-
-                    if (attempt >= maxRetry)
-                    {
-                        log.Error("达到最大重试次数，操作终止。");
-                        break;  // 如果达到最大重试次数，退出循环
-                    }
                 }
             }
+
+            return res;
         }
 
         public string LoadVersionFromFile()
@@ -6271,6 +6269,8 @@ namespace EMS
         private int delayBelowCount = 0;
         private bool SignalAlarmActive = false;  // Track if the alarm is currently active
 
+        public int RebootCount { get; set; }    //今日剩余重启次数
+
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 
 
@@ -6376,11 +6376,16 @@ namespace EMS
 
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 log.Error("Ping异常：" + ex.Message);
-            }
 
+                //判断策略功率是否为0
+                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
+                {
+                    frmSet.RestartWindows();
+                }          
+            }
         }
 
 
@@ -6714,8 +6719,10 @@ namespace EMS
 
         //从文件中读取设置信息
         //实例化整体设备类下的各个部件对象
-        public void LoadSetFromFile()
+        public bool LoadSetFromFile()
         {
+            bool res = true;
+
             Fire.Parent = this;
             int eType = 0;
             BaseEquipmentClass oneEquipment = null; //oneEquipment当作指针用
@@ -6851,7 +6858,11 @@ namespace EMS
                                     oneEquipment.iot_code = rd.GetString(11);
                                     oneEquipment.pc = rd.GetInt32(12);
                                     //oneEquipment.version = oneEquipment.LoadVersionFromFile();
-                                    oneEquipment.LoadCommandFromFile(); //下载comlist
+
+                                    if (!oneEquipment.LoadCommandFromFile()) //下载comlist
+                                    {
+                                        res = false;
+                                    }
                                                                         //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
                                                                         //oneEquipment.Parent = this;
                                     switch (oneEquipment.comType)
@@ -6881,6 +6892,7 @@ namespace EMS
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
+                res = false;
             }
             finally
             {
@@ -6888,6 +6900,8 @@ namespace EMS
             }
             Report2Cloud = new CloudClass();
             Report2Cloud.Parent = this;
+
+            return res;
         }
 
 
