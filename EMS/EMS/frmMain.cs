@@ -508,7 +508,11 @@ namespace EMS
                         if (frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502))
                         {
                             frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
-                        }                
+                        }
+                        else
+                        {
+                            frmSet.RestartWindows();
+                        }
                     }
                     else if (frmSet.config.ConnectStatus == "485")
                     {

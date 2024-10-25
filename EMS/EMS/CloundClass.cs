@@ -319,7 +319,7 @@ namespace EMS
 
                             log.Info("发送心跳结束");
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         { 
                             log.Error("SendHeartbeat: " + ex.Message);
                         }
@@ -349,7 +349,7 @@ namespace EMS
                     {
                         mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
                     }
-                    catch (MqttClientException ex)
+                    catch (Exception ex)
                     {
                         log.Error("Write2Topic: " + ex.Message);
                     }
@@ -414,7 +414,7 @@ namespace EMS
                             mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -426,7 +426,7 @@ namespace EMS
                             mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -446,7 +446,7 @@ namespace EMS
                             mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -458,7 +458,7 @@ namespace EMS
                             mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -478,7 +478,7 @@ namespace EMS
                             mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -490,7 +490,7 @@ namespace EMS
                             mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -509,7 +509,7 @@ namespace EMS
                         {
                             mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -528,7 +528,7 @@ namespace EMS
                         {
                             mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -553,7 +553,7 @@ namespace EMS
                             mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }
@@ -565,7 +565,7 @@ namespace EMS
                             mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
                                 MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
                         }
-                        catch (MqttClientException ex)
+                        catch (Exception ex)
                         {
                             log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
                         }

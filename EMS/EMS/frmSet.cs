@@ -164,7 +164,7 @@ namespace EMS
                 {
                     frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
                 }
-                if (frmMain.Selffrm.AllEquipment != null)
+                if (frmMain.Selffrm.AllEquipment.PCSList != null)
                 {
                     for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
                     {
