@@ -1387,6 +1387,7 @@ namespace EMS
                         new Column { Name = "cellIDMinV", Type = "double", IsNullable = true, Key = "", Comment = "单体最低电压ID" },
                         new Column { Name = "cellMinV", Type = "double", IsNullable = true, Key = "", Comment = "单体最低电压" },
                         new Column { Name = "BMSa", Type = "double", IsNullable = true, Key = "", Comment = "电流" },
+                        new Column { Name = "BMStemper", Type = "double", IsNullable = true, Key = "", Comment = "温度" },
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "发生时间" },
                         new Column { Name = "Warning", Type = "varchar(255)", IsNullable = true, Key = "", Comment = "告警信息" },
                     }

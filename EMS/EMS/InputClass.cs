@@ -859,56 +859,7 @@ namespace EMS
             }
             return bResult;
         }
-        public void RecodChargeinform(int level)
-        {
-            DateTime dtTemp = DateTime.Now;
-            string msg = "";
-            string sql = "";
-            switch (level)
-            {
-                case 1:
-                    msg = "充电1级告警";
-                    break;
-                case 2:
-                    msg = "充电2级告警";
-                    break;
-                case 3:
-                    msg = "充电3级告警";
-                    break;
-                case 4:
-                    msg = "放电1级告警";
-                    break;
-                case 5:
-                    msg = "放电2级告警";
-                    break;
-                case 6:
-                    msg = "放电3级告警";
-                    break;
-            }
-            if (msg != "")
-            {
-                if (level < 4)
-                {
-                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, BMSa, Time, Warning) "
-                                    + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
-                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
-                                    + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
-                }
-                else
-                {
-                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMinV, cellMinV, BMSa, Time, Warning) "
-                                   + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
-                                   + frmMain.Selffrm.AllEquipment.BMS.cellIDMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()
-                                   + "','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
-                }
 
-                if (sql != "")
-                {
-                    DBConnection.ExecSQL(sql);
-                }
-
-            }
-        }
         //处理一个故障
         public void RecodError(string awClass, string aeID, int aWaringID, int awLevels, string aWarning, bool aError)
         {
@@ -6242,7 +6193,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master7.3.6";
+        public string EMSVersion { get; set; } = "EMS240815Master7.3.7";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6297,6 +6248,50 @@ namespace EMS
             //    }
             //  //free onePark;
             //}
+        }
+
+        public void RecodChargeinform(int level)
+        {
+            if (frmMain.Selffrm.AllEquipment.BMS != null)
+            {
+                DateTime dtTemp = DateTime.Now;
+                string msg = "";
+                string sql = "";
+                switch (level)
+                {
+                    case 1:
+                        msg = "充电1级告警";
+                        break;
+                    case 2:
+                        msg = "充电2级告警";
+                        break;
+                    case 3:
+                        msg = "充电3级告警";
+                        break;
+                    case 4:
+                        msg = "放电1级告警";
+                        break;
+                    case 5:
+                        msg = "放电2级告警";
+                        break;
+                    case 6:
+                        msg = "放电3级告警";
+                        break;
+                }
+                if (msg != "")
+                {
+                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, BMSa, BMStemper, Time, Warning) "
+                                    + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
+                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()  + "','"
+                                    + frmMain.Selffrm.AllEquipment.BMS.averageTemp.ToString() +"','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
+
+                    if (sql != "")
+                    {
+                        DBConnection.ExecSQL(sql);
+                    }
+
+                }
+            }
         }
 
         public void TestSignalStrength()
@@ -8917,7 +8912,7 @@ namespace EMS
                             frmSet.variCharge.UBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(2);
+                        frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
                         
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
@@ -8989,7 +8984,7 @@ namespace EMS
                             frmSet.variCharge.OBmsPcsState = 0;
 
                         //记录单体电压 温度 电流
-                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(5);
+                        frmMain.Selffrm.AllEquipment.RecodChargeinform(5);
 
                         //保存充放限制阀门到数据库
                         frmSet.Set_VariCharge();
