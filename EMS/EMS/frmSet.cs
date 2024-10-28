@@ -2197,6 +2197,7 @@ namespace EMS
         private void btnFlash3_Click(object sender, EventArgs e)
         {
             RenewTactics();
+            RenewBalaTactics();
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
         }
 
@@ -2374,9 +2375,20 @@ namespace EMS
             }
         }
 
+        private void RenewBalaTactics()
+        {
+            if (frmMain.BalaTacticsList.LoadFromMySQL())
+            {
+                frmMain.BalaTacticsList.ActiveIndex = -1;
+            }
+       
+        }
+
         private void RebootEms_Click(object sender, EventArgs e)
         {
             RestartApplication();
         }
+
+        
     }
 }

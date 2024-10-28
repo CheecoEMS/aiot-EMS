@@ -74,6 +74,7 @@ namespace EMS
         private static System.Threading.Timer Cloud_timer;
         private static System.Threading.Timer UI_timer;
         private static System.Threading.Timer Tacitc_Timer;
+        private static System.Threading.Timer BalaTacitc_Timer;
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
         private static System.Threading.Timer Heartbeat_Timer;
@@ -552,6 +553,11 @@ namespace EMS
                 InitializeCloud_timer();
                 InitializeUI_timer();
                 InitializeTacitc_Timer();
+                if (frmMain.BalaTacticsList != null && frmMain.Selffrm.AllEquipment.BMS != null && frmMain.Selffrm.AllEquipment.BMS.FunctionLevel > 0)//均衡
+                {
+                    InitializeBalaTacitc_Timer();
+                }
+                
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
                 InitializeHeartbeat_Timer();
@@ -748,6 +754,17 @@ namespace EMS
             //获取信号数据
             frmMain.Selffrm.AllEquipment.TestSignalStrength();
         }
+
+        static void InitializeBalaTacitc_Timer()
+        {
+            BalaTacitc_Timer = new System.Threading.Timer(BalaTacitc_TimerCallback, null, 0, 60000);
+        }
+        static void BalaTacitc_TimerCallback(Object state)
+        {
+            frmMain.BalaTacticsList.CheckBalaTacticsOnce();
+        }
+
+
         static void InitializeTacitc_Timer()
         {
             //每30秒 判断策略时段  

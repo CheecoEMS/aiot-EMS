@@ -7062,10 +7062,6 @@ namespace EMS
                 AutoReadDataCom2();//表2、3、4，空调,液冷机
                 AutoReadDataCom4(); //PCS 
                 AutoReadE1();//表1
-                if (frmMain.BalaTacticsList != null && BMS != null && BMS.FunctionLevel > 0)//均衡
-                {
-                    frmMain.BalaTacticsList.AutoCheckBalaTactics();
-                }
 
             }
             catch (Exception ex)
