@@ -6280,9 +6280,11 @@ namespace EMS
                 }
                 if (msg != "")
                 {
-                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, BMSa, BMStemper, Time, Warning) "
+                    sql = "insert into chargeinform (cellIDMaxtemp, cellMaxTemp, cellIDMaxV, cellMaxV, cellIDMinV, cellMinV ,BMSa, BMStemper, rTime, Warning) "
                                     + "values ('" + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxtemp.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp.ToString() + "','"
-                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.a.ToString()  + "','"
+                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMaxV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMaxV.ToString() + "','"
+                                    + frmMain.Selffrm.AllEquipment.BMS.cellIDMinV.ToString() + "','" + frmMain.Selffrm.AllEquipment.BMS.cellMinV.ToString() + "','"
+                                    + frmMain.Selffrm.AllEquipment.BMS.a.ToString()  + "','"
                                     + frmMain.Selffrm.AllEquipment.BMS.averageTemp.ToString() +"','" + dtTemp.ToString("yyyy-MM-dd HH:mm:ss") + "','" + msg + "')";
 
                     if (sql != "")
