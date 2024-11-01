@@ -2855,12 +2855,21 @@ namespace EMS
     //电表2
     public class Elemeter2Class : BaseEquipmentClass
     {
-        public double[] Ukwh { get; set; } = { 0, 0, 0, 0, 0 };            //综合有功尖峰平谷电表;   总尖峰平谷
-        public double[] PUkwh { get; set; } = { 0, 0, 0, 0, 0 };           //正向有功尖峰平谷电表;累计充电
-        public double[] OUkwh { get; set; } = { 0, 0, 0, 0, 0 };           //反向有功尖峰平谷电表;累计放电
-        public double[] Nukwh { get; set; } = { 0, 0, 0, 0, 0 };           //综合无功尖峰平谷电表;
-        public double[] PNukwh { get; set; } = { 0, 0, 0, 0, 0 };          //正向无功尖峰平谷电表;
-        public double[] ONukwh { get; set; } = { 0, 0, 0, 0, 0 };          //反向无功尖峰平谷电表;
+        public double[] Ukwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //综合有功尖峰平谷电表;   总尖峰平谷
+        public double[] PUkwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };           //正向有功尖峰平谷电表;累计充电
+        public double[] OUkwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //反向有功尖峰平谷电表;累计放电
+        public double[] Nukwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };             //综合无功尖峰平谷电表;
+        public double[] PNukwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //正向无功尖峰平谷电表;
+        public double[] ONukwh { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //反向无功尖峰平谷电表;
+
+
+        /*        public double[] Ukwh { get; set; } = { 0, 0, 0, 0, 0 };            //综合有功尖峰平谷电表;   总尖峰平谷
+                public double[] PUkwh { get; set; } = { 0, 0, 0, 0, 0 };           //正向有功尖峰平谷电表;累计充电
+                public double[] OUkwh { get; set; } = { 0, 0, 0, 0, 0 };           //反向有功尖峰平谷电表;累计放电
+                public double[] Nukwh { get; set; } = { 0, 0, 0, 0, 0 };           //综合无功尖峰平谷电表;
+                public double[] PNukwh { get; set; } = { 0, 0, 0, 0, 0 };          //正向无功尖峰平谷电表;
+                public double[] ONukwh { get; set; } = { 0, 0, 0, 0, 0 };          //反向无功尖峰平谷电表;*/
+
         public double AllUkva { get; set; } = 0;     //总有用功率                           
         public double AUkva { get; set; } = 0;
         public double BUkva { get; set; } = 0;
@@ -2967,6 +2976,18 @@ namespace EMS
             }
         }
 
+        public void SetJFTG_8(byte[] a4Zoon, byte[] aBFTGs)
+        {
+            if (m485 ==null)
+                return;
+            lock (m485.sp)
+            {
+                SetSysBytes(122, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
+                SetSysBytes(123, aBFTGs, false);//42字节的1尖峰平谷设计
+                                               // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+            }
+        }
+
         //获取需量
         public void GetPUMdemand_now()
         {
@@ -2987,75 +3008,184 @@ namespace EMS
             bool bPrepared = false;
             string strTemp = "";
             string strData = "";
-            if (GetSysData(64, ref strTemp))//一次读取批量数据，再对数据进行拆分
-            {
-                bPrepared = true;
-                if (Get3strData(0, ref strTemp, ref strData))
-                    Ukwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(1, ref strTemp, ref strData))
-                    Ukwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(2, ref strTemp, ref strData))
-                    Ukwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(3, ref strTemp, ref strData))
-                    Ukwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(4, ref strTemp, ref strData))
-                    Ukwh[4] = Math.Round(float.Parse(strData), 2);
-                //正向有功5
-                if (Get3strData(5, ref strTemp, ref strData))
-                    PUkwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(6, ref strTemp, ref strData))
-                    PUkwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(7, ref strTemp, ref strData))
-                    PUkwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(8, ref strTemp, ref strData))
-                    PUkwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(9, ref strTemp, ref strData))
-                    PUkwh[4] = Math.Round(float.Parse(strData), 2);
-                //反向有功10
-                if (Get3strData(10, ref strTemp, ref strData))
-                    OUkwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(11, ref strTemp, ref strData))
-                    OUkwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(12, ref strTemp, ref strData))
-                    OUkwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(13, ref strTemp, ref strData))
-                    OUkwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(14, ref strTemp, ref strData))
-                    OUkwh[4] = Math.Round(float.Parse(strData), 2);
-                //无功15
-                if (Get3strData(15, ref strTemp, ref strData))
-                    Nukwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(16, ref strTemp, ref strData))
-                    Nukwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(17, ref strTemp, ref strData))
-                    Nukwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(18, ref strTemp, ref strData))
-                    Nukwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(19, ref strTemp, ref strData))
-                    Nukwh[4] = Math.Round(float.Parse(strData), 2);
+            /*            if (GetSysData(64, ref strTemp))//一次读取批量数据，再对数据进行拆分
+                        {
+                            bPrepared = true;
+                            if (Get3strData(0, ref strTemp, ref strData))
+                                Ukwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(1, ref strTemp, ref strData))
+                                Ukwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(2, ref strTemp, ref strData))
+                                Ukwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(3, ref strTemp, ref strData))
+                                Ukwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(4, ref strTemp, ref strData))
+                                Ukwh[4] = Math.Round(float.Parse(strData), 2);
+                            //正向有功5
+                            if (Get3strData(5, ref strTemp, ref strData))
+                                PUkwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(6, ref strTemp, ref strData))
+                                PUkwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(7, ref strTemp, ref strData))
+                                PUkwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(8, ref strTemp, ref strData))
+                                PUkwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(9, ref strTemp, ref strData))
+                                PUkwh[4] = Math.Round(float.Parse(strData), 2);
+                            //反向有功10
+                            if (Get3strData(10, ref strTemp, ref strData))
+                                OUkwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(11, ref strTemp, ref strData))
+                                OUkwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(12, ref strTemp, ref strData))
+                                OUkwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(13, ref strTemp, ref strData))
+                                OUkwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(14, ref strTemp, ref strData))
+                                OUkwh[4] = Math.Round(float.Parse(strData), 2);
+                            //无功15
+                            if (Get3strData(15, ref strTemp, ref strData))
+                                Nukwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(16, ref strTemp, ref strData))
+                                Nukwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(17, ref strTemp, ref strData))
+                                Nukwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(18, ref strTemp, ref strData))
+                                Nukwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(19, ref strTemp, ref strData))
+                                Nukwh[4] = Math.Round(float.Parse(strData), 2);
 
-                //正向无功
-                if (Get3strData(20, ref strTemp, ref strData))
+                            //正向无功
+                            if (Get3strData(20, ref strTemp, ref strData))
+                                PNukwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(21, ref strTemp, ref strData))
+                                PNukwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(22, ref strTemp, ref strData))
+                                PNukwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(23, ref strTemp, ref strData))
+                                PNukwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(24, ref strTemp, ref strData))
+                                PNukwh[4] = Math.Round(float.Parse(strData), 2);
+                            //反向无功25
+                            if (Get3strData(25, ref strTemp, ref strData))
+                                ONukwh[0] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(26, ref strTemp, ref strData))
+                                ONukwh[1] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(27, ref strTemp, ref strData))
+                                ONukwh[2] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(28, ref strTemp, ref strData))
+                                ONukwh[3] = Math.Round(float.Parse(strData), 2);
+                            if (Get3strData(29, ref strTemp, ref strData))
+                                ONukwh[4] = Math.Round(float.Parse(strData), 2);
+                        }*/
+
+            if (GetSysData(121, ref strTemp))//一次读取批量数据，再对数据进行拆分
+            {             
+                bPrepared = true;
+                if (Get3strData(74, ref strTemp, ref strData))
+                    Ukwh[0] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(75, ref strTemp, ref strData))
+                    PUkwh[0] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(76, ref strTemp, ref strData))
+                    OUkwh[0] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(77, ref strTemp, ref strData))
+                    Nukwh[0] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(78, ref strTemp, ref strData))
                     PNukwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(21, ref strTemp, ref strData))
-                    PNukwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(22, ref strTemp, ref strData))
-                    PNukwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(23, ref strTemp, ref strData))
-                    PNukwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(24, ref strTemp, ref strData))
-                    PNukwh[4] = Math.Round(float.Parse(strData), 2);
-                //反向无功25
-                if (Get3strData(25, ref strTemp, ref strData))
+                if (Get3strData(79, ref strTemp, ref strData))
                     ONukwh[0] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(26, ref strTemp, ref strData))
+
+                if (Get3strData(80, ref strTemp, ref strData)) { }//当前组合视在总电能
+
+                //当前总有功电能
+                if (Get3strData(81, ref strTemp, ref strData))
+                    Ukwh[1] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(82, ref strTemp, ref strData))
+                    Ukwh[2] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(83, ref strTemp, ref strData))
+                    Ukwh[3] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(84, ref strTemp, ref strData))
+                    Ukwh[4] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(85, ref strTemp, ref strData))
+                    Ukwh[5] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(86, ref strTemp, ref strData))
+                    Ukwh[6] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(87, ref strTemp, ref strData))
+                    Ukwh[7] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(88, ref strTemp, ref strData))
+                    Ukwh[8] = Math.Round(float.Parse(strData), 2);
+
+                //当前正向有功电能
+                if (Get3strData(89, ref strTemp, ref strData))
+                    PUkwh[1] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(90, ref strTemp, ref strData))
+                    PUkwh[2] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(91, ref strTemp, ref strData))
+                    PUkwh[3] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(92, ref strTemp, ref strData))
+                    PUkwh[4] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(93, ref strTemp, ref strData))
+                    PUkwh[5] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(94, ref strTemp, ref strData))
+                    PUkwh[6] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(95, ref strTemp, ref strData))
+                    PUkwh[7] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(96, ref strTemp, ref strData))
+                    PUkwh[8] = Math.Round(float.Parse(strData), 2);
+
+                //当前反向有功电能费
+                if (Get3strData(97, ref strTemp, ref strData))
+                    OUkwh[1] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(98, ref strTemp, ref strData))
+                    OUkwh[2] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(99, ref strTemp, ref strData))
+                    OUkwh[3] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(100, ref strTemp, ref strData))
+                    OUkwh[4] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(101, ref strTemp, ref strData))
+                    OUkwh[5] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(102, ref strTemp, ref strData))
+                    OUkwh[6] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(103, ref strTemp, ref strData))
+                    OUkwh[7] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(104, ref strTemp, ref strData))
+                    OUkwh[8] = Math.Round(float.Parse(strData), 2);
+
+                //当前正向无功电能
+                if (Get3strData(105, ref strTemp, ref strData))
+                    PNukwh[1] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(106, ref strTemp, ref strData))
+                    PNukwh[2] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(107, ref strTemp, ref strData))
+                    PNukwh[3] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(108, ref strTemp, ref strData))
+                    PNukwh[4] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(109, ref strTemp, ref strData))
+                    PNukwh[5] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(110, ref strTemp, ref strData))
+                    PNukwh[6] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(111, ref strTemp, ref strData))
+                    PNukwh[7] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(112, ref strTemp, ref strData))
+                    PNukwh[8] = Math.Round(float.Parse(strData), 2);
+
+                //当前反向无功电能
+                if (Get3strData(113, ref strTemp, ref strData))
                     ONukwh[1] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(27, ref strTemp, ref strData))
+                if (Get3strData(114, ref strTemp, ref strData))
                     ONukwh[2] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(28, ref strTemp, ref strData))
+                if (Get3strData(115, ref strTemp, ref strData))
                     ONukwh[3] = Math.Round(float.Parse(strData), 2);
-                if (Get3strData(29, ref strTemp, ref strData))
+                if (Get3strData(116, ref strTemp, ref strData))
                     ONukwh[4] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(117, ref strTemp, ref strData))
+                    ONukwh[5] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(118, ref strTemp, ref strData))
+                    ONukwh[6] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(119, ref strTemp, ref strData))
+                    ONukwh[7] = Math.Round(float.Parse(strData), 2);
+                if (Get3strData(120, ref strTemp, ref strData))
+                    ONukwh[8] = Math.Round(float.Parse(strData), 2);
             }
 
             //

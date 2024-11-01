@@ -72,14 +72,28 @@ namespace EMS
                                     tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
                                     i++;
                                 }
-                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                                
+/*                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
                                 byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
                                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                                 {
                                     frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
                                 }
                                 if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                                {
                                     frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                }*/
+
+                                byte[] atable3 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1 };//使用八费率的第一套表
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable3, tempJFPG);
+                                }
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                                {
+                                    //frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                }
+
                             }
                         }
                     }
