@@ -71,13 +71,11 @@ namespace EMS
         public EMSEquipment Model4G = new EMSEquipment();
 
         //定时器
-        private static System.Threading.Timer Cloud_timer;
         private static System.Threading.Timer UI_timer;
         private static System.Threading.Timer Tacitc_Timer;
         private static System.Threading.Timer BalaTacitc_Timer;
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
-        private static System.Threading.Timer Heartbeat_Timer;
         private static System.Threading.Timer Led_Timer;
         private static System.Threading.Timer LiquidCold_Timer;
         //8.8
@@ -550,9 +548,8 @@ namespace EMS
                 pid.PID_init(1, pidd, 10, 10);*/
 
                 //开启定时器
-                InitializeCloud_timer();
                 InitializeUI_timer();
-                InitializeTacitc_Timer();
+                //InitializeTacitc_Timer();
                 if (frmMain.BalaTacticsList != null && frmMain.Selffrm.AllEquipment.BMS != null && frmMain.Selffrm.AllEquipment.BMS.FunctionLevel > 0)//均衡
                 {
                     InitializeBalaTacitc_Timer();
@@ -560,7 +557,7 @@ namespace EMS
                 
                 InitializePublic_Timer();
                 InitializeCXFN_Timer();
-                InitializeHeartbeat_Timer();
+                
                 //led定时器
                 if (frmMain.Selffrm.AllEquipment.Led != null)
                 {
@@ -572,8 +569,8 @@ namespace EMS
                     frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
                     InitializeLiquidCold_HeartBeat_Timer();
                 }
-                frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
-
+                frmMain.Selffrm.AllEquipment.Report2Cloud.InitAll_Timer();
+                
                 frmFlash.AddPostion(10);
                 //开启任务多线程
                 frmMain.Selffrm.AllEquipment.AutoReadData();
@@ -594,24 +591,6 @@ namespace EMS
         /*            定时器              */
         /*                                */
         /*********************************/
-
-        static void InitializeHeartbeat_Timer()
-        {
-            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
-        }
-        static void Heartbeat_TimerCallback(Object state)
-        {
-            log.Info("触发心跳定时器");
-            if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
-            {
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
-            }
-            else
-            {
-                log.Error("mqttClient为空，触发重连");
-                frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
-            }
-        }
 
         static void InitializeCXFN_Timer()
         {
@@ -774,28 +753,7 @@ namespace EMS
         {
             frmMain.TacticsList.CheckTacticsOnce();
         }
-        static void InitializeCloud_timer()
-        {
-            //每60秒 数据上云  
-            Cloud_timer = new System.Threading.Timer(Cloud_timerCallback, null, 0, 60000);
-        }
-        static void Cloud_timerCallback(Object state)
-        {
-            // 定时器触发时要执行的代码  
-            //if (frmSet.config.EMSstatus == 1)
-            //{
-                DateTime tempTime = DateTime.Now;
-                //采集数据保存在数据库中
-                frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
-                //采集数据上传云端
-                frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
-            //}
 
-            //make json
-/*            DateTime tempTimeq = DateTime.Now;
-            string rDate = tempTimeq.ToString("yyyyMMddHHmmss");
-            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2CloudTest(rDate);*/
-        }
         static void InitializeUI_timer()
         {
             // 每两秒修正 UI 

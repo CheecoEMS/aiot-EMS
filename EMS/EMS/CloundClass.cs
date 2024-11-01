@@ -12,6 +12,7 @@ using log4net;
 using System.Runtime.InteropServices;
 using M2Mqtt.Exceptions;
 
+
 namespace EMS
 {
 
@@ -47,9 +48,10 @@ namespace EMS
         public bool SendAgain = true;
         public string HeartbeatID;
         public volatile bool ConnectToCloud = false;
-        private readonly object _lockMqtt = new object();
-
-        private static System.Threading.Timer Publish_Timer;//数据上云定时器
+        
+        private static System.Threading.Timer DownloadData_timer;//数据上云定时器
+        private static System.Threading.Timer UploadData_Timer;
+        private static System.Threading.Timer Heartbeat_Timer;
 
         //数据上云
         private string DataPath = "c:\\SendData"; //数据保存地址
@@ -61,8 +63,15 @@ namespace EMS
 
         private static ILog log = LogManager.GetLogger("CloudClass");
 
+        private readonly object _lockMqtt = new object();
         private static readonly object _lockTXT = new object();
-        private static readonly object _lockPublishTimer = new object();
+        
+        //定时器标志位
+        private static bool isUploadDataStopped = false;//判断Publish_Timer是否已被暂停
+        
+        private static bool isHeartbeatExecuting = false; //判断Heartbeat_Timer是否正在执行
+        private static bool isDownloadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
+        private static bool isUploadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
 
         public CloudClass()
         {
@@ -73,6 +82,124 @@ namespace EMS
                 Directory.CreateDirectory(DataPath);
             }
             //mqttConnect(); 
+        }
+
+        /********************************************************************************************
+         * 
+         *                              定时器
+         * 
+         * *****************************************************************************************/
+
+        public void InitAll_Timer()
+        {
+            InitializeHeartbeat_Timer();
+            InitializeDownloadData_timer();
+            InitializeeUploadData_Timer();
+        }
+
+
+        public void InitializeHeartbeat_Timer()
+        {
+            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
+        }
+        public void Heartbeat_TimerCallback(Object state)
+        {
+            if (isHeartbeatExecuting)
+            {
+                log.Info("Heartbeat_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isHeartbeatExecuting = true; // 设置标志位，表示当前回调正在执行
+
+            try
+            {
+                log.Info("触发心跳定时器");
+                if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
+                }
+                else
+                {
+                    log.Error("mqttClient为空，触发重连");
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Heartbeat_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isHeartbeatExecuting = false; // 执行完毕，重置标志位
+            }
+        }
+
+
+        public void InitializeDownloadData_timer()
+        {
+            //每60秒 数据上云  
+            DownloadData_timer = new System.Threading.Timer(DownloadDataCallback, null, 0, 60000);
+        }
+        private void DownloadDataCallback(Object state)
+        {
+            if (isDownloadDataExecuting)
+            {
+                log.Info("DownloadDataCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isDownloadDataExecuting = true;
+
+            try
+            {
+                DateTime tempTime = DateTime.Now;
+                //采集数据保存在数据库中
+                Save2DataSoure(tempTime);
+                //采集数据上传云端
+                Save2CloudFile(tempTime);
+            }
+            catch (Exception ex)
+            {
+                log.Error("DownloadDataCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isDownloadDataExecuting = false; // 执行完毕，重置标志位
+            }
+        }
+
+
+        public void InitializeeUploadData_Timer()
+        {
+            UploadData_Timer = new System.Threading.Timer(UploadData_TimerCallback, null, 0, 30000);
+        }
+        private void UploadData_TimerCallback(Object state)
+        {
+
+            if (isUploadDataExecuting)
+            {
+                log.Info("isUploadDataExecuting is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isUploadDataExecuting = true;
+            try
+            {
+                //上传数据
+                if (ConnectToCloud)
+                {
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("isUploadDataExecuting encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isUploadDataExecuting = false;
+            }
         }
 
         /// <summary>
@@ -86,37 +213,6 @@ namespace EMS
             return Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly);
         }
 
-
-        //限速发送
-        /*        public void SendmqttData()
-                {
-                    log.Info("数据上云获取锁_lockTXT ");
-                    lock (_lockTXT)
-                    {
-
-                        allFiles = GetAllFileNames(DataPath, Filters);
-                        //发送数据
-                        if (allFiles.Length > 0)
-                        {
-                            for (int i = 0; i < allFiles.Length; i += batchSize)
-                            {
-                                string[] batch = allFiles.Skip(i).Take(batchSize).ToArray();
-                                // 逐个发送文件
-                                foreach (string allFiles in batch)
-                                {
-                                    string fileName = Path.GetFileName(allFiles);
-                                    aFileCap = fileName.Substring(1, 3);
-                                    strData = File.ReadAllText(@allFiles);
-                                    Write2Topic(aFileCap, strData);
-                                    File.Delete(allFiles);
-                                }
-                            }
-                        }
-                        //清空数组
-                        allFiles = Array.Empty<string>();
-                    }
-                    log.Info("数据上云释放锁_lockTXT ");
-                }*/
 
         public void SendmqttData()
         {
@@ -154,25 +250,6 @@ namespace EMS
                 allFiles = Array.Empty<string>();
             }
         }
-
-
-        public void InitializePublish_Timer()
-        {
-            Publish_Timer = new System.Threading.Timer(Publish_TimerCallback, null, 0, 30000);
-        }
-        private void Publish_TimerCallback(Object state)
-        {
-            //上传数据
-            if (ConnectToCloud)
-            {
-                log.Info("数据上云获取锁_lockPublishTimer ");
-                lock (_lockPublishTimer)
-                {
-                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
-                }
-            }
-        }
-
 
 
         public void IniClound()
@@ -270,32 +347,29 @@ namespace EMS
             try
             {
                 ConnectToCloud = false;
-                //保证定时器已经完成publish动作，释放锁_lockMqtt
-                log.Info("mqtt重启获取锁_lockPublishTimer ");
-                lock (_lockPublishTimer)
-                {
-                    //停止定时器
-                    if (Publish_Timer != null)
-                    {
-                        Publish_Timer.Change(Timeout.Infinite, Timeout.Infinite);
-                        Publish_Timer.Dispose();
-                        Publish_Timer = null;
-                    }
 
-                    if (CreateClient())
-                    {
-                        ListernAllTopic();
-                        InitializePublish_Timer();  // 重新启动定时器
-                        SendAgain = true;
-                    }
+                if (!isUploadDataStopped)
+                {
+                    // 先停止定时器，以确保在重连期间不会重复触发
+                    UploadData_Timer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    isUploadDataStopped = true;
                 }
+
+                if (CreateClient())
+                {
+                    ListernAllTopic();
+                    // 重连成功后重新启动定时器
+                    UploadData_Timer?.Change(0, 30000);  // 设置定时器间隔为 30 秒
+                    isUploadDataStopped = false;  // 更新状态
+                    log.Info("重连成功，定时器UploadData_Timer已重新启动。");
+                    SendAgain = true;
+                }
+                
             }
             catch (Exception ex)
             {
-
+                log.Error("mqttReconnect: " + ex.Message);
             }
-
-
         }
 
         public void SendHeartbeat()
@@ -757,6 +831,60 @@ namespace EMS
             }
         }
 
+        //保存到文件
+        public void Save2DataSoure(DateTime atempTime)
+        {
+            try
+            {
+                if (Parent == null)
+                    return;
+                string tempDate = atempTime.ToString("yyyy-MM-dd HH:mm:ss");
+                int i = 0;
+                //关口电表 
+                if (Parent.Elemeter1List != null)
+                {
+                    foreach (Elemeter1Class tempEM1 in Parent.Elemeter1List)
+                    {
+                        tempEM1.Save2DataSource(tempDate);
+                    }
+                }
+                //电表2---设备电表
+                if (Parent.Elemeter2 != null)
+                    Parent.Elemeter2.Save2DataSource(tempDate);
+                //电表3---辅助电表
+                if (Parent.Elemeter3 != null)
+                    Parent.Elemeter3.Save2DataSource(tempDate);
+                //PCS                
+                for (i = 0; i < Parent.PCSList.Count; i++)
+                    Parent.PCSList[i].Save2DataSource(tempDate);
+                //BMS                
+                if (Parent.BMS!=null)
+                    Parent.BMS.Save2DataSource(tempDate);
+                //空调
+                if (Parent.TempControl!=null)
+                    Parent.TempControl.Save2DataSource(tempDate);
+                //液冷
+                if (Parent.LiquidCool!=null)
+                    Parent.LiquidCool.Save2DataSource(tempDate);
+                //传感器
+                if (Parent.Fire != null)
+                    Parent.Fire.Save2DataSource(tempDate);
+                //UPS
+                /*                if (UPS != null)
+                                    UPS.Save2DataSource(tempDate);*/
+                //其他 
+            }
+            catch (Exception ex)
+            {
+                log.Error("Save2DataSoure: " + ex.Message);
+            }
+            finally
+            {
+
+            }
+        }
+
+
 
         //将数据整理存入文件
         public void Save2CloudFile(DateTime tempTime)
@@ -923,6 +1051,7 @@ namespace EMS
             }
             catch(Exception ex)
             {
+                log.Error("DataRetransmission: " + ex.Message);
                 return false;
             }
             return result;
