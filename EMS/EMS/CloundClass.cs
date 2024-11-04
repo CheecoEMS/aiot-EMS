@@ -228,12 +228,6 @@ namespace EMS
                     {
                         frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
                     }
-                    else
-                    {
-                        log.Warn("Connection to cloud is lost. Stopping UploadDataThread.");
-                        StopUploadDataThread(); // 连接丢失时停止线程
-                        return;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -628,11 +622,13 @@ namespace EMS
                 if (CreateClient())
                 {
                     ListernAllTopic();
+                    receivedHeartbeatResponse = true;
 
                     // 重连成功后重新创建并启动上传数据的线程
-                    TryStartUploadDataThread();
+                    //TryStartUploadDataThread();
+                    StartUploadDataThread();
                     log.Info("重连成功，UploadDataThread 已重新启动。");
-                    receivedHeartbeatResponse = true;
+                    
                 }
             }
             catch (Exception ex)
