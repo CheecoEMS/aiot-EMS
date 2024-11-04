@@ -85,6 +85,9 @@ namespace EMS
         
         private Thread HeartbeatThread;
 
+        private Thread WaitUploadDataThread;
+        private bool isWaitUploadDataExecuting = false;
+
         public CloudClass()
         {
             string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
@@ -185,12 +188,31 @@ namespace EMS
 
         /********************************UploadDataThread*************************************/
 
+
         public void TryStartUploadDataThread()
         {
-            if (ConnectToCloud && !isUploadDataThreadRunning) // 只有在连接到云端且线程未运行时启动
+            WaitUploadDataThread = new Thread(TryStartUploadDataThreadCallback);
+            WaitUploadDataThread.IsBackground = true;
+            WaitUploadDataThread.Priority = ThreadPriority.Normal;
+            WaitUploadDataThread.Name = "WaitUploadDataThread";
+            WaitUploadDataThread.Start();
+        }
+
+        private void TryStartUploadDataThreadCallback()
+        {
+            isWaitUploadDataExecuting = true;
+            while (!ConnectToCloud || isUploadDataThreadRunning)
             {
-                StartUploadDataThread();
+                // 如果未连接到云端或线程已运行，等待一段时间再检查
+                Thread.Sleep(5000); // 每隔 5 秒检查一次条件
             }
+
+            // 一旦条件满足，启动上传数据线程
+            isWaitUploadDataExecuting = false;
+            StartUploadDataThread();
+
+            // 回调方法执行完毕，线程会自动销毁
+            log.Info("WaitUploadDataThread has finished execution and will be automatically terminated.");
         }
 
         private void StartUploadDataThread()
@@ -625,8 +647,13 @@ namespace EMS
                     receivedHeartbeatResponse = true;
 
                     // 重连成功后重新创建并启动上传数据的线程
-                    //TryStartUploadDataThread();
-                    StartUploadDataThread();
+
+                    //StartUploadDataThread();
+                    if (!isWaitUploadDataExecuting)
+                    { 
+                        TryStartUploadDataThread();
+                    }
+
                     log.Info("重连成功，UploadDataThread 已重新启动。");
                     
                 }
