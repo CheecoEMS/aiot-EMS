@@ -221,7 +221,7 @@ namespace EMS
                     // 只有在策略模式才会运行策略
                     if (frmSet.config.SysMode == 1)
                         TacticsOn = true;
-                    return;
+                    continue;
                 }
 
                 //开启策略，若EMS无策略则重新读取数据库
@@ -231,7 +231,6 @@ namespace EMS
                 }
 
                 DateTime now = DateTime.Now;
-
                 //没有策略的执行策略就要停止输出
                 if (TacticsList.Count == 0)
                 {
@@ -268,7 +267,7 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.HostStart = false;
                         frmMain.Selffrm.AllEquipment.SlaveStart= false;
                     }
-                    return;
+                    continue;
                 }
                 //找到区段处理方法
                 //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置

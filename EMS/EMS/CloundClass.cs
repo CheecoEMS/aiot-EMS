@@ -11,7 +11,7 @@ using System.Threading;
 using log4net;
 using System.Runtime.InteropServices;
 using M2Mqtt.Exceptions;
-
+using System.Threading.Tasks;
 
 namespace EMS
 {
@@ -44,34 +44,46 @@ namespace EMS
 
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
-        public bool receivedHeartbeatResponse = false;
-        public bool SendAgain = true;
-        public string HeartbeatID;
-        public volatile bool ConnectToCloud = false;
         
-        private static System.Threading.Timer DownloadData_timer;//数据上云定时器
-        private static System.Threading.Timer UploadData_Timer;
-        private static System.Threading.Timer Heartbeat_Timer;
+        public volatile bool receivedHeartbeatResponse = true;  //每次发送心跳，置为false，接收到心跳置为true
+        public volatile bool ConnectToCloud = false;  //只有当接收到心跳返回，才置为true
+
+        public string HeartbeatID;  //校验发送和接收得心跳uuid
+        
+        
+        private static System.Threading.Timer DownloadData_timer;   //数据本地存储定时器
+        private static System.Threading.Timer UploadData_Timer;     //数据本地上云定时器
+        private static System.Threading.Timer Heartbeat_Timer;      //心跳连接定时器
 
         //数据上云
         private string DataPath = "c:\\SendData"; //数据保存地址
         private string Filters = "*.json"; //数据格式
         string[] allFiles;
-        string aFileCap;
-        string strData;
-        public static int batchSize = 10;
+        private static int batchSize = 10;   //限制每次据本地上云周期内上传数据量大小
 
         private static ILog log = LogManager.GetLogger("CloudClass");
 
-        private readonly object _lockMqtt = new object();
+        private static readonly object _lockMqtt = new object();
         private static readonly object _lockTXT = new object();
         
         //定时器标志位
         private static bool isUploadDataStopped = false;//判断Publish_Timer是否已被暂停
         
         private static bool isHeartbeatExecuting = false; //判断Heartbeat_Timer是否正在执行
+        //private static bool isDownloadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
+        //private static bool isUploadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
+
+        //线程
+        private Thread UploadDataThread;
+        private CancellationTokenSource uploadDataCancellationTokenSource;
+        private bool isUploadDataExecuting = false;
+        private bool isUploadDataThreadRunning = false; // 用于标记线程是否已启动
+
+        private Thread DownloadDataThread;
         private static bool isDownloadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
-        private static bool isUploadDataExecuting = false; //判断Heartbeat_Timer是否正在执行
+        private CancellationTokenSource downloadDataCancellationTokenSource;
+        
+        private Thread HeartbeatThread;
 
         public CloudClass()
         {
@@ -86,23 +98,253 @@ namespace EMS
 
         /********************************************************************************************
          * 
+         *                              线程
+         * 
+         * *****************************************************************************************/
+
+
+        
+        public void InitCloudClass_Threads()
+        {
+            StartUploadDataThread();
+            StartHeartbeatThread();
+            //StartDownloadDataThread();
+        }
+
+        /********************************DownloadDataThread*************************************/
+
+        public void StartDownloadDataThread()
+        {
+            // 创建取消令牌源
+            downloadDataCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = downloadDataCancellationTokenSource.Token;
+
+            // 创建并启动 DownloadData 线程
+            DownloadDataThread = new Thread(() => DownloadDataThreadCallback(cancellationToken))
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.Normal,
+                Name = "DownloadDataThread"
+            };
+            DownloadDataThread.Start();
+        }
+
+        private void DownloadDataThreadCallback(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (isDownloadDataExecuting)
+                {
+                    log.Info("DownloadDataThread is still executing. Skipping this cycle to avoid overlap.");
+                    Thread.Sleep(60000); // 等待 60 秒后再检查
+                    continue;
+                }
+
+                isDownloadDataExecuting = true;
+
+                try
+                {
+                    DateTime tempTime = DateTime.Now;
+                    // 采集数据保存在数据库中
+                    Save2DataSoure(tempTime);
+                    // 采集数据上传云端
+                    Save2CloudFile(tempTime);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("DownloadDataThread encountered an error: " + ex.Message);
+                }
+                finally
+                {
+                    isDownloadDataExecuting = false;
+                }
+
+                // 等待 60 秒再进行下一次数据上传
+                Thread.Sleep(60000);
+            }
+
+            log.Info("DownloadDataThread has been stopped.");
+        }
+
+        public void StopDownloadDataThread()
+        {
+            if (downloadDataCancellationTokenSource != null)
+            {
+                downloadDataCancellationTokenSource.Cancel(); // 发出取消信号
+                downloadDataCancellationTokenSource.Dispose();
+                downloadDataCancellationTokenSource = null;
+            }
+
+            if (DownloadDataThread != null && DownloadDataThread.IsAlive)
+            {
+                DownloadDataThread.Join(); // 等待线程安全结束
+            }
+
+            log.Info("DownloadDataThread has been successfully stopped.");
+        }
+
+        /********************************UploadDataThread*************************************/
+
+        public void TryStartUploadDataThread()
+        {
+            if (ConnectToCloud && !isUploadDataThreadRunning) // 只有在连接到云端且线程未运行时启动
+            {
+                StartUploadDataThread();
+            }
+        }
+
+        private void StartUploadDataThread()
+        {
+            // 创建取消令牌源
+            uploadDataCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = uploadDataCancellationTokenSource.Token;
+
+            UploadDataThread = new Thread(() => UploadDataThreadCallback(cancellationToken))
+            {
+                IsBackground = true,
+                Priority = ThreadPriority.Highest,
+                Name = "UploadDataThread"
+            };
+            UploadDataThread.Start();
+            isUploadDataThreadRunning = true; // 设置线程运行标志
+        }
+
+        private void UploadDataThreadCallback(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (isUploadDataExecuting)
+                {
+                    log.Info("UploadDataThread is still executing. Skipping this cycle to avoid overlap.");
+                    Thread.Sleep(30000); // 等待 30 秒后再检查
+                    continue;
+                }
+
+                isUploadDataExecuting = true;
+
+                try
+                {
+                    if (ConnectToCloud)
+                    {
+                        frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
+                    }
+                    else
+                    {
+                        log.Warn("Connection to cloud is lost. Stopping UploadDataThread.");
+                        StopUploadDataThread(); // 连接丢失时停止线程
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("UploadDataThread encountered an error: " + ex.Message);
+                }
+                finally
+                {
+                    isUploadDataExecuting = false;
+                }
+
+                // 等待 30 秒再进行下一次上传
+                Thread.Sleep(30000);
+            }
+
+            log.Info("UploadDataThread has been stopped.");
+        }
+
+        public void StopUploadDataThread()
+        {
+            if (uploadDataCancellationTokenSource != null)
+            {
+                uploadDataCancellationTokenSource.Cancel(); // 发出取消信号
+                uploadDataCancellationTokenSource.Dispose();
+                uploadDataCancellationTokenSource = null;
+            }
+
+            if (UploadDataThread != null && UploadDataThread.IsAlive)
+            {
+                UploadDataThread.Join(); // 等待线程安全结束
+            }
+
+            isUploadDataThreadRunning = false; // 重置线程运行标志
+            log.Info("UploadDataThread has been successfully stopped.");
+        }
+
+        /********************************tHeartbeatThread*************************************/
+        private void StartHeartbeatThread()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                HeartbeatThread = new Thread(HeartbeatThreadCallback);
+                HeartbeatThread.IsBackground = true;
+                HeartbeatThread.Priority = ThreadPriority.Normal;
+                HeartbeatThread.Name = "HeartbeatThread";
+                HeartbeatThread.Start();
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting HeartbeatThread: " + ex.Message);
+            }
+        }
+
+        private void HeartbeatThreadCallback()
+        {
+            while (true)
+            {
+                if (isHeartbeatExecuting)
+                {
+                    log.Info("HeartbeatThreadCallback is still executing. Skipping this cycle to avoid overlap.");
+                    Thread.Sleep(180000); // 等待 3 分钟后再次检查
+                    continue;
+                }
+
+                isHeartbeatExecuting = true;
+                try
+                {
+                    log.Info("触发心跳定时器");
+                    if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
+                    }
+                    else
+                    {
+                        log.Error("mqttClient为空，触发重连");
+                        frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("HeartbeatThreadCallback encountered an error: " + ex.Message);
+                }
+                finally
+                {
+                    isHeartbeatExecuting = false;
+                }
+
+                // 等待 3 分钟再进行下一次心跳
+                Thread.Sleep(180000);
+            }
+        }
+
+        /********************************************************************************************
+         * 
          *                              定时器
          * 
          * *****************************************************************************************/
 
-        public void InitAll_Timer()
+        public void InitCloudClass_Timer()
         {
-            InitializeHeartbeat_Timer();
+            //InitializeHeartbeat_Timer();
             InitializeDownloadData_timer();
-            InitializeeUploadData_Timer();
+            //InitializeUploadData_Timer();
         }
 
 
-        public void InitializeHeartbeat_Timer()
+        private void InitializeHeartbeat_Timer()
         {
             Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
         }
-        public void Heartbeat_TimerCallback(Object state)
+        private void Heartbeat_TimerCallback(Object state)
         {
             if (isHeartbeatExecuting)
             {
@@ -136,7 +378,7 @@ namespace EMS
         }
 
 
-        public void InitializeDownloadData_timer()
+        private void InitializeDownloadData_timer()
         {
             //每60秒 数据上云  
             DownloadData_timer = new System.Threading.Timer(DownloadDataCallback, null, 0, 60000);
@@ -170,7 +412,7 @@ namespace EMS
         }
 
 
-        public void InitializeeUploadData_Timer()
+        private void InitializeUploadData_Timer()
         {
             UploadData_Timer = new System.Threading.Timer(UploadData_TimerCallback, null, 0, 30000);
         }
@@ -201,6 +443,8 @@ namespace EMS
                 isUploadDataExecuting = false;
             }
         }
+
+
 
         /// <summary>
         /// 查询目录里的文件
@@ -332,7 +576,7 @@ namespace EMS
                 {
                     ListernAllTopic();
                     FirstRun = true;
-                    SendAgain = true;
+                    receivedHeartbeatResponse = true;
                 }
             }
             catch (Exception ex)
@@ -342,7 +586,7 @@ namespace EMS
         }
 
 
-        public void mqttReconnect()
+/*        public void mqttReconnect()
         {
             try
             {
@@ -362,7 +606,7 @@ namespace EMS
                     UploadData_Timer?.Change(0, 30000);  // 设置定时器间隔为 30 秒
                     isUploadDataStopped = false;  // 更新状态
                     log.Info("重连成功，定时器UploadData_Timer已重新启动。");
-                    SendAgain = true;
+                    receivedHeartbeatResponse = true;
                 }
                 
             }
@@ -370,13 +614,41 @@ namespace EMS
             {
                 log.Error("mqttReconnect: " + ex.Message);
             }
+        }*/
+
+        public void mqttReconnect()
+        {
+            try
+            {
+                ConnectToCloud = false;
+
+                // 先停止上传数据的线程，确保在重连期间不会重复触发
+                StopUploadDataThread();
+
+                if (CreateClient())
+                {
+                    ListernAllTopic();
+
+                    // 重连成功后重新创建并启动上传数据的线程
+                    TryStartUploadDataThread();
+                    log.Info("重连成功，UploadDataThread 已重新启动。");
+                    receivedHeartbeatResponse = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("mqttReconnect: " + ex.Message);
+            }
         }
+
+
+
 
         public void SendHeartbeat()
         {
-            if (SendAgain)
+            if (receivedHeartbeatResponse)
             {
-                SendAgain = false;
+                receivedHeartbeatResponse = false;
                 HeartbeatID = Guid.NewGuid().ToString();
                 string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
 
@@ -418,7 +690,6 @@ namespace EMS
                 if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
                 {
                     log.Info("数据上云获取锁_lockMqtt ");
-
                     try
                     {
                         mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
@@ -1069,7 +1340,7 @@ namespace EMS
                 {
                     ConnectToCloud = true;
                 }
-                SendAgain = true;
+                receivedHeartbeatResponse = true;
             }
         }
 
