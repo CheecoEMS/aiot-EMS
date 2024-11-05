@@ -90,6 +90,10 @@ namespace EMS
         private static bool isTestSignalStrengthExecuting = false;
         private static bool isTemperControlExecuting = false;
 
+        //线程
+        private Thread PublicThread;
+        //private bool isPublicExecuting = false;
+
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -561,9 +565,11 @@ namespace EMS
 
                 //开启定时器
                 frmMain.Selffrm.IniralizeFrmMain_Timer();
+                frmMain.Selffrm.InitFrmMainClass_Threads();
+
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Timer(); 
                 frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Threads();
-
+            
                 frmFlash.AddPostion(10);
                 //开启任务多线程
                 frmMain.Selffrm.AllEquipment.AutoReadData();
@@ -576,6 +582,133 @@ namespace EMS
             return Selffrm;
         }
 
+        /**********************************/
+        /*                                */
+        /*            线程                */
+        /*                                */
+        /*********************************/
+        public void InitFrmMainClass_Threads()
+        {
+            StartPublicThread();
+        }
+
+
+        private void StartPublicThread()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                PublicThread = new Thread(PublicThreadCallback);
+                PublicThread.IsBackground = true;
+                PublicThread.Priority = ThreadPriority.Highest;
+                PublicThread.Name = "PublicThread";
+                PublicThread.Start();
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+            }
+        }
+
+        private void PublicThreadCallback()
+        {
+            while (true)
+            {
+                if (isPublicExecuting)
+                {
+                    log.Info("Public_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                    Thread.Sleep(120000); // 等待 2分钟后再次检查
+                    continue;
+                }
+
+                isPublicExecuting = true;
+
+                try
+                {
+                    // 检查月份是否更新
+                    if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+                    {
+                        frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
+                        frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
+                        frmSet.historyDatas.ClientPUMdemandMax = 0;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+
+                        frmSet.Set_HistoryData();
+                        frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
+                    }
+
+                    // 检查日期是否更新
+                    if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                    {
+                        // 重置EMS重启次数
+                        if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                        {
+                            frmSet.historyDatas.RebootCount = 5;
+                            frmSet.Set_HistoryData();
+                        }
+
+                        // 删除180天前的数据
+                        frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+
+                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                        {
+                            // 保存当天收益到数据库
+                            frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+
+                            // 当日收益发送到云
+                            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+
+                            // 更新日期
+                            frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                            // 将当天的储能表和辅表的电能数据保存到INI
+                            frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                        }
+
+                        // 校准电表日期
+                        frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+                        // 每晚00:00更新策略
+                        if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
+                        {
+                            try
+                            {
+                                frmMain.TacticsList.LoadFromMySQL();
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("定时器刷新数据库失败: " + ex.Message);
+                            }
+                        }
+
+                        // 更新均衡策略
+                        try
+                        {
+                            frmMain.BalaTacticsList.LoadFromMySQL();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("00:00更新均衡策略失败: " + ex.Message);
+                        }
+                    }
+
+                    // 保存今日充放电量
+                    frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Public_TimerCallback encountered an error: " + ex.Message);
+                }
+                finally
+                {
+                    isPublicExecuting = false;
+                }
+
+                // 等待 2分钟再进行下一次心跳
+                Thread.Sleep(120000);
+            }
+        }
 
 
 
@@ -595,7 +728,7 @@ namespace EMS
                 frmMain.Selffrm.InitializeBalaTacitc_Timer();
             }
 
-            frmMain.Selffrm.InitializePublic_Timer();
+            //frmMain.Selffrm.InitializePublic_Timer();
 
             //记录EMS功率日志
             frmMain.Selffrm.InitializeCXFN_Timer();
