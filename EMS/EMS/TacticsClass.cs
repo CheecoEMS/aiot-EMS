@@ -41,7 +41,7 @@ namespace EMS
             Parent = aParent;
         }
 
-        public void LoadJFPGFromSQL()
+/*        public void LoadJFPGFromSQL()
         {
             string astrSQL = "select startTime, eName  from electrovalence ";
 
@@ -72,8 +72,8 @@ namespace EMS
                                     tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
                                     i++;
                                 }
-                                
-/*                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+
+                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
                                 byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
                                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                                 {
@@ -82,24 +82,82 @@ namespace EMS
                                 if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
                                 {
                                     frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
-                                }*/
-
-                                byte[] atable3 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1 };//使用八费率的第一套表
-                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable3, tempJFPG);
                                 }
-                                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                                {
-                                    //frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
-                                }
-
                             }
                         }
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { Console.Write(ex.Message); }
+            finally
+            {
+
+            }
+        }*/
+
+        public void LoadJFPGFromSQL()
+        {
+            string astrSQL = "select startTime, eName  from electrovalence ";
+
+            try
+            {
+                byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
+                int i = 0;
+                DateTime dtTemp;
+
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                while (rd.Read())
+                                {
+                                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Hour;
+                                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Minute;
+                                    i++;
+                                }
+
+                                byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1 };//使用八费率的第一套表
+                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                //只有储能能够设置8段费率
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG);
+                                }
+
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                                {
+                                    // 检查并处理 tempJFPG 数组中每个时段的费率号
+                                    for (int j = 0; j < 14; j++)
+                                    {
+                                        if (tempJFPG[j * 3 + 0] > 4)
+                                        {
+                                            tempJFPG[j * 3 + 0] = 0;
+                                            tempJFPG[j * 3 + 1] = 0;
+                                            tempJFPG[j * 3 + 2] = 0;
+                                        }
+                                    }
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) 
+            {
+                log.Error("LoadJFPGFromSQL: " + ex.Message); 
+            }
             finally
             {
 

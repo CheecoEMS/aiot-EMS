@@ -6202,8 +6202,8 @@ namespace EMS
         public string mDate = ""; //月份
 
         public double[] SAuxiliaryKWH = { 0, 0, 0, 0, 0 };   //记录当天开始辅助用电量
-        public double[] SE2PKWH = { 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）
-        public double[] SE2OKWH = { 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
+        public double[] SE2PKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）
+        public double[] SE2OKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems208800001";
         public int runState { get; set; } = 0;  //运行状态 0正常，1故障，2停机
@@ -6235,8 +6235,8 @@ namespace EMS
         //整体设备类的字段
         public UInt16 Error { get; set; }    //EMS故障  -----》EMSErrorssss
         public double[] AuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0 };     //当天总辅助电量 （辅助电表）
-        public double[] E2PKWH { get; set; } = { 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
-        public double[] E2OKWH { get; set; } = { 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向）
+        public double[] E2PKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
+        public double[] E2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向）
 
 
         //public double SPCSInKWH;    //记录PCS 开始的总充电量
@@ -8560,7 +8560,7 @@ namespace EMS
                 if (Elemeter2 != null)
                 {
                     Elemeter2.GetDataFromEqipment();
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 9; i++)
                     {
                         E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
                         E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i];
@@ -9366,17 +9366,12 @@ namespace EMS
 
             double dProfit = 0;
             //计算尖峰平谷数据的当天充放电量---电表2为计量表
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 9; i++)
             {
                 E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i]; //当前表值--当天开始的值
                 E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
                 Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
                 Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
-                if (Elemeter3 != null)
-                {
-                    AuxiliaryKWH[i] = Elemeter3.Akwh[i] - SAuxiliaryKWH[i]; //辅助电表当天用电量  
-                    Profit2Cloud.DaliyAuxiliaryKWH[i] = AuxiliaryKWH[i];
-                }
                 //计算成本和价格
                 dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
                 Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
@@ -9384,6 +9379,16 @@ namespace EMS
             //返回今日省的钱数
             Profit = dProfit / 100;//按分
             Profit2Cloud.DaliyProfit = Profit;
+
+            for (int j = 0; j < 5; j++)
+            {
+                if (Elemeter3 != null )
+                {
+                    AuxiliaryKWH[j] = Elemeter3.Akwh[j] - SAuxiliaryKWH[j]; //辅助电表当天用电量  
+                    Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];
+                }
+            }
+
             return true;
         }
 

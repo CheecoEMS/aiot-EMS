@@ -257,7 +257,6 @@ namespace Modbus
                 catch (TimeoutException ex) // 捕获 GetResponse 抛出的超时异常
                 {
                     //log.Error($"GetComFreeData TimeoutException: {ex.Message}");
-                    //log.Error($"Raw Message Hex: {BitConverter.ToString(aMessage)}");
                     bResult = false;
                 }
                 catch (ObjectDisposedException ex) // 捕获 GetResponse 抛出的对象释放异常
