@@ -39,7 +39,7 @@ namespace EMS
         public static int PCSwaValue;
         public static string[] TimeZones = new string[4];
         public static int[] TZSetIndex = { 0, 0, 0, 0 };
-        public static int[,] Prices = { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } }; //无尖峰平谷的电价
+        public static int[,] Prices = { { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; //无尖峰平谷的电价
         private bool bTCDataChanged = false;
         private bool bEDataChanged = false;
         public bool bSheduleChanged = false;

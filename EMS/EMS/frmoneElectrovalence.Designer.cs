@@ -31,6 +31,8 @@ namespace EMS
         {
             this.components = new System.ComponentModel.Container();
             this.plData = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.tneM = new EMS.TouchNumberEdit(this.components);
             this.tneH = new EMS.TouchNumberEdit(this.components);
             this.tcbSection = new EMS.TouchCombox(this.components);
@@ -42,8 +44,6 @@ namespace EMS
             this.button1 = new System.Windows.Forms.Button();
             this.btnCanncel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.plData.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -66,6 +66,30 @@ namespace EMS
             this.plData.Name = "plData";
             this.plData.Size = new System.Drawing.Size(976, 665);
             this.plData.TabIndex = 19;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("微软雅黑 Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label2.ForeColor = System.Drawing.Color.White;
+            this.label2.Location = new System.Drawing.Point(660, 142);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(26, 21);
+            this.label2.TabIndex = 59;
+            this.label2.Text = "分";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("微软雅黑 Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(514, 142);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(26, 21);
+            this.label1.TabIndex = 58;
+            this.label1.Text = "时";
             // 
             // tneM
             // 
@@ -131,7 +155,8 @@ namespace EMS
         "尖",
         "峰",
         "平",
-        "谷"};
+        "谷",
+        "深谷"};
             this.tbeName.Location = new System.Drawing.Point(408, 196);
             this.tbeName.Name = "tbeName";
             this.tbeName.SelectItemIndex = 0;
@@ -237,30 +262,6 @@ namespace EMS
             this.btnOk.Text = "确定";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("微软雅黑 Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(514, 142);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(26, 21);
-            this.label1.TabIndex = 58;
-            this.label1.Text = "时";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("微软雅黑 Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(660, 142);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(26, 21);
-            this.label2.TabIndex = 59;
-            this.label2.Text = "分";
             // 
             // frmoneElectrovalence
             // 

@@ -296,32 +296,16 @@ namespace EMS
             int item = tcbtest.SelectItemIndex;
             switch (item)
             { 
-                case 0:
-                    string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe"; // 替换为您的应用程序的可执行文件路径  
-                    try
-                    {
-                        Process.Start(exePath);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("无法重启应用程序: " + ex.Message);
-                    }
-
-                    // 退出当前进程  
-                    Environment.Exit(0);
+                case 0:               
+                    string sqlQuery = $"SELECT* FROM profit WHERE rTime BETWEEN '2024-11-06 00:00:00' AND '2024-11-06 23:59:59'";
+                    DBConnection.UploadCloud(sqlQuery);
                     break;
                 case 1:
-                    frmMain.Selffrm.AllEquipment.PCSList[0].test = 1;
+                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
                     break;
                 default: 
                     break;
             }
-        }
-
-        private void btnPostProfit_Click(object sender, EventArgs e)
-        {
-            //当日收益发送到云
-            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
         }
 
         private void btnTimeCalibration_Click(object sender, EventArgs e)
