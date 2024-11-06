@@ -73,7 +73,7 @@ namespace EMS
                     + oneForm.tneM.Value.ToString() + ":0");
                 DBConnection.ExecSQL("insert into electrovalence (section,eName,startTime)  values ('"
                       + oneForm.tcbSection.SelectItemIndex.ToString() + "','"
-                      + oneForm.tbeName.strText + "','"
+                      + oneForm.tbeName.SelectItemIndex.ToString() + "','"
                       + dtTemp.ToString("H:m:s") + "')");
 
                 DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");

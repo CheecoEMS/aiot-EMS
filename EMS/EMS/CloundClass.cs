@@ -138,7 +138,7 @@ namespace EMS
                             try
                             {
                                 string fileName = Path.GetFileName(file);
-                                string aFileCap = fileName.Substring(1, 3); // 确保这里的索引和长度是有效的  
+                                string aFileCap = fileName.Substring(1, 3)+"Demo"; // 确保这里的索引和长度是有效的  
                                 string strData = File.ReadAllText(file);
                                 Write2Topic(aFileCap, strData);
                                 File.Delete(file);
@@ -1176,6 +1176,7 @@ namespace EMS
                         + isection.ToString() + "','0','"
                         + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
+                    
                     if(DBConnection.ExecSQL(strData))
                     {
                         result = true;
