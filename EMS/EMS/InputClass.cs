@@ -26,10 +26,10 @@ namespace EMS
     {
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems2023888888";
-        public double[] DaliyAuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0 };     //当天总辅助电量 （辅助电表）
-        public double[] DaliyE2PKWH { get; set; } = { 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
-        public double[] DaliyE2OKWH { get; set; } = { 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向） 
-        public double[] DaliyPrice { get; set; } = { 0, 0, 0, 0, 0 };    //电价
+        public double[] DaliyAuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };     //当天总辅助电量 （辅助电表）
+        public double[] DaliyE2PKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
+        public double[] DaliyE2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向） 
+        public double[] DaliyPrice { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //电价
         public double DaliyProfit { get; set; }           //当天收益 
     }
 
@@ -2988,6 +2988,24 @@ namespace EMS
             }
         }
 
+        public void clearJFPG_8()
+        {
+            if (m485 ==null)
+                return;
+
+            byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
+
+            lock (m485.sp)
+            {
+                SetSysBytes(123, tempJFPG, false);//42字节的1尖峰平谷设计
+                                                // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+            }
+        }
+
         //获取需量
         public void GetPUMdemand_now()
         {
@@ -3296,12 +3314,12 @@ namespace EMS
         {
             //基本信息
             DBConnection.ExecSQL("INSERT INTO elemeter2 (rTime, "
-                 + "Ukwh,UkwhJ,UkwhF,UkwhP,UkwhG,"
-                 + "PUkwh,PUkwhJ,PUkwhF,PUkwhP,PUkwhG,"
-                 + "OUkwh,OUkwhJ,OUkwhF,OUkwhP,OUkwhG,"
-                 + "Nukwh, NukwhJ,NukwhF,NukwhP,NukwhG,"
-                 + "PNukwh,PNukwhJ,PNukwhF,PNukwhP,PNukwhG,"
-                 + "ONukwh, ONukwhJ,ONukwhF,ONukwhP,ONukwhG,"
+                 + "Ukwh,UkwhJ,UkwhF,UkwhP,UkwhG,Ukwh5,Ukwh6,Ukwh7,Ukwh8,"
+                 + "PUkwh,PUkwhJ,PUkwhF,PUkwhP,PUkwhG,PUkw5,PUkw6,PUkw7,PUkw8,"
+                 + "OUkwh,OUkwhJ,OUkwhF,OUkwhP,OUkwhG,OUkw5,OUkw6,OUkw7,OUkw8,"
+                 + "Nukwh, NukwhJ,NukwhF,NukwhP,NukwhG,Nukw5,Nukw6,Nukw7,Nukw8,"
+                 + "PNukwh,PNukwhJ,PNukwhF,PNukwhP,PNukwhG,PNukw5,PNukw6,PNukw7,PNukw8,"
+                 + "ONukwh, ONukwhJ,ONukwhF,ONukwhP,ONukwhG,ONukw5,ONukw6,ONukw7,ONukw8,"
                 + "AllUkva, AUkva, BUkva, CUkva,   "
                 + "AllNukva,  ANukva, BNukva,  CNukva, "
                 + " AllAAkva, AAkva, BAkva, CAkva," 
@@ -3309,11 +3327,17 @@ namespace EMS
                 + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)VALUES( '"
                 + arDate + "','"//rTime.ToString("yyyy-M-d H:m:s")
                 + Ukwh[0].ToString() + "','" + Ukwh[1].ToString() + "','" + Ukwh[2].ToString() + "','" + Ukwh[3].ToString() + "','" + Ukwh[4].ToString() + "','"
+                + Ukwh[5].ToString() + "','" + Ukwh[6].ToString() + "','" + Ukwh[7].ToString() + "','" + Ukwh[8].ToString() + "','"
                 + PUkwh[0].ToString() + "','" + PUkwh[1].ToString() + "','" + PUkwh[2].ToString() + "','" + PUkwh[3].ToString() + "','" + PUkwh[4].ToString() + "','"
+                + PUkwh[5].ToString() + "','" + PUkwh[6].ToString() + "','" + PUkwh[7].ToString() + "','" + PUkwh[8].ToString() + "','"
                 + OUkwh[0].ToString() + "','" + OUkwh[1].ToString() + "','" + OUkwh[2].ToString() + "','" + OUkwh[3].ToString() + "','" + OUkwh[4].ToString() + "','"
+                + OUkwh[5].ToString() + "','" + OUkwh[6].ToString() + "','" + OUkwh[7].ToString() + "','" + OUkwh[8].ToString() + "','"
                 + Nukwh[0].ToString() + "','" + Nukwh[1].ToString() + "','" + Nukwh[2].ToString() + "','" + Nukwh[3].ToString() + "','" + Nukwh[4].ToString() + "','"
+                + Nukwh[5].ToString() + "','"  + Nukwh[6].ToString() + "','"  + Nukwh[7].ToString() + "','"  + Nukwh[8].ToString() + "','"
                 + PNukwh[0].ToString() + "','" + PNukwh[1].ToString() + "','" + PNukwh[2].ToString() + "','" + PNukwh[3].ToString() + "','" + PNukwh[4].ToString() + "','"
+                + PNukwh[5].ToString() + "','" + PNukwh[6].ToString() + "','" + PNukwh[7].ToString() + "','" + PNukwh[8].ToString() + "','"
                 + ONukwh[0].ToString() + "','" + ONukwh[1].ToString() + "','" + ONukwh[2].ToString() + "','" + ONukwh[3].ToString() + "','" + ONukwh[4].ToString() + "','"
+                + ONukwh[5].ToString() + "','" + ONukwh[6].ToString() + "','" + ONukwh[7].ToString() + "','" + ONukwh[8].ToString() + "','"
 
                 + AllUkva.ToString() + "','" + AUkva.ToString() + "','" + BUkva.ToString() + "','" + CUkva.ToString() + "','"
                 + AllNukva.ToString() + "','" + ANukva.ToString() + "','" + BNukva.ToString() + "','" + CNukva.ToString() + "','"
@@ -6229,8 +6253,6 @@ namespace EMS
         public int Prev_Led_ShowPowerLevel = 0;
         // 6-4
         public bool[] LedErrorState = { false, false, false };//错误标志位 1.2.3级别
-
-
 
         //整体设备类的字段
         public UInt16 Error { get; set; }    //EMS故障  -----》EMSErrorssss
@@ -9465,10 +9487,14 @@ namespace EMS
                         CalculatePower();
                     }
                     //更新当天的其实电表电能值
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 9; i++)
                     {
                         SE2PKWH[i] = Elemeter2.PUkwh[i]; //当前表值--当天开始的值
                         SE2OKWH[i] = Elemeter2.OUkwh[i];
+                    }
+
+                    for (int i = 0; i < 9; i++)
+                    {
                         if (Elemeter3 != null)
                             SAuxiliaryKWH[i] = Elemeter3.Akwh[i]; //辅助电表当天用电量
                     }
@@ -9481,22 +9507,50 @@ namespace EMS
             try
             {
                 string strData = "";
-                for (int i = 1; i < 5; i++)
+
+                for (int i = 1; i < 9; i++)
                 {
-                    strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
-                            + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
-                            + "','" + frmSet.Prices[0, i].ToString();
-                } 
+                    if (i < 5)
+                    {
+                        strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
+                                + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
+                                + "','" + frmSet.Prices[0, i].ToString();
+                    }
+                    else
+                    {
+                        strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
+                            + E2PKWH[i].ToString() + "','" + frmSet.Prices[0, i].ToString();
+                    }
+                }
+
                 //保存到数据库   
                 DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
                 + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
-                + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price"
-               + ")value('" + astrDate + "','" + Profit.ToString() + "','"
-               + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
+                + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price,"
+                + "out5kwh,out5Price,in5kwh,in5Price,out6kwh,out6Price,in6kwh,in6Price,"
+                + "out7kwh,out7Price,in7kwh,in7Price,out8kwh,out8Price,in8kwh,in8Price"
+                + ")value('" + astrDate + "','" + Profit.ToString() + "','"
+                + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
+
+
+
+                /*                for (int i = 1; i < 5; i++)
+                                {
+                                    strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
+                                            + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
+                                            + "','" + frmSet.Prices[0, i].ToString();
+                                } 
+                                //保存到数据库   
+                                DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
+                                + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
+                                + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price"
+                               + ")value('" + astrDate + "','" + Profit.ToString() + "','"
+                               + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");*/
+
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("SaveDataInoneDay: " + ex.ToString());
             }
         }
 

@@ -109,6 +109,12 @@ namespace EMS
                 int i = 0;
                 DateTime dtTemp;
 
+                //清空费率表
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
+                }
+
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
                     connection.Open();
