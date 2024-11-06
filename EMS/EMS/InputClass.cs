@@ -6345,7 +6345,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master7.3.7";
+        public string EMSVersion { get; set; } = "EMS240815Master7.3.9";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7211,11 +7211,13 @@ namespace EMS
                     }
                 }
 
+                AutoTactics();
 
                 /***************Normal*************/
                 AutoReadDataCom2();//表2、3、4，空调,液冷机
                 AutoReadDataCom4(); //PCS 
                 AutoReadE1();//表1
+                
 
             }
             catch (Exception ex)
@@ -7232,6 +7234,30 @@ namespace EMS
         /// /////////////////////////////////////////////////////////////////////////////////////
         /// </summary>
         /// 
+
+        public void AutoTactics()
+        {
+            try
+            {
+                //实例化等待连接的线程
+                if (frmMain.TacticsList != null)
+                {
+                    log.Error("启动监听策略");
+                    Thread ClientRecThread = new Thread(frmMain.TacticsList.CheckTactics);
+                    ClientRecThread.IsBackground = true;
+                    ClientRecThread.Priority = ThreadPriority.Highest;
+                    ClientRecThread.Start();
+                    ClientRecThread.Name = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+        }
+
+
+
 
         public void Read_Serial()
         {

@@ -10,6 +10,7 @@ using System.Windows.Forms.DataVisualization.Charting;
 using log4net;
 using static IEC104.CIEC104Slave;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 //351200 
 
@@ -71,15 +72,28 @@ namespace EMS
         public EMSEquipment Model4G = new EMSEquipment();
 
         //定时器
-        private static System.Threading.Timer Cloud_timer;
         private static System.Threading.Timer UI_timer;
-        private static System.Threading.Timer Tacitc_Timer;
         private static System.Threading.Timer BalaTacitc_Timer;
         private static System.Threading.Timer Public_Timer;
         private static System.Threading.Timer CXFN_Timer;//超限防逆log
-        private static System.Threading.Timer Heartbeat_Timer;
         private static System.Threading.Timer Led_Timer;
         private static System.Threading.Timer LiquidCold_Timer;
+        private static System.Threading.Timer TestSignalStrength_Timer;
+        private static System.Threading.Timer TemperControl_Timer;
+
+        private static bool isUiExecuting = false; //判断UI_timer是否正在执行
+        private static bool isBalaTacticExecuting = false; 
+        private static bool isPublicExecuting = false;
+        private static bool isCXFNExecuting = false;
+        private static bool isLedLoopExecuting = false;
+        private static bool isLiquidColdHeartbeatExecuting = false;
+        private static bool isTestSignalStrengthExecuting = false;
+        private static bool isTemperControlExecuting = false;
+
+        //线程
+        private Thread PublicThread;
+        //private bool isPublicExecuting = false;
+
         //8.8
         private static ILog log = LogManager.GetLogger("frmMain");
 
@@ -546,34 +560,16 @@ namespace EMS
                         frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
-/*                double[] pidd = new double[3] { 1, 2, 3 };
-                pid.PID_init(1, pidd, 10, 10);*/
+                /*                double[] pidd = new double[3] { 1, 2, 3 };
+                                pid.PID_init(1, pidd, 10, 10);*/
 
                 //开启定时器
-                InitializeCloud_timer();
-                InitializeUI_timer();
-                InitializeTacitc_Timer();
-                if (frmMain.BalaTacticsList != null && frmMain.Selffrm.AllEquipment.BMS != null && frmMain.Selffrm.AllEquipment.BMS.FunctionLevel > 0)//均衡
-                {
-                    InitializeBalaTacitc_Timer();
-                }
-                
-                InitializePublic_Timer();
-                InitializeCXFN_Timer();
-                InitializeHeartbeat_Timer();
-                //led定时器
-                if (frmMain.Selffrm.AllEquipment.Led != null)
-                {
-                    InitializeLed_Timer();
-                }
-                //液冷心跳定时器
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
-                    InitializeLiquidCold_HeartBeat_Timer();
-                }
-                frmMain.Selffrm.AllEquipment.Report2Cloud.InitializePublish_Timer();
+                frmMain.Selffrm.IniralizeFrmMain_Timer();
+                frmMain.Selffrm.InitFrmMainClass_Threads();
 
+                frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Timer(); 
+                frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Threads();
+            
                 frmFlash.AddPostion(10);
                 //开启任务多线程
                 frmMain.Selffrm.AllEquipment.AutoReadData();
@@ -586,6 +582,133 @@ namespace EMS
             return Selffrm;
         }
 
+        /**********************************/
+        /*                                */
+        /*            线程                */
+        /*                                */
+        /*********************************/
+        public void InitFrmMainClass_Threads()
+        {
+            StartPublicThread();
+        }
+
+
+        private void StartPublicThread()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                PublicThread = new Thread(PublicThreadCallback);
+                PublicThread.IsBackground = true;
+                PublicThread.Priority = ThreadPriority.Highest;
+                PublicThread.Name = "PublicThread";
+                PublicThread.Start();
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+            }
+        }
+
+        private void PublicThreadCallback()
+        {
+            while (true)
+            {
+                if (isPublicExecuting)
+                {
+                    log.Info("Public_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                    Thread.Sleep(120000); // 等待 2分钟后再次检查
+                    continue;
+                }
+
+                isPublicExecuting = true;
+
+                try
+                {
+                    // 检查月份是否更新
+                    if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+                    {
+                        frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
+                        frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
+                        frmSet.historyDatas.ClientPUMdemandMax = 0;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+
+                        frmSet.Set_HistoryData();
+                        frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
+                    }
+
+                    // 检查日期是否更新
+                    if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                    {
+                        // 重置EMS重启次数
+                        if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                        {
+                            frmSet.historyDatas.RebootCount = 5;
+                            frmSet.Set_HistoryData();
+                        }
+
+                        // 删除180天前的数据
+                        frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+
+                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                        {
+                            // 保存当天收益到数据库
+                            frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+
+                            // 当日收益发送到云
+                            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+
+                            // 更新日期
+                            frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                            // 将当天的储能表和辅表的电能数据保存到INI
+                            frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                        }
+
+                        // 校准电表日期
+                        frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+                        // 每晚00:00更新策略
+                        if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
+                        {
+                            try
+                            {
+                                frmMain.TacticsList.LoadFromMySQL();
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("定时器刷新数据库失败: " + ex.Message);
+                            }
+                        }
+
+                        // 更新均衡策略
+                        try
+                        {
+                            frmMain.BalaTacticsList.LoadFromMySQL();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("00:00更新均衡策略失败: " + ex.Message);
+                        }
+                    }
+
+                    // 保存今日充放电量
+                    frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Public_TimerCallback encountered an error: " + ex.Message);
+                }
+                finally
+                {
+                    isPublicExecuting = false;
+                }
+
+                // 等待 2分钟再进行下一次心跳
+                Thread.Sleep(120000);
+            }
+        }
 
 
 
@@ -594,255 +717,367 @@ namespace EMS
         /*            定时器              */
         /*                                */
         /*********************************/
-
-        static void InitializeHeartbeat_Timer()
+        public void IniralizeFrmMain_Timer()
         {
-            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
-        }
-        static void Heartbeat_TimerCallback(Object state)
-        {
-            log.Info("触发心跳定时器");
-            if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
+            //更新数据看板显示数据
+            frmMain.Selffrm.InitializeUI_timer();
+
+            //均衡定时器
+            if (frmMain.BalaTacticsList != null && frmMain.Selffrm.AllEquipment.BMS != null && frmMain.Selffrm.AllEquipment.BMS.FunctionLevel > 0)//均衡
             {
-                frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
+                frmMain.Selffrm.InitializeBalaTacitc_Timer();
             }
-            else
+
+            //frmMain.Selffrm.InitializePublic_Timer();
+
+            //记录EMS功率日志
+            frmMain.Selffrm.InitializeCXFN_Timer();
+
+            //led定时器
+            if (frmMain.Selffrm.AllEquipment.Led != null)
             {
-                log.Error("mqttClient为空，触发重连");
-                frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
+                frmMain.Selffrm.InitializeLed_Timer();
+            }
+
+            //液冷心跳定时器
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
+                frmMain.Selffrm.InitializeLiquidCold_HeartBeat_Timer();
+            }
+
+            //4G信号检测定时器
+            frmMain.Selffrm.InitializeTestSignalStrength_Timer();
+
+            //温控定时器
+            frmMain.Selffrm.InitializeTemperControl_Timer();
+        }
+
+        private void InitializeTemperControl_Timer()
+        {
+            TemperControl_Timer = new System.Threading.Timer(TemperControl_TimerCallback, null, 0, 60000);
+        }
+
+        private void TemperControl_TimerCallback(Object state)
+        {
+            if (isTemperControlExecuting)
+            {
+                log.Info("TemperControl_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isTemperControlExecuting = true;
+
+            try
+            {
+                if (frmSet.config.EMSstatus == 1)
+                {
+                    // 温控
+                    if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                            frmMain.Selffrm.AllEquipment.TempControl.state != 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true); // 开启空调
+                        }
+                        else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
+                                 frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
+                                 frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                        {
+                            if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                            {
+                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false); // 关闭空调
+                            }
+                        }
+                    }
+
+                    // 液冷控制
+                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                            frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true); // 开启液冷机
+                            frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand(); // 确保温控参数配置正确
+                        }
+                        else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
+                                 frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
+                                 frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                        {
+                            if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                            {
+                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false); // 关闭液冷机
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("TemperControl_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isTemperControlExecuting = false;
             }
         }
 
-        static void InitializeCXFN_Timer()
+
+        private void InitializeTestSignalStrength_Timer()
+        {
+            TestSignalStrength_Timer = new System.Threading.Timer(TestSignalStrength_TimerCallback, null, 0, 60000);
+        }
+        private void TestSignalStrength_TimerCallback(Object state)
+        {
+            // 检查是否已有正在执行的任务，避免重叠
+            if (isTestSignalStrengthExecuting)
+            {
+                log.Info("TestSignalStrength_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isTestSignalStrengthExecuting = true;
+
+            try
+            {
+                // 获取信号数据
+                frmMain.Selffrm.AllEquipment.TestSignalStrength();
+            }
+            catch (Exception ex)
+            {
+                log.Error("TestSignalStrength_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isTestSignalStrengthExecuting = false;
+            }
+        }
+
+
+        private void InitializeCXFN_Timer()
         {
             CXFN_Timer = new System.Threading.Timer(CXFN_TimerCallback, null, 0, 10000);
         }
-        static void CXFN_TimerCallback(Object state)
+        private void CXFN_TimerCallback(Object state)
         {
-            if (frmSet.config.SysCount > 1)
+            // 检查是否已有正在执行的任务，避免重叠
+            if (isCXFNExecuting)
             {
-                frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+                log.Info("CXFN_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
             }
-            else
+
+            isCXFNExecuting = true;
+
+            try
             {
-                frmMain.Selffrm.AllEquipment.SingleReflux_Log();
+                // 根据 SysCount 的值调用不同的日志方法
+                if (frmSet.config.SysCount > 1)
+                {
+                    frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+                }
+                else
+                {
+                    frmMain.Selffrm.AllEquipment.SingleReflux_Log();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CXFN_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isCXFNExecuting = false;
             }
         }
-        static void InitializePublic_Timer()
+
+        private void InitializePublic_Timer()
         {
             //每120秒，是否满足隔日数据上传和需量更新和温度控制
             Public_Timer = new System.Threading.Timer(Public_TimerCallback, null, 0, 120000);
         }
-        static void Public_TimerCallback(Object state)
+        private void Public_TimerCallback(Object state)
         {
-            //保存今日充放电量
-            frmMain.Selffrm.AllEquipment.CalculateNowPower();
-
-            //如果月份更新：
-            if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+            if (isPublicExecuting)
             {
-                frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
-                frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
-                frmSet.historyDatas.ClientPUMdemandMax = 0;
-                frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-
-                frmSet.Set_HistoryData();
-                frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
+                log.Info("Public_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
             }
 
-            //如果日期更新：
-            //1.清理数据库的旧数据
-            //2.保存当天收益到数据库
-            //3.上传当天收益到云
-            //4.下载策略
+            isPublicExecuting = true;
 
-            if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+            try
             {
-                //重置EMS重启次数
-                if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                // 保存今日充放电量
+                frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
+                // 检查月份是否更新
+                if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
                 {
-                    frmSet.historyDatas.RebootCount = 5;
+                    frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
+                    frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
+                    frmSet.historyDatas.ClientPUMdemandMax = 0;
+                    frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+
                     frmSet.Set_HistoryData();
+                    frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
                 }
 
-                //删除180天前的数据
-                frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
-
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
-                { 
-                    //保存当天收益到数据库FormatException ex)
-                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
-                    //当日收益发送到云
-                    frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);//qiao
-                                                                                                                   //更新日期
-                    frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                    //将当天的储能表和辅表的总尖峰平谷的累计电能数据保存到INI，包含日期和具体电能值
-                    frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
-                }
-                //校准电表日期
-                frmMain.Selffrm.AllEquipment.MeterCalibration();
-                //每晚00：00更新策略
-                if (frmMain.TacticsList != null)
+                // 检查日期是否更新
+                if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
                 {
+                    // 重置EMS重启次数
+                    if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                    {
+                        frmSet.historyDatas.RebootCount = 5;
+                        frmSet.Set_HistoryData();
+                    }
+
+                    // 删除180天前的数据
+                    frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+
+                    if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                    {
+                        // 保存当天收益到数据库
+                        frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+
+                        // 当日收益发送到云
+                        frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+
+                        // 更新日期
+                        frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                        // 将当天的储能表和辅表的电能数据保存到INI
+                        frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                    }
+
+                    // 校准电表日期
+                    frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+                    // 每晚00:00更新策略
+                    if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
+                    {
+                        try
+                        {
+                            frmMain.TacticsList.LoadFromMySQL();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("定时器刷新数据库失败: " + ex.Message);
+                        }
+                    }
+
+                    // 更新均衡策略
                     try
                     {
-                        if (frmSet.config.IsMaster == 1)
-                        {
-                            if (frmMain.TacticsList != null)
-                            {
-                                try
-                                {
-                                    frmMain.TacticsList.LoadFromMySQL();
-                                }
-                                catch
-                                {
-                                    log.Error("定时器刷新数据库失败");
-                                }
-                            }
-                        }
+                        frmMain.BalaTacticsList.LoadFromMySQL();
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        log.Error("00：00更新策略失败");
+                        log.Error("00:00更新均衡策略失败: " + ex.Message);
                     }
                 }
-                //更新均衡策略
-                try
-                {
-                    frmMain.BalaTacticsList.LoadFromMySQL();
-                }
-                catch { log.Error("00：00更新均衡策略失败"); }
             }
-
-
-            if (frmSet.config.EMSstatus == 1)
+            catch (Exception ex)
             {
-                if (frmMain.Selffrm.AllEquipment.TempControl != null)//(!AllEquipment.TempControl.PowerOn)
-                {
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.TempControl.state != 1)
-                    {
-                        frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true);//PCS工作前启动空调
-                    }                    //pcs必须处于低功率状态，且电池常温10---30度就停止空调
-                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp <  frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp >  frmSet.cloudLimits.FrigOffLower))
-                    {
-                        if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false);//PCS工作前启动空调
-                        }
-                    }
-                }
-
-                //液冷控制
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower && frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
-                    {
-                        frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true);//PCS工作前启动液冷机
-                        //9-4 新增逻辑 液冷机开机指令时直接再做个温控参数配置下发，用来保证运行的控制参数是正确的
-                        frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
-                    }                    //pcs必须处于低功率状态，且电池常温10---30度就停止液冷
-                    else if ((frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255) && (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper) && (frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower))
-                    {
-                        if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);//PCS工作前启动液冷机
-                        }
-                    }
-                }
+                log.Error("Public_TimerCallback encountered an error: " + ex.Message);
             }
-
-            //获取信号数据
-            frmMain.Selffrm.AllEquipment.TestSignalStrength();
+            finally
+            {
+                isPublicExecuting = false;
+            }
         }
 
-        static void InitializeBalaTacitc_Timer()
+        private void InitializeBalaTacitc_Timer()
         {
             BalaTacitc_Timer = new System.Threading.Timer(BalaTacitc_TimerCallback, null, 0, 60000);
         }
-        static void BalaTacitc_TimerCallback(Object state)
+        private void BalaTacitc_TimerCallback(Object state)
         {
-            frmMain.BalaTacticsList.CheckBalaTacticsOnce();
+            // 检查是否已有正在执行的任务，避免重叠
+            if (isBalaTacticExecuting)
+            {
+                log.Info("BalaTacitc_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isBalaTacticExecuting = true;
+
+            try
+            {
+                // 执行均衡策略检查
+                frmMain.BalaTacticsList.CheckBalaTacticsOnce();
+            }
+            catch (Exception ex)
+            {
+                log.Error("BalaTacitc_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isBalaTacticExecuting = false;
+            }
         }
 
-
-        static void InitializeTacitc_Timer()
-        {
-            //每30秒 判断策略时段  
-            Tacitc_Timer = new System.Threading.Timer(Tacitc_TimerCallback, null, 0, 30000);
-        }
-        static void Tacitc_TimerCallback(Object state)
-        {
-            frmMain.TacticsList.CheckTacticsOnce();
-        }
-        static void InitializeCloud_timer()
-        {
-            //每60秒 数据上云  
-            Cloud_timer = new System.Threading.Timer(Cloud_timerCallback, null, 0, 60000);
-        }
-        static void Cloud_timerCallback(Object state)
-        {
-            // 定时器触发时要执行的代码  
-            //if (frmSet.config.EMSstatus == 1)
-            //{
-                DateTime tempTime = DateTime.Now;
-                //采集数据保存在数据库中
-                frmMain.Selffrm.AllEquipment.Save2DataSoure(tempTime);
-                //采集数据上传云端
-                frmMain.Selffrm.AllEquipment.Report2Cloud.Save2CloudFile(tempTime);
-            //}
-
-            //make json
-/*            DateTime tempTimeq = DateTime.Now;
-            string rDate = tempTimeq.ToString("yyyyMMddHHmmss");
-            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2CloudTest(rDate);*/
-        }
-        static void InitializeUI_timer()
+        private void InitializeUI_timer()
         {
             // 每两秒修正 UI 
             UI_timer = new System.Threading.Timer(UI_timerCallback, null, 0, 2000);
         }
 
-        static void UI_timerCallback(Object state)
+        private void UI_timerCallback(Object state)
         {
-
-            // 和页面按钮有关
-            if (!frmMain.Selffrm.BeFoused)
+            // 检查是否已有任务在执行，避免重叠
+            if (isUiExecuting)
+            {
+                log.Info("UI_timerCallback is still executing. Skipping this tick to avoid overlap.");
                 return;
+            }
 
-            // 单个数据
+            isUiExecuting = true;
+
+            try
+            {
+                // 确认页面是否在焦点内
+                if (!frmMain.Selffrm.BeFoused)
+                    return;
+
+                // 更新策略状态和功率显示
+                UpdatePowerState();
+
+                // 更新温度
+                UpdateTemperatureDisplay();
+
+                // 更新 SOC
+                UpdateSOCDisplay();
+
+                // 更新电表数据
+                UpdateMeterDisplay();
+            }
+            catch (Exception ex)
+            {
+                log.Error("UI_timerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isUiExecuting = false;
+            }
+        }
+
+        private void UpdatePowerState()
+        {
             if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
             {
                 string strCap = "手动";
                 if (TacticsList.TacticsOn)
-                {
                     strCap = "策略";
-                }
                 else if (frmSet.config.PCSGridModel == 1)
-                {
                     strCap = "离网";
-                }
                 else if (frmSet.config.SysMode == 2)
-                {
                     strCap = "网控";
-                }
 
                 double allUkva = frmMain.Selffrm.AllEquipment.PCSList[0].allUkva;
-                string stateText, powerText;
-                if (allUkva > 0.5)
-                {
-                    stateText = strCap + "放电";
-                    powerText = allUkva.ToString("F1") + "kw";
-                }
-                else if (allUkva < -0.5)
-                {
-                    stateText = strCap + "充电";
-                    powerText = allUkva.ToString("F1") + "kw";
-                }
-                else
-                {
-                    stateText = strCap + "待机";
-                    powerText = "0.0kw";
-                }
+                string stateText = strCap + (allUkva > 0.5 ? "放电" : allUkva < -0.5 ? "充电" : "待机");
+                string powerText = allUkva.ToString("F1") + "kw";
 
                 if (frmMain.Selffrm.labState.IsHandleCreated && frmMain.Selffrm.labPCSuKW.IsHandleCreated)
                 {
@@ -853,8 +1088,10 @@ namespace EMS
                     }));
                 }
             }
+        }
 
-            // 温度
+        private void UpdateTemperatureDisplay()
+        {
             if (frmMain.Selffrm.AllEquipment.TempControl != null)
             {
                 double indoorTemp = frmMain.Selffrm.AllEquipment.TempControl.indoorTemp;
@@ -866,8 +1103,10 @@ namespace EMS
                     }));
                 }
             }
+        }
 
-            // SOC
+        private void UpdateSOCDisplay()
+        {
             double BMSSOC = frmMain.Selffrm.AllEquipment.BMSSOC;
             if (frmMain.Selffrm.labSOC.IsHandleCreated && frmMain.Selffrm.vpbSOC.IsHandleCreated)
             {
@@ -877,8 +1116,10 @@ namespace EMS
                     frmMain.Selffrm.vpbSOC.Value = (int)BMSSOC;
                 }));
             }
+        }
 
-            // 电表数据
+        private void UpdateMeterDisplay()
+        {
             if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
             {
                 double GridKVA = frmMain.Selffrm.AllEquipment.GridKVA;
@@ -886,14 +1127,14 @@ namespace EMS
                 double PCSPKWH = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
                 double E2OKWH = frmMain.Selffrm.AllEquipment.E2OKWH[0];
                 double E2PKWH = frmMain.Selffrm.AllEquipment.E2PKWH[0];
+
                 if (frmMain.Selffrm.labGridkva.IsHandleCreated &&
                     frmMain.Selffrm.labPCSOKWH.IsHandleCreated &&
                     frmMain.Selffrm.labPCSPKWH.IsHandleCreated &&
                     frmMain.Selffrm.labE2PKWH.IsHandleCreated &&
                     frmMain.Selffrm.labE2OKWH.IsHandleCreated &&
                     frmMain.Selffrm.labelDelay.IsHandleCreated &&
-                    frmMain.Selffrm.labelJitter.IsHandleCreated )
-
+                    frmMain.Selffrm.labelJitter.IsHandleCreated)
                 {
                     frmMain.Selffrm.Invoke((Action)(() =>
                     {
@@ -907,33 +1148,76 @@ namespace EMS
                     }));
                 }
             }
-            
         }
 
-        static void InitializeLed_Timer()
+        private void InitializeLed_Timer()
         {
             Led_Timer = new System.Threading.Timer(LedLoop_timerCallback, null, 0, 10000);
         }
-        static void LedLoop_timerCallback(Object state)
+        private void LedLoop_timerCallback(Object state)
         {
-            //LED控制
-            if (frmMain.Selffrm.AllEquipment.Led != null)
+            // 检查是否已有任务在执行，避免重叠
+            if (isLedLoopExecuting)
             {
-                frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+                log.Info("LedLoop_timerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isLedLoopExecuting = true;
+
+            try
+            {
+                // LED控制
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("LedLoop_timerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isLedLoopExecuting = false;
             }
         }
-        static void InitializeLiquidCold_HeartBeat_Timer()
+
+        private void InitializeLiquidCold_HeartBeat_Timer()
         {
-            LiquidCold_Timer = new System.Threading.Timer(InitializeLiquidCold_HeartBeat_Timer, null, 0, 25000);
+            LiquidCold_Timer = new System.Threading.Timer(LiquidCold_HeartBeat_TimerCallback, null, 0, 25000);
         }
-        static void InitializeLiquidCold_HeartBeat_Timer(Object state)
+        private void LiquidCold_HeartBeat_TimerCallback(Object state)
         {
-            //LED控制
-            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            // 检查是否已有任务在执行，避免重叠
+            if (isLiquidColdHeartbeatExecuting)
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.GetOutwaterTempFromEquipment_Heartbeat();
+                log.Info("LiquidCold_HeartBeat_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isLiquidColdHeartbeatExecuting = true;
+
+            try
+            {
+                // 获取液冷设备的出水温度
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.LiquidCool.GetOutwaterTempFromEquipment_Heartbeat();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("LiquidCold_HeartBeat_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isLiquidColdHeartbeatExecuting = false;
             }
         }
+
+
+        /*************************************************************************************************************************/
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
