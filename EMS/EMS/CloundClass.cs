@@ -755,198 +755,205 @@ namespace EMS
         //这段定义了收到消息之后做什么事情
         private void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
-            bool Result = false;
-            string strResponse = "{ \"jsonrpc\":\"2.0\", \"result\":true, \"id\":\"";
-            string ErrorstrResponse = "{ \"jsonrpc\":\"2.0\", \"result\":false, \"id\":\"";
-            string topic = e.Topic.ToString();            
-            string message = System.Text.Encoding.Default.GetString(e.Message);
-            
-            JObject jsonObject = JObject.Parse(message);
-            string strID = "";
-            if (jsonObject["id"] != null)
+            try
             {
-                strID = jsonObject["id"].ToString();
-            }       
-            //同时订阅两个或者以上主题时，分类收集收到的信息
+                bool Result = false;
+                string strResponse = "{ \"jsonrpc\":\"2.0\", \"result\":true, \"id\":\"";
+                string ErrorstrResponse = "{ \"jsonrpc\":\"2.0\", \"result\":false, \"id\":\"";
+                string topic = e.Topic.ToString();
+                string message = System.Text.Encoding.Default.GetString(e.Message);
 
-            if (topic == TacticTopic + "request")
-            {
-                Result = GetServerTactics(message);
-                log.Info("接收TacticTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
+                JObject jsonObject = JObject.Parse(message);
+                string strID = "";
+                if (jsonObject["id"] != null)
                 {
-                    if (Result)
-                    {
-                        try
-                        {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
+                    strID = jsonObject["id"].ToString();
                 }
-            }
-            else if (topic == PriceTopic + "request")
-            {
-                Result = GetServerEPrices(message);
-                log.Info("接收PriceTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
-                {
-                    if (Result)
-                    {
-                        try
-                        {
-                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                }
-            }
-            else if (topic == EMSLimitTopic + "request")
-            {
-                Result = GetServerEMSLimit(message);
-                log.Info("接收EMSLimitTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
-                {
-                    if (Result)
-                    {
-                        try
-                        {
-                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                }
-            }
-            else if (topic == AIOTTableTopic + "request")
-            {
-                strID = GetAiotTable(message);
-                log.Info("接收AIOTTableTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
-                {
-                    if (mqttClient != null)
-                    {
-                        try
-                        {
-                            mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                }
-            }
-            else if (topic == BalaTableTopic + "request")
-            {
-                strID = GetBalaTable(message);
-                log.Info("接收BalaTableTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
-                {
-                    if (mqttClient != null)
-                    {
-                        try
-                        {
-                            mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
+                //同时订阅两个或者以上主题时，分类收集收到的信息
 
-                    }
-                }
-            }
-            else if (topic == HeartbeatTopic)
-            {
-                GetHeartbeat(message);
-            }
-            else if (topic == UploadTopic  + "request")
-            {
-                Result = DataRetransmission(message);
-                log.Info("接收UploadTopic，获取锁_lockMqtt");
-                lock (_lockMqtt)
+                if (topic == TacticTopic + "request")
                 {
-                    if (Result)
+                    Result = GetServerTactics(message);
+                    log.Info("接收TacticTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
                     {
-                        try
+                        if (Result)
                         {
-                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            try
+                            {
+                                mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            try
+                            {
+                                mqttClient.Publish(TacticTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
                         }
                     }
                 }
-            }
-            /*            else if (topic == BalaTacticTopic)
+                else if (topic == PriceTopic + "request")
+                {
+                    Result = GetServerEPrices(message);
+                    log.Info("接收PriceTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
+                    {
+                        if (Result)
                         {
-                            //log.Info("接收到均衡策略");
-                            strID = GetServerBalaTactics(message);
-                            mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
-                                MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
-                        }*/
+                            try
+                            {
+                                mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                mqttClient.Publish(PriceTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                    }
+                }
+                else if (topic == EMSLimitTopic + "request")
+                {
+                    Result = GetServerEMSLimit(message);
+                    log.Info("接收EMSLimitTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
+                    {
+                        if (Result)
+                        {
+                            try
+                            {
+                                mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                mqttClient.Publish(EMSLimitTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                    }
+                }
+                else if (topic == AIOTTableTopic + "request")
+                {
+                    strID = GetAiotTable(message);
+                    log.Info("接收AIOTTableTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
+                    {
+                        if (mqttClient != null)
+                        {
+                            try
+                            {
+                                mqttClient.Publish(AIOTTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                    }
+                }
+                else if (topic == BalaTableTopic + "request")
+                {
+                    strID = GetBalaTable(message);
+                    log.Info("接收BalaTableTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
+                    {
+                        if (mqttClient != null)
+                        {
+                            try
+                            {
+                                mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+
+                        }
+                    }
+                }
+                else if (topic == HeartbeatTopic)
+                {
+                    GetHeartbeat(message);
+                }
+                else if (topic == UploadTopic  + "request")
+                {
+                    Result = DataRetransmission(message);
+                    log.Info("接收UploadTopic，获取锁_lockMqtt");
+                    lock (_lockMqtt)
+                    {
+                        if (Result)
+                        {
+                            try
+                            {
+                                mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                mqttClient.Publish(UploadTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(ErrorstrResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error("Client_MqttMsgPublishReceived:" + ex.Message);
+                            }
+                        }
+                    }
+                }
+                /*            else if (topic == BalaTacticTopic)
+                            {
+                                //log.Info("接收到均衡策略");
+                                strID = GetServerBalaTactics(message);
+                                mqttClient.Publish(BalaTableTopic + "response/" + strID, System.Text.Encoding.UTF8.GetBytes(strResponse + strID + "\"}"),
+                                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);
+                            }*/
+            }
+            catch (Exception ex)
+            {
+                log.Error("Client_MqttMsgPublishReceived: " + ex.Message);
+            }
         }
 
 
@@ -1298,12 +1305,12 @@ namespace EMS
         public bool DataRetransmission(string astrData)
         {
             bool result = false;
-            if (astrData == "")
-                return false;
-            JObject jsonObject = JObject.Parse(astrData);
-            string strID = "";
             try
-            {
+            {             
+                if (astrData == "")
+                    return false;
+                JObject jsonObject = JObject.Parse(astrData);
+                string strID = "";
                 strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "aiot/uploadData")
@@ -1343,27 +1350,36 @@ namespace EMS
                     result = false;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 log.Error("DataRetransmission: " + ex.Message);
                 return false;
             }
+
             return result;
+            
         }
 
         public void GetHeartbeat(string astrData, bool aIsFileData = false)
         {
-            JObject jsonObject = null;
-            jsonObject = JObject.Parse(astrData);
-            string ID = jsonObject["HeartBeatID"].ToString();
-            log.Info("接收心跳uuid: " + ID);
-            if (ID == HeartbeatID)
+            try
             {
-                if (!ConnectToCloud)
+                JObject jsonObject = null;
+                jsonObject = JObject.Parse(astrData);
+                string ID = jsonObject["HeartBeatID"].ToString();
+                log.Info("接收心跳uuid: " + ID);
+                if (ID == HeartbeatID)
                 {
-                    ConnectToCloud = true;
+                    if (!ConnectToCloud)
+                    {
+                        ConnectToCloud = true;
+                    }
+                    receivedHeartbeatResponse = true;
                 }
-                receivedHeartbeatResponse = true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("GetHeartbeat: " + ex.Message);
             }
         }
 
@@ -1431,12 +1447,12 @@ namespace EMS
         //接收到均衡控制命令
         public string GetBalaTable(string astrData)
         {
-            if (astrData == "")
-                return "";
-            JObject jsonObject = JObject.Parse(astrData);
             string strID = "";
             try
             {
+                if (astrData == "")
+                    return "";
+                JObject jsonObject = JObject.Parse(astrData);
                 strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "aiot/table")
@@ -1460,8 +1476,10 @@ namespace EMS
                  on: 0关机、1运行
                  */
             }
-            catch
-            { }
+            catch(Exception ex)
+            {
+                log.Error("GetBalaTable: " + ex.Message);
+            }
             return strID;
         }
 
@@ -1478,15 +1496,15 @@ namespace EMS
         public bool GetServerTactics(string astrData)
         {
             bool result = false;
-            if (astrData == "")
-            {
-                return false;
-            }
-            JObject jsonObject = null;
-            jsonObject = JObject.Parse(astrData);
-            string strID = "";
             try
             {
+                if (astrData == "")
+                {
+                    return false;
+                }
+                JObject jsonObject = null;
+                jsonObject = JObject.Parse(astrData);
+                string strID = "";
                 strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string date = jsonObject["params"]["date"].ToString();
                 string strTopic = jsonObject["method"].ToString();
@@ -1543,8 +1561,10 @@ namespace EMS
                     result = false;
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                log.Error("GetServerTactics: " + ex.Message);
+            }
             return result;
         }
 
@@ -1559,26 +1579,26 @@ namespace EMS
         public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
         {
             bool result = false;
-            JObject jsonObject = null;
-            string strDataFile = "";
-            if (aIsFileData)
-            {
-                strDataFile = strDownPath + "\\" + astrData;
-                if (!File.Exists(strDataFile))
-                    return false;
-                StreamReader file = File.OpenText(strDataFile);
-                JsonTextReader reader = new JsonTextReader(file);
-                jsonObject = (JObject)JToken.ReadFrom(reader);
-            }
-            else
-            {
-                if (astrData == "")
-                    return false;
-                jsonObject = JObject.Parse(astrData); 
-            }
-
             try
             {
+                JObject jsonObject = null;
+                string strDataFile = "";
+                if (aIsFileData)
+                {
+                    strDataFile = strDownPath + "\\" + astrData;
+                    if (!File.Exists(strDataFile))
+                        return false;
+                    StreamReader file = File.OpenText(strDataFile);
+                    JsonTextReader reader = new JsonTextReader(file);
+                    jsonObject = (JObject)JToken.ReadFrom(reader);
+                }
+                else
+                {
+                    if (astrData == "")
+                        return false;
+                    jsonObject = JObject.Parse(astrData);
+                }
+
                 string date = jsonObject["params"]["date"].ToString();
                 int iPriceCount = jsonObject["params"]["price"].Count();
                 string strTopic = jsonObject["method"].ToString();
@@ -1613,8 +1633,10 @@ namespace EMS
                         File.Delete(strDataFile);
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                log.Error("GetServerEPrices: " + ex.Message);
+            }
             //输出返回数据
             return result;
         }
@@ -1662,8 +1684,10 @@ namespace EMS
                  on: 0关机、1运行
                  */
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                log.Error("GetAiotTable: " + ex.Message);
+            }
             return strID;
         }
 
@@ -1671,12 +1695,12 @@ namespace EMS
         public bool GetServerEMSLimit(string astrData)
         {
             bool bResult = false;
-            if (astrData == "")
-                return false;
-
-            JObject jsonObject = JObject.Parse(astrData);
             try
             {
+                if (astrData == "")
+                    return false;
+
+                JObject jsonObject = JObject.Parse(astrData);
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "ems/limit")
                 {
@@ -1768,9 +1792,9 @@ namespace EMS
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Handle exceptions if needed
+                log.Error("GetServerEMSLimit: " + ex.Message);
             }
             return bResult;
         }
