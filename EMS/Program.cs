@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Squirrel;
 using System.Threading.Tasks;
+using log4net;
 
 namespace EMS
 {
@@ -39,43 +40,62 @@ namespace EMS
         public const int WM_SYSCOMMAND = 0x0112;
         public const int SC_MAXIMIZE = 0xF030;//窗体最大化消息
         public const int SC_NOMAL = 0xF120;//窗体还原消息
+
+        private static ILog log = LogManager.GetLogger("Program");
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
         static async Task Main()
         {
-
-            // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
-            using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/"))
+            try
             {
-                //await mgr.UpdateApp();
-                var updateInfo = await mgr.CheckForUpdate();
-                if (updateInfo.ReleasesToApply.Count > 0)
+                // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/"))
                 {
-                    // 下载和应用更新
-                    await mgr.UpdateApp();
+                    //await mgr.UpdateApp();
 
-                    // 应用完成后重启应用以加载新版本
-                    UpdateManager.RestartAppWhenExited();
-                    return;  // 停止当前应用，等待重启
+                    var updateInfo = await mgr.CheckForUpdate();
+                    if (updateInfo.ReleasesToApply.Count > 0)
+                    {
+                        // 下载和应用更新
+                        //await mgr.UpdateApp();
+                        mgr.UpdateApp().GetAwaiter().GetResult();
+
+                        // 应用完成后重启应用以加载新版本
+                        UpdateManager.RestartAppWhenExited();
+                        return;  // 停止当前应用，等待重启
+                    }
+
+
                 }
+            }
+            catch (Exception ex)
+            {
+                log.Error("远程更新失败：" + ex.Message);
             }
 
 
+            Application.EnableVisualStyles();
 
-            if (! CheckAppExists()) 
+            frmFlash.ShowFlashForm();
+            frmFlash.AddPostion(10);
+            frmMain.Selffrm = new frmMain();
+
+            Application.Run(frmMain.Selffrm);
+
+/*            if (! CheckAppExists()) 
             { 
                 frmFlash.ShowFlashForm();
 
-/*                //自动保存dump文件
+*//*                //自动保存dump文件
                 string crashDumpFolder = @"C:\crashdump"; // 设置 crashdump 文件夹路径
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
                 if (!Directory.Exists(crashDumpFolder))
                 {
                     Directory.CreateDirectory(crashDumpFolder);
                 }
-                StartCrashMonitor(crashDumpFolder);*/
+                StartCrashMonitor(crashDumpFolder);*//*
 
                 frmFlash.AddPostion(10);
 
@@ -90,9 +110,9 @@ namespace EMS
                 frmMain.Selffrm = new frmMain();
                 
                 Application.Run(frmMain.Selffrm);
-                Application.Exit();
-                Application.ExitThread(); 
-            }
+*//*                Application.Exit();
+                Application.ExitThread(); *//*
+            }*/
         }
 
         static void StartCrashMonitor(string crashDumpFolder)

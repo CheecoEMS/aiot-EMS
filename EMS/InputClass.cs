@@ -1370,7 +1370,7 @@ namespace EMS
                 //LED获取当前电量等级
                 frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (frmMain.Selffrm.AllEquipment.BMSSOC > 3) ? (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20) : 0;//Eg: soc为5%，显示1格
 
-                log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}");
+                //log.Debug($" errorclass：{errorclass} Led_ShowPowerLevel：{frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel}");
 
                 //frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20);
 
@@ -6345,7 +6345,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EMS240815Master7.3.10";
+        public string EMSVersion { get; set; } = "EmsMaster1.0.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7609,6 +7609,8 @@ namespace EMS
                 +"超限防逆PCS单机实际功率：" + PCSKVA + " "
                 +"超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
                 +"超限防逆PCS功率：" + PCSScheduleKVA * dRate + " "
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100 + " "
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
@@ -8093,9 +8095,20 @@ namespace EMS
                 +"超限防逆PCS主从实际功率：" + Math.Abs(AllwaValue) + " "
                 +"超限防逆整体计划功率：" +  Math.Abs(AllPCSScheduleKVA) + " "
                 +"超限防逆PCS本机实际计划功率：" + PCSScheduleKVA * dRate + " "
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100 + " "
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
+        public void Client_Log()
+        {
+            log.Debug(
+                "超限防逆PCS本机实际计划功率：" + PCSScheduleKVA  + " "
+                +"超限防逆PCS本机当前功率：" + PCSKVA + " "
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100
+                );
+        }
 
         private void MutiReflux()
         {

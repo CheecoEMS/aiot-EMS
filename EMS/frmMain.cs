@@ -872,14 +872,22 @@ namespace EMS
             try
             {
                 // 根据 SysCount 的值调用不同的日志方法
-                if (frmSet.config.SysCount > 1)
+                if (frmSet.config.IsMaster == 1)
                 {
-                    frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+                    if (frmSet.config.SysCount > 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.MutiReflux_Log();
+                    }
+                    else
+                    {
+                        frmMain.Selffrm.AllEquipment.SingleReflux_Log();
+                    }
                 }
                 else
-                {
-                    frmMain.Selffrm.AllEquipment.SingleReflux_Log();
+                { 
+                    
                 }
+
             }
             catch (Exception ex)
             {

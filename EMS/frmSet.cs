@@ -2268,7 +2268,7 @@ namespace EMS
             public int CellCount { get; set; } // int
             public int SysInterval { get; set; } // int
             public int YunInterval { get; set; } // int
-            public int IsMaster { get; set; } // bool
+            public int IsMaster { get; set; } // 1:主机 0：从机
             public int Master485Addr { get; set; } // int
             public int i485Addr { get; set; } // int
             public int AutoRun { get; set; } // bool

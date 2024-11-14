@@ -494,7 +494,7 @@ namespace EMS
                             try
                             {
                                 string fileName = Path.GetFileName(file);
-                                string aFileCap = fileName.Substring(1, 3)+"Demo"; // 确保这里的索引和长度是有效的  
+                                string aFileCap = fileName.Substring(1, 3); // 确保这里的索引和长度是有效的  
                                 string strData = File.ReadAllText(file);
                                 Write2Topic(aFileCap, strData);
                                 File.Delete(file);
