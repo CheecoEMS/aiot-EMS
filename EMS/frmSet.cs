@@ -12,7 +12,11 @@ using System.Collections.Generic;
 using Google.Protobuf.WellKnownTypes;
 using MySqlX.XDevAPI.Common;
 using Mysqlx.Session;
-
+using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
+using System.IO;
+using Squirrel;
+using System.Reflection;
 
 namespace EMS
 {
@@ -89,7 +93,7 @@ namespace EMS
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
 
-
+                oneForm.ShowVersion();
                 oneForm.ShowINIdata();
                 oneForm.btnBaseInf_Click(null, EventArgs.Empty);
                 oneForm.bTCDataChanged = false;
@@ -155,7 +159,7 @@ namespace EMS
             if (historyDatas != null &&  historyDatas.RebootCount > 0)
             {
                 historyDatas.RebootCount--;
-                
+
                 PowerGPIO(0);
                 Set_Cloudlimits();
                 Set_HistoryData();
@@ -171,7 +175,6 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
                     }
                 }
-
 
                 string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
                 try
@@ -203,7 +206,7 @@ namespace EMS
             string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P,DaliyE2PKWH_G,DaliyE2OKWH_Z,DaliyE2OKWH_J,DaliyE2OKWH_F,DaliyE2OKWH_P,DaliyE2OKWH_G, "
                           + " RebootCount FROM HistoricalData;";
 
-            try 
+            try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
@@ -362,7 +365,7 @@ namespace EMS
             finally
             {
 
-                
+
             }
             return result;
         }
@@ -503,7 +506,7 @@ namespace EMS
         public static bool Set_Config()
         {
             string astrSQL = "UPDATE config SET "
-                        + "SysID = '" + frmSet.config.SysID 
+                        + "SysID = '" + frmSet.config.SysID
                         + "', Open104 = '" + frmSet.config.Open104.ToString()
                         + "', NetTick = '" + frmSet.config.NetTick.ToString()
                         + "', SysName = '" + frmSet.config.SysName
@@ -634,7 +637,7 @@ namespace EMS
             catch (Exception ex)
             {
                 // 处理异常情况
-                log.Error (ex.Message);
+                log.Error(ex.Message);
                 result = false;
             }
             return result;
@@ -785,7 +788,7 @@ namespace EMS
         public List<ModbusCommand> VersionList = new List<ModbusCommand>(); //从由协议转义的TXT文本获取command的相关信息，如寄存器地址，功能码，字节大小等
 
         /*Fix:地址待可以归一*/
-        public static UInt32[] GPOIAddr ={   
+        public static UInt32[] GPOIAddr ={
             0xFED0E178,//消防
             0xFED0E278,//急停
             0xFED0E1C8,
@@ -805,7 +808,7 @@ namespace EMS
             0xFED0E3A8,
         };
 
-        public static UInt32[] GPOIAddr2 ={ 
+        public static UInt32[] GPOIAddr2 ={
             0xFED0E178,//0 消防            
             0xFED0E278,//1 急停
             0xFED0E1C8,//2 门禁
@@ -850,7 +853,7 @@ namespace EMS
                     /*Fix:冗余*/
                     frmSet.SetGPIOState(0, 3);  //急停
                     frmSet.SetGPIOState(1, 3);  //消防
-                    frmSet.SetGPIOState(2, 3);  
+                    frmSet.SetGPIOState(2, 3);
                     frmSet.SetGPIOState(3, 3);
                     frmSet.SetGPIOState(4, 3);
                     frmSet.SetGPIOState(5, 3);
@@ -861,7 +864,7 @@ namespace EMS
                     frmSet.SetGPIOState(9, 1);   //PCS On
                     frmSet.SetGPIOState(10, 1);  //2 error
                     frmSet.SetGPIOState(11, 1); //3 error
-                  //frmSet.SetGPIOState(12, 1);
+                                                //frmSet.SetGPIOState(12, 1);
                     frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）
                     break;
                 case 1://液冷 初始化：输入、输出 电平置低
@@ -935,12 +938,12 @@ namespace EMS
                     SysIO.SetPhysLong(hDriver, GPOIAddr[3], 2);//写入  预留 断路器
                     SysIO.SetPhysLong(hDriver, GPOIAddr[4], 2);//写入  预留 门禁系统
                     SysIO.SetPhysLong(hDriver, GPOIAddr[5], 3);//写入  UPS
-                    SysIO. SetPhysLong(hDriver,GPOIAddr[6], 3);//写入  市电
+                    SysIO.SetPhysLong(hDriver, GPOIAddr[6], 3);//写入  市电
                     SysIO.SetPhysLong(hDriver, GPOIAddr[7], 2);//写入 
                                                                ////////////////////////////////////////////////////////
                                                                //输出
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[8] , 0);//写出  电源指示灯
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[9] , 1);//写出  运行指示灯，充放电点亮 
+                    SysIO.SetPhysLong(hDriver, GPOIAddr[8], 0);//写出  电源指示灯
+                    SysIO.SetPhysLong(hDriver, GPOIAddr[9], 1);//写出  运行指示灯，充放电点亮 
                     SysIO.SetPhysLong(hDriver, GPOIAddr[10], 1);//写出  一般故障1、2级不影响工作
                     SysIO.SetPhysLong(hDriver, GPOIAddr[11], 1);//写出  综合控制箱风机控制 
                     SysIO.SetPhysLong(hDriver, GPOIAddr[12], 1);//输出 
@@ -981,8 +984,8 @@ namespace EMS
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 2);//写入  UPS
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 2);//写入  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3);//写入 
-                                                               ////////////////////////////////////////////////////////
-                                                               //输出
+                                                                ////////////////////////////////////////////////////////
+                                                                //输出
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 0);//写出  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0);//写出  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0);//写出  
@@ -1026,8 +1029,8 @@ namespace EMS
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 3);//写入  反馈
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3);//写入 
 
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[8],  1);//输出  电源指示
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[9],  0);//输出  运行指示
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 1);//输出  电源指示
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0);//输出  运行指示
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0);//输出  告警指示
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[11], 0);//输出  故障指示
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[12], 0);//输出  
@@ -1113,34 +1116,34 @@ namespace EMS
         }
 
         //监测触发BMS发生二级告警， 控制告警指示灯：（0：关闭 1：开启）
-        public static void BMS2warningGPIO(int option) 
+        public static void BMS2warningGPIO(int option)
         {
-            if(option == 0)
-            switch (config.GPIOSelect)
-            {
-                case 0:
-                    frmSet.SetGPIOState(10, 1);//FA 无RTC
-                    break;
-                case 1:
-                   // frmSet.SetGPIOState(10, 1);
-                    break;
-                case 2:
-                    frmSet.SetGPIOState(10, 0);//FB + RTC
-                    break;
-            }
-            else 
-            switch (config.GPIOSelect)
-            {
-                case 0:
-                    frmSet.SetGPIOState(10, 0);
-                    break;
-                case 1:
-                    //frmSet.SetGPIOState(10, 0);
-                    break;
-                case 2:
-                    frmSet.SetGPIOState(10, 1);
-                    break;
-            }
+            if (option == 0)
+                switch (config.GPIOSelect)
+                {
+                    case 0:
+                        frmSet.SetGPIOState(10, 1);//FA 无RTC
+                        break;
+                    case 1:
+                        // frmSet.SetGPIOState(10, 1);
+                        break;
+                    case 2:
+                        frmSet.SetGPIOState(10, 0);//FB + RTC
+                        break;
+                }
+            else
+                switch (config.GPIOSelect)
+                {
+                    case 0:
+                        frmSet.SetGPIOState(10, 0);
+                        break;
+                    case 1:
+                        //frmSet.SetGPIOState(10, 0);
+                        break;
+                    case 2:
+                        frmSet.SetGPIOState(10, 1);
+                        break;
+                }
         }
 
         //控制故障指示灯 ：（0：关闭 ， 1：开启）
@@ -1153,7 +1156,7 @@ namespace EMS
                         frmSet.SetGPIOState(11, 1);
                         break;
                     case 1:
-                       // frmSet.SetGPIOState(11, 1);
+                        // frmSet.SetGPIOState(11, 1);
                         break;
                     case 2:
                         frmSet.SetGPIOState(11, 0);
@@ -1166,7 +1169,7 @@ namespace EMS
                         frmSet.SetGPIOState(11, 0);
                         break;
                     case 1:
-                       // frmSet.SetGPIOState(11, 0);
+                        // frmSet.SetGPIOState(11, 0);
                         break;
                     case 2:
                         frmSet.SetGPIOState(11, 1);
@@ -1184,7 +1187,7 @@ namespace EMS
                         frmSet.SetGPIOState(9, 1);
                         break;
                     case 1:
-                       // frmSet.SetGPIOState(9, 1);
+                        // frmSet.SetGPIOState(9, 1);
                         break;
                     case 2:
                         frmSet.SetGPIOState(9, 0);
@@ -1238,7 +1241,7 @@ namespace EMS
 
         public bool PutTchCheck(int input)
         {
-            bool result ;
+            bool result;
             if (input == 1)
             {
                 result =  true;
@@ -1311,7 +1314,7 @@ namespace EMS
                 tcbUseBalaTactics.SetValue(PutTchCheck(config.UseBalaTactics));
                 tcbiPCSfactory.SetSelectItemIndex(config.iPCSfactory);
                 tcbPCSGridModel_OnValueChange(null);
-                tcbGPIO.SetSelectItemIndex((config.GPIOSelect==1)? 1:0);// 0、2：风冷 1：液冷   注：只展示不做UI修改
+                tcbGPIO.SetSelectItemIndex((config.GPIOSelect==1) ? 1 : 0);// 0、2：风冷 1：液冷   注：只展示不做UI修改
                 tcbBMSVer.SetSelectItemIndex(config.BMSVerb);
                 tcbPCSForceRun.SetValue(PutTchCheck(config.PCSForceRun));
                 //10.25
@@ -1453,7 +1456,7 @@ namespace EMS
                 strWorkType = "放电";
             string tempPCSType;
             int tempPCSwaValue = Math.Abs(PCSwaValue);
-      
+
 
             //将其他两种改编为恒功率
             if (PCSType == "恒流")
@@ -1504,7 +1507,7 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.wTypeActive = strWorkType;
                         frmMain.Selffrm.AllEquipment.PCSScheduleKVA = tempPCSwaValue;
                         frmMain.Selffrm.AllEquipment.HostStart = true;
-                        frmMain.Selffrm.AllEquipment.SlaveStart = true;                               
+                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
                     }
                     break;
                 case 1://策略模式
@@ -1513,7 +1516,7 @@ namespace EMS
                     frmMain.TacticsList.LoadFromMySQL();
                     frmMain.TacticsList.ActiveIndex = -1;
                     frmMain.TacticsList.TacticsOn = true;
-                    
+
                     break;
                 case 2://网控模式
                     frmMain.Selffrm.AllEquipment.eState = 2;//网控开启
@@ -1525,7 +1528,7 @@ namespace EMS
         static public void Err3off()
         {
             while (frmMain.Selffrm.AllEquipment.PCSKVA != 0)
-            {   
+            {
                 //关闭PCS充电放电
                 frmMain.Selffrm.AllEquipment.HostStart = false;
                 frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
@@ -1549,7 +1552,7 @@ namespace EMS
             }
         }
 
-        static  public  void DeleOldData(string astrData)
+        static public void DeleOldData(string astrData)
         {
             //删除清理数据库
             string[] strSQL = {"delete from cellstemp where rTime<'"+astrData+"'",
@@ -1594,7 +1597,7 @@ namespace EMS
         }
 
         private void btnACErrorClean_Click(object sender, EventArgs e)
-        {           
+        {
             frmMain.Selffrm.AllEquipment.TCCleanError();
         }
 
@@ -1602,7 +1605,7 @@ namespace EMS
         {
             frmMain.Selffrm.AllEquipment.TCPowerOn(false);
         }
-        
+
 
         private void btnMain_Click(object sender, EventArgs e)
         {
@@ -1615,7 +1618,7 @@ namespace EMS
             Set_ComponentSettings();
 
             CloseForm();
-            frmMain.ShowMainForm();          
+            frmMain.ShowMainForm();
         }
 
 
@@ -1663,7 +1666,7 @@ namespace EMS
             if (dbgElectrovalence.SelectedRows.Count > 0)
             {
                 frmoneElectrovalence.EditData(dbgElectrovalence);
-            } 
+            }
         }
 
         private void btnEdit3_Click(object sender, EventArgs e)
@@ -1732,7 +1735,7 @@ namespace EMS
             tpCom.Parent = null;
             tpLog.Parent = null;
             tpLC.Parent = null;
-           
+
 
         }
 
@@ -1868,8 +1871,8 @@ namespace EMS
         private void btnLog_Click(object sender, EventArgs e)
         {
 
-/*            DBConnection.SetDBGrid(oneForm.dbgLog);
-            DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");*/
+            /*            DBConnection.SetDBGrid(oneForm.dbgLog);
+                        DBConnection.ShowData2DBGrid(oneForm.dbgLog, "select * from log");*/
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2026,7 +2029,7 @@ namespace EMS
                 pbTimer.Value += 5;
         }
 
- 
+
 
         private void tcbIsMaster_OnValueChange(object sender)
         {
@@ -2045,25 +2048,25 @@ namespace EMS
 
         private void tcbPCSGridModel_OnValueChange(object sender)
         {
-/*            switch (tcbPCSGridModel.SelectItemIndex)
-            {
-                case 0://并网
-                    tcbPCSType.SetSelectItemIndex(3);
-                    tcbPCSMode.SetSelectItemIndex(1);
-                    tcbPCSMode.Enabled = true;
-                    tnePCSwaValue.Visible = true;
-                    labPCSwaValue.Visible = true;
-                    lablPCSwaValue2.Visible = true;
-                    break;
-                case 1://离网
-                    tcbPCSType.SetSelectItemIndex(4);
-                    tcbPCSMode.SetSelectItemIndex(1);
-                    tcbPCSMode.Enabled = false;
-                    tnePCSwaValue.Visible = false;
-                    labPCSwaValue.Visible = false;
-                    lablPCSwaValue2.Visible = false;
-                    break;
-            }*/
+            /*            switch (tcbPCSGridModel.SelectItemIndex)
+                        {
+                            case 0://并网
+                                tcbPCSType.SetSelectItemIndex(3);
+                                tcbPCSMode.SetSelectItemIndex(1);
+                                tcbPCSMode.Enabled = true;
+                                tnePCSwaValue.Visible = true;
+                                labPCSwaValue.Visible = true;
+                                lablPCSwaValue2.Visible = true;
+                                break;
+                            case 1://离网
+                                tcbPCSType.SetSelectItemIndex(4);
+                                tcbPCSMode.SetSelectItemIndex(1);
+                                tcbPCSMode.Enabled = false;
+                                tnePCSwaValue.Visible = false;
+                                labPCSwaValue.Visible = false;
+                                lablPCSwaValue2.Visible = false;
+                                break;
+                        }*/
         }
 
         private void btnCleanDataBase_Click(object sender, EventArgs e)
@@ -2108,7 +2111,7 @@ namespace EMS
             RestartWindows();
         }
 
-        private void btnClose_Click(object sender, EventArgs e)
+        public void btnClose_Click(object sender, EventArgs e)
         {
             PowerGPIO(0);
             Set_Cloudlimits();
@@ -2135,7 +2138,7 @@ namespace EMS
             frmMain.Selffrm.AllEquipment.TCIni(true);
         }
 
-        
+
         //液冷设置->液冷设置->应用
         private void btnLCRun_Click(object sender, EventArgs e)
         {
@@ -2151,7 +2154,7 @@ namespace EMS
 
         private void btnLClose_Click(object sender, EventArgs e)
         {
-            try 
+            try
             {
                 if (frmMain.Selffrm.AllEquipment.LiquidCool !=null)
                     frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
@@ -2229,7 +2232,7 @@ namespace EMS
             public volatile int MinSOC;
             public volatile int WarnMaxGridKW;
             public volatile int WarnMinGridKW;
-            public volatile int PcsKva ;
+            public volatile int PcsKva;
             public volatile int Pre_Client_PUMdemand_Max;
             public volatile int EnableActiveReduce;
             public volatile int PumScale;
@@ -2334,7 +2337,7 @@ namespace EMS
          * 
          *  UI  BMS
          * 
-         * *******************************/ 
+         * *******************************/
 
         private void btnBMSRead_Click(object sender, EventArgs e)
         {
@@ -2381,7 +2384,7 @@ namespace EMS
             {
                 frmMain.BalaTacticsList.ActiveIndex = -1;
             }
-       
+
         }
 
         private void RebootEms_Click(object sender, EventArgs e)
@@ -2389,6 +2392,114 @@ namespace EMS
             RestartApplication();
         }
 
-        
+        private void tbUpdateEMS_Click(object sender, EventArgs e)
+        {
+            //frmUpdateEms.ShowForm();
+        }
+
+        private void ShowVersion()
+        {
+            // 获取当前程序集
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            // 获取版本信息
+            Version version = assembly.GetName().Version;
+            tbNowVersion.Text = version.ToString();
+        }
+
+        private async void btnOK_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(tbVersion.Text.Trim()))
+            {
+                MessageBox.Show("版本信息不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                string versionInput = tbVersion.Text.Trim();
+                btnOK.Enabled = false; // 禁用按钮，防止重复点击
+
+                try
+                {
+                    DialogResult result = MessageBox.Show($"确认更新到版本：{versionInput} 吗？", "确认更新", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        bool isUpdate = await CheckAndUpdateAsync(versionInput);
+                        if (isUpdate)
+                        {
+                            ReStartEMS();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("btnOK_ClickAsync: " + ex.Message);
+                }
+                finally
+                {
+                    btnOK.Enabled = true; // 恢复按钮
+                }
+            }
+        }
+
+        private async Task<bool> CheckAndUpdateAsync(string version)
+        {
+            try
+            {
+                string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
+                log.Error("更新文件版本: " + version);
+
+                // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                using (var mgr = new UpdateManager(updateUrl))
+                {
+                    var updateInfo = await mgr.CheckForUpdate();
+                    if (updateInfo.ReleasesToApply.Count > 0)
+                    {
+                        // 下载和应用更新
+                        //mgr.UpdateApp().GetAwaiter().GetResult();
+                        await mgr.UpdateApp();
+                        log.Error("更新完成，准备重启应用。");
+                        MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        /*                        // 重启应用
+                                                UpdateManager.RestartAppWhenExited();
+
+                                                // 退出当前进程  
+                                                Application.Exit();*/
+
+
+                        // 调用重启逻辑
+                        UpdateManager.RestartAppWhenExited();
+                        return true;
+                    }
+                    else
+                    {
+                        // 已是最新版本
+                        MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CheckAndUpdateAsync: " + ex.Message);
+                MessageBox.Show($"更新失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        private void ReStartEMS()
+        {
+            PowerGPIO(0);
+            Set_Cloudlimits();
+            if (frmMain.Selffrm.AllEquipment.Led != null)
+            {
+                frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+            }
+            this.Close();
+            frmMain.Selffrm.Close();
+        }
+  
     }
 }

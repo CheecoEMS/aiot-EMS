@@ -48,10 +48,10 @@ namespace EMS
         [STAThread]
         static async Task Main()
         {
-            try
+/*            try
             {
                 // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
-                using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/"))
+                using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
                 {
                     //await mgr.UpdateApp();
 
@@ -73,7 +73,7 @@ namespace EMS
             catch (Exception ex)
             {
                 log.Error("远程更新失败：" + ex.Message);
-            }
+            }*/
 
 
             Application.EnableVisualStyles();

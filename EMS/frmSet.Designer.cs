@@ -43,6 +43,7 @@ namespace EMS
             this.btnEqipments = new System.Windows.Forms.Button();
             this.tbAll = new System.Windows.Forms.TabControl();
             this.plSetMain = new System.Windows.Forms.TabPage();
+            this.btnRebootEms = new System.Windows.Forms.Button();
             this.tcbGPIO = new EMS.TouchCombox(this.components);
             this.label99 = new System.Windows.Forms.Label();
             this.tcbPCSForceRun = new EMS.TCheckBox(this.components);
@@ -202,6 +203,11 @@ namespace EMS
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tpLog = new System.Windows.Forms.TabPage();
+            this.label100 = new System.Windows.Forms.Label();
+            this.tbNowVersion = new System.Windows.Forms.TextBox();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.label101 = new System.Windows.Forms.Label();
+            this.tbVersion = new System.Windows.Forms.TextBox();
             this.tbCTL = new System.Windows.Forms.TabPage();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnBMSRead = new System.Windows.Forms.Button();
@@ -327,7 +333,7 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
-            this.btnRebootEms = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -352,6 +358,7 @@ namespace EMS
             this.panel6.SuspendLayout();
             this.panel4.SuspendLayout();
             this.panel3.SuspendLayout();
+            this.tpLog.SuspendLayout();
             this.tbCTL.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -360,6 +367,7 @@ namespace EMS
             this.groupBox5.SuspendLayout();
             this.panel9.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -429,9 +437,8 @@ namespace EMS
             this.btnLog.Name = "btnLog";
             this.btnLog.Size = new System.Drawing.Size(88, 44);
             this.btnLog.TabIndex = 17;
-            this.btnLog.Text = "云设置";
+            this.btnLog.Text = "更新";
             this.btnLog.UseVisualStyleBackColor = false;
-            this.btnLog.Visible = false;
             this.btnLog.Click += new System.EventHandler(this.btnLog_Click);
             // 
             // btnShedule
@@ -600,6 +607,21 @@ namespace EMS
             this.plSetMain.Size = new System.Drawing.Size(845, 643);
             this.plSetMain.TabIndex = 0;
             this.plSetMain.Text = "基本信息";
+            // 
+            // btnRebootEms
+            // 
+            this.btnRebootEms.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnRebootEms.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnRebootEms.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnRebootEms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRebootEms.ForeColor = System.Drawing.Color.White;
+            this.btnRebootEms.Location = new System.Drawing.Point(494, 535);
+            this.btnRebootEms.Name = "btnRebootEms";
+            this.btnRebootEms.Size = new System.Drawing.Size(125, 44);
+            this.btnRebootEms.TabIndex = 66;
+            this.btnRebootEms.Text = "重启EMS";
+            this.btnRebootEms.UseVisualStyleBackColor = true;
+            this.btnRebootEms.Click += new System.EventHandler(this.RebootEms_Click);
             // 
             // tcbGPIO
             // 
@@ -2699,6 +2721,7 @@ namespace EMS
             // tpLog
             // 
             this.tpLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.tpLog.Controls.Add(this.groupBox2);
             this.tpLog.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tpLog.Location = new System.Drawing.Point(4, 4);
             this.tpLog.Name = "tpLog";
@@ -2706,6 +2729,62 @@ namespace EMS
             this.tpLog.Size = new System.Drawing.Size(845, 643);
             this.tpLog.TabIndex = 6;
             this.tpLog.Text = "云设置";
+            // 
+            // label100
+            // 
+            this.label100.AutoSize = true;
+            this.label100.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label100.ForeColor = System.Drawing.Color.White;
+            this.label100.Location = new System.Drawing.Point(22, 47);
+            this.label100.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label100.Name = "label100";
+            this.label100.Size = new System.Drawing.Size(90, 21);
+            this.label100.TabIndex = 50;
+            this.label100.Text = "当前版本：";
+            // 
+            // tbNowVersion
+            // 
+            this.tbNowVersion.Location = new System.Drawing.Point(113, 47);
+            this.tbNowVersion.Name = "tbNowVersion";
+            this.tbNowVersion.Size = new System.Drawing.Size(210, 26);
+            this.tbNowVersion.TabIndex = 49;
+            // 
+            // btnOK
+            // 
+            this.btnOK.BackColor = System.Drawing.Color.Transparent;
+            this.btnOK.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnOK.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnOK.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOK.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnOK.ForeColor = System.Drawing.Color.White;
+            this.btnOK.Location = new System.Drawing.Point(435, 83);
+            this.btnOK.Margin = new System.Windows.Forms.Padding(1);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(86, 45);
+            this.btnOK.TabIndex = 47;
+            this.btnOK.Text = "确定";
+            this.btnOK.UseVisualStyleBackColor = false;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // label101
+            // 
+            this.label101.AutoSize = true;
+            this.label101.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label101.ForeColor = System.Drawing.Color.White;
+            this.label101.Location = new System.Drawing.Point(22, 102);
+            this.label101.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label101.Name = "label101";
+            this.label101.Size = new System.Drawing.Size(90, 21);
+            this.label101.TabIndex = 46;
+            this.label101.Text = "更新版本：";
+            // 
+            // tbVersion
+            // 
+            this.tbVersion.Location = new System.Drawing.Point(113, 102);
+            this.tbVersion.Name = "tbVersion";
+            this.tbVersion.Size = new System.Drawing.Size(210, 26);
+            this.tbVersion.TabIndex = 45;
             // 
             // tbCTL
             // 
@@ -4460,20 +4539,20 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
-            // btnRebootEms
+            // groupBox2
             // 
-            this.btnRebootEms.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnRebootEms.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnRebootEms.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnRebootEms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRebootEms.ForeColor = System.Drawing.Color.White;
-            this.btnRebootEms.Location = new System.Drawing.Point(494, 535);
-            this.btnRebootEms.Name = "btnRebootEms";
-            this.btnRebootEms.Size = new System.Drawing.Size(125, 44);
-            this.btnRebootEms.TabIndex = 66;
-            this.btnRebootEms.Text = "重启EMS";
-            this.btnRebootEms.UseVisualStyleBackColor = true;
-            this.btnRebootEms.Click += new System.EventHandler(this.RebootEms_Click);
+            this.groupBox2.Controls.Add(this.label100);
+            this.groupBox2.Controls.Add(this.tbVersion);
+            this.groupBox2.Controls.Add(this.tbNowVersion);
+            this.groupBox2.Controls.Add(this.label101);
+            this.groupBox2.Controls.Add(this.btnOK);
+            this.groupBox2.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.groupBox2.Location = new System.Drawing.Point(15, 8);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(533, 138);
+            this.groupBox2.TabIndex = 51;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "更新";
             // 
             // frmSet
             // 
@@ -4522,6 +4601,7 @@ namespace EMS
             this.panel4.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
+            this.tpLog.ResumeLayout(false);
             this.tbCTL.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
@@ -4534,6 +4614,8 @@ namespace EMS
             this.groupBox5.PerformLayout();
             this.panel9.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -4837,5 +4919,11 @@ namespace EMS
         private System.Windows.Forms.Label label99;
         private System.Windows.Forms.TabPage plSetMain;
         private System.Windows.Forms.Button btnRebootEms;
+        private System.Windows.Forms.Label label100;
+        private System.Windows.Forms.TextBox tbNowVersion;
+        private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.Label label101;
+        private System.Windows.Forms.TextBox tbVersion;
+        private System.Windows.Forms.GroupBox groupBox2;
     }
 }

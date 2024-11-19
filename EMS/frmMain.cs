@@ -117,8 +117,7 @@ namespace EMS
             Text = "EMS system";
 
             //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
-              TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
-            //socketWrapper.OnReceiveDataEvent2 += new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+            TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
 
             //tcp
             ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
@@ -560,8 +559,6 @@ namespace EMS
                         frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                     }
                 }
-                /*                double[] pidd = new double[3] { 1, 2, 3 };
-                                pid.PID_init(1, pidd, 10, 10);*/
 
                 //开启定时器
                 frmMain.Selffrm.IniralizeFrmMain_Timer();
