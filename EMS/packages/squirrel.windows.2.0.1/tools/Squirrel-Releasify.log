@@ -2828,3 +2828,223 @@ Usage: WriteZipToSetup [Setup.exe template] [Zip File]
 [19/11/24 18:09:03] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
 [19/11/24 18:09:04] info: Program: Building embedded zip file for Setup.exe
 [19/11/24 18:09:07] info: Program: Finished Squirrel Updater
+[20/11/24 16:39:12] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[20/11/24 16:39:12] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 16:39:12] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[20/11/24 16:39:12] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[20/11/24 16:39:12] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 16:39:12] info: ReleasePackage: Removing unnecessary data
+[20/11/24 16:39:12] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 16:39:13] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 16:39:16] info: Program: Finished Squirrel Updater
+[20/11/24 16:43:41] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.1.nupkg
+[20/11/24 16:43:41] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 16:43:41] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.1.nupkg
+[20/11/24 16:43:41] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.1.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.1-full.nupkg
+[20/11/24 16:43:42] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 16:43:42] info: ReleasePackage: Removing unnecessary data
+[20/11/24 16:43:42] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 16:43:42] info: DeltaPackageBuilder: Extracting .\Releases\EMS-1.0.0-full.nupkg and D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.1-full.nupkg into C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\aircontrol.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\BalaCell.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\Biao1.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\Biao2.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\Biao3.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\BMS.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\BmsVersion.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\BouncyCastle.Crypto.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\Config.ini hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\Dehumidifier.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.MsDelta.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.PatchApi.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DofD.ini hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DoPU.ini hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DotNetty.Buffers.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DotNetty.Codecs.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DotNetty.Common.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DotNetty.Transport.dll hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: \lib\net45\DSP2.txt hasn't changed, writing dummy file
+[20/11/24 16:43:43] info: DeltaPackageBuilder: Delta patching C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\lib\net45\EMS.exe => C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb\lib\net45\EMS.exe
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\EMS.exe.config hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\ems.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\ems1.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: Delta patching C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\lib\net45\EMS_ExecutionStub.exe => C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb\lib\net45\EMS_ExecutionStub.exe
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Fire.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Google.Protobuf.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\GPIODriver32.sys hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\GPIODriver64.sys hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\K4os.Compression.LZ4.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\K4os.Compression.LZ4.Streams.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\K4os.Hash.xxHash.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\LED.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\LiquidCool.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\log4net.config hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\log4net.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\M2MqttClientDotnetCore1.0.1.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Bcl.AsyncInterfaces.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.DependencyInjection.Abstractions.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.DependencyInjection.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Logging.Abstractions.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Logging.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Options.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Primitives.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Mdb.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Pdb.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Rocks.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\MQTTClient.exe.config hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\MQTTnet.Extensions.ManagedClient.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\MySql.Data.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Newtonsoft.Json.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\NuGet.Squirrel.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\pcs.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\pcs1.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\pcs2.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SharpCompress.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControl.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControlx64.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControlx64.lib hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRW.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRWx64.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRWx64.lib hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\Squirrel.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Buffers.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Collections.Immutable.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Diagnostics.DiagnosticSource.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Memory.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Numerics.Vectors.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Runtime.CompilerServices.Unsafe.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.Threading.Tasks.Extensions.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\System.ValueTuple.dll hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: DeltaPackageBuilder: \lib\net45\ups.txt hasn't changed, writing dummy file
+[20/11/24 16:43:44] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 16:43:49] info: Program: Finished Squirrel Updater
+[20/11/24 17:29:33] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[20/11/24 17:29:33] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 17:29:33] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[20/11/24 17:29:33] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[20/11/24 17:29:33] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 17:29:33] info: ReleasePackage: Removing unnecessary data
+[20/11/24 17:29:33] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 17:29:34] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 17:29:37] info: Program: Finished Squirrel Updater
+[20/11/24 17:42:46] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.1.nupkg
+[20/11/24 17:42:46] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 17:42:46] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.1.nupkg
+[20/11/24 17:42:46] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.1.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.1-full.nupkg
+[20/11/24 17:42:47] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 17:42:47] info: ReleasePackage: Removing unnecessary data
+[20/11/24 17:42:47] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 17:42:47] info: DeltaPackageBuilder: Extracting .\Releases\EMS-1.0.0-full.nupkg and D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.1-full.nupkg into C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\aircontrol.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\BalaCell.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\Biao1.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\Biao2.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\Biao3.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\BMS.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\BmsVersion.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\BouncyCastle.Crypto.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\Config.ini hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\Dehumidifier.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.MsDelta.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DeltaCompressionDotNet.PatchApi.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DofD.ini hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DoPU.ini hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DotNetty.Buffers.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DotNetty.Codecs.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DotNetty.Common.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DotNetty.Transport.dll hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: \lib\net45\DSP2.txt hasn't changed, writing dummy file
+[20/11/24 17:42:48] info: DeltaPackageBuilder: Delta patching C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\lib\net45\EMS.exe => C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb\lib\net45\EMS.exe
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\EMS.exe.config hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\ems.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\ems1.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: Delta patching C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\lib\net45\EMS_ExecutionStub.exe => C:\Users\lenovo\AppData\Local\SquirrelTemp\tempb\lib\net45\EMS_ExecutionStub.exe
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Fire.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Google.Protobuf.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\GPIODriver32.sys hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\GPIODriver64.sys hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\K4os.Compression.LZ4.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\K4os.Compression.LZ4.Streams.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\K4os.Hash.xxHash.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\LED.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\LiquidCool.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\log4net.config hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\log4net.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\M2MqttClientDotnetCore1.0.1.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Bcl.AsyncInterfaces.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.DependencyInjection.Abstractions.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.DependencyInjection.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Logging.Abstractions.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Logging.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Options.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Microsoft.Extensions.Primitives.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Mdb.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Pdb.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Mono.Cecil.Rocks.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\MQTTClient.exe.config hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\MQTTnet.Extensions.ManagedClient.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\MySql.Data.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Newtonsoft.Json.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\NuGet.Squirrel.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\pcs.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\pcs1.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\pcs2.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SharpCompress.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControl.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControlx64.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechDriverControlx64.lib hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRW.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRWx64.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\SpesTechMmioRWx64.lib hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\Squirrel.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Buffers.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Collections.Immutable.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Diagnostics.DiagnosticSource.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Memory.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Numerics.Vectors.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Runtime.CompilerServices.Unsafe.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.Threading.Tasks.Extensions.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\System.ValueTuple.dll hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: DeltaPackageBuilder: \lib\net45\ups.txt hasn't changed, writing dummy file
+[20/11/24 17:42:49] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 17:42:53] info: Program: Finished Squirrel Updater
+[20/11/24 17:52:48] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[20/11/24 17:52:48] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 17:52:48] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[20/11/24 17:52:48] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[20/11/24 17:52:48] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 17:52:48] info: ReleasePackage: Removing unnecessary data
+[20/11/24 17:52:48] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 17:52:49] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 17:52:53] info: Program: Finished Squirrel Updater
+[20/11/24 18:00:13] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[20/11/24 18:00:13] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 18:00:13] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[20/11/24 18:00:14] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[20/11/24 18:00:14] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 18:00:14] info: ReleasePackage: Removing unnecessary data
+[20/11/24 18:00:14] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 18:00:14] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 18:00:18] info: Program: Finished Squirrel Updater
+[20/11/24 18:46:29] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[20/11/24 18:46:29] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[20/11/24 18:46:29] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[20/11/24 18:46:29] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[20/11/24 18:46:30] info: ReleasePackage: Extracting dependent packages: []
+[20/11/24 18:46:30] info: ReleasePackage: Removing unnecessary data
+[20/11/24 18:46:30] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[20/11/24 18:46:30] info: Program: Building embedded zip file for Setup.exe
+[20/11/24 18:46:34] info: Program: Finished Squirrel Updater
+[21/11/24 16:33:52] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.0.nupkg
+[21/11/24 16:33:52] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[21/11/24 16:33:52] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg
+[21/11/24 16:33:52] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.0.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.0-full.nupkg
+[21/11/24 16:33:53] info: ReleasePackage: Extracting dependent packages: []
+[21/11/24 16:33:53] info: ReleasePackage: Removing unnecessary data
+[21/11/24 16:33:53] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[21/11/24 16:33:53] info: Program: Building embedded zip file for Setup.exe
+[21/11/24 16:33:57] info: Program: Finished Squirrel Updater

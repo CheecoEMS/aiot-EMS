@@ -39,6 +39,7 @@ namespace EMS
         public DateTime WorkingDate = Convert.ToDateTime("2000-01-01 00:00:01");
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
+        private Thread Thread_CheckBalaTactics;
         private static ILog log = LogManager.GetLogger("BalaTacticsClass");
 
 
@@ -94,11 +95,6 @@ namespace EMS
                 res = false;
                 log.Error(ex.Message);
             }
-            finally
-            {
-               
-            }
-
             return res;
         }
 
@@ -121,14 +117,14 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(CheckBalaTactics);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
-                ClientRecThread.Start();
+                Thread_CheckBalaTactics = new Thread(CheckBalaTactics);
+                Thread_CheckBalaTactics.IsBackground = true;
+                Thread_CheckBalaTactics.Priority = ThreadPriority.Normal;
+                Thread_CheckBalaTactics.Start();
             }
-            catch
+            catch (Exception ex)
             {
-
+                log.Error("AutoCheckBalaTactics: " + ex.Message);
             }
         }
         //每分钟检查一次
@@ -136,43 +132,15 @@ namespace EMS
         {
             DateTime now;
             BalaTacticsClass oneBalaTactics = null;
-            int sleepCount = 1000;
+            int sleepCount = 120000;
+
+            log.Error("启动监听均衡策略");
             while (true)
             {
-                Thread.Sleep(sleepCount);
-                
-                if (frmSet.config.UseBalaTactics == 0)
+                try
                 {
-                    if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
-                    {
-                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                    }
-                    continue;
-                }
-                now = DateTime.Now;
-
-                lock (BalaTacticsList)
-                {
-                    //没有策略的执行策略就要停止输出
-                    if (BalaTacticsList.Count == 0)
-                    {               
-                        if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                        }
-                        continue;
-                    }
-                    //判断时间所在的区间和工作内容
-                    int i = 0;
-                    for (i = 0; i < BalaTacticsList.Count; i++)
-                    {
-                        oneBalaTactics = BalaTacticsList[i];
-                        if (CheckTimeInShedule(oneBalaTactics, now))
-                            break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
-                    }//for
-
-                    //没找到就停止
-                    if (i == BalaTacticsList.Count)
+                    Thread.Sleep(sleepCount);
+                    if (frmSet.config.UseBalaTactics == 0)
                     {
                         if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
                         {
@@ -180,106 +148,19 @@ namespace EMS
                         }
                         continue;
                     }
-                    //找到区段处理方法
-                    //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
-                    //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
-                    if (ActiveIndex != i)
+                    now = DateTime.Now;
+
+                    lock (BalaTacticsList)
                     {
-                        //更换策略点
-                        if (ActiveIndex >= 0)
+                        //没有策略的执行策略就要停止输出
+                        if (BalaTacticsList.Count == 0)
                         {
-                            // Thread.Sleep(120000);
-                            //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
-                            if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
+                            if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
                             {
                                 frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                                lock (frmMain.Selffrm.AllEquipment)
-                                {
-                                    if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                        frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                                    using (StreamReader reader = new StreamReader(frmSet.BalaPath))
-                                    {
-                                        string line;
-                                        while ((line = reader.ReadLine()) != null)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
-                                        }
-                                    }
-                                }
-
-                                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                {
-                                    frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
-                                }
-
                             }
+                            continue;
                         }
-                        ActiveIndex = i;
-                    }
-                    else
-                    {                      
-                        //运行策略 
-                        if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
-                        {
-                            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-
-                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                            using (StreamReader reader = new StreamReader(frmSet.BalaPath))
-                            {
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
-                                }
-                            }
-                            
-                            //10.8
-                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                            {
-                                frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
-                            }
-
-                        }
-                        ActiveIndex = i;
-                    }
-                }
-            }//lock  
-
-        }
-
-        public void CheckBalaTacticsOnce()
-        {
-            DateTime now;
-            BalaTacticsClass oneBalaTactics = null;
-
-
-            if (frmSet.config.UseBalaTactics == 0)
-            {
-                if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                }
-            }
-            else
-            {
-                now = DateTime.Now;
-
-                lock (BalaTacticsList)
-                {
-                    //没有策略的执行策略就要停止输出
-                    if (BalaTacticsList.Count == 0)
-                    {
-                        if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                        }
-
-                    }
-                    else
-                    { 
                         //判断时间所在的区间和工作内容
                         int i = 0;
                         for (i = 0; i < BalaTacticsList.Count; i++)
@@ -296,77 +177,78 @@ namespace EMS
                             {
                                 frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
                             }
-
+                            continue;
                         }
-                        else
+                        //找到区段处理方法
+                        //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
+                        //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
+                        if (ActiveIndex != i)
                         {
-                            //找到区段处理方法
-                            //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
-                            //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
-                            if (ActiveIndex != i)
+                            //更换策略点
+                            if (ActiveIndex >= 0)
                             {
-                                //更换策略点
-                                if (ActiveIndex >= 0)
-                                {
-                                    // Thread.Sleep(120000);
-                                    //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
-                                    if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
-                                    {
-                                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-                                        lock (frmMain.Selffrm.AllEquipment)
-                                        {
-                                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                                frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                                            using (StreamReader reader = new StreamReader(frmSet.BalaPath))
-                                            {
-                                                string line;
-                                                while ((line = reader.ReadLine()) != null)
-                                                {
-                                                    frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
-                                                }
-                                            }
-                                        }
-
-                                        if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                        {
-                                            frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
-                                        }
-
-                                    }
-                                }
-                                ActiveIndex = i;
-                            }
-                            else
-                            {
-                                //运行策略 
+                                // Thread.Sleep(120000);
+                                //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
                                 if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
                                 {
                                     frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-
-                                    if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                                        frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                                    using (StreamReader reader = new StreamReader(frmSet.BalaPath))
+                                    lock (frmMain.Selffrm.AllEquipment)
                                     {
-                                        string line;
-                                        while ((line = reader.ReadLine()) != null)
+                                        if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                                            frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+
+                                        using (StreamReader reader = new StreamReader(frmSet.BalaPath))
                                         {
-                                            frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                                            string line;
+                                            while ((line = reader.ReadLine()) != null)
+                                            {
+                                                frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                                            }
                                         }
                                     }
 
-                                    //10.8
                                     if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
                                     {
                                         frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
                                     }
 
                                 }
-                                ActiveIndex = i;
                             }
+                            ActiveIndex = i;
+                        }
+                        else
+                        {
+                            //运行策略 
+                            if (frmMain.Selffrm.AllEquipment.BalaRun == 0)
+                            {
+                                frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+
+                                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                                    frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+
+                                using (StreamReader reader = new StreamReader(frmSet.BalaPath))
+                                {
+                                    string line;
+                                    while ((line = reader.ReadLine()) != null)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                                    }
+                                }
+
+                                //10.8
+                                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                                {
+                                    frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                                }
+
+                            }
+                            ActiveIndex = i;
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("CheckBalaTactics: " + ex.Message);
                 }
             }
 

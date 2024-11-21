@@ -83,10 +83,6 @@ namespace EMS
             {
                 log.Error(ex.Message);
             }
-            finally
-            {
-
-            }
         }
     }
 }

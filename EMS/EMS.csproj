@@ -355,12 +355,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BalaTacticsListClass.cs" />
-    <Compile Include="frmUpdateEms.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmUpdateEms.Designer.cs">
-      <DependentUpon>frmUpdateEms.cs</DependentUpon>
-    </Compile>
     <Compile Include="pid.cs" />
     <Compile Include="CloundClass.cs" />
     <Compile Include="DBConnect.cs" />
@@ -582,9 +576,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmoneUser.resx">
       <DependentUpon>frmoneUser.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmUpdateEms.resx">
-      <DependentUpon>frmUpdateEms.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmWarrning.resx">
       <DependentUpon>frmWarrning.cs</DependentUpon>

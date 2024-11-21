@@ -32,7 +32,9 @@ namespace EMS
         public bool TacticsOn = false;  //策略标识符
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
-        
+        private Thread Thread_CheckTactics;
+
+
         private static ILog log = LogManager.GetLogger("TacticsClass");
 
 
@@ -236,10 +238,6 @@ namespace EMS
             {
                 log.Error(ex.Message);
             }
-            finally
-            {
-
-            }
             return Result;
         }
 
@@ -287,275 +285,165 @@ namespace EMS
         /// </summary>
         /// 
 
-        public void CheckTactics()
+        public void AutoCheckTactics()
         {
+            try
+            {
+                Thread_CheckTactics = new Thread(CheckTactics);
+                Thread_CheckTactics.IsBackground = true;
+                Thread_CheckTactics.Priority = ThreadPriority.Highest;
+                Thread_CheckTactics.Start();
+                Thread_CheckTactics.Name = "";               
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+        }
+
+        private void CheckTactics()
+        {
+            log.Error("启动监听策略");
             while (true)
             {
-                Thread.Sleep(30000);
-                TacticsClass oneTactics = null;
-
-                if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
+                try
                 {
-                    // 只有在策略模式才会运行策略
-                    if (frmSet.config.SysMode == 1)
-                        TacticsOn = true;
-                    continue;
-                }
+                    Thread.Sleep(30000);
+                    TacticsClass oneTactics = null;
 
-                //开启策略，若EMS无策略则重新读取数据库
-                if (TacticsList.Count == 0)
-                {
-                    LoadFromMySQL();
-                }
-
-                DateTime now = DateTime.Now;
-                //没有策略的执行策略就要停止输出
-                if (TacticsList.Count == 0)
-                {
-                    lock (frmMain.Selffrm.AllEquipment)
+                    if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
                     {
-                        frmMain.Selffrm.AllEquipment.waValueActive = 0;
-                        //主从计划功率清零
-                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                        //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
-                        frmMain.Selffrm.AllEquipment.HostStart = false;
-                        frmMain.Selffrm.AllEquipment.SlaveStart = false;
+                        // 只有在策略模式才会运行策略
+                        if (frmSet.config.SysMode == 1)
+                            TacticsOn = true;
+                        continue;
                     }
-                }
 
-
-                //判断时间所在的区间和工作内容
-                int i;
-                for (i = 0; i < TacticsList.Count; i++)
-                {
-                    oneTactics = TacticsList[i];
-                    if (CheckTimeInShedule(oneTactics, now))
-                        break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
-                }//for
-
-                //没找到就停止
-                if (i == TacticsList.Count)
-                {
-                    lock (frmMain.Selffrm.AllEquipment)
+                    //开启策略，若EMS无策略则重新读取数据库
+                    if (TacticsList.Count == 0)
                     {
-                        frmMain.Selffrm.AllEquipment.eState = 1;
-                        //主从计划功率清零
-                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                        //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
-                        frmMain.Selffrm.AllEquipment.HostStart = false;
-                        frmMain.Selffrm.AllEquipment.SlaveStart= false;
+                        LoadFromMySQL();
                     }
-                    continue;
-                }
-                //找到区段处理方法
-                //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
-                //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
-                if (ActiveIndex != i)
-                {
-                    //更换策略点
-                    if (ActiveIndex >= 0)
+
+                    DateTime now = DateTime.Now;
+                    //没有策略的执行策略就要停止输出
+                    if (TacticsList.Count == 0)
                     {
-                        //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
-                        while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
+                        lock (frmMain.Selffrm.AllEquipment)
                         {
-                            lock (frmMain.Selffrm.AllEquipment)
-                            {
-                                //2.21
-                                frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                                frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-
-                                if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
-                                {
-                                    frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                                }
-
-                                if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                                {
-                                    frmMain.Selffrm.AllEquipment.dRate = 0;
-                                    frmMain.Selffrm.AllEquipment.eState = 1;
-                                    frmMain.Selffrm.AllEquipment.PCSTypeActive = oneTactics.PCSType;
-                                    frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
-                                    //下发的功率值恒为正数
-                                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
-                                    frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
-                                    log.Error("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
-                                    frmMain.Selffrm.AllEquipment.HostStart = true;
-                                    frmMain.Selffrm.AllEquipment.SlaveStart = true;
-
-                                }
-                            }
+                            frmMain.Selffrm.AllEquipment.waValueActive = 0;
+                            //主从计划功率清零
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                            //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
+                            frmMain.Selffrm.AllEquipment.HostStart = false;
+                            frmMain.Selffrm.AllEquipment.SlaveStart = false;
                         }
-                        ActiveIndex = i;
                     }
-                    else
+
+
+                    //判断时间所在的区间和工作内容
+                    int i;
+                    for (i = 0; i < TacticsList.Count; i++)
                     {
-                        //运行策略
-                        while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
+                        oneTactics = TacticsList[i];
+                        if (CheckTimeInShedule(oneTactics, now))
+                            break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
+                    }//for
+
+                    //没找到就停止
+                    if (i == TacticsList.Count)
+                    {
+                        lock (frmMain.Selffrm.AllEquipment)
                         {
-                            lock (frmMain.Selffrm.AllEquipment)
+                            frmMain.Selffrm.AllEquipment.eState = 1;
+                            //主从计划功率清零
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                            //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
+                            frmMain.Selffrm.AllEquipment.HostStart = false;
+                            frmMain.Selffrm.AllEquipment.SlaveStart= false;
+                        }
+                        continue;
+                    }
+                    //找到区段处理方法
+                    //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
+                    //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
+                    if (ActiveIndex != i)
+                    {
+                        //更换策略点
+                        if (ActiveIndex >= 0)
+                        {
+                            //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
+                            while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
                             {
-                                //2.21
-                                frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                                frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-                                if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
+                                lock (frmMain.Selffrm.AllEquipment)
                                 {
-                                    frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                                }
+                                    //2.21
+                                    frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
+                                    frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
 
-                                if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                                {
-                                    frmMain.Selffrm.AllEquipment.eState = 1;
-                                    //frmMain.Selffrm.AllEquipment.runState = 0;
-                                    frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
-                                    frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
-                                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
-                                    frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
-                                    log.Error("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
+                                    if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
+                                    {
+                                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                                    }
 
-                                    frmMain.Selffrm.AllEquipment.HostStart = true;
-                                    frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                                    if (frmMain.Selffrm.AllEquipment.GotoSchedule)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.dRate = 0;
+                                        frmMain.Selffrm.AllEquipment.eState = 1;
+                                        frmMain.Selffrm.AllEquipment.PCSTypeActive = oneTactics.PCSType;
+                                        frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
+                                        //下发的功率值恒为正数
+                                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                        frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
+                                        log.Error("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
+                                        frmMain.Selffrm.AllEquipment.HostStart = true;
+                                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
+
+                                    }
                                 }
                             }
                             ActiveIndex = i;
                         }
-                    }
-                }
-            }
-        }
-
-        public void CheckTacticsOnce()
-        {
-            TacticsClass oneTactics = null;
-
-            if (!TacticsOn)//策略标识符没有开启，延长线程睡眠时间
-            {
-                // 只有在策略模式才会运行策略
-                if (frmSet.config.SysMode == 1)
-                    TacticsOn = true;
-                return;
-            }
-
-            //开启策略，若EMS无策略则重新读取数据库
-            if (TacticsList.Count == 0)
-            {
-                LoadFromMySQL();
-            }
-
-            DateTime now = DateTime.Now;
-
-            //没有策略的执行策略就要停止输出
-            if (TacticsList.Count == 0)
-            {
-                lock (frmMain.Selffrm.AllEquipment)
-                {
-                    frmMain.Selffrm.AllEquipment.waValueActive = 0;
-                    //主从计划功率清零
-                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                    //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
-                    frmMain.Selffrm.AllEquipment.HostStart = false;
-                    frmMain.Selffrm.AllEquipment.SlaveStart = false;
-                }
-            }
-
-
-            //判断时间所在的区间和工作内容
-            int i;
-            for (i = 0; i < TacticsList.Count; i++)
-            {
-                oneTactics = TacticsList[i];
-                if (CheckTimeInShedule(oneTactics, now))
-                    break;//找到list中第一条符合条件的策略(遇到新的策略会立刻中断当前策略，执行新的策略)
-            }//for
-
-            //没找到就停止
-            if (i == TacticsList.Count)
-            {
-                lock (frmMain.Selffrm.AllEquipment)
-                {
-                    frmMain.Selffrm.AllEquipment.eState = 1;
-                    //主从计划功率清零
-                    frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                    //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
-                    frmMain.Selffrm.AllEquipment.HostStart = false;
-                    frmMain.Selffrm.AllEquipment.SlaveStart= false;
-                }
-                return;
-            }
-            //找到区段处理方法
-            //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
-            //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
-            if (ActiveIndex != i)
-            {
-                //更换策略点
-                if (ActiveIndex >= 0)
-                {
-                    //从策略中取出PCS的执行参数，打开hostStart，在com1线程中唯一PCS执行
-                    while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
-                    {
-                        lock (frmMain.Selffrm.AllEquipment)
+                        else
                         {
-                            //2.21
-                            frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                            frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-
-                            if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
+                            //运行策略
+                            while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
                             {
-                                frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                            }
+                                lock (frmMain.Selffrm.AllEquipment)
+                                {
+                                    //2.21
+                                    frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
+                                    frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
+                                    if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
+                                    {
+                                        frmMain.Selffrm.AllEquipment.GotoSchedule = true;
+                                    }
 
-                            if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                            {
-                                frmMain.Selffrm.AllEquipment.dRate = 0;
-                                frmMain.Selffrm.AllEquipment.eState = 1;
-                                frmMain.Selffrm.AllEquipment.PCSTypeActive = oneTactics.PCSType;
-                                frmMain.Selffrm.AllEquipment.wTypeActive = oneTactics.tType;
-                                //下发的功率值恒为正数
-                                frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
-                                frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
-                                log.Error("更换策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
-                                frmMain.Selffrm.AllEquipment.HostStart = true;
-                                frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                                    if (frmMain.Selffrm.AllEquipment.GotoSchedule)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.eState = 1;
+                                        //frmMain.Selffrm.AllEquipment.runState = 0;
+                                        frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
+                                        frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
+                                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
+                                        frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
+                                        log.Error("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
 
+                                        frmMain.Selffrm.AllEquipment.HostStart = true;
+                                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                                    }
+                                }
+                                ActiveIndex = i;
                             }
                         }
                     }
-                    ActiveIndex = i;
                 }
-                else
+                catch (Exception ex)
                 {
-                    //运行策略
-                    while (frmMain.Selffrm.AllEquipment.PCSTypeActive != oneTactics.PCSType || frmMain.Selffrm.AllEquipment.wTypeActive != oneTactics.tType || frmMain.Selffrm.AllEquipment.PCSScheduleKVA != oneTactics.waValue/frmSet.config.SysCount)
-                    {
-                        lock (frmMain.Selffrm.AllEquipment)
-                        {
-                            //2.21
-                            frmMain.Selffrm.AllEquipment.PrewTypeActive = oneTactics.tType;
-                            frmMain.Selffrm.AllEquipment.PrePCSTypeActive = oneTactics.PCSType;
-                            if (frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "恒功率")
-                            {
-                                frmMain.Selffrm.AllEquipment.GotoSchedule = true;
-                            }
-
-                            if (frmMain.Selffrm.AllEquipment.GotoSchedule)
-                            {
-                                frmMain.Selffrm.AllEquipment.eState = 1;
-                                //frmMain.Selffrm.AllEquipment.runState = 0;
-                                frmMain.Selffrm.AllEquipment.PCSTypeActive = TacticsList[i].PCSType;
-                                frmMain.Selffrm.AllEquipment.wTypeActive = TacticsList[i].tType;
-                                frmMain.Selffrm.AllEquipment.PCSScheduleKVA = oneTactics.waValue/frmSet.config.SysCount;
-                                frmMain.Selffrm.AllEquipment.AllPCSScheduleKVA = oneTactics.waValue;
-                                log.Error("运行策略点的PCS计划功率：" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA+ " "+oneTactics.tType + " "+oneTactics.PCSType);
-
-                                frmMain.Selffrm.AllEquipment.HostStart = true;
-                                frmMain.Selffrm.AllEquipment.SlaveStart = true;
-                            }
-                        }
-                        ActiveIndex = i;
-                    }
+                    log.Error("CheckTactics: "+ ex.Message);
                 }
             }
         }
-
 
         //判断是否在时间段内
         private bool CheckTimeInShedule(TacticsClass aTactics, DateTime aTime)

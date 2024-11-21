@@ -218,4 +218,3 @@ D:\Github\aiot-EMS\EMS\obj\Debug\EMS.csproj.CoreCompileInputs.cache
 D:\Github\aiot-EMS\EMS\obj\Debug\EMS.csproj.CopyComplete
 D:\Github\aiot-EMS\EMS\obj\Debug\EMS.exe
 D:\Github\aiot-EMS\EMS\obj\Debug\EMS.pdb
-D:\Github\aiot-EMS\EMS\obj\Debug\EMS.frmUpdateEms.resources

@@ -156,38 +156,45 @@ namespace EMS
         //EMS重启
         public static void RestartApplication()
         {
-            if (historyDatas != null &&  historyDatas.RebootCount > 0)
+            try
             {
-                historyDatas.RebootCount--;
-
-                PowerGPIO(0);
-                Set_Cloudlimits();
-                Set_HistoryData();
-
-                if (frmMain.Selffrm.AllEquipment.Led != null)
+                if (historyDatas != null &&  historyDatas.RebootCount > 0)
                 {
-                    frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
-                }
-                if (frmMain.Selffrm.AllEquipment.PCSList != null)
-                {
-                    for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
+                    historyDatas.RebootCount--;
+
+                    PowerGPIO(0);
+                    Set_Cloudlimits();
+                    Set_HistoryData();
+
+                    if (frmMain.Selffrm.AllEquipment.Led != null)
                     {
-                        frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
+                        frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
                     }
-                }
+                    if (frmMain.Selffrm.AllEquipment.PCSList != null)
+                    {
+                        for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
+                        {
+                            frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
+                        }
+                    }
 
-                string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
-                try
-                {
-                    Process.Start(exePath);
-                }
-                catch (Exception ex)
-                {
-                    log.Error("无法重启应用程序: " + ex.Message);
-                }
+                    string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
+                    try
+                    {
+                        Process.Start(exePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("无法重启应用程序: " + ex.Message);
+                    }
 
-                // 退出当前进程  
-                Environment.Exit(0);
+                    // 退出当前进程  
+                    Environment.Exit(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("RestartApplication: " + ex.Message);
             }
         }
 
@@ -845,72 +852,79 @@ namespace EMS
         //GPIO初始化
         public static void InitGPIO()
         {
-            switch (config.GPIOSelect)
+            try
             {
-                case 0://FA,FB 无RTC: 初始化：输入、输出 电平置高
-                    frmSet.Init0_GPIO();
+                switch (config.GPIOSelect)
+                {
+                    case 0://FA,FB 无RTC: 初始化：输入、输出 电平置高
+                        frmSet.Init0_GPIO();
 
-                    /*Fix:冗余*/
-                    frmSet.SetGPIOState(0, 3);  //急停
-                    frmSet.SetGPIOState(1, 3);  //消防
-                    frmSet.SetGPIOState(2, 3);
-                    frmSet.SetGPIOState(3, 3);
-                    frmSet.SetGPIOState(4, 3);
-                    frmSet.SetGPIOState(5, 3);
-                    frmSet.SetGPIOState(6, 3);
-                    frmSet.SetGPIOState(7, 3);
-                    //
-                    frmSet.SetGPIOState(8, 1);   //24V on(powerOn)
-                    frmSet.SetGPIOState(9, 1);   //PCS On
-                    frmSet.SetGPIOState(10, 1);  //2 error
-                    frmSet.SetGPIOState(11, 1); //3 error
-                                                //frmSet.SetGPIOState(12, 1);
-                    frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）
-                    break;
-                case 1://液冷 初始化：输入、输出 电平置低
-                    frmSet.Init1_GPIO();
+                        /*Fix:冗余*/
+                        frmSet.SetGPIOState(0, 3);  //急停
+                        frmSet.SetGPIOState(1, 3);  //消防
+                        frmSet.SetGPIOState(2, 3);
+                        frmSet.SetGPIOState(3, 3);
+                        frmSet.SetGPIOState(4, 3);
+                        frmSet.SetGPIOState(5, 3);
+                        frmSet.SetGPIOState(6, 3);
+                        frmSet.SetGPIOState(7, 3);
+                        //
+                        frmSet.SetGPIOState(8, 1);   //24V on(powerOn)
+                        frmSet.SetGPIOState(9, 1);   //PCS On
+                        frmSet.SetGPIOState(10, 1);  //2 error
+                        frmSet.SetGPIOState(11, 1); //3 error
+                                                    //frmSet.SetGPIOState(12, 1);
+                        frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）
+                        break;
+                    case 1://液冷 初始化：输入、输出 电平置低
+                        frmSet.Init1_GPIO();
 
-                    /*Fix:冗余*/
-                    frmSet.SetGPIOState(0, 2);//消防
-                    frmSet.SetGPIOState(1, 2);//急停
-                    frmSet.SetGPIOState(2, 2);//门禁
-                    frmSet.SetGPIOState(3, 2);
-                    frmSet.SetGPIOState(4, 2);
-                    frmSet.SetGPIOState(5, 2);
-                    frmSet.SetGPIOState(6, 2);
-                    frmSet.SetGPIOState(7, 2);
-                    //
-                    frmSet.SetGPIOState(8, 0);   //24V on(powerOn)
-                    frmSet.SetGPIOState(9, 0);   //PCS On
-                    frmSet.SetGPIOState(10, 0);  //2 error
-                    frmSet.SetGPIOState(11, 0); //3 error
-                    frmSet.SetGPIOState(12, 0);
-                    frmSet.SetGPIOState(13, 0);
-                    frmSet.SetGPIOState(14, 1);//EMS LED （特殊：初始化置高开启灯）
-                    frmSet.SetGPIOState(15, 0);
-                    break;
-                case 2://FB +RTC
-                    frmSet.Init2_GPIO();
+                        /*Fix:冗余*/
+                        frmSet.SetGPIOState(0, 2);//消防
+                        frmSet.SetGPIOState(1, 2);//急停
+                        frmSet.SetGPIOState(2, 2);//门禁
+                        frmSet.SetGPIOState(3, 2);
+                        frmSet.SetGPIOState(4, 2);
+                        frmSet.SetGPIOState(5, 2);
+                        frmSet.SetGPIOState(6, 2);
+                        frmSet.SetGPIOState(7, 2);
+                        //
+                        frmSet.SetGPIOState(8, 0);   //24V on(powerOn)
+                        frmSet.SetGPIOState(9, 0);   //PCS On
+                        frmSet.SetGPIOState(10, 0);  //2 error
+                        frmSet.SetGPIOState(11, 0); //3 error
+                        frmSet.SetGPIOState(12, 0);
+                        frmSet.SetGPIOState(13, 0);
+                        frmSet.SetGPIOState(14, 1);//EMS LED （特殊：初始化置高开启灯）
+                        frmSet.SetGPIOState(15, 0);
+                        break;
+                    case 2://FB +RTC
+                        frmSet.Init2_GPIO();
 
-                    /*Fix:冗余*/
-                    frmSet.SetGPIOState(0, 2);//消防
-                    frmSet.SetGPIOState(1, 2);//急停
-                    frmSet.SetGPIOState(2, 2);
-                    frmSet.SetGPIOState(3, 2);
-                    frmSet.SetGPIOState(4, 2);
-                    frmSet.SetGPIOState(5, 2);
-                    frmSet.SetGPIOState(6, 2);
-                    frmSet.SetGPIOState(7, 2);
-                    //
-                    frmSet.SetGPIOState(8, 1);   //24V on(powerOn)
-                    frmSet.SetGPIOState(9, 0);   //PCS On
-                    frmSet.SetGPIOState(10, 0);  //2 error
-                    frmSet.SetGPIOState(11, 0); //3 error
-                    frmSet.SetGPIOState(12, 0);
-                    frmSet.SetGPIOState(13, 0);
-                    frmSet.SetGPIOState(14, 0);
-                    frmSet.SetGPIOState(15, 1);//EMS LED （特殊：初始化置高开启灯）
-                    break;
+                        /*Fix:冗余*/
+                        frmSet.SetGPIOState(0, 2);//消防
+                        frmSet.SetGPIOState(1, 2);//急停
+                        frmSet.SetGPIOState(2, 2);
+                        frmSet.SetGPIOState(3, 2);
+                        frmSet.SetGPIOState(4, 2);
+                        frmSet.SetGPIOState(5, 2);
+                        frmSet.SetGPIOState(6, 2);
+                        frmSet.SetGPIOState(7, 2);
+                        //
+                        frmSet.SetGPIOState(8, 1);   //24V on(powerOn)
+                        frmSet.SetGPIOState(9, 0);   //PCS On
+                        frmSet.SetGPIOState(10, 0);  //2 error
+                        frmSet.SetGPIOState(11, 0); //3 error
+                        frmSet.SetGPIOState(12, 0);
+                        frmSet.SetGPIOState(13, 0);
+                        frmSet.SetGPIOState(14, 0);
+                        frmSet.SetGPIOState(15, 1);//EMS LED （特殊：初始化置高开启灯）
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("InitGPIOL " + ex.Message);
             }
         }
         public static void Init0_GPIO()  //原版未修改 FA
@@ -2442,49 +2456,97 @@ namespace EMS
             }
         }
 
-        private async Task<bool> CheckAndUpdateAsync(string version)
+        public static async Task<bool> CheckAndUpdateAsync(string version)
         {
             try
             {
-                string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
-                log.Error("更新文件版本: " + version);
-
-                // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
-                //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
-                using (var mgr = new UpdateManager(updateUrl))
+                //判断是否处于策略时段
+                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
                 {
-                    var updateInfo = await mgr.CheckForUpdate();
-                    if (updateInfo.ReleasesToApply.Count > 0)
+                    string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
+                    log.Error("更新文件版本: " + version);
+
+                    // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                    //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                    using (var mgr = new UpdateManager(updateUrl))
                     {
-                        // 下载和应用更新
-                        //mgr.UpdateApp().GetAwaiter().GetResult();
-                        await mgr.UpdateApp();
-                        log.Error("更新完成，准备重启应用。");
-                        MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        var updateInfo = await mgr.CheckForUpdate();
+                        if (updateInfo.ReleasesToApply.Count > 0)
+                        {
+                            // 下载和应用更新
+                            //mgr.UpdateApp().GetAwaiter().GetResult();
+                            await mgr.UpdateApp();
+                            log.Error("更新完成，准备重启应用。");
 
-                        /*                        // 重启应用
-                                                UpdateManager.RestartAppWhenExited();
+                            MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                                                // 退出当前进程  
-                                                Application.Exit();*/
-
-
-                        // 调用重启逻辑
-                        UpdateManager.RestartAppWhenExited();
-                        return true;
+                            // 调用重启逻辑
+                            await UpdateManager.RestartAppWhenExited();
+                            return true;
+                        }
+                        else
+                        {
+                            // 已是最新版本
+                            MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return false;
+                        }
                     }
-                    else
-                    {
-                        // 已是最新版本
-                        MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return false;
-                    }
+                }
+                else
+                {
+                    return false;
                 }
             }
             catch (Exception ex)
             {
                 log.Error("CheckAndUpdateAsync: " + ex.Message);
                 MessageBox.Show($"更新失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        public static async Task<bool> CheckAndUpdateAsyncNoBox(string version)
+        {
+            try
+            {
+                //判断是否处于策略时段
+                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
+                {
+                    string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
+                    log.Error("更新文件版本: " + version);
+
+                    // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                    //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                    using (var mgr = new UpdateManager(updateUrl))
+                    {
+                        var updateInfo = await mgr.CheckForUpdate();
+                        if (updateInfo.ReleasesToApply.Count > 0)
+                        {
+                            // 下载和应用更新
+                            //mgr.UpdateApp().GetAwaiter().GetResult();
+                            await mgr.UpdateApp();
+                            log.Error("更新完成，准备重启应用。");
+
+                            //MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            // 调用重启逻辑
+                            await UpdateManager.RestartAppWhenExited();
+                            return true;
+                        }
+                        else
+                        {
+                            // 已是最新版本
+                            //MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return false;
+                        }
+                    }
+                }
+                else { return false; }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CheckAndUpdateAsync: " + ex.Message);
+                //MessageBox.Show($"更新失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }

@@ -12,6 +12,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
@@ -968,6 +969,14 @@ namespace EMS
     /// 
     /// </summary>
     /// 
+
+    public class VisualEmsClass
+    {
+        public double[] E2PKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
+        public double[] E2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向）
+        private double PcsKva;
+    }
+
 
     //新增计时器6.22
     public class TimeMeasurement
@@ -1926,9 +1935,11 @@ namespace EMS
                 }
                 return true;
             }
-            catch
-            { return false; }
-
+            catch (Exception ex)
+            {
+                log.Error("LiquidCoolClass ExecCommand: " + ex.Message);
+                return false;
+            }
         }
 
         /// <summary>
@@ -4741,36 +4752,43 @@ namespace EMS
         //根据bms的版本信息，决定开放的工程
         public void CheckFunctionLevel()
         {
-            //读取BMS版本列表
-            ReadBmsVersions();
-
-            string strTemp = "";
-            string strData = "";
-
-            //BMS版本信息
-            if (GetSysData(140, ref strTemp))
+            try
             {
-                if (Get3strData(136, ref strTemp, ref strData))
-                    ProjectNumber = int.Parse(strData);
-                if (Get3strData(137, ref strTemp, ref strData))
-                    MajorVersionNumber = int.Parse(strData);
-                if (Get3strData(138, ref strTemp, ref strData))
-                    SubversionVersionNumber = int.Parse(strData);
-                if (Get3strData(139, ref strTemp, ref strData))
-                    CorrectionVersionNumber = int.Parse(strData);
+                //读取BMS版本列表
+                ReadBmsVersions();
 
-                BmsHardware = ProjectNumber.ToString()+"."+MajorVersionNumber.ToString()+"."+SubversionVersionNumber.ToString()+"."+CorrectionVersionNumber.ToString();
+                string strTemp = "";
+                string strData = "";
 
-                
-                foreach (var (version, Level) in BmsVersions)
+                //BMS版本信息
+                if (GetSysData(140, ref strTemp))
                 {
-                    if (version == BmsHardware)
+                    if (Get3strData(136, ref strTemp, ref strData))
+                        ProjectNumber = int.Parse(strData);
+                    if (Get3strData(137, ref strTemp, ref strData))
+                        MajorVersionNumber = int.Parse(strData);
+                    if (Get3strData(138, ref strTemp, ref strData))
+                        SubversionVersionNumber = int.Parse(strData);
+                    if (Get3strData(139, ref strTemp, ref strData))
+                        CorrectionVersionNumber = int.Parse(strData);
+
+                    BmsHardware = ProjectNumber.ToString()+"."+MajorVersionNumber.ToString()+"."+SubversionVersionNumber.ToString()+"."+CorrectionVersionNumber.ToString();
+
+
+                    foreach (var (version, Level) in BmsVersions)
                     {
-                        FunctionLevel = Level;
-                        break; 
+                        if (version == BmsHardware)
+                        {
+                            FunctionLevel = Level;
+                            break;
+                        }
                     }
+                    log.Error("BMS版本号: " + BmsHardware  + "BMS功能等级：" + FunctionLevel);
                 }
-                log.Error("BMS版本号: " + BmsHardware  + "BMS功能等级：" + FunctionLevel);
+            }
+            catch (Exception ex)
+            {
+                log.Error("CheckFunctionLevel: " + ex.Message);
             }
         }
 
@@ -6198,6 +6216,9 @@ namespace EMS
         //汇流柜新增DTSD1352
         public Elemeter2Class Elemeter2H;
 
+        //虚拟设备EMS
+        public VisualEmsClass visualEms = new VisualEmsClass();
+
         public string DofD = "";
 
         //2.21
@@ -6345,7 +6366,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "EmsMaster1.0.0";
+        public string EMSVersion { get; set; } = "";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6376,10 +6397,30 @@ namespace EMS
 
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 
+        //线程
+        private Thread Thread_ReadDataCom1;
+        private Thread Thread_TestSignalStrength;
+        private Thread Thread_TemperControl;
+        private Thread Thread_LiquidCold_HeartBeat;
+        private Thread Thread_Led_Control;
+        private Thread Thread_Read_Serial;
+        private Thread Thread_ControlEMSTCP;
+        private Thread Thread_ControlEMS;
+        private Thread Thread_ReadPointGrid;
+        private Thread Thread_ReadPointPower;
+        private Thread Thread_ReadDataE1;
+        private Thread Thread_ReadEquipmentDataBMS;
+        private Thread Thread_ReadCOM2Data;
+        private Thread Thread_ReadEquipmentDataPCS;
 
         public AllEquipmentClass()
         {
-            Fire = new FireClass(); 
+            Fire = new FireClass();
+
+            // 获取版本信息
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Version version = assembly.GetName().Version;
+            EMSVersion = version.ToString();
         }
 
         //析构函数
@@ -6540,29 +6581,36 @@ namespace EMS
 
         public void MeterCalibration()
         {
-            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            try
             {
-                if (Elemeter2.Prepared)
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                 {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
-                }
-            }
-            if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
-            {
-                foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
-                {
-                    if (tempEleMeter.Prepared)
+                    if (Elemeter2.Prepared)
                     {
-                        tempEleMeter.timing(73);
+                        frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
+                    }
+                }
+                if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
+                {
+                    foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
+                    {
+                        if (tempEleMeter.Prepared)
+                        {
+                            tempEleMeter.timing(73);
+                        }
+                    }
+                }
+                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                {
+                    if (Elemeter3.Prepared)
+                    {
+                        frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
                     }
                 }
             }
-            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+            catch (Exception ex)
             {
-                if (Elemeter3.Prepared)
-                {
-                    frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
-                }
+                log.Error("MeterCalibration: " + ex.Message);
             }
         }
 
@@ -6857,13 +6905,10 @@ namespace EMS
                     }
                 }        
             }
-            catch
-            { }
-            finally
+            catch (Exception ex)
             {
-
+                log.Error("LoadErrorState: " + ex.Message);
             }
-
         }
 
         //从文件中读取设置信息
@@ -7056,65 +7101,79 @@ namespace EMS
 
         public void init_LiquidCool() //初始化
         {
+            try
             {
                 frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
             }
+            catch (Exception ex)
+            {
+                log.Error("init_LiquidCool: " + ex.Message);
+            }
+                        
         }
 
 
         public void init_LED() //LED初始化
         {
-            if (frmMain.Selffrm.AllEquipment.Led != null)
+            try
             {
-                if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
-                else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
-                if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
-                else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
-
-                frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20); //电量
-
-                //运行状态变化
-                if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //运行待机状态
+                if (frmMain.Selffrm.AllEquipment.Led != null)
                 {
-                    switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                    if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true) frmMain.Selffrm.AllEquipment.Led_ShowError = 2; //三级告警
+                    else frmMain.Selffrm.AllEquipment.Led_ShowError = 0;
+                    if (Math.Abs(frmMain.Selffrm.AllEquipment.PCSList[0].allUkva) > 0.5) frmMain.Selffrm.AllEquipment.Led_Show_status = 1; //0 待机 1 运行 
+                    else frmMain.Selffrm.AllEquipment.Led_Show_status = 0;
+
+                    frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel = (((int)frmMain.Selffrm.AllEquipment.BMSSOC + 19) / 20); //电量
+
+                    //运行状态变化
+                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 0)   //运行待机状态
+                    {
+                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                        {
+                            case 0:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
+                                break;
+                            case 1:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
+                                break;
+                            case 2:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
+                                break;
+                        }
+                    }
+                    if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)   //运行运行状态 
+                    {
+                        switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
+                        {
+                            case 0:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
+                                break;
+                            case 1:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
+                                break;
+                            case 2:
+                                frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
+                                break;
+                        }
+                    }
+                    switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
                     {
                         case 0:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_N();
+                            frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
                             break;
                         case 1:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_W();
-                            break;
-                        case 2:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Standby_E();
+                            frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
                             break;
                     }
-                }
-                if (frmMain.Selffrm.AllEquipment.Led_Show_status == 1)   //运行运行状态 
-                {
-                    switch (frmMain.Selffrm.AllEquipment.Led_ShowError)
-                    {
-                        case 0:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_N();
-                            break;
-                        case 1:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_W();
-                            break;
-                        case 2:
-                            frmMain.Selffrm.AllEquipment.Led.Set_Led_Charge_E();
-                            break;
-                    }
-                }
-                switch (frmMain.Selffrm.AllEquipment.Led_Show_status)   //显示电量 
-                {
-                    case 0:
-                        frmMain.Selffrm.AllEquipment.Led.SetButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                        break;
-                    case 1:
-                        frmMain.Selffrm.AllEquipment.Led.SetChargeButteryPercent(frmMain.Selffrm.AllEquipment.Led_ShowPowerLevel);
-                        break;
-                }
 
+                }
             }
+            catch (Exception ex)
+            {
+                log.Error("init_LED: " + ex.Message);
+            }
+            
         }
         //保存到文件
         public void Save2DataSoure(DateTime atempTime)
@@ -7201,7 +7260,6 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
                         }
                     }
-
                 }
                 else
                 {
@@ -7211,14 +7269,25 @@ namespace EMS
                     }
                 }
 
-                AutoTactics();
+                //液冷心跳定时器
+                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
+                    AutoLiquidCold_HeartBeat();
+                }
 
                 /***************Normal*************/
                 AutoReadDataCom2();//表2、3、4，空调,液冷机
                 AutoReadDataCom4(); //PCS 
                 AutoReadE1();//表1
-                
 
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    AutoLed_Control();
+                }
+
+                AutoTemperControl();//温控
+                AutoTestSignalStrength();//4G信号检测
             }
             catch (Exception ex)
             {
@@ -7235,27 +7304,187 @@ namespace EMS
         /// </summary>
         /// 
 
-        public void AutoTactics()
+        private void AutoTestSignalStrength()
         {
             try
             {
-                //实例化等待连接的线程
-                if (frmMain.TacticsList != null)
-                {
-                    log.Error("启动监听策略");
-                    Thread ClientRecThread = new Thread(frmMain.TacticsList.CheckTactics);
-                    ClientRecThread.IsBackground = true;
-                    ClientRecThread.Priority = ThreadPriority.Highest;
-                    ClientRecThread.Start();
-                    ClientRecThread.Name = "";
-                }
+                // 创建并启动 Heartbeat 线程
+                Thread_TestSignalStrength = new Thread(TestSignalStrengthCallback);
+                Thread_TestSignalStrength.IsBackground = true;
+                Thread_TestSignalStrength.Priority = ThreadPriority.Normal;
+                Thread_TestSignalStrength.Start();
+                Thread_TestSignalStrength.Name = "";
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("Error starting PublicThread: " + ex.Message);
             }
         }
 
+        private void TestSignalStrengthCallback()
+        {
+            while (true)
+            {
+                try
+                {
+                    // 获取信号数据
+                    frmMain.Selffrm.AllEquipment.TestSignalStrength();
+                    Thread.Sleep(60000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("TestSignalStrength_TimerCallback encountered an error: " + ex.Message);
+                }
+
+            }
+        }
+
+        private void AutoTemperControl()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                Thread_TemperControl = new Thread(TemperControlCallback);
+                Thread_TemperControl.IsBackground = true;
+                Thread_TemperControl.Priority = ThreadPriority.Normal;
+                Thread_TemperControl.Start();
+                Thread_TemperControl.Name = "";
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+            }
+        }
+
+        private void TemperControlCallback()
+        {
+            while (true)
+            {
+                try
+                {
+                    if (frmSet.config.EMSstatus == 1)
+                    {
+                        // 温控
+                        if (frmMain.Selffrm.AllEquipment.TempControl != null)
+                        {
+                            if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                                frmMain.Selffrm.AllEquipment.TempControl.state != 1)
+                            {
+                                frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true); // 开启空调
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
+                                     frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
+                                     frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                            {
+                                if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
+                                {
+                                    frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(false); // 关闭空调
+                                }
+                            }
+                        }
+
+                        // 液冷控制
+                        if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                        {
+                            if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                                frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
+                            {
+                                frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true); // 开启液冷机
+                                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand(); // 确保温控参数配置正确
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
+                                     frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
+                                     frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                            {
+                                if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
+                                {
+                                    frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false); // 关闭液冷机
+                                }
+                            }
+                        }
+                    }
+                    Thread.Sleep(60000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("TemperControl_TimerCallback encountered an error: " + ex.Message);
+                }
+            }
+        }
+
+        private void AutoLiquidCold_HeartBeat()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                Thread_LiquidCold_HeartBeat = new Thread(LiquidCold_HeartBeatCallback);
+                Thread_LiquidCold_HeartBeat.IsBackground = true;
+                Thread_LiquidCold_HeartBeat.Priority = ThreadPriority.Highest;
+                Thread_LiquidCold_HeartBeat.Start();
+                Thread_LiquidCold_HeartBeat.Name = "";
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+            }
+        }
+
+        private void LiquidCold_HeartBeatCallback()
+        {
+            while (true)
+            {
+                try
+                {
+                    // 获取液冷设备的出水温度
+                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.LiquidCool.GetOutwaterTempFromEquipment_Heartbeat();
+                    }
+                    Thread.Sleep(25000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("LiquidCold_HeartBeat_TimerCallback encountered an error: " + ex.Message);
+                }           
+            }
+        }
+
+
+
+
+        private void AutoLed_Control()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                Thread_Led_Control = new Thread(Led_ControlCallback);
+                Thread_Led_Control.IsBackground = true;
+                Thread_Led_Control.Priority = ThreadPriority.Normal;
+                Thread_Led_Control.Start();
+                Thread_Led_Control.Name = "";
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+            }
+        }
+
+        private void Led_ControlCallback()
+        {
+            while (true)
+            {
+                try
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Led_Control_Loop();
+                    // 等待 2分钟再进行下一次心跳
+                    Thread.Sleep(120000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Led_ControlCallback: " + ex.Message);
+                }
+            }
+        }
 
 
 
@@ -7265,21 +7494,28 @@ namespace EMS
             bool GetMsg = false;
             while (true)
             {
-                Thread.Sleep(1000);
-                if (frmMain.Selffrm.ems.m485.sp != null)
+                try
                 {
-                    while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
+                    if (frmMain.Selffrm.ems.m485.sp != null)
                     {
-                        int info = frmMain.Selffrm.ems.m485.sp.ReadByte();
-                        receivedData.Add((byte)info);
-                        GetMsg = true;
+                        while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
+                        {
+                            int info = frmMain.Selffrm.ems.m485.sp.ReadByte();
+                            receivedData.Add((byte)info);
+                            GetMsg = true;
+                        }
+                        if (GetMsg)
+                        {
+                            frmMain.Selffrm.OnReceiveCMD2(1, receivedData.ToArray());
+                            GetMsg = false;
+                            receivedData.Clear();
+                        }
                     }
-                    if (GetMsg)
-                    {
-                        frmMain.Selffrm.OnReceiveCMD2(1, receivedData.ToArray());
-                        GetMsg = false;
-                        receivedData.Clear();
-                    }
+                    Thread.Sleep(1000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Read_Serial: " + ex.Message);
                 }
             }
         }
@@ -7289,11 +7525,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(Read_Serial);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_Read_Serial = new Thread(Read_Serial);
+                Thread_Read_Serial.IsBackground = true;
+                Thread_Read_Serial.Priority = ThreadPriority.Highest;
+                Thread_Read_Serial.Start();
+                Thread_Read_Serial.Name = "";
             }
             catch (Exception ex)
             {
@@ -7306,12 +7542,14 @@ namespace EMS
         {
             while (true)
             {
-                Thread.Sleep(1000);
-/*                //问询从机功率
-                ReadAllEmsTCP();*/
-                //发送充放电模式
-                //if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
-                //{
+                try
+                {
+                    Thread.Sleep(1000);
+                    /*                //问询从机功率
+                                    ReadAllEmsTCP();*/
+                    //发送充放电模式
+                    //if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                    //{
                     if (!ChechPower)
                     {
                         SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
@@ -7322,20 +7560,25 @@ namespace EMS
                         SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
                         SetAllPCSKVATCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
                     }
-                //}
+                    //}
 
-                //发送功率大小
-/*                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                    //发送功率大小
+                    /*                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                                    {
+                                        if (!ChechPower)
+                                        {
+                                            SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
+                                        }
+                                        else
+                                        {
+                                            SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
+                                        }
+                                    }*/
+                }
+                catch (Exception ex)
                 {
-                    if (!ChechPower)
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1);
-                    }
-                    else
-                    {
-                        SetAllPCSCommandTCP(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate);
-                    }
-                }*/
+                    log.Error("ControlEMSTCP:" + ex.Message);
+                }
             }
         }
 
@@ -7344,11 +7587,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ControlEMSTCP);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ControlEMSTCP = new Thread(ControlEMSTCP);
+                Thread_ControlEMSTCP.IsBackground = true;
+                Thread_ControlEMSTCP.Priority = ThreadPriority.Highest;
+                Thread_ControlEMSTCP.Start();
+                Thread_ControlEMSTCP.Name = "";
             }
             catch (Exception ex)
             {
@@ -7363,18 +7606,25 @@ namespace EMS
         public void ControlEMS() {
             while (true)
             {
-                Thread.Sleep(1000);
-                if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
+                try
                 {
-                    if (!ChechPower)
+                    Thread.Sleep(1000);
+                    if (frmMain.Selffrm.AllEquipment.wTypeActive != null && frmMain.Selffrm.AllEquipment.PCSTypeActive != null)
                     {
-                        SetAllPCSCommand(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1, true);
+                        if (!ChechPower)
+                        {
+                            SetAllPCSCommand(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, 1, true);
+                        }
+                        else
+                        {
+                            SetAllPCSCommand(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate, true);
+                        }
                     }
-                    else
-                    {
-                        SetAllPCSCommand(frmMain.Selffrm.AllEquipment.wTypeActive, frmMain.Selffrm.AllEquipment.PCSTypeActive, frmMain.Selffrm.AllEquipment.dRate, true);
-                    }
-                }              
+                }
+                catch (Exception ex)
+                {
+                    log.Error("ControlEMS: " + ex.Message);
+                }
             }
         }
 
@@ -7382,11 +7632,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ControlEMS);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ControlEMS = new Thread(ControlEMS);
+                Thread_ControlEMS.IsBackground = true;
+                Thread_ControlEMS.Priority = ThreadPriority.Highest;
+                Thread_ControlEMS.Start();
+                Thread_ControlEMS.Name = "";
             }
             catch (Exception ex)
             {
@@ -7398,48 +7648,55 @@ namespace EMS
         {
             while (true)
             {
-                Thread.Sleep(1000);
-                //有关口表
-                if (ChechPower)
+                try
                 {
-                    //获取电网功率
-                    double tempGridKVA = 0;
-                    double tempPUMdemand_max = 0;
-                    double tempPUMdemand_now = 0;
-                    //电表1---关口电表，用于防逆流
-                    foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                    Thread.Sleep(1000);
+                    //有关口表
+                    if (ChechPower)
                     {
-                        Elemeter1.GetAllUkva();
-                        tempGridKVA += Elemeter1.AllUkva;
+                        //获取电网功率
+                        double tempGridKVA = 0;
+                        double tempPUMdemand_max = 0;
+                        double tempPUMdemand_now = 0;
+                        //电表1---关口电表，用于防逆流
+                        foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                        {
+                            Elemeter1.GetAllUkva();
+                            tempGridKVA += Elemeter1.AllUkva;
 
-                        Elemeter1.GetPUMdemand_now();
-                        tempPUMdemand_now += Elemeter1.PUMdemand_now;
-                    }                  
-                    E1_PUMdemand_now = tempPUMdemand_now;
+                            Elemeter1.GetPUMdemand_now();
+                            tempPUMdemand_now += Elemeter1.PUMdemand_now;
+                        }
+                        E1_PUMdemand_now = tempPUMdemand_now;
 
-                    
-                    if (Elemeter1List[0].Prepared)//若电表通讯正常，则计算电网平均功率
-                    {
-                        GridKVA = tempGridKVA;
-                        GridKVA_window = GetGridKVA_window(GridKVA);
+
+                        if (Elemeter1List[0].Prepared)//若电表通讯正常，则计算电网平均功率
+                        {
+                            GridKVA = tempGridKVA;
+                            GridKVA_window = GetGridKVA_window(GridKVA);
+                        }
+                        else//若电表失联，清空数据
+                        {
+                            //电网功率清零
+                            GridKVA = 0;
+                            AllUkvaWindow.Clear();
+                            GridKVA_window = 0;
+                            //电网需量清零
+                            E1_PUMdemand_now = 0;
+                        }
                     }
-                    else//若电表失联，清空数据
+
+                    //获取并网柜电表当前需量
+                    if (Elemeter1Z !=null)
                     {
-                        //电网功率清零
-                        GridKVA = 0;
-                        AllUkvaWindow.Clear();
-                        GridKVA_window = 0;
-                        //电网需量清零
-                        E1_PUMdemand_now = 0;
+                        Elemeter1Z.GetPUMdemand_now();
+
+                        E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
                     }
                 }
-
-                //获取并网柜电表当前需量
-                if (Elemeter1Z !=null)
+                catch (Exception ex) 
                 {
-                    Elemeter1Z.GetPUMdemand_now();
-               
-                    E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
+                    log.Error("ReadPointGrid: " + ex.Message);
                 }
             }
 
@@ -7452,11 +7709,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadPointGrid);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadPointGrid = new Thread(ReadPointGrid);
+                Thread_ReadPointGrid.IsBackground = true;
+                Thread_ReadPointGrid.Priority = ThreadPriority.Highest;
+                Thread_ReadPointGrid.Start();
+                Thread_ReadPointGrid.Name = "";
             }
             catch (Exception ex)
             {
@@ -7471,31 +7728,38 @@ namespace EMS
             //获取主机pcs功率
             while (true)
             {
-                Thread.Sleep(1000);
-                double PCSPower = 0;
-                for (int i = 0; i < PCSList.Count; i++)
+                try
                 {
-                    PCSList[i].GetallUkva();
-                    PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
+                    Thread.Sleep(1000);
+                    double PCSPower = 0;
+                    for (int i = 0; i < PCSList.Count; i++)
+                    {
+                        PCSList[i].GetallUkva();
+                        PCSPower += PCSList[i].allUkva;//主从模式设备整体PCS的功率
+                    }
+
+
+                    //获取主从整体pcs功率
+                    if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster == 1)
+                    {
+                        if (frmSet.config.ConnectStatus == "tcp")
+                        {
+                            ReadAllEmsTCP();
+                        }
+                        else if (frmSet.config.ConnectStatus == "485")
+                        {
+                            ReadAllEmsRTU();
+                        }
+
+                        if (Elemeter1Z != null)
+                        {
+                            AllwaValue = Elemeter1Z.AllUkva;
+                        }
+                    }
                 }
-
-
-                //获取主从整体pcs功率
-                if (frmSet.config.SysCount > 1 && frmSet.config.IsMaster == 1)
+                catch (Exception ex)
                 {
-                    if (frmSet.config.ConnectStatus == "tcp")
-                    {
-                        ReadAllEmsTCP();
-                    }
-                    else if (frmSet.config.ConnectStatus == "485")
-                    {
-                        ReadAllEmsRTU();
-                    }
-
-                    if (Elemeter1Z != null)
-                    {
-                        AllwaValue = Elemeter1Z.AllUkva;
-                    }
+                    log.Error("ReadPointPower: "+ ex.Message);
                 }
             }
 
@@ -7508,11 +7772,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadPointPower);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadPointPower = new Thread(ReadPointPower);
+                Thread_ReadPointPower.IsBackground = true;
+                Thread_ReadPointPower.Priority = ThreadPriority.Highest;
+                Thread_ReadPointPower.Start();
+                Thread_ReadPointPower.Name = "";
             }
             catch (Exception ex)
             {
@@ -7522,30 +7786,35 @@ namespace EMS
 
         public void ReadDataE1()
         {
-            double tempPUMdemand_max;
             while (true)
             {
-                Thread.Sleep(2000);
-           
-                tempPUMdemand_max = 0;
-                //2.21 获取整体功率
-                if (Elemeter1Z != null)
+                try
                 {
-                    Elemeter1Z.GetDataFromEqipment();
-
-                    E2_PUMdemand_Max = Elemeter1Z.PUMdemand_Max;
-                }
-
-                //1 关口表
-                if (ChechPower)
-                {
-                    //电表1---关口电表，用于防逆流
-                    foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                    Thread.Sleep(2000);
+                    double tempPUMdemand_max = 0;
+                    //2.21 获取整体功率
+                    if (Elemeter1Z != null)
                     {
-                        Elemeter1.GetDataFromEqipment();
-                        tempPUMdemand_max += Elemeter1.PUMdemand_Max;
+                        Elemeter1Z.GetDataFromEqipment();
+
+                        E2_PUMdemand_Max = Elemeter1Z.PUMdemand_Max;
                     }
-                    E1_PUMdemand_Max = tempPUMdemand_max;
+
+                    //1 关口表
+                    if (ChechPower)
+                    {
+                        //电表1---关口电表，用于防逆流
+                        foreach (Elemeter1Class Elemeter1 in Elemeter1List)
+                        {
+                            Elemeter1.GetDataFromEqipment();
+                            tempPUMdemand_max += Elemeter1.PUMdemand_Max;
+                        }
+                        E1_PUMdemand_Max = tempPUMdemand_max;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("ReadDataE1: " + ex.Message);
                 }
             }
         }
@@ -7554,11 +7823,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadDataE1);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadDataE1 = new Thread(ReadDataE1);
+                Thread_ReadDataE1.IsBackground = true;
+                Thread_ReadDataE1.Priority = ThreadPriority.Normal;
+                Thread_ReadDataE1.Start();
+                Thread_ReadDataE1.Name = "";
             }
             catch (Exception ex)
             {
@@ -7582,11 +7851,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadCom1Data);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadDataCom1 = new Thread(ReadCom1Data);
+                Thread_ReadDataCom1.IsBackground = true;
+                Thread_ReadDataCom1.Priority = ThreadPriority.Highest;
+                Thread_ReadDataCom1.Start();
+                Thread_ReadDataCom1.Name = "";
             }
             catch (Exception ex)
             {
@@ -8582,11 +8851,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadCOM2Data);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadCOM2Data = new Thread(ReadCOM2Data);
+                Thread_ReadCOM2Data.IsBackground = true;
+                Thread_ReadCOM2Data.Priority = ThreadPriority.Normal;
+                Thread_ReadCOM2Data.Start();
+                Thread_ReadCOM2Data.Name = "";
             }
             catch (Exception ex)
             {
@@ -8717,11 +8986,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadEquipmentDataBMS);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Highest;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadEquipmentDataBMS = new Thread(ReadEquipmentDataBMS);
+                Thread_ReadEquipmentDataBMS.IsBackground = true;
+                Thread_ReadEquipmentDataBMS.Priority = ThreadPriority.Highest;
+                Thread_ReadEquipmentDataBMS.Start();
+                Thread_ReadEquipmentDataBMS.Name = "";
             }
             catch (Exception ex)
             {
@@ -8816,11 +9085,11 @@ namespace EMS
             try
             {
                 //实例化等待连接的线程
-                Thread ClientRecThread = new Thread(ReadEquipmentDataPCS);
-                ClientRecThread.IsBackground = true;
-                ClientRecThread.Priority = ThreadPriority.Normal;
-                ClientRecThread.Start();
-                ClientRecThread.Name = "";
+                Thread_ReadEquipmentDataPCS = new Thread(ReadEquipmentDataPCS);
+                Thread_ReadEquipmentDataPCS.IsBackground = true;
+                Thread_ReadEquipmentDataPCS.Priority = ThreadPriority.Normal;
+                Thread_ReadEquipmentDataPCS.Start();
+                Thread_ReadEquipmentDataPCS.Name = "";
             }
             catch (Exception ex)
             {
@@ -9526,21 +9795,28 @@ namespace EMS
 
         public void Power_CRC()
         {
-            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+            try
             {
-                if (Elemeter2.PUkwh[0] < SE2PKWH[0] || Elemeter2.OUkwh[0] < SE2OKWH[0])  //判断总正总负电能是否小于上次电能
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                 {
-                    SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
-                    SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
-                    SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
-                    SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
-                    SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
-                    SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
-                    SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
-                    SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
-                    SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
-                    SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
+                    if (Elemeter2.PUkwh[0] < SE2PKWH[0] || Elemeter2.OUkwh[0] < SE2OKWH[0])  //判断总正总负电能是否小于上次电能
+                    {
+                        SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
+                        SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
+                        SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
+                        SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
+                        SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
+                        SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
+                        SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
+                        SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
+                        SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
+                        SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Power_CRC: " + ex.Message);
             }
         }
 

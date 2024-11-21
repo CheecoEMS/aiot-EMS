@@ -41,6 +41,7 @@ namespace EMS
         public string BalaTacticTopic;
         public string HeartbeatTopic;
         public string UploadTopic;
+        public string OtaTopic;
 
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
@@ -111,7 +112,7 @@ namespace EMS
         {
             StartUploadDataThread();
             StartHeartbeatThread();
-            //StartDownloadDataThread();
+            StartDownloadDataThread();
         }
 
         /********************************DownloadDataThread*************************************/
@@ -136,37 +137,22 @@ namespace EMS
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (isDownloadDataExecuting)
-                {
-                    log.Info("DownloadDataThread is still executing. Skipping this cycle to avoid overlap.");
-                    Thread.Sleep(60000); // 等待 60 秒后再检查
-                    continue;
-                }
-
-                isDownloadDataExecuting = true;
-
                 try
                 {
                     DateTime tempTime = DateTime.Now;
                     // 采集数据保存在数据库中
                     Save2DataSoure(tempTime);
-                    // 采集数据上传云端
-                    Save2CloudFile(tempTime);
+/*                    // 采集数据上传云端
+                    Save2CloudFile(tempTime);*/
                 }
                 catch (Exception ex)
                 {
                     log.Error("DownloadDataThread encountered an error: " + ex.Message);
                 }
-                finally
-                {
-                    isDownloadDataExecuting = false;
-                }
 
                 // 等待 60 秒再进行下一次数据上传
                 Thread.Sleep(60000);
             }
-
-            log.Info("DownloadDataThread has been stopped.");
         }
 
         public void StopDownloadDataThread()
@@ -208,14 +194,28 @@ namespace EMS
             }
 
             // 一旦条件满足，启动上传数据线程
+            bool res = true;
+            int retryCount = 0;
+            const int maxRetries = 5; // 最大重试次数
+
+            while (res && ConnectToCloud && retryCount < maxRetries)
+            {     
+                res = StartUploadDataThread();
+                if (res)
+                {
+                    break;
+                }
+                retryCount++;
+                log.Error($"UploadDataThread 启动失败，正在进行第 {retryCount} 次重试...");
+                Thread.Sleep(5000);
+            }
             isWaitUploadDataExecuting = false;
-            StartUploadDataThread();
 
             // 回调方法执行完毕，线程会自动销毁
             log.Info("WaitUploadDataThread has finished execution and will be automatically terminated.");
         }
 
-        private void StartUploadDataThread()
+        private bool StartUploadDataThread()
         {
             // 创建取消令牌源
             uploadDataCancellationTokenSource = new CancellationTokenSource();
@@ -227,23 +227,36 @@ namespace EMS
                 Priority = ThreadPriority.Highest,
                 Name = "UploadDataThread"
             };
-            UploadDataThread.Start();
-            isUploadDataThreadRunning = true; // 设置线程运行标志
+
+            try
+            {
+                UploadDataThread.Start();
+
+                // 检查线程是否成功启动
+                if (UploadDataThread.IsAlive)
+                {
+                    isUploadDataThreadRunning = true;
+                    log.Info("UploadDataThread 启动成功。");
+                }
+                else
+                {
+                    isUploadDataThreadRunning = false;
+                    log.Error("UploadDataThread 启动失败。");
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"启动 UploadDataThread 时发生异常: {ex.Message}");
+                isUploadDataThreadRunning = false;
+            }
+
+            return isUploadDataThreadRunning;
         }
 
         private void UploadDataThreadCallback(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (isUploadDataExecuting)
-                {
-                    log.Info("UploadDataThread is still executing. Skipping this cycle to avoid overlap.");
-                    Thread.Sleep(30000); // 等待 30 秒后再检查
-                    continue;
-                }
-
-                isUploadDataExecuting = true;
-
                 try
                 {
                     if (ConnectToCloud)
@@ -255,34 +268,35 @@ namespace EMS
                 {
                     log.Error("UploadDataThread encountered an error: " + ex.Message);
                 }
-                finally
-                {
-                    isUploadDataExecuting = false;
-                }
-
-                // 等待 30 秒再进行下一次上传
                 Thread.Sleep(30000);
             }
 
-            log.Info("UploadDataThread has been stopped.");
+            log.Error("UploadDataThread has been stopped.");
         }
 
         public void StopUploadDataThread()
         {
-            if (uploadDataCancellationTokenSource != null)
+            try
             {
-                uploadDataCancellationTokenSource.Cancel(); // 发出取消信号
-                uploadDataCancellationTokenSource.Dispose();
-                uploadDataCancellationTokenSource = null;
-            }
+                if (uploadDataCancellationTokenSource != null)
+                {
+                    uploadDataCancellationTokenSource.Cancel(); // 发出取消信号
+                    uploadDataCancellationTokenSource.Dispose();
+                    uploadDataCancellationTokenSource = null;
+                }
 
-            if (UploadDataThread != null && UploadDataThread.IsAlive)
+                if (UploadDataThread != null && UploadDataThread.IsAlive)
+                {
+                    UploadDataThread.Join(); // 等待线程安全结束
+                }
+
+                isUploadDataThreadRunning = false; // 重置线程运行标志
+                log.Info("UploadDataThread has been successfully stopped.");
+            }
+            catch (Exception ex)
             {
-                UploadDataThread.Join(); // 等待线程安全结束
+                log.Error("StopUploadDataThread: " + ex.Message);
             }
-
-            isUploadDataThreadRunning = false; // 重置线程运行标志
-            log.Info("UploadDataThread has been successfully stopped.");
         }
 
         /********************************tHeartbeatThread*************************************/
@@ -307,14 +321,6 @@ namespace EMS
         {
             while (true)
             {
-                if (isHeartbeatExecuting)
-                {
-                    log.Info("HeartbeatThreadCallback is still executing. Skipping this cycle to avoid overlap.");
-                    Thread.Sleep(180000); // 等待 3 分钟后再次检查
-                    continue;
-                }
-
-                isHeartbeatExecuting = true;
                 try
                 {
                     log.Info("触发心跳定时器");
@@ -332,10 +338,6 @@ namespace EMS
                 {
                     log.Error("HeartbeatThreadCallback encountered an error: " + ex.Message);
                 }
-                finally
-                {
-                    isHeartbeatExecuting = false;
-                }
 
                 // 等待 3 分钟再进行下一次心跳
                 Thread.Sleep(180000);
@@ -350,47 +352,7 @@ namespace EMS
 
         public void InitCloudClass_Timer()
         {
-            //InitializeHeartbeat_Timer();
             InitializeDownloadData_timer();
-            //InitializeUploadData_Timer();
-        }
-
-
-        private void InitializeHeartbeat_Timer()
-        {
-            Heartbeat_Timer = new System.Threading.Timer(Heartbeat_TimerCallback, null, 0, 180000);
-        }
-        private void Heartbeat_TimerCallback(Object state)
-        {
-            if (isHeartbeatExecuting)
-            {
-                log.Info("Heartbeat_TimerCallback is still executing. Skipping this tick to avoid overlap.");
-                return;
-            }
-
-            isHeartbeatExecuting = true; // 设置标志位，表示当前回调正在执行
-
-            try
-            {
-                log.Info("触发心跳定时器");
-                if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
-                {
-                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
-                }
-                else
-                {
-                    log.Error("mqttClient为空，触发重连");
-                    frmMain.Selffrm.AllEquipment.Report2Cloud.mqttReconnect();
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error("Heartbeat_TimerCallback encountered an error: " + ex.Message);
-            }
-            finally
-            {
-                isHeartbeatExecuting = false; // 执行完毕，重置标志位
-            }
         }
 
 
@@ -412,8 +374,8 @@ namespace EMS
             try
             {
                 DateTime tempTime = DateTime.Now;
-                //采集数据保存在数据库中
-                Save2DataSoure(tempTime);
+/*                //采集数据保存在数据库中
+                Save2DataSoure(tempTime);*/
                 //采集数据上传云端
                 Save2CloudFile(tempTime);
             }
@@ -426,40 +388,6 @@ namespace EMS
                 isDownloadDataExecuting = false; // 执行完毕，重置标志位
             }
         }
-
-
-        private void InitializeUploadData_Timer()
-        {
-            UploadData_Timer = new System.Threading.Timer(UploadData_TimerCallback, null, 0, 30000);
-        }
-        private void UploadData_TimerCallback(Object state)
-        {
-
-            if (isUploadDataExecuting)
-            {
-                log.Info("isUploadDataExecuting is still executing. Skipping this tick to avoid overlap.");
-                return;
-            }
-
-            isUploadDataExecuting = true;
-            try
-            {
-                //上传数据
-                if (ConnectToCloud)
-                {
-                    frmMain.Selffrm.AllEquipment.Report2Cloud.SendmqttData();
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error("isUploadDataExecuting encountered an error: " + ex.Message);
-            }
-            finally
-            {
-                isUploadDataExecuting = false;
-            }
-        }
-
 
 
         /// <summary>
@@ -514,18 +442,26 @@ namespace EMS
 
         public void IniClound()
         {
-            PriceTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/meter/price/";
-            TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
-            EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
-            //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
-            string strID = frmSet.config.SysID;
-            if (strID.Length >= 7)
-                strID = strID.Substring(strID.Length - 7, 7);
-            AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
-            BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
-            BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
-			HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
-            UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
+            try
+            {
+                PriceTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/meter/price/";
+                TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
+                EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
+                //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
+                string strID = frmSet.config.SysID;
+                if (strID.Length >= 7)
+                    strID = strID.Substring(strID.Length - 7, 7);
+                AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
+                BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
+                BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
+                HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
+                UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
+                OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
+            }
+            catch (Exception ex)
+            {
+                log.Error("IniClound: " + ex.Message);
+            }
         }
 
         public bool CreateClient()
@@ -581,6 +517,9 @@ namespace EMS
             ListenTopic(BalaTableTopic + "request");
             ListenTopic(HeartbeatTopic);
             ListenTopic(UploadTopic + "request");
+            ListenTopic(OtaTopic + "request");
+
+            log.Error("Topic: " + OtaTopic + "request");
         }
 
         // 建立MQTT连接
@@ -652,10 +591,7 @@ namespace EMS
                     if (!isWaitUploadDataExecuting)
                     { 
                         TryStartUploadDataThread();
-                    }
-
-                    log.Info("重连成功，UploadDataThread 已重新启动。");
-                    
+                    }            
                 }
             }
             catch (Exception ex)
@@ -941,6 +877,11 @@ namespace EMS
                             }
                         }
                     }
+                }
+                else if (topic == OtaTopic  + "request")
+                {
+                    log.Info("接收到升级指令");
+                    ImplOta(message);                 
                 }
                 /*            else if (topic == BalaTacticTopic)
                             {
@@ -1302,6 +1243,53 @@ namespace EMS
         //接收到的文件
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        private async void ExecOtaFormCloud(string version)
+        {
+            bool isUpdate = await frmSet.CheckAndUpdateAsyncNoBox(version);
+            if (isUpdate)
+            {
+                frmSet.PowerGPIO(0);
+                frmSet.Set_Cloudlimits();
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                }
+                frmMain.Selffrm.Close();
+            }
+
+        }
+
+        public void ImplOta(string astrData)
+        {
+            try
+            {
+                if (astrData == "")
+                    return ;
+                JObject jsonObject = JObject.Parse(astrData);
+                string strID = "";
+                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
+                string strTopic = jsonObject["method"].ToString();
+                if (strTopic != "aiot/ota")
+                    return ;
+                //9.11
+                var param = jsonObject["params"];
+                string version = param["version"].ToString();
+                if (version != "")
+                {
+                    ExecOtaFormCloud(version);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("ImplOta: " + ex.Message);
+                return ;
+            }
+
+            return ;
+        }
+        
         public bool DataRetransmission(string astrData)
         {
             bool result = false;
@@ -1317,25 +1305,9 @@ namespace EMS
                     return false;
                 //9.11
                 var param = jsonObject["params"];
-                if (param["topic"].ToString() == "pem")
+                if (param["topic"].ToString() == "pem" && param["iot_code"] != null)
                 {
-                    if (param["iot_code"] != null)
-                    {
-                        if (param["iot_code"].ToString() != frmMain.Selffrm.AllEquipment.iot_code)
-                        {
-                            return false;
-                        }
-                        else
-                        {
-                            string start = param["start"].ToString();
-                            string end = param["end"].ToString();
-                            //string sqlQuery2 = "SELECT * FROM profit WHERE rTime = '" + tempDate + "'"; // 你的查询语句
-                            string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
-                            DBConnection.UploadCloud(sqlQuery);
-                            result = true;
-                        }
-                    }
-                    else
+                    if (param["iot_code"].ToString() == frmMain.Selffrm.AllEquipment.iot_code)
                     {
                         string start = param["start"].ToString();
                         string end = param["end"].ToString();
@@ -1343,11 +1315,7 @@ namespace EMS
                         string sqlQuery = $"SELECT * FROM profit WHERE rTime BETWEEN '{start}' AND '{end}'";
                         DBConnection.UploadCloud(sqlQuery);
                         result = true;
-                    }
-                }
-                else
-                {
-                    result = false;
+                    }           
                 }
             }
             catch (Exception ex)
@@ -1356,8 +1324,7 @@ namespace EMS
                 return false;
             }
 
-            return result;
-            
+            return result;           
         }
 
         public void GetHeartbeat(string astrData, bool aIsFileData = false)
