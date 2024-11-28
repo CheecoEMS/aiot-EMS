@@ -154,6 +154,46 @@ namespace EMS
         }
 
         //EMS重启
+        public static void RestartApplicationNoCount()
+        {
+            try
+            {
+                    PowerGPIO(0);
+                    Set_Cloudlimits();
+                    Set_HistoryData();
+
+                    if (frmMain.Selffrm.AllEquipment.Led != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                    }
+                    if (frmMain.Selffrm.AllEquipment.PCSList != null)
+                    {
+                        for (int j = 0; j < frmMain.Selffrm.AllEquipment.PCSList.Count; j++)
+                        {
+                            frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
+                        }
+                    }
+
+                    string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
+                    try
+                    {
+                        Process.Start(exePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("无法重启应用程序: " + ex.Message);
+                    }
+
+                    // 退出当前进程  
+                    Environment.Exit(0);
+                
+            }
+            catch (Exception ex)
+            {
+                log.Error("RestartApplication: " + ex.Message);
+            }
+        }
+
         public static void RestartApplication()
         {
             try

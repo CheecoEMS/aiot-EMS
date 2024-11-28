@@ -177,20 +177,21 @@ namespace EMS
         //下载command文件
         public bool LoadCommandFromFile()
         {
-            string version;
             int maxRetry = 3;  // 最大重试次数
             int attempt = 0;   // 当前重试次数
             bool res = false;
+
+            if (!File.Exists(strCommandFile))
+            {
+                log.Error("协议文件不存在，无法读取。");
+                return false;
+            }
 
             while (attempt < maxRetry)
             {
                 try
                 {
-                    attempt++; // 每次开始新尝试时增加计数
-                    if (!File.Exists(strCommandFile))
-                        return false;
-
-                    // 读取数据
+                    attempt++;
                     using (StreamReader srFile = File.OpenText(strCommandFile))
                     {
                         string strData = srFile.ReadLine();
@@ -198,10 +199,12 @@ namespace EMS
 
                         while (strData != null)
                         {
-                            strData = strData.Trim(); // 去掉首尾空格字符
+                            strData = strData.Trim();
 
-                            // 遇到空白行、以"#"或"*"开头的行跳过
-                            if ((strData == "") || (strData.Substring(0, 1) == "#") || (strData.Substring(0, 1) == "*"))
+                            // 跳过空白行或注释行
+                            if (string.IsNullOrEmpty(strData) ||
+                                strData.StartsWith("#") ||
+                                strData.StartsWith("*"))
                             {
                                 strData = srFile.ReadLine();
                                 continue;
@@ -213,20 +216,85 @@ namespace EMS
 
                             strData = srFile.ReadLine();
                         }
+
+                        // 检查是否有有效内容
+                        if (ComList.Count == 0)
+                        {
+                            log.Error("协议文件中没有有效命令行，加载失败。");
+                            return false;
+                        }
                     }
 
-                    // 成功执行后退出循环
+                    // 成功读取协议文件
                     res = true;
                     break;
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
+                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.Message);
                 }
+            }
+
+            if (!res)
+            {
+                log.Error("最终读取协议失败，所有尝试均未成功。");
             }
 
             return res;
         }
+
+        /*        public bool LoadCommandFromFile()
+                {
+                    string version;
+                    int maxRetry = 3;  // 最大重试次数
+                    int attempt = 0;   // 当前重试次数
+                    bool res = false;
+
+                    while (attempt < maxRetry)
+                    {
+                        try
+                        {
+                            attempt++; // 每次开始新尝试时增加计数
+                            if (!File.Exists(strCommandFile))
+                                return false;
+
+                            // 读取数据
+                            using (StreamReader srFile = File.OpenText(strCommandFile))
+                            {
+                                string strData = srFile.ReadLine();
+                                ComList.Clear();
+
+                                while (strData != null)
+                                {
+                                    strData = strData.Trim(); // 去掉首尾空格字符
+
+                                    // 遇到空白行、以"#"或"*"开头的行跳过
+                                    if ((strData == "") || (strData.Substring(0, 1) == "#") || (strData.Substring(0, 1) == "*"))
+                                    {
+                                        strData = srFile.ReadLine();
+                                        continue;
+                                    }
+
+                                    ModbusCommand oneCommand = new ModbusCommand();
+                                    if (strData2Park(strData, ref oneCommand, this.pc))
+                                        ComList.Add(oneCommand);
+
+                                    strData = srFile.ReadLine();
+                                }
+                            }
+
+                            // 成功执行后退出循环
+                            res = true;
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
+                        }
+                    }
+
+                    return res;
+                }*/
 
         public string LoadVersionFromFile()
         {
@@ -6217,7 +6285,7 @@ namespace EMS
         public Elemeter2Class Elemeter2H;
 
         //虚拟设备EMS
-        public VisualEmsClass visualEms = new VisualEmsClass();
+        //public VisualEmsClass visualEms = new VisualEmsClass();
 
         public string DofD = "";
 

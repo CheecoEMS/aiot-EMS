@@ -390,7 +390,7 @@ namespace EMS
                 if (!frmMain.Selffrm.AllEquipment.LoadSetFromFile())
                 {
                     //加载数据库或者协议文件失败，则EMS重启
-                    frmSet.RestartApplication();
+                    frmSet.RestartApplicationNoCount();
                 }
 
 
