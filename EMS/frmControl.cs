@@ -318,8 +318,6 @@ namespace EMS
         {
             //桌面选定执行功率存入设置中
             SaveUiInstall();
-            //保存修改数据
-            frmSet.Set_Config();
         }
     }
 }

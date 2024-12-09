@@ -318,7 +318,6 @@ namespace EMS
                             TacticsOn = true;
                         continue;
                     }
-
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
                     {
@@ -339,8 +338,6 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.SlaveStart = false;
                         }
                     }
-
-
                     //判断时间所在的区间和工作内容
                     int i;
                     for (i = 0; i < TacticsList.Count; i++)
@@ -364,6 +361,7 @@ namespace EMS
                         }
                         continue;
                     }
+
                     //找到区段处理方法
                     //ActiveIndex 初始默认为-2 是因为防止更新TacticsList后 指针指向空的位置
                     //循环读取策略列表，只有运行第一条策略或者更新策略才会下发指令
