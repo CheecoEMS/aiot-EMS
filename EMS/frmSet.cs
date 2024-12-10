@@ -149,6 +149,7 @@ namespace EMS
                     }
                 }
 
+                Thread.Sleep(120000);
                 SysIO.Reboot();
             }
         }

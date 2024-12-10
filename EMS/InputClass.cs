@@ -179,7 +179,6 @@ namespace EMS
         {
             int maxRetry = 3;  // 最大重试次数
             int attempt = 0;   // 当前重试次数
-            bool res = false;
 
             if (!File.Exists(strCommandFile))
             {
@@ -218,29 +217,21 @@ namespace EMS
                         }
 
                         // 检查是否有有效内容
-                        if (ComList.Count == 0)
+                        if (ComList.Count > 0)
                         {
-                            log.Error("协议文件中没有有效命令行，加载失败。");
-                            return false;
+                            log.Error("成功从协议文件加载命令: " + strCommandFile);
+                            return true;
                         }
                     }
-
-                    // 成功读取协议文件
-                    res = true;
-                    break;
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.Message);
+                    log.Error($"读取协议失败 ({strCommandFile} :尝试 {attempt}/{maxRetry})：" + ex.Message);
                 }
             }
 
-            if (!res)
-            {
-                log.Error("最终读取协议失败，所有尝试均未成功。");
-            }
-
-            return res;
+            log.Error("从协议文件加载命令失败: " + strCommandFile);
+            return false;
         }
 
         /*        public bool LoadCommandFromFile()
@@ -6585,7 +6576,7 @@ namespace EMS
                     int timeout = 1000;
 
                     // Ping目标地址并获取延迟信息
-                    PingReply reply = pingSender.Send("admin.eaiot.cloud", timeout, buffer, options);
+                    PingReply reply = pingSender.Send("139.224.192.206", timeout, buffer, options);
                     if (reply.Status == IPStatus.Success)
                     {
                         SignalDelay =  reply.RoundtripTime;
