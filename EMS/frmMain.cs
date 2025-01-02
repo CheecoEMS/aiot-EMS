@@ -356,7 +356,7 @@ namespace EMS
             try
             {
                 //延迟等待2min
-                //Thread.Sleep(120000);
+                Thread.Sleep(120000);
 
                 //配置Config配置文件地址，获取配置文件中的设定
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
