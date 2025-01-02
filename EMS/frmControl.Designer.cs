@@ -68,6 +68,7 @@ namespace EMS
             this.lablPCSwaValue2 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.labPCSwaValue = new System.Windows.Forms.Label();
+            this.btnReadDofD = new System.Windows.Forms.Button();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -279,6 +280,7 @@ namespace EMS
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.btnReadDofD);
             this.groupBox3.Controls.Add(this.btnTimeCalibration);
             this.groupBox3.Controls.Add(this.tcbtest);
             this.groupBox3.Controls.Add(this.btnConnectChoose);
@@ -659,6 +661,21 @@ namespace EMS
             this.labPCSwaValue.TabIndex = 45;
             this.labPCSwaValue.Text = "PCS设置值";
             // 
+            // btnReadDofD
+            // 
+            this.btnReadDofD.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnReadDofD.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnReadDofD.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnReadDofD.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnReadDofD.ForeColor = System.Drawing.Color.White;
+            this.btnReadDofD.Location = new System.Drawing.Point(418, 23);
+            this.btnReadDofD.Name = "btnReadDofD";
+            this.btnReadDofD.Size = new System.Drawing.Size(88, 44);
+            this.btnReadDofD.TabIndex = 72;
+            this.btnReadDofD.Text = "读取电能";
+            this.btnReadDofD.UseVisualStyleBackColor = true;
+            this.btnReadDofD.Click += new System.EventHandler(this.btnReadDofD_Click);
+            // 
             // frmControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -724,5 +741,6 @@ namespace EMS
         private TouchCombox tcbConnectStatus;
         private TouchCombox tcbtest;
         private System.Windows.Forms.Button btnTimeCalibration;
+        private System.Windows.Forms.Button btnReadDofD;
     }
 }

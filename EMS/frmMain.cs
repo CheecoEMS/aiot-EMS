@@ -356,7 +356,7 @@ namespace EMS
             try
             {
                 //延迟等待2min
-                Thread.Sleep(120000);
+                //Thread.Sleep(120000);
 
                 //配置Config配置文件地址，获取配置文件中的设定
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
@@ -419,6 +419,7 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.DoPU = strSysPath + "DoPU.ini";//记录客户负载最大需量
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
                 frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
+                //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
 
                 //配置各个部件的设备码
                 string strID = frmSet.config.SysID;
@@ -470,7 +471,7 @@ namespace EMS
                 { }
                 frmFlash.AddPostion(10);
 
-                if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
+/*                if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
                 {
                     frmMain.Selffrm.AllEquipment.SaveDataInoneDay(Selffrm.AllEquipment.rDate);
                     //当日收益发送到云
@@ -478,10 +479,15 @@ namespace EMS
                     //当日表数据记录INI文件
                     Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                     frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
-                }
+                }*/
+
+                frmMain.Selffrm.AllEquipment.ReadDataInoneDaySQL();//必须在设备初始化结束后
 
                 //校验电表数据
                 Selffrm.AllEquipment.Power_CRC();
+
+                //初始化今日充放数据
+                Selffrm.AllEquipment.InitE2Power();
 
                 //校准电表日期
                 frmMain.Selffrm.AllEquipment.MeterCalibration();
@@ -679,7 +685,8 @@ namespace EMS
                     }
 
                     // 检查日期是否更新
-                    if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                    //if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                    if (frmSet.peElestic.rDate.ToString("yyyy-MM-dd") != DateTime.Now.ToString("yyyy-MM-dd"))
                     {
                         // 重置EMS重启次数
                         if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
@@ -694,16 +701,25 @@ namespace EMS
                         if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                         {
                             // 保存当天收益到数据库
-                            frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                            //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                            //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
+                            frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+
 
                             // 当日收益发送到云
-                            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+                            frmMain.Selffrm.AllEquipment.CalculateProfit();
+                            //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+                            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
 
                             // 更新日期
-                            frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                            //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                            frmSet.peElestic.rDate = DateTime.Now;
 
                             // 将当天的储能表和辅表的电能数据保存到INI
-                            frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                            //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+
+                            // 将当天的储能表和辅表的电能数据保存到SQL
+                            frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd HH:mm:ss"));
                         }
 
                         // 校准电表日期

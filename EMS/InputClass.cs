@@ -6302,12 +6302,12 @@ namespace EMS
 
         public int  ConversionRate = 1; //实际转换率
 
-        public string rDate = ""; //日期
+        public string rDate { get; set; } = ""; //日期
         public string mDate = ""; //月份
 
-        public double[] SAuxiliaryKWH = { 0, 0, 0, 0, 0 };   //记录当天开始辅助用电量
-        public double[] SE2PKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）
-        public double[] SE2OKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
+        //public double[] SAuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0 };   //记录当天开始辅助用电量
+        //public double[] SE2PKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）
+        //public double[] SE2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems208800001";
         public int runState { get; set; } = 0;  //运行状态 0正常，1故障，2停机
@@ -8951,8 +8951,8 @@ namespace EMS
                     Elemeter2.GetDataFromEqipment();
                     for (int i = 0; i < 9; i++)
                     {
-                        E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
-                        E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i];
+                        E2OKWH[i] = Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
+                        E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];                    
                     }
                 }
                 //汇流柜电表
@@ -8964,6 +8964,8 @@ namespace EMS
             }
             catch { }
         }
+
+
         //从设备上读取数据表2\3\4,5个传感器和空调
         public void GetDataFromEqipment()
         {
@@ -9008,11 +9010,11 @@ namespace EMS
                 {
                     Elemeter3.GetDataFromEqipment();
                     AuxiliaryKVA = Elemeter3.AKva;
-                    AuxiliaryKWH[0] = Elemeter3.Akwh[0] - SAuxiliaryKWH[0];   //当天总辅助电量 =组合电能- 当天开始辅助用电量
-                    AuxiliaryKWH[1] = Elemeter3.Akwh[1] - SAuxiliaryKWH[01];
-                    AuxiliaryKWH[2] = Elemeter3.Akwh[2] - SAuxiliaryKWH[02];
-                    AuxiliaryKWH[3] = Elemeter3.Akwh[03] - SAuxiliaryKWH[03];
-                    AuxiliaryKWH[4] = Elemeter3.Akwh[04] - SAuxiliaryKWH[04];
+                    AuxiliaryKWH[0] = Elemeter3.Akwh[0] - frmSet.peElestic.SAuxiliaryKWH[0];   //当天总辅助电量 =组合电能- 当天开始辅助用电量
+                    AuxiliaryKWH[1] = Elemeter3.Akwh[1] - frmSet.peElestic.SAuxiliaryKWH[01];
+                    AuxiliaryKWH[2] = Elemeter3.Akwh[2] - frmSet.peElestic.SAuxiliaryKWH[02];
+                    AuxiliaryKWH[3] = Elemeter3.Akwh[3] - frmSet.peElestic.SAuxiliaryKWH[03];
+                    AuxiliaryKWH[4] = Elemeter3.Akwh[4] - frmSet.peElestic.SAuxiliaryKWH[04];
                 }
                 //电表4---设备电表
                 if (Elemeter4 != null)
@@ -9593,195 +9595,405 @@ namespace EMS
         /// <summary>
         /// 读取当天记录数据，起始的尖峰平谷电能值
         /// </summary>
-        public bool ReadDataInoneDayINI()
+        /// 
+
+        public bool ReadDataInoneDaySQL()
         {
-            INIFile ConfigINI = new INIFile();
+            bool res = false;
             try
             {
+                
                 //如果日期不符返回false，并赋值当前的值为起始数据
-                rDate = ConfigINI.INIRead("Recode Date", "rDate", "", DofD);
-                if (rDate == DateTime.Now.ToString("yyyy-MM-dd"))
-                {
-                    for (int i = 0; i < 5; i++)//总、尖峰=平谷
-                    {
-                        if (Elemeter2 == null)
-                        {
-                            //记录当天开始充电电量（positive 正向）
-                            SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
-                                , "0", DofD));
-                            //记录当天开始放电电量（opposite反向，逆向）
-                            SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
-                                , "0", DofD));
-                        }
-                        else
-                        {
-                            //记录当天开始充电电量（positive 正向）
-                            SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
-                                , Elemeter2.PUkwh[i].ToString(), DofD));
-                            //记录当天开始放电电量（opposite反向，逆向）
-                            SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
-                                , Elemeter2.OUkwh[i].ToString(), DofD));
-                        }
-                        if (Elemeter3 == null)
-                        {
-                            //记录当天开始辅助用电量
-                            SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
-                                , "0", DofD));
-                        }
-                        else
-                        {
-                            //记录当天开始辅助用电量
-                            SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
-                                , Elemeter3.Akwh[i].ToString(), DofD));
-                        }
-                    }
-                    //记录PCS 开始的总充电量
-                    // SPCSInKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSInKWH", "0", DofD));
-                    //记录PCS 开始的总放电量
-                    // SPCSOutKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSOutKWH", "0", DofD)); 
-                    return true;
-                }
-                else
-                {
+                if (!frmSet.LoadPeElesticFromMySQL())
+                { 
                     if (Elemeter2 != null)
                     {
                         Elemeter2.GetDataFromEqipment();
+
+                        for (int i = 0; i < 9; i++)//总\尖\峰\平\谷
+                        {
+                            frmSet.peElestic.SE2PKWH[i] = Elemeter2.PUkwh[i];
+                            frmSet.peElestic.SE2OKWH[i] = Elemeter2.OUkwh[i];
+                        }
                     }
-
-
 
                     if (Elemeter3 != null)
                     {
                         Elemeter3.GetDataFromEqipment();
+                        for (int i = 0; i < 5; ++i)
+                        {
+                            frmSet.peElestic.SAuxiliaryKWH[i] = Elemeter3.Akwh[i];
+                        }
                     }
-
-
-                    WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
-                    return true;
                 }
+
+                res = true;
             }
             catch (Exception ex)
             {
                 frmMain.ShowDebugMSG(ex.ToString());
                 return false;
             }
-            finally
-            {
-                // ConfigINI.
 
-            }
+            return res;
         }
+
+        public void ReadDataInoneDayINI()
+        {
+            INIFile ConfigINI = new INIFile();
+            try
+            {
+                if (!frmSet.LoadPeElesticFromMySQL())
+                {
+
+                    //如果日期不符返回false，并赋值当前的值为起始数据
+                    rDate = ConfigINI.INIRead("Recode Date", "rDate", "", DofD);
+
+                    if (rDate == DateTime.Now.ToString("yyyy-MM-dd"))
+                    {
+                        lock (frmSet.peElestic)
+                        {
+                            //数据清空
+                            for (int i = 0; i < 9; i++)
+                            {
+                                frmSet.peElestic.SE2PKWH[i] = 0;
+                                frmSet.peElestic.SE2OKWH[i] = 0;
+                                if (i < 5)
+                                {
+                                    frmSet.peElestic.SAuxiliaryKWH[i] = 0;
+                                }
+                            }
+
+                            if (Elemeter2 != null)
+                            {
+                                for (int i = 0; i < 9; i++)//总、尖峰=平谷
+                                {
+                                    if (i < 5)
+                                    {
+                                        //记录当天开始充电电量（positive 正向）
+                                        frmSet.peElestic.SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
+                                            , "0", DofD));
+
+                                        //记录当天开始放电电量（opposite反向，逆向）
+                                        frmSet.peElestic.SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
+                                            , "0", DofD));
+                                    }
+                                    else
+                                    {
+                                        //记录当天开始充电电量（positive 正向）
+                                        frmSet.peElestic.SE2PKWH[i] = 0;
+
+                                        //记录当天开始放电电量（opposite反向，逆向）
+                                        frmSet.peElestic.SE2OKWH[i] = 0;
+                                    }
+                                }
+                            }
+
+                            if (Elemeter3 != null)
+                            {
+                                for (int i = 0; i < 5; i++)//总、尖峰=平谷
+                                {
+                                    //记录当天开始辅助用电量
+                                    frmSet.peElestic.SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
+                                    , "0", DofD));
+                                }
+                            }
+
+                            frmSet.peElestic.rDate = DateTime.Now;
+                            frmSet.Insert_PeElesticData(frmSet.peElestic.rDate.ToString("yyyy-MM-dd HH:mm:ss"));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                frmMain.ShowDebugMSG(ex.ToString());
+            }
+
+        }
+
+
+        /*        public bool ReadDataInoneDayINI()
+                {
+                    INIFile ConfigINI = new INIFile();
+                    try
+                    {
+                        //如果日期不符返回false，并赋值当前的值为起始数据
+                        rDate = ConfigINI.INIRead("Recode Date", "rDate", "", DofD);
+                        if (rDate == DateTime.Now.ToString("yyyy-MM-dd"))
+                        {
+                            for (int i = 0; i < 5; i++)//总、尖峰=平谷
+                            {
+                                if (Elemeter2 == null)
+                                {
+                                    //记录当天开始充电电量（positive 正向）
+                                    SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
+                                        , "0", DofD));
+                                    //记录当天开始放电电量（opposite反向，逆向）
+                                    SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
+                                        , "0", DofD));
+                                }
+                                else
+                                {
+                                    //记录当天开始充电电量（positive 正向）
+                                    SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
+                                        , Elemeter2.PUkwh[i].ToString(), DofD));
+                                    //记录当天开始放电电量（opposite反向，逆向）
+                                    SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
+                                        , Elemeter2.OUkwh[i].ToString(), DofD));
+                                }
+                                if (Elemeter3 == null)
+                                {
+                                    //记录当天开始辅助用电量
+                                    SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
+                                        , "0", DofD));
+                                }
+                                else
+                                {
+                                    //记录当天开始辅助用电量
+                                    SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
+                                        , Elemeter3.Akwh[i].ToString(), DofD));
+                                }
+                            }
+                            //记录PCS 开始的总充电量
+                            // SPCSInKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSInKWH", "0", DofD));
+                            //记录PCS 开始的总放电量
+                            // SPCSOutKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSOutKWH", "0", DofD)); 
+                            return true;
+                        }
+                        else
+                        {
+                            if (Elemeter2 != null)
+                            {
+                                Elemeter2.GetDataFromEqipment();
+                            }
+
+
+
+                            if (Elemeter3 != null)
+                            {
+                                Elemeter3.GetDataFromEqipment();
+                            }
+
+
+                            WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
+                            return true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.ShowDebugMSG(ex.ToString());
+                        return false;
+                    }
+                    finally
+                    {
+                        // ConfigINI.
+
+                    }
+                }*/
 
         /// <summary>
         /// 将从机接受主机指令数据保存到INI
         /// </summary>
-/*        public void WriteDataPCSCommandINI(string arDate , string PCS485, int aAddr)
-        {
-            INIFile ConfigINI = new INIFile();
-            ConfigINI.INIWrite("Recode Date", "rDate", arDate, PCSfD);
+        /*        public void WriteDataPCSCommandINI(string arDate , string PCS485, int aAddr)
+                {
+                    INIFile ConfigINI = new INIFile();
+                    ConfigINI.INIWrite("Recode Date", "rDate", arDate, PCSfD);
 
-            //ConfigINI.INIWrite("Recode Date", "PCS485" , PCS485, PCSfD);
-            switch (aAddr)
-            {
-                case 0x6000://开关pcs
-                    ConfigINI.INIWrite("Recode Date", "PCS开关", PCS485, PCSfD);
-                    break;
-                case 0x6001://计划功率 
-                    ConfigINI.INIWrite("Recode Date", "PCS计划功率", PCS485, PCSfD);
-                    break;
-                case 0x6002://实际功率 
-                    ConfigINI.INIWrite("Recode Date", "PCS实际功率", PCS485, PCSfD);
-                    break;
-                case 0x6003://充放电  
-                    ConfigINI.INIWrite("Recode Date", "PCS充放电模式", PCS485, PCSfD);
-                    break;
-                case 0x6004://恒压横流恒功率、AC恒压
-                    ConfigINI.INIWrite("Recode Date", "PCS状态", PCS485, PCSfD);
-                    break;
-                case 0x6005:
-                    ConfigINI.INIWrite("Recode Date", "PCS执行主机指令", PCS485, PCSfD);
-                    break;
-                case 0x6006:
-                    ConfigINI.INIWrite("Recode Date", "PCS充放电状态", PCS485, PCSfD);
-                    break;
-                case 0x6007:
-                    ConfigINI.INIWrite("Recode Date", "PCS模式", PCS485, PCSfD);
-                    break;
-                case 0x6008:
-                    ConfigINI.INIWrite("Recode Date", "PCS运行功率", PCS485, PCSfD);
-                    break;
-            }
-        }*/
+                    //ConfigINI.INIWrite("Recode Date", "PCS485" , PCS485, PCSfD);
+                    switch (aAddr)
+                    {
+                        case 0x6000://开关pcs
+                            ConfigINI.INIWrite("Recode Date", "PCS开关", PCS485, PCSfD);
+                            break;
+                        case 0x6001://计划功率 
+                            ConfigINI.INIWrite("Recode Date", "PCS计划功率", PCS485, PCSfD);
+                            break;
+                        case 0x6002://实际功率 
+                            ConfigINI.INIWrite("Recode Date", "PCS实际功率", PCS485, PCSfD);
+                            break;
+                        case 0x6003://充放电  
+                            ConfigINI.INIWrite("Recode Date", "PCS充放电模式", PCS485, PCSfD);
+                            break;
+                        case 0x6004://恒压横流恒功率、AC恒压
+                            ConfigINI.INIWrite("Recode Date", "PCS状态", PCS485, PCSfD);
+                            break;
+                        case 0x6005:
+                            ConfigINI.INIWrite("Recode Date", "PCS执行主机指令", PCS485, PCSfD);
+                            break;
+                        case 0x6006:
+                            ConfigINI.INIWrite("Recode Date", "PCS充放电状态", PCS485, PCSfD);
+                            break;
+                        case 0x6007:
+                            ConfigINI.INIWrite("Recode Date", "PCS模式", PCS485, PCSfD);
+                            break;
+                        case 0x6008:
+                            ConfigINI.INIWrite("Recode Date", "PCS运行功率", PCS485, PCSfD);
+                            break;
+                    }
+                }*/
 
 
         /// <summary>
         /// 将当天的起始尖峰平谷数据保存到INI，包含日期和具体电能值
         /// </summary>
-        public void WriteDataInoneDayINI(string arDate)
-        {
-            INIFile ConfigINI = new INIFile();
-            ConfigINI.INIWrite("Recode Date", "rDate", arDate, DofD);//"Recode Date"=配置节点名称，"rDate"=键名，arDate=返回键值，DofD=路径
-            {
-                for (int i = 0; i < 5; i++)//总\尖\峰\平\谷
+        /*        public void WriteDataInoneDayINI(string arDate)
                 {
-                    if (Elemeter2 != null)
+                    INIFile ConfigINI = new INIFile();
+                    ConfigINI.INIWrite("Recode Date", "rDate", arDate, DofD);//"Recode Date"=配置节点名称，"rDate"=键名，arDate=返回键值，DofD=路径
                     {
-                        SE2PKWH[i] = Elemeter2.PUkwh[i];
-                        SE2OKWH[i] = Elemeter2.OUkwh[i];
-                    }
-                    if (Elemeter3 != null)
-                    {
-                        SAuxiliaryKWH[i] = Elemeter3.Akwh[i];
-                    }
+                        for (int i = 0; i < 5; i++)//总\尖\峰\平\谷
+                        {
+                            if (Elemeter2 != null)
+                            {
+                                SE2PKWH[i] = Elemeter2.PUkwh[i];
+                                SE2OKWH[i] = Elemeter2.OUkwh[i];
+                            }
+                            if (Elemeter3 != null)
+                            {
+                                SAuxiliaryKWH[i] = Elemeter3.Akwh[i];
+                            }
 
-                     //记录当天开始（隔天时）充电电量（positive 正向）//隔天时，过去累计电量
-                    ConfigINI.INIWrite("Recode Date", "SE2PKWH" + i.ToString(), SE2PKWH[i].ToString(), DofD);
-                    //记录当天开始放电电量（opposite反向，逆向）
-                    ConfigINI.INIWrite("Recode Date", "SE2OKWH" + i.ToString(), SE2OKWH[i].ToString(), DofD);
-                    //记录当天开始辅助用电量
-                    ConfigINI.INIWrite("Recode Date", "SAuxiliaryKWH" + i.ToString(), SAuxiliaryKWH[i].ToString(), DofD);
+                             //记录当天开始（隔天时）充电电量（positive 正向）//隔天时，过去累计电量
+                            ConfigINI.INIWrite("Recode Date", "SE2PKWH" + i.ToString(), SE2PKWH[i].ToString(), DofD);
+                            //记录当天开始放电电量（opposite反向，逆向）
+                            ConfigINI.INIWrite("Recode Date", "SE2OKWH" + i.ToString(), SE2OKWH[i].ToString(), DofD);
+                            //记录当天开始辅助用电量
+                            ConfigINI.INIWrite("Recode Date", "SAuxiliaryKWH" + i.ToString(), SAuxiliaryKWH[i].ToString(), DofD);
+                        }
+                        //记录PCS 开始的总充电量
+                        // ConfigINI.INIWrite("Recode Date", "SPCSInKWH"  , SPCSInKWH.ToString(), DofD); 
+                        //记录PCS 开始的总放电量
+                        // ConfigINI.INIWrite("Recode Date", "SPCSOutKWH" , SPCSOutKWH.ToString(), DofD); 
+                    }
+                }*/
+
+        public void WriteDataInoneDaySQL(string arDate)
+        {
+            try
+            {
+                if (Elemeter2 != null)
+                {
+                    for (int i = 0; i < 9; i++)//总\尖\峰\平\谷
+                    {
+                        frmSet.peElestic.SE2PKWH[i] = Elemeter2.PUkwh[i];
+                        frmSet.peElestic.SE2OKWH[i] = Elemeter2.OUkwh[i];
+                    }
                 }
-                //记录PCS 开始的总充电量
-                // ConfigINI.INIWrite("Recode Date", "SPCSInKWH"  , SPCSInKWH.ToString(), DofD); 
-                //记录PCS 开始的总放电量
-                // ConfigINI.INIWrite("Recode Date", "SPCSOutKWH" , SPCSOutKWH.ToString(), DofD); 
+
+                if (Elemeter3 != null)
+                {
+                    for (int i = 0; i < 5; ++i)
+                    {
+                        frmSet.peElestic.SAuxiliaryKWH[i] = Elemeter3.Akwh[i];
+                    }
+                }
+
+                frmSet.Set_PeElesticData(arDate);
             }
+            catch (Exception e) 
+            {
+                log.Error(e);
+            }
+        }
+
+        public bool CalculateProfit()
+        {
+            double dProfit = 0;
+            if (Elemeter2 != null)
+            {
+                //计算尖峰平谷数据的当天充放电量---电表2为计量表
+                for (int i = 0; i < 9; i++)
+                {
+                    Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
+                    Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
+                    //计算成本和价格
+                    dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
+                    Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
+                }
+                //返回今日省的钱数
+                Profit = dProfit / 100;//按分
+                Profit2Cloud.DaliyProfit = Profit;
+            }
+            else
+            {
+                return false;
+            }
+
+
+            if (Elemeter3 != null)
+            {
+                for (int j = 0; j < 5; j++)
+                {
+                    AuxiliaryKWH[j] = Elemeter3.Akwh[j] - frmSet.peElestic.SAuxiliaryKWH[j]; //辅助电表当天用电量  
+                    Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];               
+                }
+            }
+            return true;
         }
 
         public bool CalculatePower()
         {
-            if (Elemeter2 == null)
-                return false;
-
             double dProfit = 0;
-            //计算尖峰平谷数据的当天充放电量---电表2为计量表
-            for (int i = 0; i < 9; i++)
+            if (Elemeter2 != null)
             {
-                E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i]; //当前表值--当天开始的值
-                E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
-                Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
-                Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
-                //计算成本和价格
-                dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
-                Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
-            }
-            //返回今日省的钱数
-            Profit = dProfit / 100;//按分
-            Profit2Cloud.DaliyProfit = Profit;
-
-            for (int j = 0; j < 5; j++)
-            {
-                if (Elemeter3 != null)
+                //计算尖峰平谷数据的当天充放电量---电表2为计量表
+                for (int i = 0; i < 9; i++)
                 {
-                    AuxiliaryKWH[j] = Elemeter3.Akwh[j] - SAuxiliaryKWH[j]; //辅助电表当天用电量  
-                    Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];
+                    E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i]; //当前表值--当天开始的值
+                    E2OKWH[i] = Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
+                    //Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
+                    //Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
+                    //计算成本和价格
+                    //dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
+                    //Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
+                }
+                //返回今日省的钱数
+                //Profit = dProfit / 100;//按分
+                //Profit2Cloud.DaliyProfit = Profit;
+            }
+            else
+            {
+                return false;
+            }
+
+
+            if (Elemeter3 != null)
+            {
+                for (int j = 0; j < 5; j++)
+                {
+                    if (Elemeter3 != null)
+                    {
+                        AuxiliaryKWH[j] = Elemeter3.Akwh[j] - frmSet.peElestic.SAuxiliaryKWH[j]; //辅助电表当天用电量  
+                        //Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];
+                    }
                 }
             }
-
             return true;
         }
 
-        public bool CalculateE2Power()
+        public void InitE2Power()
+        {
+            try
+            {
+                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                    for (int i = 0; i < 9; i++)
+                    {
+                        frmMain.Selffrm.AllEquipment.E2OKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
+                        frmMain.Selffrm.AllEquipment.E2PKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
+                    }
+                }
+            }
+            catch (Exception ex) 
+            {
+                log.Error("InitE2Power: " + ex.Message);
+            }
+        }
+
+
+/*        public bool CalculateE2Power()
         {
             if (Elemeter2 == null)
                 return false;
@@ -9819,10 +10031,12 @@ namespace EMS
 
             return true;
         }
-
-
-
-
+*/
+        /// <summary>
+        /// 计算电量
+        /// </summary>
+        /// <returns></returns>
+        /// 
         /// <summary>
         /// 放public定时器内存储电表2的当前值
         /// </summary>
@@ -9835,17 +10049,25 @@ namespace EMS
             //计算尖峰平谷数据的当天充放电量---电表2为计量表
             if (Elemeter2.Prepared)
             {
-                frmSet.historyDatas.DaliyE2PKWH_Z = (int)(Elemeter2.PUkwh[0] - SE2PKWH[0]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2PKWH_J = (int)(Elemeter2.PUkwh[1] - SE2PKWH[1]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2PKWH_F = (int)(Elemeter2.PUkwh[2] - SE2PKWH[2]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2PKWH_P = (int)(Elemeter2.PUkwh[3] - SE2PKWH[3]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2PKWH_G = (int)(Elemeter2.PUkwh[4] - SE2PKWH[4]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_Z = (int)(Elemeter2.PUkwh[0] - frmSet.peElestic.SE2PKWH[0]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_J = (int)(Elemeter2.PUkwh[1] - frmSet.peElestic.SE2PKWH[1]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_F = (int)(Elemeter2.PUkwh[2] - frmSet.peElestic.SE2PKWH[2]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_P = (int)(Elemeter2.PUkwh[3] - frmSet.peElestic.SE2PKWH[3]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_G = (int)(Elemeter2.PUkwh[4] - frmSet.peElestic.SE2PKWH[4]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_5 = (int)(Elemeter2.PUkwh[5] - frmSet.peElestic.SE2PKWH[5]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_6 = (int)(Elemeter2.PUkwh[6] - frmSet.peElestic.SE2PKWH[6]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_7 = (int)(Elemeter2.PUkwh[7] - frmSet.peElestic.SE2PKWH[7]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2PKWH_8 = (int)(Elemeter2.PUkwh[8] - frmSet.peElestic.SE2PKWH[8]); //当前表值--当天开始的值
 
-                frmSet.historyDatas.DaliyE2OKWH_Z = (int)(Elemeter2.OUkwh[0] - SE2OKWH[0]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2OKWH_J = (int)(Elemeter2.OUkwh[1] - SE2OKWH[1]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2OKWH_F = (int)(Elemeter2.OUkwh[2] - SE2OKWH[2]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2OKWH_P = (int)(Elemeter2.OUkwh[3] - SE2OKWH[3]); //当前表值--当天开始的值
-                frmSet.historyDatas.DaliyE2OKWH_G = (int)(Elemeter2.OUkwh[4] - SE2OKWH[4]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_Z = (int)(Elemeter2.OUkwh[0] - frmSet.peElestic.SE2OKWH[0]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_J = (int)(Elemeter2.OUkwh[1] - frmSet.peElestic.SE2OKWH[1]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_F = (int)(Elemeter2.OUkwh[2] - frmSet.peElestic.SE2OKWH[2]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_P = (int)(Elemeter2.OUkwh[3] - frmSet.peElestic.SE2OKWH[3]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_G = (int)(Elemeter2.OUkwh[4] - frmSet.peElestic.SE2OKWH[4]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_5 = (int)(Elemeter2.OUkwh[5] - frmSet.peElestic.SE2OKWH[5]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_6 = (int)(Elemeter2.OUkwh[6] - frmSet.peElestic.SE2OKWH[6]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_7 = (int)(Elemeter2.OUkwh[7] - frmSet.peElestic.SE2OKWH[7]); //当前表值--当天开始的值
+                frmSet.historyDatas.DaliyE2OKWH_8 = (int)(Elemeter2.OUkwh[8] - frmSet.peElestic.SE2OKWH[8]); //当前表值--当天开始的值
 
                 frmSet.Set_HistoryData();
             }
@@ -9858,18 +10080,26 @@ namespace EMS
             {
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                 {
-                    if (Elemeter2.PUkwh[0] < SE2PKWH[0] || Elemeter2.OUkwh[0] < SE2OKWH[0])  //判断总正总负电能是否小于上次电能
+                    if (Elemeter2.PUkwh[0] < frmSet.peElestic.SE2PKWH[0] || Elemeter2.OUkwh[0] < frmSet.peElestic.SE2OKWH[0])  //判断总正总负电能是否小于上次电能
                     {
-                        SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
-                        SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
-                        SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
-                        SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
-                        SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
-                        SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
-                        SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
-                        SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
-                        SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
-                        SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
+                        frmSet.peElestic.SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
+                        frmSet.peElestic.SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
+                        frmSet.peElestic.SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
+                        frmSet.peElestic.SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
+                        frmSet.peElestic.SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
+                        frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
+                        frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
+                        frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
+                        frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
+                        frmSet.peElestic.SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
+                        frmSet.peElestic.SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
+                        frmSet.peElestic.SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
+                        frmSet.peElestic.SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
+                        frmSet.peElestic.SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
+                        frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
+                        frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
+                        frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
+                        frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
                     }
                 }
             }
@@ -9882,7 +10112,7 @@ namespace EMS
 
         //日期更换时候保存当天数据
 
-        public void SaveDataInoneDay(string astrDate)
+/*        public void SaveDataInoneDay(string astrDate)
         {
             bool res1 = false;
             bool res2 = false;
@@ -9948,47 +10178,19 @@ namespace EMS
             {
                 log.Error("SaveDataInoneDay: " + ex.ToString());
             }
-        }
+        }*/
 
 
-        /*        public void SaveDataInoneDay(string astrDate)
+        public void SaveDataInoneDaySQL(string astrDate)
+        {
+            try
+            {
+                //计算尖峰平谷数据的当天充放电量
+                if (astrDate != "")
                 {
-                    if (Elemeter2 == null)
-                        return;
-                    lock (Elemeter2)
-                    {
-                        if (Elemeter3 == null)
-                            return;
-
-                        lock (Elemeter3)
-                        {
-                            //计算尖峰平谷数据的当天充放电量
-                            if (astrDate != "")
-                            {
-                                Profit2Cloud.time = Convert.ToDateTime(astrDate + " 23:59:59");
-                                CalculatePower();
-                            }
-                            //更新当天的其实电表电能值
-                            for (int i = 0; i < 9; i++)
-                            {
-                                SE2PKWH[i] = Elemeter2.PUkwh[i]; //当前表值--当天开始的值
-                                SE2OKWH[i] = Elemeter2.OUkwh[i];
-                            }
-
-                            for (int i = 0; i < 5; i++)
-                            {
-                                SAuxiliaryKWH[i] = Elemeter3.Akwh[i]; //辅助电表当天用电量
-                            }
-                        }
-                    }
-                    //
-                    if (astrDate == "")
-                        return;
-
-                    try
-                    {
+                    if (CalculatePower())
+                    {                             
                         string strData = "";
-
                         for (int i = 1; i < 9; i++)
                         {
                             if (i < 5)
@@ -10012,28 +10214,14 @@ namespace EMS
                         + "out7kwh,out7Price,in7kwh,in7Price,out8kwh,out8Price,in8kwh,in8Price"
                         + ")value('" + astrDate + "','" + Profit.ToString() + "','"
                         + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
-
-
-
-                        *//*                for (int i = 1; i < 5; i++)
-                                        {
-                                            strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
-                                                    + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
-                                                    + "','" + frmSet.Prices[0, i].ToString();
-                                        } 
-                                        //保存到数据库   
-                                        DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
-                                        + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
-                                        + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price"
-                                       + ")value('" + astrDate + "','" + Profit.ToString() + "','"
-                                       + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");*//*
-
                     }
-                    catch (Exception ex)
-                    {
-                        log.Error("SaveDataInoneDay: " + ex.ToString());
-                    }
-                }*/
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("SaveDataInoneDay: " + ex.ToString());
+            }
+        }
 
     }
 

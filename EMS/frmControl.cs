@@ -301,7 +301,7 @@ namespace EMS
                     DBConnection.UploadCloud(sqlQuery);
                     break;
                 case 1:
-                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                    //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
                     break;
                 default: 
                     break;
@@ -318,6 +318,14 @@ namespace EMS
         {
             //桌面选定执行功率存入设置中
             SaveUiInstall();
+        }
+
+        private void btnReadDofD_Click(object sender, EventArgs e)
+        {
+            if (frmMain.Selffrm.AllEquipment != null)
+            {
+                frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI();
+            }
         }
     }
 }

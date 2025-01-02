@@ -2007,14 +2007,49 @@ namespace EMS
                         new Column { Name = "DaliyE2PKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰充电量" },
                         new Column { Name = "DaliyE2PKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平充电量" },
                         new Column { Name = "DaliyE2PKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷充电量" },
+                        new Column { Name = "DaliyE2PKWH_5", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
+                        new Column { Name = "DaliyE2PKWH_6", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
+                        new Column { Name = "DaliyE2PKWH_7", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
+                        new Column { Name = "DaliyE2PKWH_8", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
                         new Column { Name = "DaliyE2OKWH_Z", Type = "int", IsNullable = true, Key = "" , Comment = "今日总放电量" },
                         new Column { Name = "DaliyE2OKWH_J", Type = "int", IsNullable = true, Key = "" , Comment = "今日尖放电量" },
                         new Column { Name = "DaliyE2OKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰放电量" },
                         new Column { Name = "DaliyE2OKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
                         new Column { Name = "DaliyE2OKWH_G", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
+                        new Column { Name = "DaliyE2OKWH_5", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
+                        new Column { Name = "DaliyE2OKWH_6", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
+                        new Column { Name = "DaliyE2OKWH_7", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
+                        new Column { Name = "DaliyE2OKWH_8", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
                         new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数" }
-
-
+                    }
+                },
+                {
+                    "PeElestic", new List<Column>
+                    {
+                        new Column { Name = "rDate", Type = "datetime", IsNullable = true, Key = "" , Comment = "更新时间"},
+                        new Column { Name = "SE2PKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "总正向电量"},
+                        new Column { Name = "SE2OKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "总反向电量"},
+                        new Column { Name = "SAuxiliaryKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "辅助电量" },
+                        new Column { Name = "SE2PKWH1", Type = "double", IsNullable = true, Key = "" , Comment = "尖正向电量" },
+                        new Column { Name = "SE2OKWH1", Type = "double", IsNullable = true, Key = "" , Comment = "尖反向电量" },
+                        new Column { Name = "SAuxiliaryKWH1", Type = "double", IsNullable = true, Key = "" , Comment = "尖辅助电量" },
+                        new Column { Name = "SE2PKWH2", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH2", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SAuxiliaryKWH2", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2PKWH3", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH3", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SAuxiliaryKWH3", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2PKWH4", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH4", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SAuxiliaryKWH4", Type = "double", IsNullable = true, Key = "" , Comment = "" } ,
+                        new Column { Name = "SE2PKWH5", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH5", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2PKWH6", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH6", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2PKWH7", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH7", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2PKWH8", Type = "double", IsNullable = true, Key = "" , Comment = "" },
+                        new Column { Name = "SE2OKWH8", Type = "double", IsNullable = true, Key = "" , Comment = "" }
                     }
                 }
                 // Add more tables as needed

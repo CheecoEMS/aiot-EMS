@@ -17,6 +17,7 @@ using static System.Net.WebRequestMethods;
 using System.IO;
 using Squirrel;
 using System.Reflection;
+using System.Web.UI;
 
 namespace EMS
 {
@@ -35,6 +36,7 @@ namespace EMS
         public volatile static VariChargeClass variCharge = new VariChargeClass();
         public volatile static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
         public volatile static HistoryDataClass historyDatas = new HistoryDataClass();
+        public volatile static PeElesticClass peElestic = new PeElesticClass();
 
         public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
@@ -245,14 +247,201 @@ namespace EMS
 
         /*********************************************
          * 
+         *          peElestic
+         * 
+         ********************************************/
+        public static bool LoadPeElesticFromMySQL()
+        {
+            bool result = false;
+            string astrSQL = "SELECT rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, "
+                           + "SAuxiliaryKWH4, SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8 FROM PeElestic;";
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows && rd.Read())
+                            {
+                                if (peElestic != null)
+                                {
+                                    peElestic.rDate = rd.IsDBNull(0) ? DateTime.MinValue : rd.GetDateTime(0);
+                                    peElestic.SE2PKWH[0] = rd.IsDBNull(1) ? 0 : rd.GetDouble(1);
+                                    peElestic.SE2OKWH[0] = rd.IsDBNull(2) ? 0 : rd.GetDouble(2);
+                                    peElestic.SAuxiliaryKWH[0] = rd.IsDBNull(3) ? 0 : rd.GetDouble(3);
+                                    peElestic.SE2PKWH[1] = rd.IsDBNull(4) ? 0 : rd.GetDouble(4);
+                                    peElestic.SE2OKWH[1] = rd.IsDBNull(5) ? 0 : rd.GetDouble(5);
+                                    peElestic.SAuxiliaryKWH[1] = rd.IsDBNull(6) ? 0 : rd.GetDouble(6);
+                                    peElestic.SE2PKWH[2] = rd.IsDBNull(7) ? 0 : rd.GetDouble(7);
+                                    peElestic.SE2OKWH[2] = rd.IsDBNull(8) ? 0 : rd.GetDouble(8);
+                                    peElestic.SAuxiliaryKWH[2] = rd.IsDBNull(9) ? 0 : rd.GetDouble(9);
+                                    peElestic.SE2PKWH[3] = rd.IsDBNull(10) ? 0 : rd.GetDouble(10);
+                                    peElestic.SE2OKWH[3] = rd.IsDBNull(11) ? 0 : rd.GetDouble(11);
+                                    peElestic.SAuxiliaryKWH[3] = rd.IsDBNull(12) ? 0 : rd.GetDouble(12);
+                                    peElestic.SE2PKWH[4] = rd.IsDBNull(13) ? 0 : rd.GetDouble(13);
+                                    peElestic.SE2OKWH[4] = rd.IsDBNull(14) ? 0 : rd.GetDouble(14);
+                                    peElestic.SAuxiliaryKWH[4] = rd.IsDBNull(15) ? 5 : rd.GetDouble(15);
+                                    peElestic.SE2PKWH[5] = rd.IsDBNull(16) ? 0 : rd.GetDouble(16);
+                                    peElestic.SE2OKWH[5] = rd.IsDBNull(17) ? 0 : rd.GetDouble(17);
+                                    peElestic.SE2PKWH[6] = rd.IsDBNull(18) ? 0 : rd.GetDouble(18);
+                                    peElestic.SE2OKWH[6] = rd.IsDBNull(19) ? 0 : rd.GetDouble(19);
+                                    peElestic.SE2PKWH[7] = rd.IsDBNull(20) ? 0 : rd.GetDouble(20);
+                                    peElestic.SE2OKWH[7] = rd.IsDBNull(21) ? 0 : rd.GetDouble(21);
+                                    peElestic.SE2PKWH[8] = rd.IsDBNull(22) ? 0 : rd.GetDouble(22);
+                                    peElestic.SE2OKWH[8] = rd.IsDBNull(23) ? 0 : rd.GetDouble(23);
+                                }
+                                result = true;
+                            }
+
+
+/*                            else
+                            {
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                                    for (int i = 0; i < 9; i++)//总\尖\峰\平\谷
+                                    {
+                                        frmSet.peElestic.SE2PKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i];
+                                        frmSet.peElestic.SE2OKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[i];
+                                    }
+                                }
+
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+                                    for (int i = 0; i < 5; ++i)
+                                    {
+                                        frmSet.peElestic.SAuxiliaryKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter3.Akwh[i];
+                                    }
+                                }
+                                frmSet.Insert_PeElesticData();
+                            }*/
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                result = false;
+            }
+            return result;
+        }
+
+        public static bool Set_PeElesticData(string tempDate)
+        {
+            string astrSQL = "update  PeElestic  SET "
+                + " rDate  ='" + tempDate
+                + "', SE2PKWH0  ='" + frmSet.peElestic.SE2PKWH[0].ToString()
+                + "', SE2OKWH0  ='" + frmSet.peElestic.SE2OKWH[0].ToString()
+                + "', SAuxiliaryKWH0  ='" + frmSet.peElestic.SAuxiliaryKWH[0].ToString()
+                + "', SE2PKWH1 ='" + frmSet.peElestic.SE2PKWH[1].ToString()
+                + "', SE2OKWH1 ='" + frmSet.peElestic.SE2OKWH[1].ToString()
+                + "', SAuxiliaryKWH1 ='" + frmSet.peElestic.SAuxiliaryKWH[1].ToString()
+                + "', SE2PKWH2 ='" + frmSet.peElestic.SE2PKWH[2].ToString()
+                + "', SE2OKWH2 ='" + frmSet.peElestic.SE2OKWH[2].ToString()
+                + "', SAuxiliaryKWH2 ='" + frmSet.peElestic.SAuxiliaryKWH[2].ToString()
+                + "', SE2PKWH3 ='" + frmSet.peElestic.SE2PKWH[3].ToString()
+                + "', SE2OKWH3 ='" + frmSet.peElestic.SE2OKWH[3].ToString()
+                + "', SAuxiliaryKWH3 ='" + frmSet.peElestic.SAuxiliaryKWH[3].ToString()
+                + "', SE2PKWH4 ='" + frmSet.peElestic.SE2PKWH[4].ToString()
+                + "', SE2OKWH4 ='" + frmSet.peElestic.SE2OKWH[4].ToString()
+                + "', SAuxiliaryKWH4 ='" + frmSet.peElestic.SAuxiliaryKWH[4].ToString()
+                + "', SE2PKWH5 ='" + frmSet.peElestic.SE2PKWH[5].ToString()
+                + "', SE2OKWH5 ='" + frmSet.peElestic.SE2OKWH[5].ToString()
+                + "', SE2PKWH6 ='" + frmSet.peElestic.SE2PKWH[6].ToString()
+                + "', SE2OKWH6 ='" + frmSet.peElestic.SE2OKWH[6].ToString()
+                + "', SE2PKWH7 ='" + frmSet.peElestic.SE2PKWH[7].ToString()
+                + "', SE2OKWH7 ='" + frmSet.peElestic.SE2OKWH[7].ToString()
+                + "', SE2PKWH8 ='" + frmSet.peElestic.SE2PKWH[8].ToString()
+                + "', SE2OKWH8 ='" + frmSet.peElestic.SE2OKWH[8].ToString()
+                + "';";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                result = false;
+                log.Error("Set_PeElesticData: " + ex.Message);
+            }
+            return result;
+        }
+
+        public static bool Insert_PeElesticData(string tempDate)
+        {
+            // 假设 PeElestic 表有一个自增的主键或其他唯一标识符，这里不显式插入
+            string astrSQL = "INSERT INTO PeElestic (rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, " +
+                             "SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, SAuxiliaryKWH4, " +
+                             "SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8) " +
+                             "VALUES ('" + tempDate + "', '" + frmSet.peElestic.SE2PKWH[0].ToString() + "', '" + frmSet.peElestic.SE2OKWH[0].ToString() + "', '" +
+                             frmSet.peElestic.SAuxiliaryKWH[0].ToString() + "', '" + frmSet.peElestic.SE2PKWH[1].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[1].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[1].ToString() + "', '" +
+                             frmSet.peElestic.SE2PKWH[2].ToString() + "', '" + frmSet.peElestic.SE2OKWH[2].ToString() + "', '" +
+                             frmSet.peElestic.SAuxiliaryKWH[2].ToString() + "', '" + frmSet.peElestic.SE2PKWH[3].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[3].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[3].ToString() + "', '" +
+                             frmSet.peElestic.SE2PKWH[4].ToString() + "', '" + frmSet.peElestic.SE2OKWH[4].ToString() + "', '" +
+                             frmSet.peElestic.SAuxiliaryKWH[4].ToString() + "', '" + frmSet.peElestic.SE2PKWH[5].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[5].ToString() + "', '" + frmSet.peElestic.SE2PKWH[6].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[6].ToString() + "', '" + frmSet.peElestic.SE2PKWH[7].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[7].ToString() + "', '" + frmSet.peElestic.SE2PKWH[8].ToString() + "', '" +
+                             frmSet.peElestic.SE2OKWH[8].ToString() + "')";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+                    result = true;
+                }
+                else
+                {
+                    // 处理执行失败的逻辑
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 处理异常情况
+                result = false;
+                log.Error(ex.Message);
+            }
+            return result;
+        }
+
+        /*********************************************
+         * 
          *          HistoryData
          * 
          ********************************************/
         public static bool LoadHistoryDataFromMySQL()
         {
             bool result = false;
-            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P,DaliyE2PKWH_G,DaliyE2OKWH_Z,DaliyE2OKWH_J,DaliyE2OKWH_F,DaliyE2OKWH_P,DaliyE2OKWH_G, "
-                          + " RebootCount FROM HistoricalData;";
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
+                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount FROM HistoricalData;";
 
             try
             {
@@ -274,12 +463,20 @@ namespace EMS
                                 historyDatas.DaliyE2PKWH_F = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
                                 historyDatas.DaliyE2PKWH_P = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
                                 historyDatas.DaliyE2PKWH_G = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
-                                historyDatas.DaliyE2OKWH_Z = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                                historyDatas.DaliyE2OKWH_J = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                                historyDatas.DaliyE2OKWH_F = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
-                                historyDatas.DaliyE2OKWH_P = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
-                                historyDatas.DaliyE2OKWH_G = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
-                                historyDatas.RebootCount = rd.IsDBNull(14) ? 5 : rd.GetInt32(14);
+                                historyDatas.DaliyE2PKWH_5 = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                historyDatas.DaliyE2PKWH_6 = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                                historyDatas.DaliyE2PKWH_7 = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
+                                historyDatas.DaliyE2PKWH_8 = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
+                                historyDatas.DaliyE2OKWH_Z = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
+                                historyDatas.DaliyE2OKWH_J = rd.IsDBNull(14) ? 0 : rd.GetInt32(14);
+                                historyDatas.DaliyE2OKWH_F = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
+                                historyDatas.DaliyE2OKWH_P = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
+                                historyDatas.DaliyE2OKWH_G = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
+                                historyDatas.DaliyE2OKWH_5 = rd.IsDBNull(18) ? 0 : rd.GetInt32(18);
+                                historyDatas.DaliyE2OKWH_6 = rd.IsDBNull(19) ? 0 : rd.GetInt32(19);
+                                historyDatas.DaliyE2OKWH_7 = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
+                                historyDatas.DaliyE2OKWH_8 = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
+                                historyDatas.RebootCount = rd.IsDBNull(22) ? 5 : rd.GetInt32(22);
 
                                 result = true;
                             }
@@ -299,11 +496,9 @@ namespace EMS
             }
             finally
             {
-
-
+                // 可以在这里添加任何需要在最后执行的代码
             }
             return result;
-
         }
 
         public static bool Set_HistoryData()
@@ -318,11 +513,19 @@ namespace EMS
                 + "', DaliyE2PKWH_F ='" + frmSet.historyDatas.DaliyE2PKWH_F.ToString()
                 + "', DaliyE2PKWH_P ='" + frmSet.historyDatas.DaliyE2PKWH_P.ToString()
                 + "', DaliyE2PKWH_G ='" + frmSet.historyDatas.DaliyE2PKWH_G.ToString()
+                + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
+                + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
+                + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
+                + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
                 + "', DaliyE2OKWH_Z ='" + frmSet.historyDatas.DaliyE2OKWH_Z.ToString()
                 + "', DaliyE2OKWH_J ='" + frmSet.historyDatas.DaliyE2OKWH_J.ToString()
                 + "', DaliyE2OKWH_F ='" + frmSet.historyDatas.DaliyE2OKWH_F.ToString()
                 + "', DaliyE2OKWH_P ='" + frmSet.historyDatas.DaliyE2OKWH_P.ToString()
                 + "', DaliyE2OKWH_G ='" + frmSet.historyDatas.DaliyE2OKWH_G.ToString()
+                + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
+                + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
+                + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
+                + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
                 + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
                 + "';";
 
@@ -345,7 +548,7 @@ namespace EMS
             {
                 // 处理异常情况
                 result = false;
-                log.Error(ex.Message);
+                log.Error("Set_HistoryData: " + ex.Message);
             }
             return result;
         }
@@ -2260,6 +2463,39 @@ namespace EMS
         }
 
         /************************* DB Class *********************************/
+        public class PeElesticClass
+        {
+            public DateTime rDate;
+            public double[] SE2PKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始充电电量（positive 正向）  new double[9]
+            public double[] SE2OKWH = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
+            public double[] SAuxiliaryKWH = { 0, 0, 0, 0, 0 };
+/*            public double SE2PKWH;
+            public double SE2PKWH0;
+            public double SE2OKWH0;
+            public double SAuxiliaryKWH0;
+            public double SE2PKWH1;
+            public double SE2OKWH1;
+            public double SAuxiliaryKWH1;
+            public double SE2PKWH2;
+            public double SE2OKWH2;
+            public double SAuxiliaryKWH2;
+            public double SE2PKWH3;
+            public double SE2OKWH3;
+            public double SAuxiliaryKWH3;
+            public double SE2PKWH4;
+            public double SE2OKWH4;
+            public double SAuxiliaryKWH4;
+            public double SE2PKWH5;
+            public double SE2OKWH5;
+            public double SE2PKWH6;
+            public double SE2OKWH6;
+            public double SE2PKWH7;
+            public double SE2OKWH7;
+            public double SE2PKWH8;
+            public double SE2OKWH8;*/
+        }
+
+
         public class HistoryDataClass
         {
             public volatile int E1PUMdemandMaxOld;
@@ -2271,11 +2507,19 @@ namespace EMS
             public volatile int DaliyE2PKWH_F;
             public volatile int DaliyE2PKWH_P;
             public volatile int DaliyE2PKWH_G;
+            public volatile int DaliyE2PKWH_5;
+            public volatile int DaliyE2PKWH_6;
+            public volatile int DaliyE2PKWH_7;
+            public volatile int DaliyE2PKWH_8;
             public volatile int DaliyE2OKWH_Z;
             public volatile int DaliyE2OKWH_J;
             public volatile int DaliyE2OKWH_F;
             public volatile int DaliyE2OKWH_P;
             public volatile int DaliyE2OKWH_G;
+            public volatile int DaliyE2OKWH_5;
+            public volatile int DaliyE2OKWH_6;
+            public volatile int DaliyE2OKWH_7;
+            public volatile int DaliyE2OKWH_8;
             public volatile int RebootCount;
         }
 

@@ -48,41 +48,77 @@ namespace EMS
         [STAThread]
         static async Task Main()
         {
-/*            try
+            /*            try
+                        {
+                            // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                            using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                            {
+                                //await mgr.UpdateApp();
+
+                                var updateInfo = await mgr.CheckForUpdate();
+                                if (updateInfo.ReleasesToApply.Count > 0)
+                                {
+                                    // 下载和应用更新
+                                    //await mgr.UpdateApp();
+                                    mgr.UpdateApp().GetAwaiter().GetResult();
+
+                                    // 应用完成后重启应用以加载新版本
+                                    UpdateManager.RestartAppWhenExited();
+                                    return;  // 停止当前应用，等待重启
+                                }
+
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("远程更新失败：" + ex.Message);
+                        }*/
+
+
+            try
             {
-                // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
-                using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                // 定义要执行的命令
+                string[] commands = new string[2];
+
+                commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
+                commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
+
+                for (int i = 0; i < 2; ++i)
                 {
-                    //await mgr.UpdateApp();
-
-                    var updateInfo = await mgr.CheckForUpdate();
-                    if (updateInfo.ReleasesToApply.Count > 0)
+                    // 创建 ProcessStartInfo 对象，并配置其属性
+                    ProcessStartInfo processStartInfo = new ProcessStartInfo("cmd", "/c " + commands[i])
                     {
-                        // 下载和应用更新
-                        //await mgr.UpdateApp();
-                        mgr.UpdateApp().GetAwaiter().GetResult();
-
-                        // 应用完成后重启应用以加载新版本
-                        UpdateManager.RestartAppWhenExited();
-                        return;  // 停止当前应用，等待重启
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    // 创建并启动进程
+                    // 启动进程
+                    using (Process process = Process.Start(processStartInfo))
+                    {
+                        // 等待进程退出
+                        process.WaitForExit();
                     }
-
-
                 }
+
+
+
+                //启动EMS主程序
+                Application.EnableVisualStyles();
+
+                frmFlash.ShowFlashForm();
+                frmFlash.AddPostion(10);
+                frmMain.Selffrm = new frmMain();
+
+                Application.Run(frmMain.Selffrm);
             }
             catch (Exception ex)
             {
-                log.Error("远程更新失败：" + ex.Message);
-            }*/
+                Console.WriteLine($"发生错误: {ex.Message}");
+            }
 
-
-            Application.EnableVisualStyles();
-
-            frmFlash.ShowFlashForm();
-            frmFlash.AddPostion(10);
-            frmMain.Selffrm = new frmMain();
-
-            Application.Run(frmMain.Selffrm);
 
 /*            if (! CheckAppExists()) 
             { 
