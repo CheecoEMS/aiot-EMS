@@ -1860,7 +1860,7 @@ namespace EMS
                     "profit", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true,  Key = "", Comment = "日期" },
+                        new Column { Name = "rTime", Type = "date", IsNullable = true,  Key = "", Comment = "日期" },
                         new Column { Name = "profit", Type = "float", IsNullable = true,  Key = "", Comment = "收益" },
                         new Column { Name = "inPower", Type = "float", IsNullable = true,  Key = "", Comment = "充电量kwh" },
                         new Column { Name = "auxkwhAll", Type = "float", IsNullable = true,  Key = "", Comment = "辅助电用总量" },
@@ -1913,7 +1913,7 @@ namespace EMS
                         new Column {Name = "PCSType", Type = "varchar(20)", IsNullable = true,  Key = "", Comment = "PCS状态，恒压、恒流、恒功率"},
                         new Column { Name = "waValue", Type = "float", IsNullable = true,  Key = "", Comment = "恒流为电流，恒功率为功率" },
                         new Column { Name = "MinPower", Type = "int", IsNullable = true,  Key = "", Comment = "最小功率" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true,  Key = "", Comment = "" },
+                        new Column { Name = "rTime", Type = "date", IsNullable = true,  Key = "", Comment = "策略日期" },
                         new Column { Name = "endTime", Type = "time", IsNullable = true,  Key = "", Comment = "" }
                     }
                 },
@@ -2026,7 +2026,7 @@ namespace EMS
                 {
                     "PeElestic", new List<Column>
                     {
-                        new Column { Name = "rDate", Type = "datetime", IsNullable = true, Key = "" , Comment = "更新时间"},
+                        new Column { Name = "rDate", Type = "date", IsNullable = true, Key = "" , Comment = "更新日期"},
                         new Column { Name = "SE2PKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "总正向电量"},
                         new Column { Name = "SE2OKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "总反向电量"},
                         new Column { Name = "SAuxiliaryKWH0", Type = "double", IsNullable = true, Key = "" , Comment = "辅助电量" },

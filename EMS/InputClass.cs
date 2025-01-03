@@ -9700,7 +9700,7 @@ namespace EMS
                             }
 
                             frmSet.peElestic.rDate = DateTime.Now;
-                            frmSet.Insert_PeElesticData(frmSet.peElestic.rDate.ToString("yyyy-MM-dd HH:mm:ss"));
+                            frmSet.Insert_PeElesticData(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
                         }
                     }
                 }
