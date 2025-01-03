@@ -1506,11 +1506,19 @@ namespace EMS
                     if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
                         strData += "'恒功率','" + jsonObject["params"]["strategy"][i]["value"].ToString();
                     else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
-                        strData += "'自适应需量','" + jsonObject["params"]["strategy"][i]["value"].ToString();
+                        strData += "'自适应需量','" + jsonObject["params"]["strategy"][i]["value"].ToString() + "','";
 
-
+                    if (jsonObject["rTime"] == null)
+                    {
+                        string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                        strData += strDate;
+                    }
+                    else
+                    {
+                        strData += jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
+                    }
                     //从云获取策略插入数据库中
-                    strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue)VALUES('" + strData + "')";
+                    strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue, rTime)VALUES('" + strData + "')";
 
                     if (!DBConnection.ExecSQL(strData))
                     {
@@ -1583,8 +1591,18 @@ namespace EMS
                     frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
                     frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
                     strData = jsonObject["params"]["price"][i]["start"].ToString() + "','"
-                        + isection.ToString() + "','0','"
-                        + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        + isection.ToString() + "','0','";
+
+                    if (jsonObject["rTime"] == null)
+                    {
+                        string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                        strData += strDate;
+                    }
+                    else
+                    {
+                        strData += jsonObject["params"]["price"][i]["pricdate"].ToString();
+                    }
+
                     strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
                     
                     if(DBConnection.ExecSQL(strData))

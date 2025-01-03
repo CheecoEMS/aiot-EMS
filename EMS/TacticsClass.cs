@@ -99,7 +99,8 @@ namespace EMS
 
         public void LoadJFPGFromSQL()
         {
-            string astrSQL = "select startTime, eName  from electrovalence ";
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            string astrSQL = "select startTime, eName  from electrovalence " + "where rTime = " + strDate;
 
             try
             {
@@ -176,8 +177,9 @@ namespace EMS
         public bool LoadFromMySQL()
         {
             bool Result = false;
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime,endTime, tType, PCSType, waValue"
-                    + " from tactics  order by startTime";
+                    + " from tactics " + "where rTime = " + strDate + " order by startTime";
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))

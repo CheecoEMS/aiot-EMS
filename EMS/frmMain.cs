@@ -734,7 +734,8 @@ namespace EMS
                         {
                             try
                             {
-                                frmMain.TacticsList.LoadFromMySQL();
+                                frmMain.TacticsList.LoadFromMySQL();//重新装载策略
+                                frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段
                             }
                             catch (Exception ex)
                             {
