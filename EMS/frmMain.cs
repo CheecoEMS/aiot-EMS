@@ -672,6 +672,7 @@ namespace EMS
             {
                 try
                 {
+
                     // 检查月份是否更新
                     if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
                     {
@@ -710,7 +711,8 @@ namespace EMS
 
 
                                 // 当日收益发送到云
-                                frmMain.Selffrm.AllEquipment.CalculateProfit();
+                                frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
                                 //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
                                 frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
 
@@ -750,6 +752,17 @@ namespace EMS
                         catch (Exception ex)
                         {
                             log.Error("00:00更新均衡策略失败: " + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        //昨日收益重传
+                        if (frmMain.Selffrm.AllEquipment.WaitRecPem == 1)
+                        {
+                            log.Error("未确认接收，重发报文");
+                            DateTime previousDay = frmSet.peElestic.rDate.AddDays(-1);
+                            string previousDayString = previousDay.ToString("yyyy-MM-dd");
+                            frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(previousDayString);
                         }
                     }
 

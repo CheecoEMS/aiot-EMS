@@ -43,6 +43,8 @@ namespace EMS
         public string UploadTopic;
         public string OtaTopic;
 
+        public string checkPemTopic;
+
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
         
@@ -457,6 +459,7 @@ namespace EMS
                 HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
                 UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
                 OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
+                checkPemTopic = "pem";
             }
             catch (Exception ex)
             {
@@ -518,6 +521,7 @@ namespace EMS
             ListenTopic(HeartbeatTopic);
             ListenTopic(UploadTopic + "request");
             ListenTopic(OtaTopic + "request");
+            ListenTopic(checkPemTopic);
 
             log.Error("Topic: " + OtaTopic + "request");
         }
@@ -700,6 +704,15 @@ namespace EMS
                 string message = System.Text.Encoding.Default.GetString(e.Message);
 
                 JObject jsonObject = JObject.Parse(message);
+
+                if (jsonObject["iot_code"] != null)
+                {
+                    if (topic == checkPemTopic && jsonObject["iot_code"].ToString() ==  frmMain.Selffrm.AllEquipment.Profit2Cloud.iot_code)
+                    {
+                        CheckPemArri(message);
+                    }
+                }
+                
                 string strID = "";
                 if (jsonObject["id"] != null)
                 {
@@ -881,7 +894,7 @@ namespace EMS
                 else if (topic == OtaTopic  + "request")
                 {
                     log.Info("接收到升级指令");
-                    ImplOta(message);                 
+                    ImplOta(message);
                 }
                 /*            else if (topic == BalaTacticTopic)
                             {
@@ -1243,6 +1256,12 @@ namespace EMS
         //接收到的文件
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public void CheckPemArri(string astrData)
+        {
+            frmMain.Selffrm.AllEquipment.WaitRecPem = 0;
+            log.Error("确认收益报文：" + astrData);
+        }
 
 
         private async void ExecOtaFormCloud(string version)

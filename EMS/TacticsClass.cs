@@ -280,6 +280,45 @@ namespace EMS
             }
         }
 
+
+        //true:不存在找到下个满足条件的策略与当前时间间隔为10分钟
+        public bool FindNextMoveTime(string move)
+        {
+            bool res = true;
+            DateTime now = DateTime.Now;
+            TacticsClass oneTactics = null;
+            for (int i = 0; i < TacticsList.Count; i++)
+            {
+                oneTactics = TacticsList[i];
+                if (CheckMoveInShedule(oneTactics, now, move))
+                {
+                    res = false;
+                    break;
+                }
+            }
+
+            return res;
+        }
+
+        //true：找到下个满足条件的策略与当前时间间隔为10分钟
+        private bool CheckMoveInShedule(TacticsClass aTactics, DateTime aTime, string move)
+        {
+            DateTime startTimeMinusTenMinutes = aTactics.startTime.AddMinutes(-10);
+
+            if (aTactics.tType == move &&  aTime.CompareTo(startTimeMinusTenMinutes) <= 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+
+
+
         /// <summary>
         /// 策略监视线程
         /// </summary>
@@ -300,6 +339,8 @@ namespace EMS
                 frmMain.ShowDebugMSG(ex.ToString());
             }
         }
+
+
 
         private void CheckTactics()
         {
@@ -519,6 +560,9 @@ namespace EMS
             }
             return iResult;
         }
+
+
+
 
         /// <summary>
         /// 将chart数组中位置换算成时间

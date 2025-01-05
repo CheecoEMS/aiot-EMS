@@ -2794,8 +2794,10 @@ namespace EMS
         {
             try
             {
-                //判断是否处于策略时段
-                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
+                //判断
+                frmMain.Selffrm.AllEquipment.EnsureKeepStill();
+
+                if (frmMain.Selffrm.AllEquipment.KeepStill)
                 {
                     string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
                     log.Error("更新文件版本: " + version);

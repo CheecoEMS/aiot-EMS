@@ -6472,14 +6472,20 @@ namespace EMS
         private Thread Thread_ReadCOM2Data;
         private Thread Thread_ReadEquipmentDataPCS;
 
+        //信号
+        public volatile int WaitRecPem; //1:等待确认消息送达 0：确认已送达
+        public volatile bool KeepStill; //true:放空或者充满 
+
         public AllEquipmentClass()
         {
             Fire = new FireClass();
 
             // 获取版本信息
-            Assembly assembly = Assembly.GetExecutingAssembly();
+/*            Assembly assembly = Assembly.GetExecutingAssembly();
             Version version = assembly.GetName().Version;
-            EMSVersion = version.ToString();
+            EMSVersion = version.ToString();*/
+
+            EMSVersion = "1.0.2";
         }
 
         //析构函数
@@ -6501,6 +6507,32 @@ namespace EMS
             //  //free onePark;
             //}
         }
+
+        public void EnsureKeepStill()
+        {
+            //充满：0101  BMS.Error
+            if ((frmMain.Selffrm.AllEquipment.BMS.Error[2] & 5) > 0 && frmMain.TacticsList.FindNextMoveTime("放电")) //充满且与下次放电策略时间间隔超过10分钟
+            {
+                KeepStill = true;
+            }
+            else if ((frmMain.Selffrm.AllEquipment.BMS.Error[2] & 32778) > 0 && frmMain.TacticsList.FindNextMoveTime("充电"))//放空：1000000000001010  防空且与下次充电策略时间间隔超过10分钟
+            {
+                KeepStill = true;
+            }
+            else if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0) //计划功率为0
+            {
+                KeepStill = true;
+            }
+            else if (frmMain.Selffrm.AllEquipment.ErrorState[2]) //设备出现3级告警
+            {
+                KeepStill = true;
+            }
+            else
+            {
+                KeepStill = false;
+            }
+        }
+
 
         public void RecodChargeinform(int level)
         {
@@ -9897,7 +9929,7 @@ namespace EMS
             }
         }
 
-        public bool CalculateProfit()
+        public bool CalculateProfit(string strdate)
         {
             double dProfit = 0;
             if (Elemeter2 != null)
@@ -9914,6 +9946,8 @@ namespace EMS
                 //返回今日省的钱数
                 Profit = dProfit / 100;//按分
                 Profit2Cloud.DaliyProfit = Profit;
+
+                Profit2Cloud.time = Convert.ToDateTime(strdate + " 23:59:59");
             }
             else
             {
