@@ -6485,7 +6485,7 @@ namespace EMS
             Version version = assembly.GetName().Version;
             EMSVersion = version.ToString();*/
 
-            EMSVersion = "1.0.2";
+            EMSVersion = "1.0.3";
         }
 
         //析构函数
@@ -7025,6 +7025,7 @@ namespace EMS
                         {
                             if (rd != null && rd.HasRows)
                             {
+                                log.Error("数据库已配置设备");
                                 while (rd.Read())//调用 Read 方法读取 SqlDataReader
                                 {
                                     string adata = rd.GetString(1).Trim();
@@ -7148,8 +7149,8 @@ namespace EMS
                                     {
                                         res = false;
                                     }
-                                                                        //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
-                                                                        //oneEquipment.Parent = this;
+                                    //frmMain.Selffrm.AllEquipment.LiquidCool.ProtocolVersion = oneEquipment.LoadVersionFromFile();
+                                    //oneEquipment.Parent = this;
                                     switch (oneEquipment.comType)
                                     {
                                         case 0:
@@ -7164,6 +7165,11 @@ namespace EMS
                                             break;
                                     }
                                 }
+                            }
+                            else
+                            {
+                                log.Error("数据库设备输入失败....重试");
+                                res = false;
                             }
                         }
                     }

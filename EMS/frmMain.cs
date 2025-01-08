@@ -363,39 +363,40 @@ namespace EMS
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
                 frmSet.BalaPath = strSysPath + "BalaCell.txt";         
-                log.Warn("CHEECO-START");
+                log.Error("CHEECO-START");
 
                 ////连接数据库
                 DBConnection conn = new DBConnection();
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
                 DBConnection.CheckTables();
+                log.Error("结束数据库格式检查");
                 frmSet.LoadCloudLimitsFromMySQL();
                 frmSet.LoadConfigFromMySQL();
                 frmSet.LoadVariChargeFromMySQL();
                 frmSet.LoadComponentSettingsFromMySQL();
+                frmSet.LoadHistoryDataFromMySQL();
 
+                log.Error("结束数据库读取");
                 //同步今日剩余重启次数
-                 frmMain.Selffrm.AllEquipment.RebootCount = frmSet.historyDatas.RebootCount;
+                frmMain.Selffrm.AllEquipment.RebootCount = frmSet.historyDatas.RebootCount;
                 
                
                 //获取历史需量
                 if (frmSet.config.IsMaster == 1)
                 {
-                    if (frmSet.LoadHistoryDataFromMySQL())
-                    {
-                        frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max_old = frmSet.historyDatas.E1PUMdemandMaxOld;
-                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max_old = frmSet.historyDatas.ClientPUMdemandMaxOld;
-                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = frmSet.historyDatas.ClientPUMdemandMax;
-                    }
+                    frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max_old = frmSet.historyDatas.E1PUMdemandMaxOld;
+                    frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max_old = frmSet.historyDatas.ClientPUMdemandMaxOld;
+                    frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = frmSet.historyDatas.ClientPUMdemandMax;      
                 }
 
+                log.Error("读取协议文件");
                 //从数据库中下载并实例化设备部件对象(包括 comlist)
                 if (!frmMain.Selffrm.AllEquipment.LoadSetFromFile())
                 {
                     //加载数据库或者协议文件失败，则EMS重启
                     frmSet.RestartApplicationNoCount();
                 }
-
+                log.Error("读取协议文件结束");
 
                 //初始化端口
                 frmSet.InitGPIO();
@@ -511,12 +512,26 @@ namespace EMS
                 //若配置接入104服务
                 if (frmSet.config.Open104 == 1)
                 {
+                    //恢复远动状态
+                    if (frmSet.historyDatas.YDstatus == 1)
+                    {
+                        frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
+                        frmSet.config.SysMode = 2;
+                        frmMain.TacticsList.TacticsOn = false;   //关闭策略
+
+                        //初始化设置
+                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                        frmMain.Selffrm.AllEquipment.HostStart = true;
+                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                    }
+
                     frmMain.Selffrm.Slave104.IEC104_Init();
 
                     if (frmMain.Selffrm.TCPserver.TCPServerIni(2404))//配置主站开放2404端口
                     {
                         frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接  
-                    }                    
+                    }
+
                 }
 
                 //使用TCP/IP通讯方式
@@ -584,7 +599,7 @@ namespace EMS
             }
             catch (Exception err)
             {
-                frmMain.ShowDebugMSG(err.ToString());
+               log.Error("启动报错：" + err);
             }
             return Selffrm;
         }

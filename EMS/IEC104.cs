@@ -696,23 +696,22 @@ namespace IEC104
                 message[16] = 0x01;
             else if (frmMain.Selffrm.AllEquipment.runState == 0)
                 message[16] = 0x00;
-            //PCS充电放电状态 （1：充电 0：放电）
+            //BMS通信 ： （ 1：通信 0：失联 ）
             if (frmMain.Selffrm.AllEquipment.BMS.Prepared == true)
                 message[17] = 0x01;
             else
                 message[17] = 0x00;
-            //BMS通信 ： （ 1：通信 0：失联 ）
+            //储能需求侧相应模式投入 ( 1:进入网控 0：未进入)
             if (frmMain.Selffrm.AllEquipment.eState == 2)
                 message[18] = 0x01;
             else
                 message[18] = 0x00;
-            //储能需求侧相应模式投入 ( 1:进入网控 0：未进入)
+            //PCS开关状态  0:停机 1：开机
             if (frmMain.Selffrm.AllEquipment.PCSList[0].Prepared == true)
                 message[19] = 0x01;
             else
                 message[19] = 0x00;
-            //log.Debug("104内部 PcsRun" + frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun);
-            //PCS开关状态  0:停机 1：开机
+            //log.Debug("104内部 PcsRun" + frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun);   
             if (frmMain.Selffrm.AllEquipment.ErrorState[2] == true)
                 message[20] = 0x01;
             else
@@ -836,7 +835,7 @@ namespace IEC104
                     }
                     //log.Debug("写入功率值：" + input + "写入PCSScheduleKVA" + frmMain.Selffrm.AllEquipment.PCSScheduleKVA);
                     break;
-                //储能需求侧响应模式投入
+/*                //储能需求侧响应模式投入
                 case 1:
                     if (msg[15] == 0x00)
                     {
@@ -863,7 +862,7 @@ namespace IEC104
                             frmMain.Selffrm.Slave104.HostStart_104 = false;
                         }
                     }
-                    break;
+                    break;*/
 
             }
             //send msg
@@ -1027,6 +1026,10 @@ namespace IEC104
 
                             frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
                         }
+
+                        //记录远动连接标志位
+                        frmSet.historyDatas.YDstatus = 0;
+                        frmSet.Set_HistoryData();
                     }
                     else  //开启
                     {
@@ -1042,6 +1045,10 @@ namespace IEC104
                             frmMain.Selffrm.AllEquipment.SlaveStart = true;
                             frmMain.Selffrm.Slave104.HostStart_104 = true;
                         }
+
+                        //记录远动连接标志位
+                        frmSet.historyDatas.YDstatus = 1;
+                        frmSet.Set_HistoryData();
                     }
                     break;
 

@@ -2020,7 +2020,8 @@ namespace EMS
                         new Column { Name = "DaliyE2OKWH_6", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
                         new Column { Name = "DaliyE2OKWH_7", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
                         new Column { Name = "DaliyE2OKWH_8", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
-                        new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数" }
+                        new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数"},
+                        new Column { Name = "YDstatus", Type = "int", IsNullable = true, Key = "" , Comment = "远动标志位" }
                     }
                 },
                 {

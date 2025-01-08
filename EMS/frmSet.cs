@@ -441,7 +441,7 @@ namespace EMS
         {
             bool result = false;
             string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
-                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount FROM HistoricalData;";
+                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData;";
 
             try
             {
@@ -477,6 +477,7 @@ namespace EMS
                                 historyDatas.DaliyE2OKWH_7 = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
                                 historyDatas.DaliyE2OKWH_8 = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
                                 historyDatas.RebootCount = rd.IsDBNull(22) ? 5 : rd.GetInt32(22);
+                                historyDatas.YDstatus = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
 
                                 result = true;
                             }
@@ -527,6 +528,7 @@ namespace EMS
                 + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
                 + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
                 + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
+                 + "', YDstatus ='" + frmSet.historyDatas.YDstatus.ToString()
                 + "';";
 
             bool result = false;
@@ -2521,6 +2523,7 @@ namespace EMS
             public volatile int DaliyE2OKWH_7;
             public volatile int DaliyE2OKWH_8;
             public volatile int RebootCount;
+            public volatile int YDstatus;
         }
 
         public class CloudLimitClass
@@ -2574,7 +2577,7 @@ namespace EMS
             public int Master485Addr { get; set; } // int
             public int i485Addr { get; set; } // int
             public int AutoRun { get; set; } // bool
-            public int SysMode { get; set; } // int
+            public int SysMode { get; set; } // int  0手动，1策略，2网控
             public int PCSGridModel { get; set; } // int
             public string DebugComName { get; set; } // varchar(255)
             public int DebugRate { get; set; } // int
