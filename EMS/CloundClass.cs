@@ -12,6 +12,8 @@ using log4net;
 using System.Runtime.InteropServices;
 using M2Mqtt.Exceptions;
 using System.Threading.Tasks;
+using System.Web.UI;
+using static System.Windows.Forms.AxHost;
 
 namespace EMS
 {
@@ -709,6 +711,7 @@ namespace EMS
 
                 if (topic == TacticTopic + "request")
                 {
+                    log.Error("TacticTopic: " + topic);
                     Result = GetServerTactics(message);
                     log.Info("接收TacticTopic，获取锁_lockMqtt");
                     lock (_lockMqtt)
@@ -1485,55 +1488,103 @@ namespace EMS
                     return false;
                 }
 
-                //清理旧数据
-                if (DBConnection.CheckRec("select *  FROM tactics"))
+                if (jsonObject["params"]["date"] != null)
                 {
-                    DBConnection.ExecSQL("delete FROM tactics");
-                }
+                    //获取策略日期
+                    string strDate = jsonObject["params"]["date"].ToString();
 
-                string strData = "";
-                //增加新数据
-                for (int i = 0; i < iTacticCount; i++)
-                {
-                    strData = jsonObject["params"]["strategy"][i]["start"].ToString() + "','"
-                        + jsonObject["params"]["strategy"][i]["end"].ToString() + "',";
-
-                    if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
-                        strData += "'充电',";
-                    else
-                        strData += "'放电',";
-
-                    if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
-                        strData += "'恒功率','" + jsonObject["params"]["strategy"][i]["value"].ToString();
-                    else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
-                        strData += "'自适应需量','" + jsonObject["params"]["strategy"][i]["value"].ToString() + "','";
-
-                    if (jsonObject["rTime"] == null)
+                    //增加新数据
+                    for (int i = 0; i < iTacticCount; i++)
                     {
-                        string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                        strData += strDate;
+                        string strInsert = "";
+                        string strDelete = "";
+                        string start = "";
+                        string end = "";
+                        string charge = "";
+                        string mode = "";
+                        string value = "";
+                        string strategyDate = "";
+
+                        if (jsonObject["params"]["strategy"][i]["start"] != null)
+                        {
+                            start = jsonObject["params"]["strategy"][i]["start"].ToString();
+                        }
+
+                        if (jsonObject["params"]["strategy"][i]["end"] != null)
+                        {
+                            end = jsonObject["params"]["strategy"][i]["end"].ToString();
+                        }
+
+                        if (jsonObject["params"]["strategy"][i]["charge"] != null)
+                        {
+                            if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
+                                charge = "充电";
+                            else
+                                charge = "放电";
+                        }
+
+                        if (jsonObject["params"]["strategy"][i]["mode"] != null)
+                        {
+                            if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
+                            {
+                                mode = "恒功率";
+                            }
+                            else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
+                            {
+                                mode = "自适应需量";
+                            }
+                        }
+
+                        if (jsonObject["params"]["strategy"][i]["value"] != null)
+                        {
+                            value = jsonObject["params"]["strategy"][i]["value"].ToString();
+                        }
+
+                        if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
+                        {
+                            strategyDate = jsonObject["params"]["strategy"][i]["value"].ToString();
+                        }
+                        else
+                        {
+                            strategyDate = strDate;
+                        }
+
+                        //确定是否有设置日期的策略
+
+                        string strquery = "select * from tactics where rTime = '" + strDate +"';";
+                        if (start != null && end != null && charge != null && mode != null && value != null)
+                        {
+                            if (DBConnection.CheckRec(strquery))//查找同日期的策略
+                            {
+                                //删除
+                                strDelete = "delete from tactics where rTime = '"+ strDate + "';";
+
+                                //插入
+                                DBConnection.ExecSQL(strDelete);
+                            }
+
+                            strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                                    "VALUES ('" + start + "', '" + end + "', '" + charge + "', '" + mode + "', '" + value + "', '" + strategyDate + "')";
+                            
+                            //插入
+                            if (DBConnection.ExecSQL(strInsert))
+                            {
+                                result = true;
+                            }
+                        }
+
+
+                    }
+
+                    if (frmMain.TacticsList.LoadFromMySQL())
+                    {
+                        frmMain.TacticsList.ActiveIndex = -1;
+                        result  = true;
                     }
                     else
                     {
-                        strData += jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
+                        result = false;
                     }
-                    //从云获取策略插入数据库中
-                    strData = "INSERT into tactics (startTime, endTime,tType, PCSType, waValue, rTime)VALUES('" + strData + "')";
-
-                    if (!DBConnection.ExecSQL(strData))
-                    {
-                        return false;
-                    }
-                }
-
-                if (frmMain.TacticsList.LoadFromMySQL())
-                {
-                    frmMain.TacticsList.ActiveIndex = -1;
-                    result  = true;
-                }
-                else
-                { 
-                    result = false;
                 }
             }
             catch (Exception ex)

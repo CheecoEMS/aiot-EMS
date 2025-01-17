@@ -1,12 +1,15 @@
 ﻿using log4net;
 using MySql.Data.MySqlClient;
+using Mysqlx.Crud;
 using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Windows.Forms.DataVisualization.Charting;
+using static Mysqlx.Expect.Open.Types;
 
 namespace EMS
 {
@@ -19,6 +22,7 @@ namespace EMS
         public string tType;
         public string PCSType;
         public int waValue;
+        public DateTime strategyDate;//策略日期
     }
 
     //全部策列，策略类
@@ -173,13 +177,46 @@ namespace EMS
             }
         }
 
-        //数据库中重新装载策略数据
-        public bool LoadFromMySQL()
+        public bool cleanTacticsFromMysql()
         {
             bool Result = false;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string astrSQL = "select startTime,endTime, tType, PCSType, waValue"
-                    + " from tactics " + "where rTime = " + strDate + " order by startTime";
+            string astrSQL = "DELETE from tactics where rTime < '" +strDate+"';";
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        {
+                            if (rd != null && rd.HasRows)
+                            {
+                                DBConnection.ExecSQL(astrSQL);
+                                Result = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+            }
+            return Result;
+        }
+
+
+
+        //数据库中重新装载策略数据
+        public bool LoadFromMySQL()
+        {
+            cleanTacticsFromMysql();
+            bool Result = false;
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
+                    + " from tactics " + "where rTime = '" + strDate + "' order by startTime";
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
@@ -226,6 +263,9 @@ namespace EMS
                                             oneTactics.waValue = -rd.GetInt32(4);
                                         else
                                             oneTactics.waValue = rd.GetInt32(4);
+
+                                        //策略日期
+                                        oneTactics.strategyDate = rd.GetDateTime(5);
 
                                         TacticsList.Add(oneTactics);
                                     }
@@ -448,33 +488,40 @@ namespace EMS
         //判断是否在时间段内
         private bool CheckTimeInShedule(TacticsClass aTactics, DateTime aTime)
         {
-            string strStrtTime = aTactics.startTime.ToString("HH:mm:ss");
-            string strEndTime = aTactics.endTime.ToString("HH:mm:ss");
-              
-            string strNow = aTime.ToString("HH:mm:ss");
-            if (strStrtTime.CompareTo(strEndTime) < 0)
+            if (aTactics.strategyDate == DateTime.Now)
             {
-                if ((strNow.CompareTo(strStrtTime) >= 0) &&
-                    (strNow.CompareTo(strEndTime) <= 0))
+                string strStrtTime = aTactics.startTime.ToString("HH:mm:ss");
+                string strEndTime = aTactics.endTime.ToString("HH:mm:ss");
+
+                string strNow = aTime.ToString("HH:mm:ss");
+                if (strStrtTime.CompareTo(strEndTime) < 0)
                 {
-                    return true;
+                    if ((strNow.CompareTo(strStrtTime) >= 0) &&
+                        (strNow.CompareTo(strEndTime) <= 0))
+                    {
+                        return true;
+                    }
+                    else
+                        return false;
                 }
-                else
+                //今晚到明天的策略
+                else if (strStrtTime.CompareTo(strEndTime) > 0)
+                {
+                    if ((strNow.CompareTo(strStrtTime) >= 0) ||
+                            (strNow.CompareTo(strEndTime) < 0))
+                    {
+                        return true;
+                    }
+                    else
+                        return false;
+                }
+                else //if (strStrtTime.CompareTo(strEndTime) == 0)
                     return false;
             }
-            //今晚到明天的策略
-            else if (strStrtTime.CompareTo(strEndTime) > 0)
-            {
-                if ((strNow.CompareTo(strStrtTime) >= 0) ||
-                        (strNow.CompareTo(strEndTime) < 0))
-                {
-                    return true;
-                }
-                else
-                    return false;
-            }
-            else //if (strStrtTime.CompareTo(strEndTime) == 0)
+            else
+            { 
                 return false;
+            }
         }
 
 

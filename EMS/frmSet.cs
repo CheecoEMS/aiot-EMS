@@ -2055,8 +2055,8 @@ namespace EMS
         {
 
             DBConnection.SetDBGrid(oneForm.dbgTactics);
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
-
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
             btnE.BackColor = Color.Transparent;
@@ -2459,7 +2459,8 @@ namespace EMS
         {
             RenewTactics();
             RenewBalaTactics();
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
         }
 
         /************************* DB Class *********************************/
