@@ -47,20 +47,67 @@ namespace EMS
             Parent = aParent;
         }
 
-/*        public void LoadJFPGFromSQL()
-        {
-            string astrSQL = "select startTime, eName  from electrovalence ";
+        /*        public void LoadJFPGFromSQL()
+                {
+                    string astrSQL = "select startTime, eName  from electrovalence ";
 
+                    try
+                    {
+                        byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0 };//14*3=42    14个时段 ： 号 时 分
+                        int i = 0;
+                        DateTime dtTemp;
+
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows)
+                                    {
+                                        while (rd.Read())
+                                        {
+                                            tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                            dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                                            tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
+                                            tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
+                                            i++;
+                                        }
+
+                                        byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
+                                        byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
+                                        }
+                                        if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
+                                        {
+                                            frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex) { Console.Write(ex.Message); }
+                    finally
+                    {
+
+                    }
+                }*/
+
+        public bool cleanJFPGFromMysql()
+        {
+            bool Result = false;
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            string astrSQL = "DELETE from electrovalence where rTime < '" +strDate+"';";
             try
             {
-                byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
-                int i = 0;
-                DateTime dtTemp;
-
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
                     connection.Open();
@@ -70,39 +117,24 @@ namespace EMS
                         {
                             if (rd != null && rd.HasRows)
                             {
-                                while (rd.Read())
-                                {
-                                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                                    dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Minute;
-                                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Hour;
-                                    i++;
-                                }
-
-                                byte[] atable1 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//使用第三套表 1.1-3.1  3.1-6.1 6.1-9.1 9.1-12.1 拼成1年
-                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
-                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG(atable1, tempJFPG);
-                                }
-                                if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
-                                }
+                                DBConnection.ExecSQL(astrSQL);
+                                Result = true;
                             }
                         }
                     }
                 }
             }
-            catch (Exception ex) { Console.Write(ex.Message); }
-            finally
+            catch (Exception ex)
             {
-
+                log.Error(ex.Message);
             }
-        }*/
+            return Result;
+        }
+
 
         public void LoadJFPGFromSQL()
         {
+            cleanJFPGFromMysql();
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime, eName  from electrovalence " + "where rTime = " + strDate;
 
@@ -488,7 +520,8 @@ namespace EMS
         //判断是否在时间段内
         private bool CheckTimeInShedule(TacticsClass aTactics, DateTime aTime)
         {
-            if (aTactics.strategyDate == DateTime.Now)
+            //找到符合当前日期的策略
+            if (aTactics.strategyDate.ToString("yyyy-MM-dd") == DateTime.Now.ToString("yyyy-MM-dd"))
             {
                 string strStrtTime = aTactics.startTime.ToString("HH:mm:ss");
                 string strEndTime = aTactics.endTime.ToString("HH:mm:ss");

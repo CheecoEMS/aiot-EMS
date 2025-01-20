@@ -440,6 +440,8 @@ namespace EMS
                 ElectrovalenceList.LoadFromMySQL();
                 //下载策略
                 TacticsList.LoadFromMySQL();
+                //更新电表时段
+                frmMain.TacticsList.LoadJFPGFromSQL();
                 //策略曲线图展示
                 ShowShedule2Char(true);
                 //下载均衡策略
@@ -729,13 +731,14 @@ namespace EMS
                         // 校准电表日期
                         frmMain.Selffrm.AllEquipment.MeterCalibration();
 
+                        frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段
+
                         // 每晚00:00更新策略
                         if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
                         {
                             try
                             {
                                 frmMain.TacticsList.LoadFromMySQL();//重新装载策略
-                                frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段
                             }
                             catch (Exception ex)
                             {

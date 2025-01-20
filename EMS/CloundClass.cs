@@ -744,6 +744,7 @@ namespace EMS
                 }
                 else if (topic == PriceTopic + "request")
                 {
+                    log.Error("PriceTopic" + topic);
                     Result = GetServerEPrices(message);
                     log.Info("接收PriceTopic，获取锁_lockMqtt");
                     lock (_lockMqtt)
@@ -1602,71 +1603,95 @@ namespace EMS
         ///     "range":3 //  尖：1峰：2平：3谷：4
         /// </summary>
         /// <param name="astrTacticFile"></param>
-        public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
+        /// 
+
+        public bool GetServerEPrices(string astrData, bool aIsFileData = false)
         {
             bool result = false;
             try
             {
+                if (astrData == "")
+                {
+                    return false;
+                }
                 JObject jsonObject = null;
-                string strDataFile = "";
-                if (aIsFileData)
-                {
-                    strDataFile = strDownPath + "\\" + astrData;
-                    if (!File.Exists(strDataFile))
-                        return false;
-                    StreamReader file = File.OpenText(strDataFile);
-                    JsonTextReader reader = new JsonTextReader(file);
-                    jsonObject = (JObject)JToken.ReadFrom(reader);
-                }
-                else
-                {
-                    if (astrData == "")
-                        return false;
-                    jsonObject = JObject.Parse(astrData);
-                }
-
-                string date = jsonObject["params"]["date"].ToString();
-                int iPriceCount = jsonObject["params"]["price"].Count();
+                jsonObject = JObject.Parse(astrData);
                 string strTopic = jsonObject["method"].ToString();
                 if (strTopic != "meter/price")
                     return false;
+                int iPriceCount = jsonObject["params"]["price"].Count();
 
-                //清理旧数据
-                DBConnection.ExecSQL("delete FROM electrovalence");
-                string strData = "";
-                int isection = 0;
-                //增加新数据
-                for (int i = 0; i < iPriceCount; i++)
+                if (jsonObject["params"]["date"] != null)
                 {
-                    isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
-                    frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
-                    frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
-                    strData = jsonObject["params"]["price"][i]["start"].ToString() + "','"
-                        + isection.ToString() + "','0','";
+                    //获取策略日期
+                    string strDate = jsonObject["params"]["date"].ToString();
+                    //增加新数据
+                    for (int i = 0; i < iPriceCount; i++)
+                    {
+                        string strInsert = "";
+                        string strDelete = "";
+                        int isection = -1;
+                        string start = "";
+                        string pricdate = "";
 
-                    if (jsonObject["rTime"] == null)
-                    {
-                        string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                        strData += strDate;
-                    }
-                    else
-                    {
-                        strData += jsonObject["params"]["price"][i]["pricdate"].ToString();
+                        if (jsonObject["params"]["price"][i]["range"] != null)
+                        {
+                            isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
+
+                            if (jsonObject["params"]["price"][i]["buyPrice"] != null)
+                            {
+                                frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
+                            }
+
+                            if (jsonObject["params"]["price"][i]["sellPrice"] != null)
+                            {
+                                frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
+                            }
+                        }
+
+                        if (jsonObject["params"]["price"][i]["start"] != null)
+                        {
+                            start = jsonObject["params"]["price"][i]["start"].ToString();
+                        }
+
+                        if (jsonObject["params"]["price"][i]["pricdate"] != null)
+                        {
+                            pricdate = jsonObject["params"]["price"][i]["pricdate"].ToString();
+                        }
+                        else
+                        {
+                            pricdate = strDate;
+                        }
+
+                        //确定是否有设置日期的策略
+
+                        string strquery = "select * from electrovalence where rTime = '" + strDate +"';";
+                        if (start != null && isection != -1 && start != null)
+                        {
+                            if (DBConnection.CheckRec(strquery))//查找同日期的策略
+                            {
+                                //删除
+                                strDelete = "delete from electrovalence where rTime = '"+ strDate + "';";
+
+                                //插入
+                                DBConnection.ExecSQL(strDelete);
+                            }
+
+                            strInsert = "INSERT INTO electrovalence (startTime, eName,section, rTime) " +
+                                    "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricdate + "')";
+
+                            //插入
+                            if (DBConnection.ExecSQL(strInsert))
+                            {
+                                result = true;
+                            }
+                        }
+
+
                     }
 
-                    strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
-                    
-                    if(DBConnection.ExecSQL(strData))
-                    {
-                        result = true;
-                    }
-                }
-                //更新策略
-                if (result)
-                {
                     frmMain.TacticsList.LoadJFPGFromSQL();
-                    if (aIsFileData)
-                        File.Delete(strDataFile);
+
                 }
             }
             catch (Exception ex)
@@ -1677,7 +1702,84 @@ namespace EMS
             return result;
         }
 
-        
+
+
+        /*        public bool  GetServerEPrices(string astrData, bool aIsFileData = false)
+                {
+                    bool result = false;
+                    try
+                    {
+                        JObject jsonObject = null;
+                        string strDataFile = "";
+                        if (aIsFileData)
+                        {
+                            strDataFile = strDownPath + "\\" + astrData;
+                            if (!File.Exists(strDataFile))
+                                return false;
+                            StreamReader file = File.OpenText(strDataFile);
+                            JsonTextReader reader = new JsonTextReader(file);
+                            jsonObject = (JObject)JToken.ReadFrom(reader);
+                        }
+                        else
+                        {
+                            if (astrData == "")
+                                return false;
+                            jsonObject = JObject.Parse(astrData);
+                        }
+
+                        string date = jsonObject["params"]["date"].ToString();
+                        int iPriceCount = jsonObject["params"]["price"].Count();
+                        string strTopic = jsonObject["method"].ToString();
+                        if (strTopic != "meter/price")
+                            return false;
+
+                        //清理旧数据
+                        DBConnection.ExecSQL("delete FROM electrovalence");
+                        string strData = "";
+                        int isection = 0;
+                        //增加新数据
+                        for (int i = 0; i < iPriceCount; i++)
+                        {
+                            isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
+                            frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
+                            frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
+                            strData = jsonObject["params"]["price"][i]["start"].ToString() + "','"
+                                + isection.ToString() + "','0','";
+
+                            if (jsonObject["rTime"] == null)
+                            {
+                                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                                strData += strDate;
+                            }
+                            else
+                            {
+                                strData += jsonObject["params"]["price"][i]["pricdate"].ToString();
+                            }
+
+                            strData = "INSERT into electrovalence (startTime, eName,section, rTime)VALUES('" + strData + "')";
+
+                            if(DBConnection.ExecSQL(strData))
+                            {
+                                result = true;
+                            }
+                        }
+                        //更新策略
+                        if (result)
+                        {
+                            frmMain.TacticsList.LoadJFPGFromSQL();
+                            if (aIsFileData)
+                                File.Delete(strDataFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("GetServerEPrices: " + ex.Message);
+                    }
+                    //输出返回数据
+                    return result;
+                }*/
+
+
         //云发来的策略数据
         public string GetAiotTable(string astrData)
         {
