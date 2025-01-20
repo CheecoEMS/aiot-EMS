@@ -39,6 +39,7 @@ namespace EMS
             oneForm.ShowData(aDBGrid);
             if (oneForm.ShowDialog() == DialogResult.OK)
             {//,,,,,,
+                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
                 DBConnection.ExecSQL("update  tactics  SET "
                      + " tType='" + oneForm.tcbtType.strText
                      + "',PCSType='" + oneForm.tcbPCSType.strText
@@ -54,7 +55,7 @@ namespace EMS
                     + oneForm.tneEndS.Value.ToString("D2")
                      + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
+                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();
@@ -68,7 +69,8 @@ namespace EMS
             oneForm.CleanForm();
             if (oneForm.ShowDialog() == DialogResult.OK)
             {
-                DBConnection.ExecSQL("insert into tactics (startTime,endTime,tType,PCSType,waValue) "
+                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                DBConnection.ExecSQL("insert into tactics (startTime,endTime,tType,PCSType,waValue,rTime) "
                     + "values ('"
                     + oneForm.tneStartH.Value.ToString("D2") + ":"
                     + oneForm.tneStartm.Value.ToString("D2") + ":"
@@ -78,9 +80,10 @@ namespace EMS
                     + oneForm.tneEndS.Value.ToString("D2") + "','"
                     + oneForm.tcbtType.strText + "','"
                     + oneForm.tcbPCSType.strText + "','"
-                    + oneForm.tnedwaValue.Value.ToString() + "') ");
+                    + oneForm.tnedwaValue.Value.ToString() + "','"
+                    + strDate  + "') ");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics order by startTime");
+                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }

@@ -356,7 +356,7 @@ namespace EMS
             try
             {
                 //延迟等待2min
-                Thread.Sleep(120000);
+                //Thread.Sleep(120000);
 
                 //配置Config配置文件地址，获取配置文件中的设定
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
@@ -441,6 +441,8 @@ namespace EMS
                 ElectrovalenceList.LoadFromMySQL();
                 //下载策略
                 TacticsList.LoadFromMySQL();
+                //更新电表时段
+                frmMain.TacticsList.LoadJFPGFromSQL();
                 //策略曲线图展示
                 ShowShedule2Char(true);
                 //下载均衡策略
@@ -746,12 +748,14 @@ namespace EMS
                         // 校准电表日期
                         frmMain.Selffrm.AllEquipment.MeterCalibration();
 
+                        frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段
+
                         // 每晚00:00更新策略
                         if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
                         {
                             try
                             {
-                                frmMain.TacticsList.LoadFromMySQL();
+                                frmMain.TacticsList.LoadFromMySQL();//重新装载策略
                             }
                             catch (Exception ex)
                             {

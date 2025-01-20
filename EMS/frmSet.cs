@@ -2057,8 +2057,8 @@ namespace EMS
         {
 
             DBConnection.SetDBGrid(oneForm.dbgTactics);
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
-
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
             btnE.BackColor = Color.Transparent;
@@ -2385,8 +2385,9 @@ namespace EMS
 
         private void btnUpdata_Click(object sender, EventArgs e)
         {
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             frmMain.TacticsList.LoadJFPGFromSQL();
-            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
+            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
         }
 
         //控制模式->空调设置->应用
@@ -2461,7 +2462,8 @@ namespace EMS
         {
             RenewTactics();
             RenewBalaTactics();
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
         }
 
         /************************* DB Class *********************************/

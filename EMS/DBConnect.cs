@@ -1480,10 +1480,10 @@ namespace EMS
                     "electrovalence", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "" },
+                        new Column { Name = "rTime", Type = "date", IsNullable = true, Key = "" },
                         new Column { Name = "section", Type = "int", IsNullable = true, Key = "", Comment = "区段0/1" },
                         new Column { Name = "startTime", Type = "time", IsNullable = true, Key = "" },
-                        new Column { Name = "eName", Type = "varchar(10)", IsNullable = true, Key = "", Comment = "无尖峰平谷" }
+                        new Column { Name = "eName", Type = "varchar(10)", IsNullable = true, Key = "", Comment = "无尖峰平谷深谷678" }
                     }
                 },
                 {

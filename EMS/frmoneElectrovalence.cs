@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using static System.Windows.Forms.AxHost;
 
 namespace EMS
 {
@@ -46,15 +47,17 @@ namespace EMS
             oneForm.ShowData(aDBGrid);
             if (oneForm.ShowDialog() == DialogResult.OK)
             {
+                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+
                 DateTime dtTemp = Convert.ToDateTime("2022-01-01 " + oneForm.tneH.Value.ToString() + ":"
                     + oneForm.tneM.Value.ToString() + ":0");
                 DBConnection.ExecSQL("update  electrovalence  SET "
                       + " eName='" + oneForm.tbeName.SelectItemIndex.ToString()
                       + "',section='" + oneForm.tcbSection.SelectItemIndex.ToString()
                       + "', startTime= '" + dtTemp.ToString("H:m:0")
-                      + "' where id='" + DataID + "'");
+                + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
+                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();
@@ -69,14 +72,17 @@ namespace EMS
             oneForm.CleanForm();
             if (oneForm.ShowDialog() == DialogResult.OK)
             {
+                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+
                 DateTime dtTemp = Convert.ToDateTime("2022-01-01 " + oneForm.tneH.Value.ToString() + ":"
                     + oneForm.tneM.Value.ToString() + ":0");
-                DBConnection.ExecSQL("insert into electrovalence (section,eName,startTime)  values ('"
+                DBConnection.ExecSQL("insert into electrovalence (section,eName,startTime,rTime)  values ('"
                       + oneForm.tcbSection.SelectItemIndex.ToString() + "','"
                       + oneForm.tbeName.SelectItemIndex.ToString() + "','"
-                      + dtTemp.ToString("H:m:s") + "')");
+                      + dtTemp.ToString("H:m:s") + "','"
+                      + strDate + "')");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence order by section");
+                DBConnection.ShowData2DBGrid(aDBGrid, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }
