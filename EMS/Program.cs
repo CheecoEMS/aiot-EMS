@@ -46,7 +46,7 @@ namespace EMS
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static async Task Main()
+        static void Main()
         {
             /*            try
                         {
@@ -78,45 +78,49 @@ namespace EMS
 
             try
             {
-                // 定义要执行的命令
-                string[] commands = new string[2];
 
-                commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
-                commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
-
-                for (int i = 0; i < 2; ++i)
+                if (!CheckAppExists())
                 {
-                    // 创建 ProcessStartInfo 对象，并配置其属性
-                    ProcessStartInfo processStartInfo = new ProcessStartInfo("cmd", "/c " + commands[i])
+                    // 定义要执行的命令
+                    string[] commands = new string[2];
+
+                    commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
+                    commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
+
+                    for (int i = 0; i < 2; ++i)
                     {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                    // 创建并启动进程
-                    // 启动进程
-                    using (Process process = Process.Start(processStartInfo))
-                    {
-                        // 等待进程退出
-                        process.WaitForExit();
+                        // 创建 ProcessStartInfo 对象，并配置其属性
+                        ProcessStartInfo processStartInfo = new ProcessStartInfo("cmd", "/c " + commands[i])
+                        {
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        // 创建并启动进程
+                        // 启动进程
+                        using (Process process = Process.Start(processStartInfo))
+                        {
+                            // 等待进程退出
+                            process.WaitForExit();
+                        }
                     }
+
+
+
+                    //启动EMS主程序
+                    Application.EnableVisualStyles();
+
+                    frmFlash.ShowFlashForm();
+                    frmFlash.AddPostion(10);
+                    frmMain.Selffrm = new frmMain();
+
+                    Application.Run(frmMain.Selffrm);
                 }
-
-
-
-                //启动EMS主程序
-                Application.EnableVisualStyles();
-
-                frmFlash.ShowFlashForm();
-                frmFlash.AddPostion(10);
-                frmMain.Selffrm = new frmMain();
-
-                Application.Run(frmMain.Selffrm);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"发生错误: {ex.Message}");
+               log.Error($"应用程序的主入口点发生错误: {ex.Message}");
             }
 
 

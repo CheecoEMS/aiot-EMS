@@ -179,60 +179,85 @@ namespace EMS
         {
             int maxRetry = 3;  // 最大重试次数
             int attempt = 0;   // 当前重试次数
-
-            if (!File.Exists(strCommandFile))
-            {
-                log.Error("协议文件不存在，无法读取。");
-                return false;
-            }
+            bool res = false;
 
             while (attempt < maxRetry)
             {
                 try
                 {
-                    attempt++;
-                    using (StreamReader srFile = File.OpenText(strCommandFile))
+                    attempt++; // 每次开始新尝试时增加计数
+
+                    string strSysPath = System.AppDomain.CurrentDomain.BaseDirectory;
+                    string fullPath = Path.Combine(strSysPath, strCommandFile);
+                    log.Error("文件在：" + fullPath);
+
+                    if (!File.Exists(fullPath))
                     {
-                        string strData = srFile.ReadLine();
+                        log.Error("文件不存在：" + fullPath);
+                        return false;
+                    }
+
+                    // 读取数据
+                    using (StreamReader srFile = File.OpenText(fullPath))
+                    {
+                        string strData;
                         ComList.Clear();
 
-                        while (strData != null)
+                        while ((strData = srFile.ReadLine()) != null)
                         {
-                            strData = strData.Trim();
+                            strData = strData.Trim(); // 去掉首尾空格字符
 
-                            // 跳过空白行或注释行
-                            if (string.IsNullOrEmpty(strData) ||
-                                strData.StartsWith("#") ||
-                                strData.StartsWith("*"))
+                            // 遇到空白行、以"#"或"*"开头的行跳过
+                            if (string.IsNullOrWhiteSpace(strData) || strData.StartsWith("#") || strData.StartsWith("*"))
                             {
-                                strData = srFile.ReadLine();
                                 continue;
                             }
 
                             ModbusCommand oneCommand = new ModbusCommand();
                             if (strData2Park(strData, ref oneCommand, this.pc))
+                            {
                                 ComList.Add(oneCommand);
-
-                            strData = srFile.ReadLine();
+                                log.Debug($"命令添加成功: {strData}");
+                            }
+                            else
+                            {
+                                log.Warn($"命令解析失败: {strData}");
+                            }
                         }
 
-                        // 检查是否有有效内容
-                        if (ComList.Count > 0)
-                        {
-                            log.Error("成功从协议文件加载命令: " + strCommandFile);
-                            return true;
-                        }
+                        // 成功执行后退出循环
+                        res = true;
+                        break;
                     }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    log.Error($"文件未找到 (尝试 {attempt}/{maxRetry})：{ex.Message}");
+                    // 如果文件确实不存在，直接返回false，不再重试
+                    return false;
+                }
+                catch (IOException ex)
+                {
+                    log.Error($"IO 错误 (尝试 {attempt}/{maxRetry})：{ex.Message}");
+                    // 等待一段时间后再重试
+                    Thread.Sleep(1000); // 简单示例中等待1秒，实际应用中可以调整
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"读取协议失败 ({strCommandFile} :尝试 {attempt}/{maxRetry})：" + ex.Message);
+                    log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：{ex.ToString()}");
+                    // 等待一段时间后再重试
+                    Thread.Sleep(1000); // 简单示例中等待1秒，实际应用中可以调整
                 }
             }
 
-            log.Error("从协议文件加载命令失败: " + strCommandFile);
-            return false;
+            if (!res)
+            {
+                log.Error($"所有尝试均失败，共尝试了 {maxRetry} 次");
+            }
+
+            return res;
         }
+
 
         /*        public bool LoadCommandFromFile()
                 {
@@ -246,13 +271,22 @@ namespace EMS
                         try
                         {
                             attempt++; // 每次开始新尝试时增加计数
-                            if (!File.Exists(strCommandFile))
+
+                            string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
+                            string fullPath = strSysPath + strCommandFile;
+                            log.Error("文件在： " + fullPath);
+
+                            if (!File.Exists(fullPath))
+                            {
+                                log.Error("文件不存在：" + fullPath);
                                 return false;
+                            }
 
                             // 读取数据
-                            using (StreamReader srFile = File.OpenText(strCommandFile))
+                            using (StreamReader srFile = File.OpenText(fullPath))
                             {
                                 string strData = srFile.ReadLine();
+                                log.Error("协议内容：" + strData);
                                 ComList.Clear();
 
                                 while (strData != null)
@@ -287,48 +321,51 @@ namespace EMS
                     return res;
                 }*/
 
+
         public string LoadVersionFromFile()
         {
             string version = "";
-            if (!File.Exists(strCommandFile))
+
+            string strSysPath = System.AppDomain.CurrentDomain.BaseDirectory;
+            string fullPath = System.IO.Path.Combine(strSysPath, strCommandFile);
+
+            if (!System.IO.File.Exists(fullPath))
                 return "";
 
-            //读取数据
-            StreamReader srFile = File.OpenText(strCommandFile);
-            try
+            // 使用 using 确保流被正确关闭
+            using (StreamReader srFile = System.IO.File.OpenText(fullPath))
             {
-                string strData = srFile.ReadLine();
-                ComList.Clear();
-                while (strData != null)
+                try
                 {
-                    strData = strData.Trim();//去掉首尾空格字符
-                    if ((strData.Substring(0, 1) == "*"))//遇到“*”开头的解释字符读取版本的号
+                    string strData;
+                    while ((strData = srFile.ReadLine()) != null)
                     {
-                        version = strData.Substring(1);
-                        return version;
-                    }
+                        strData = strData.Trim(); // 去掉首尾空格字符
 
-                    if ((strData == "") || (strData.Substring(0, 1) == "#"))//遇到空白行或者 “#”开头的解释字符跳过
-                    {
-                        strData = srFile.ReadLine();
-                        continue;
+                        // 检查字符串是否为空或太短
+                        if (string.IsNullOrWhiteSpace(strData) || strData.Length < 1)
+                            continue;
+
+                        // 遇到“*”开头的解释字符读取版本号
+                        if (strData.StartsWith("*"))
+                        {
+                            version = strData.Substring(1).Trim();
+                            break; // 找到版本号后立即退出循环
+                        }
+
+                        // 跳过空白行或者以 “#” 开头的注释行
+                        if (strData.StartsWith("#"))
+                            continue;
                     }
-                    strData = srFile.ReadLine();
                 }
-                return "";
-
-
+                catch (Exception ex)
+                {
+                    log.Error("LoadVersionFromFile:" + ex.ToString());
+                    return "";
+                }
             }
-            catch (Exception ex)
-            {
-                frmMain.ShowDebugMSG(ex.ToString());
-                return "";
 
-            }
-            finally
-            {
-                srFile.Close();
-            }
+            return version;
         }
 
         //把类的当时数据保存到数据库
@@ -3843,7 +3880,9 @@ namespace EMS
                 bResult = true;
             }
             catch (Exception ex)
-            { frmMain.ShowDebugMSG(ex.ToString()); }
+            { 
+               log.Error("英博ExecCommand1错误："+ex.ToString()); 
+            }
             finally
             {
             }
@@ -3913,7 +3952,9 @@ namespace EMS
                 bResult = true;
             }
             catch (Exception ex)
-            { frmMain.ShowDebugMSG(ex.ToString()); }
+            { 
+                log.Error("精石ExecCommand2错误 :" +ex.ToString()); 
+            }
             finally
             {
             }
@@ -6485,7 +6526,7 @@ namespace EMS
             Version version = assembly.GetName().Version;
             EMSVersion = version.ToString();*/
 
-            EMSVersion = "1.0.3";
+            EMSVersion = "1.0.4";
         }
 
         //析构函数
@@ -6664,7 +6705,7 @@ namespace EMS
                 //判断策略功率是否为0
                 if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
                 {
-                    frmSet.RestartWindows();
+                    //frmSet.RestartWindows();
                 }          
             }
         }
@@ -6795,6 +6836,8 @@ namespace EMS
             bool bResult = false;
             double fPower = frmMain.Selffrm.AllEquipment.GridKVA;
 
+            log.Debug("HostStart: " + HostStart + "PCSList.Count: " + PCSList.Count + "aWorkType:" + aWorkType + "ErrorState[2]: " + ErrorState[2]);
+
             if (HostStart)
             {
                 if (ErrorState[2])
@@ -6827,11 +6870,13 @@ namespace EMS
                             if ((BMSSOC > frmSet.cloudLimits.MaxSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
+                                log.Debug("充电失败,SOC过高");
                                 aData = 0;
                             }
                             else if ((BMS.MaxChargeA == 0) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "充电失败", "BMS禁止充电");
+                                log.Debug("充电失败,BMS禁止充电");
                                 aData = 0;
                             }
                             break;
@@ -6840,11 +6885,13 @@ namespace EMS
                             if ((BMSSOC < frmSet.cloudLimits.MinSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
+                                log.Debug("放电失败,SOC过低");
                                 aData = 0;
                             }
                             else if ((BMS.MaxDischargeA == 0) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "放电失败", "BMS禁止放电");
+                                log.Debug("放电失败,BMS禁止放电");
                                 aData = 0;
                             }
                             break;
@@ -6878,7 +6925,7 @@ namespace EMS
                                     frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
                                 }
                             }
-
+                            log.Debug("EMS下发功率：" + aData + "aPCSType: " + aPCSType);
                             if (aData != 0)
                             {  
                                 if (PCSList[j].ExecCommand(aPCSType, aData, BMSSOC)) //检查是否满足开启PCS条件，设置PCS的功率（不满足条件，设为0）
@@ -7168,7 +7215,7 @@ namespace EMS
                             }
                             else
                             {
-                                log.Error("数据库设备输入失败....重试");
+                                log.Error("数据库设备输入失败....重试 / 数据库没有定义任何设备");
                                 res = false;
                             }
                         }
@@ -7182,7 +7229,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("LoadSetFromFile错误： "+ ex.ToString());
                 res = false;
             }
             finally
@@ -7315,7 +7362,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("Save2DataSoure错误： " + ex.ToString());
             }
             finally
             {
@@ -7388,7 +7435,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadData错误: " + ex.ToString());
             }
         }
 
@@ -7546,9 +7593,6 @@ namespace EMS
             }
         }
 
-
-
-
         private void AutoLed_Control()
         {
             try
@@ -7630,7 +7674,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("Auto_Read_Serial: " + ex.ToString());
             }
         }
 
@@ -7692,7 +7736,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoControlEMSTCP错误:" + ex.ToString());
             }
         }
 
@@ -7737,7 +7781,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoControlEMS: " + ex.ToString());
             }
         }
         /******************************485 control*************************************/
@@ -7814,7 +7858,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadPointGrid: " + ex.ToString());
             }
         }
 
@@ -7877,7 +7921,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadPointPower: "+ex.ToString());
             }
         }
 
@@ -7928,7 +7972,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadE1: " + ex.ToString());
             }
         }
 
@@ -7956,7 +8000,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+               log.Error("AutoReadDataCom1: " + ex.ToString());
             }
         }
 
@@ -8915,7 +8959,7 @@ namespace EMS
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                    log.Error("ReadCom1Data故障" + ex.ToString());
                 }
             }
         }
@@ -8956,7 +9000,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadDataCom2错误:" + ex.ToString());
             }
         }
 
@@ -8971,7 +9015,7 @@ namespace EMS
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                    log.Error("读取线程故障" + ex.ToString());
                 }
             }
         }
@@ -9073,7 +9117,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("从设备上读取数据表2\\3\\4,5个传感器和空调错误： "+ex.ToString());
             }
         }
 
@@ -9093,7 +9137,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadDataCom3错误: " +ex.ToString());
 
 
             }
@@ -9172,7 +9216,7 @@ namespace EMS
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                    log.Error("ReadEquipmentDataBMS读取线程故障" + ex.ToString());
                 }
             } 
         }
@@ -9192,7 +9236,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("AutoReadDataCom4错误：" + ex.ToString());
             }
         }
         /// <summary>
@@ -9235,7 +9279,7 @@ namespace EMS
                     }
                     catch (Exception ex)
                     {
-                        frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                       log.Error("frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();故障" + ex.ToString());
                     }
                     endTime = DateTime.Now;
                     //Console.WriteLine("#********* IEC104***  start  **** IEC104**********#" + (endTime - startTime).TotalSeconds);
@@ -9266,7 +9310,7 @@ namespace EMS
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG("读取线程故障" + ex.ToString());
+                    log.Error("ReadEquipmentDataPCS故障" + ex.ToString());
                 }
             }
         }
@@ -9625,7 +9669,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("GetDataFromBMS: " + ex.ToString());
             }
         }
 
@@ -9745,7 +9789,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error("ReadDataInoneDayINI: "+ex.ToString());
             }
 
         }

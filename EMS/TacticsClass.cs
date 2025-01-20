@@ -105,7 +105,7 @@ namespace EMS
         {
             bool Result = false;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string astrSQL = "DELETE from electrovalence where rTime < '" +strDate+"';";
+            string astrSQL = "DELETE from electrovalence where rTime < '" + strDate + "'";
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
@@ -136,7 +136,7 @@ namespace EMS
         {
             cleanJFPGFromMysql();
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string astrSQL = "select startTime, eName  from electrovalence " + "where rTime = " + strDate;
+            string astrSQL = "select startTime, eName  from electrovalence where rTime = '" + strDate + "'";
 
             try
             {
@@ -248,7 +248,7 @@ namespace EMS
             bool Result = false;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
-                    + " from tactics " + "where rTime = '" + strDate + "' order by startTime";
+                    + " from tactics where rTime = '" + strDate + "' order by startTime";
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))

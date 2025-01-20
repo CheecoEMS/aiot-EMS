@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using log4net;
 using System.IO;
 using System.Diagnostics;
+using static System.Windows.Forms.AxHost;
 
 namespace EMS
 {
@@ -21,6 +22,12 @@ namespace EMS
         public frmControl()
         {
             InitializeComponent();
+        }
+
+        static public void INIForm()
+        {
+            if (oneForm == null)
+                oneForm = new frmControl();
         }
 
         static public void CloseForm()
@@ -296,9 +303,10 @@ namespace EMS
             int item = tcbtest.SelectItemIndex;
             switch (item)
             { 
-                case 0:               
-                    string sqlQuery = $"SELECT* FROM profit WHERE rTime BETWEEN '2024-11-06 00:00:00' AND '2024-11-06 23:59:59'";
-                    DBConnection.UploadCloud(sqlQuery);
+                case 0:
+                    string strdate = "2025-01-20";
+                    bool res = DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'");
+                    log.Error("res:" + res);
                     break;
                 case 1:
                     //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);

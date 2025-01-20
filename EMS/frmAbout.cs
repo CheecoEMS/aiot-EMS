@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using log4net;
 
 namespace EMS
 {/*
@@ -47,13 +48,35 @@ namespace EMS
     public partial class frmAbout : Form
     {
         static private frmAbout oneForm = null;
+        private static ILog log = LogManager.GetLogger("frmAbout");
+
         public frmAbout()
         {
-            InitializeComponent();
-            DoubleBuffered = true;
-            labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
-            labSoftVerb.Text = "软件版本：EmsMaster1.0.3";
+            try
+            {
+                InitializeComponent();
+                DoubleBuffered = true;
+                if (frmSet.config != null)
+                {
+                    labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
+                }
+                else
+                {
+                    log.Error("frmSet.config 为null");
+                }
+                labSoftVerb.Text = "软件版本：EmsMaster1.0.4";
+            }
+            catch (Exception ex)
+            {
+                log.Error("new frmAbout失败：" + ex.Message);
+            }
         }
+        static public void INIForm()
+        {
+            if (oneForm == null)
+                oneForm = new frmAbout();
+        }
+
 
         static public void CloseForm()
         {

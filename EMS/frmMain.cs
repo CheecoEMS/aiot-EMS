@@ -111,21 +111,76 @@ namespace EMS
         public DateTime receive_time_send;
 
 
+
         static public PID pid = new PID();
 
         public frmMain()
-        { 
-            InitializeComponent();
-            Selffrm = this;
-            Text = "EMS system";
+        {
+            /*            InitializeComponent();
+                        Selffrm = this;
+                        Text = "EMS system";
 
-            //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
-            TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+                        //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
+                        TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
 
-            //tcp
-            ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
+                        //tcp
+                        ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
 
-            LoadForm();
+                        LoadForm();*/
+
+
+            //重新规划启动顺序
+            try
+            {
+                Selffrm = this;
+                Text = "EMS system";
+
+                //委托与事件挂钩，当事件发生时将委托给函数OnReceive104CMD
+                TCPserver.OnReceiveDataEvent2 +=new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+                //socketWrapper.OnReceiveDataEvent2 += new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
+
+                //tcp
+                ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);//从机接收消息触发事件
+
+                //加载所有图像类
+                //frmAbout.INIForm();  // 依赖frmset完成数据库读入
+                frmControl.INIForm();
+                frmoneUser.INIForm();
+                frmKeyBoard.INIForm();
+                //frmLine.INIForm();  //依赖frmMain
+                frmSet.INIForm();
+                frmState.INIForm();
+                frmLogin.INIForm();
+
+
+
+                //加载,初始化数据库
+                LoadForm();
+                frmAbout.INIForm(); // 依赖frmset完成数据库读入
+                frmLine.INIForm(); //依赖frmMain初始化硬件
+
+                //图形化
+                InitializeComponent();
+
+
+                this.DoubleBuffered = true;
+                this.Width = 1024;
+                this.Height = 768;
+                SetFormPower(UserPower);
+
+                //启动图形化更新
+                InitializeUI_timer();
+
+                //数据库展示
+                DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);//必须在LoadForm();之后
+                
+                frmFlash.CloseFlashForm();
+            }
+            catch (Exception ex) 
+            {
+                log.Error("new frmMain 失败: " + ex.Message);
+
+            }
         }
 
 
@@ -355,249 +410,255 @@ namespace EMS
             //frmMain.Selffrm = new frmMain();
             try
             {
-                //延迟等待2min
-                //Thread.Sleep(120000);
+                //定义配置文件路径
+                log.Error("CHEECO-START");
 
                 //配置Config配置文件地址，获取配置文件中的设定
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
                 frmSet.INIPath = strSysPath + "Config.ini";
                 //配置均衡电池文件地址
-                frmSet.BalaPath = strSysPath + "BalaCell.txt";         
-                log.Error("CHEECO-START");
+                frmSet.BalaPath = strSysPath + "BalaCell.txt";
 
-                ////连接数据库
-                DBConnection conn = new DBConnection();
-                DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
-                DBConnection.CheckTables();
-                log.Error("结束数据库格式检查");
-                frmSet.LoadCloudLimitsFromMySQL();
-                frmSet.LoadConfigFromMySQL();
-                frmSet.LoadVariChargeFromMySQL();
-                frmSet.LoadComponentSettingsFromMySQL();
-                frmSet.LoadHistoryDataFromMySQL();
-
-                log.Error("结束数据库读取");
-                //同步今日剩余重启次数
-                frmMain.Selffrm.AllEquipment.RebootCount = frmSet.historyDatas.RebootCount;
-                
-               
-                //获取历史需量
-                if (frmSet.config.IsMaster == 1)
-                {
-                    frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max_old = frmSet.historyDatas.E1PUMdemandMaxOld;
-                    frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max_old = frmSet.historyDatas.ClientPUMdemandMaxOld;
-                    frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = frmSet.historyDatas.ClientPUMdemandMax;      
-                }
-
-                log.Error("读取协议文件");
-                //从数据库中下载并实例化设备部件对象(包括 comlist)
-                if (!frmMain.Selffrm.AllEquipment.LoadSetFromFile())
-                {
-                    //加载数据库或者协议文件失败，则EMS重启
-                    frmSet.RestartApplicationNoCount();
-                }
-                log.Error("读取协议文件结束");
-
-                //初始化端口
-                frmSet.InitGPIO();
-                //初始化灯板
-                frmMain.Selffrm.AllEquipment.init_LED();
-                //初始化液冷机
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.init_LiquidCool();
-                }
-                //初始化BMS功能等级
-                if (frmMain.Selffrm.AllEquipment.BMS != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.CheckFunctionLevel();
-                }
-                
-                //配置DofD电能历史文件的路径
                 //UpData:从云接受JSON文件
                 //DownData:向云上传JSON文件
                 frmMain.Selffrm.AllEquipment.DofD = strSysPath + "DofD.ini";//当天数据记录，开始的波峰充放电数据
+
                 frmMain.Selffrm.AllEquipment.DoPU = strSysPath + "DoPU.ini";//记录客户负载最大需量
-                frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
-                frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
-                //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                //配置各个部件的设备码
-                string strID = frmSet.config.SysID;
-                if (strID.Length >= 7)
-                    strID = strID.Substring(strID.Length - 7, 7);//截取SysID的最后7位
-                frmMain.Selffrm.AllEquipment.iot_code = "ems" + strID;
-                frmMain.Selffrm.AllEquipment.Fire.iot_code ="fire"+ strID;
-                frmMain.Selffrm.AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
-
-                frmMain.Selffrm.AllEquipment.Report2Cloud.IniClound();//配置topic
-                                                                      //连接mqtt
-                frmMain.Selffrm.AllEquipment.Report2Cloud.mqttConnect();
-                frmMain.Selffrm.AllEquipment.LoadErrorState();//读取数据库中的故障信息  
-                frmFlash.AddPostion(10);
-                //
-                TacticsList.Parent = frmMain.Selffrm.AllEquipment;
-                //下载电价信息
-                ElectrovalenceList.LoadFromMySQL();
-                //下载策略
-                TacticsList.LoadFromMySQL();
-                //更新电表时段
-                frmMain.TacticsList.LoadJFPGFromSQL();
-                //策略曲线图展示
-                ShowShedule2Char(true);
-                //下载均衡策略
-                 BalaTacticsList.LoadFromMySQL();
-                
-                try
+                ////连接数据库
+                DBConnection conn = new DBConnection();
+                if (DBConnection.CheckRec("select * from config"))
                 {
-                    //先下载电表数据
-                    for (int i = 0; i < 1; i++)
+                    log.Error("数据库环境正确");
+                    DBConnection.CheckTables();
+                    log.Error("完成数据库格式检查");
+                    frmSet.LoadCloudLimitsFromMySQL();
+                    frmSet.LoadConfigFromMySQL();
+                    frmSet.LoadVariChargeFromMySQL();
+                    frmSet.LoadComponentSettingsFromMySQL();
+                    frmSet.LoadHistoryDataFromMySQL();
+
+                    log.Error("结束数据库读取");
+                    //同步今日剩余重启次数
+                    frmMain.Selffrm.AllEquipment.RebootCount = frmSet.historyDatas.RebootCount;
+
+
+                    //获取历史需量
+                    if (frmSet.config.IsMaster == 1)
                     {
-                        //
-                        if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
+                        frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max_old = frmSet.historyDatas.E1PUMdemandMaxOld;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max_old = frmSet.historyDatas.ClientPUMdemandMaxOld;
+                        frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = frmSet.historyDatas.ClientPUMdemandMax;
+                    }
+
+                    //从数据库中下载并实例化设备部件对象(包括 comlist)，初始化Report2Cloud
+                    log.Error("读取设备协议文件");
+                    if (!frmMain.Selffrm.AllEquipment.LoadSetFromFile())
+                    {
+                        //加载数据库或者协议文件失败，则EMS重启
+                        frmSet.RestartApplicationNoCount();
+                    }
+
+                    //初始化端口
+                    frmSet.InitGPIO();
+                    //初始化灯板
+                    frmMain.Selffrm.AllEquipment.init_LED();
+                    //初始化液冷机
+                    if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.init_LiquidCool();
+                    }
+                    //初始化BMS功能等级
+                    if (frmMain.Selffrm.AllEquipment.BMS != null)
+                    {
+                        frmMain.Selffrm.AllEquipment.BMS.CheckFunctionLevel();
+                    }
+
+                    //配置各个部件的设备码
+                    string strID = frmSet.config.SysID;
+                    if (strID.Length >= 7)
+                        strID = strID.Substring(strID.Length - 7, 7);//截取SysID的最后7位
+                    frmMain.Selffrm.AllEquipment.iot_code = "ems" + strID;
+                    frmMain.Selffrm.AllEquipment.Fire.iot_code ="fire"+ strID;
+                    frmMain.Selffrm.AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
+
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.IniClound();//配置topic
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.mqttConnect();//连接mqtt
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
+
+                    frmMain.Selffrm.AllEquipment.LoadErrorState();//读取数据库中的故障信息  
+                    frmFlash.AddPostion(10);
+                    //
+                    TacticsList.Parent = frmMain.Selffrm.AllEquipment;
+                    //下载电价信息
+                    ElectrovalenceList.LoadFromMySQL();
+                    //下载策略
+                    TacticsList.LoadFromMySQL();
+                    //更新电表时段
+                    frmMain.TacticsList.LoadJFPGFromSQL();
+                    //策略曲线图展示
+                    ShowShedule2Char(true);
+                    //下载均衡策略
+                    BalaTacticsList.LoadFromMySQL();
+
+                    try
+                    {
+                        //先下载电表数据
+                        for (int i = 0; i < 1; i++)
                         {
-                            foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
+                            //
+                            if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
                             {
-                                tempEleMeter.GetDataFromEqipment();
+                                foreach (Elemeter1Class tempEleMeter in frmMain.Selffrm.AllEquipment.Elemeter1List)
+                                {
+                                    tempEleMeter.GetDataFromEqipment();
+                                }
+                            }
+                            //
+                            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                                frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+                            if (frmMain.Selffrm.AllEquipment.Elemeter4 != null)
+                                frmMain.Selffrm.AllEquipment.Elemeter4.GetDataFromEqipment();
+                        }
+                    }
+                    catch
+                    { }
+                    frmFlash.AddPostion(10);
+
+                    /*                if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
+                                    {
+                                        frmMain.Selffrm.AllEquipment.SaveDataInoneDay(Selffrm.AllEquipment.rDate);
+                                        //当日收益发送到云
+                                        Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(Selffrm.AllEquipment.rDate);//qiao
+                                        //当日表数据记录INI文件
+                                        Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                                        frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
+                                    }*/
+
+                    frmMain.Selffrm.AllEquipment.ReadDataInoneDaySQL();//必须在设备初始化结束后
+
+                    //校验电表数据
+                    Selffrm.AllEquipment.Power_CRC();
+
+                    //初始化今日充放数据
+                    Selffrm.AllEquipment.InitE2Power();
+
+                    //校准电表日期
+                    frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+
+                    //8.7 每台主机初始化对外接口
+                    BaseEquipmentClass oneEquipment = null;
+                    oneEquipment = new EMSEquipment();
+                    oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
+                    oneEquipment = (EMSEquipment)oneEquipment;
+                    oneEquipment.LoadCommandFromFile();
+
+
+                    //网络控制或者联机控制
+
+                    //连接硬件：4G通讯模块
+                    frmMain.Selffrm.Model4G.m485 = new modbus485();
+                    frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
+                    frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+
+                    //若配置接入104服务
+                    if (frmSet.config.Open104 == 1)
+                    {
+                        //恢复远动状态
+                        if (frmSet.historyDatas.YDstatus == 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
+                            frmSet.config.SysMode = 2;
+                            frmMain.TacticsList.TacticsOn = false;   //关闭策略
+
+                            //初始化设置
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                            frmMain.Selffrm.AllEquipment.HostStart = true;
+                            frmMain.Selffrm.AllEquipment.SlaveStart = true;
+                        }
+
+                        log.Error("恢复104网控状态：" + "frmMain.Selffrm.AllEquipment.HostStart: " + frmMain.Selffrm.AllEquipment.HostStart
+                             + " frmMain.Selffrm.AllEquipment.eState: " +  frmMain.Selffrm.AllEquipment.eState);
+
+                        while (!frmMain.Selffrm.AllEquipment.HostStart)
+                        {
+                            log.Error("HostStart未置true：" + frmMain.Selffrm.AllEquipment.HostStart);
+                            frmMain.Selffrm.AllEquipment.HostStart = true;
+                        }
+
+                        frmMain.Selffrm.Slave104.IEC104_Init();
+
+                        if (frmMain.Selffrm.TCPserver.TCPServerIni(2404))//配置主站开放2404端口
+                        {
+                            frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接  
+                        }
+
+                    }
+
+                    //使用TCP/IP通讯方式
+                    if (frmSet.config.IsMaster == 1)
+                    {
+                        if (frmSet.config.ConnectStatus == "tcp")
+                        {
+                            frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
+                            if (frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502))
+                            {
+                                frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
+                            }
+                            else
+                            {
+                                log.Error("502端口已被占用");
+                                //frmSet.RestartWindows();
                             }
                         }
-                        //
-                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                            frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
-                        if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                            frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
-                        if (frmMain.Selffrm.AllEquipment.Elemeter4 != null)
-                            frmMain.Selffrm.AllEquipment.Elemeter4.GetDataFromEqipment();
-                    }
-                }
-                catch
-                { }
-                frmFlash.AddPostion(10);
-
-/*                if (!frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI())//如果没有找到前一天保留的数据，就把现在电表数据记录为开始
-                {
-                    frmMain.Selffrm.AllEquipment.SaveDataInoneDay(Selffrm.AllEquipment.rDate);
-                    //当日收益发送到云
-                    Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(Selffrm.AllEquipment.rDate);//qiao
-                    //当日表数据记录INI文件
-                    Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                    frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(Selffrm.AllEquipment.rDate);
-                }*/
-
-                frmMain.Selffrm.AllEquipment.ReadDataInoneDaySQL();//必须在设备初始化结束后
-
-                //校验电表数据
-                Selffrm.AllEquipment.Power_CRC();
-
-                //初始化今日充放数据
-                Selffrm.AllEquipment.InitE2Power();
-
-                //校准电表日期
-                frmMain.Selffrm.AllEquipment.MeterCalibration();
-
-
-                //8.7 每台主机初始化对外接口
-                BaseEquipmentClass oneEquipment = null;
-                oneEquipment = new EMSEquipment();
-                oneEquipment.Parent = frmMain.Selffrm.AllEquipment;
-                oneEquipment = (EMSEquipment)oneEquipment;
-                oneEquipment.LoadCommandFromFile();
-
-
-                //网络控制或者联机控制
-
-                //连接硬件：4G通讯模块
-                frmMain.Selffrm.Model4G.m485 = new modbus485();
-                frmMain.Selffrm.Model4G.m485.ParentEquipment = frmMain.Selffrm.AllEquipment; //必不可少
-                frmMain.Selffrm.Model4G.m485.Open("Com11", 115200, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-
-                //若配置接入104服务
-                if (frmSet.config.Open104 == 1)
-                {
-                    //恢复远动状态
-                    if (frmSet.historyDatas.YDstatus == 1)
-                    {
-                        frmMain.Selffrm.AllEquipment.eState = 2; //进入网控模式
-                        frmSet.config.SysMode = 2;
-                        frmMain.TacticsList.TacticsOn = false;   //关闭策略
-
-                        //初始化设置
-                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
-                        frmMain.Selffrm.AllEquipment.HostStart = true;
-                        frmMain.Selffrm.AllEquipment.SlaveStart = true;
-                    }
-
-                    frmMain.Selffrm.Slave104.IEC104_Init();
-
-                    if (frmMain.Selffrm.TCPserver.TCPServerIni(2404))//配置主站开放2404端口
-                    {
-                        frmMain.Selffrm.TCPserver.StartMonitor2404();//监听客户端连接  
-                    }
-
-                }
-
-                //使用TCP/IP通讯方式
-                if (frmSet.config.IsMaster == 1)
-                {
-                    if (frmSet.config.ConnectStatus == "tcp")
-                    {
-                        frmMain.Selffrm.ModbusTcpServer.clientManager = new ClientManager();
-                        if (frmMain.Selffrm.ModbusTcpServer.TCPServerIni(502))
+                        else if (frmSet.config.ConnectStatus == "485")
                         {
-                            frmMain.Selffrm.ModbusTcpServer.StartMonitor502();
-                        }
-                        else
-                        {
-                            frmSet.RestartWindows();
+                            //从机的列表
+                            for (int i = 0; i < frmSet.config.SysCount-1; i++)//主机调控
+                            {
+                                EMSEquipment oneEMSEquipment = new EMSEquipment();
+                                oneEMSEquipment.LoadCommandFromFile();
+                                oneEMSEquipment.ID = i + 2;
+                                oneEMSEquipment.Parent = Selffrm.AllEquipment;
+                                oneEMSEquipment.m485 = new modbus485();
+                                oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
+                                oneEMSEquipment.m485.Open(frmSet.config.DebugComName, 38400,
+                                  8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
+                                frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
+                            }
                         }
                     }
-                    else if (frmSet.config.ConnectStatus == "485")
+                    else
                     {
-                        //从机的列表
-                        for (int i = 0; i < frmSet.config.SysCount-1; i++)//主机调控
+                        if (frmSet.config.ConnectStatus == "tcp")
                         {
-                            EMSEquipment oneEMSEquipment = new EMSEquipment();
-                            oneEMSEquipment.LoadCommandFromFile();
-                            oneEMSEquipment.ID = i + 2;
-                            oneEMSEquipment.Parent = Selffrm.AllEquipment;
-                            oneEMSEquipment.m485 = new modbus485();
-                            oneEMSEquipment.m485.ParentEquipment = Selffrm.AllEquipment;
-                            oneEMSEquipment.m485.Open(frmSet.config.DebugComName, 38400,
-                              8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                            frmMain.Selffrm.AllEquipment.EMSList.Add(oneEMSEquipment);
+                            frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.config.MasterIp, 502);
+                        }
+                        else if (frmSet.config.ConnectStatus == "485")
+                        {
+                            frmMain.Selffrm.ems.ID = frmSet.config.i485Addr;
+                            frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
+                            frmMain.Selffrm.ems.m485 = new modbus485();
+                            frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
                         }
                     }
+
+                    //开启定时器
+                    log.Error("开启定时器和多线程任务");
+                    frmMain.Selffrm.IniralizeFrmMain_Timer();
+                    frmMain.Selffrm.InitFrmMainClass_Threads();
+
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Timer();
+                    frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Threads();
+
+                    frmFlash.AddPostion(10);
+                    //开启任务多线程
+                    frmMain.Selffrm.AllEquipment.AutoReadData();
                 }
-                else
-                {
-                    if (frmSet.config.ConnectStatus == "tcp")
-                    {
-                        frmMain.Selffrm.ModbusTcpClient.TCPClientIni(frmSet.config.MasterIp, 502);
-                    }
-                    else if (frmSet.config.ConnectStatus == "485")
-                    {
-                        frmMain.Selffrm.ems.ID = frmSet.config.i485Addr;
-                        frmMain.Selffrm.ems.Parent = Selffrm.AllEquipment;
-                        frmMain.Selffrm.ems.m485 = new modbus485();
-                        frmMain.Selffrm.ems.m485.OpenEMS(frmSet.config.DebugComName, 38400, 8, System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);
-                    }
-                }
-
-                //开启定时器
-                frmMain.Selffrm.IniralizeFrmMain_Timer();
-                frmMain.Selffrm.InitFrmMainClass_Threads();
-
-                frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Timer(); 
-                frmMain.Selffrm.AllEquipment.Report2Cloud.InitCloudClass_Threads();
-            
-                frmFlash.AddPostion(10);
-                //开启任务多线程
-                frmMain.Selffrm.AllEquipment.AutoReadData();
-
-                //线程监控程序
-
-                //定时器监控程序
-                //frmMain.Selffrm.MonitorTimerAlive();
             }
             catch (Exception err)
             {
@@ -706,6 +767,7 @@ namespace EMS
                     //if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
                     if (frmSet.peElestic.rDate.ToString("yyyy-MM-dd") != DateTime.Now.ToString("yyyy-MM-dd"))
                     {
+                        log.Error("日期更迭：" + "记录时间: " + frmSet.peElestic.rDate.ToString("yyyy-MM-dd") + "当前时间： " + DateTime.Now.ToString("yyyy-MM-dd"));
                         // 重置EMS重启次数
                         if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
                         {
@@ -719,29 +781,39 @@ namespace EMS
                         if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                         {
                             string strdate = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
-                            if (!DBConnection.CheckRec("select *  FROM profit where rTime = " + strdate)) //防止重复插入
+                            if (!DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'")) //防止重复插入
                             {
                                 // 保存当天收益到数据库
                                 //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
                                 //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
+                                
                                 frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-
+                                log.Error("保存当天收益到数据库");
 
                                 // 当日收益发送到云
                                 frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
                                 frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
                                 //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
                                 frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                log.Error("当日收益发送到云");
 
                                 // 更新日期
                                 //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
                                 frmSet.peElestic.rDate = DateTime.Now;
+                                log.Error("更新日期");
 
                                 // 将当天的储能表和辅表的电能数据保存到INI
                                 //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
 
                                 // 将当天的储能表和辅表的电能数据保存到SQL
                                 frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                log.Error("将当天的储能表和辅表的电能数据保存到SQL");
+                            }
+                            else
+                            {
+                                // 更新日期
+                                frmSet.peElestic.rDate = DateTime.Now;
+                                log.Error("重新更新日期");
                             }
                         }
 
@@ -811,7 +883,7 @@ namespace EMS
         public void IniralizeFrmMain_Timer()
         {
             //更新数据看板显示数据
-            frmMain.Selffrm.InitializeUI_timer();
+            //frmMain.Selffrm.InitializeUI_timer();
 
             //记录EMS功率日志
             frmMain.Selffrm.InitializeCXFN_Timer();
@@ -1054,17 +1126,11 @@ namespace EMS
         //加载
         private void frmMain_Load(object sender, EventArgs e)
         {  
-            this.DoubleBuffered = true;
+/*            this.DoubleBuffered = true;
             this.Width = 1024;
             this.Height = 768;
             SetFormPower(UserPower);
-           
-/*            //策略曲线图展示
-            ShowShedule2Char(true);*/
-
-            //TacticsList.ShowTactic2Char(ctMain,true);
-            //TacticsList.LoadHistay(ctMain);
-             
+                 
             //链接网络 ----非拨号网络无效
             SysIO.Connect4G();
             //检查是否有断网数据
@@ -1092,34 +1158,22 @@ namespace EMS
             //打开debug的串口
             try
             {
-                // spDebug.PortName = frmSet.DebugComName;
-                //spDebug.BaudRate = frmSet.DebugRate;
-                // spDebug.Open();
+
             }
             catch (Exception ex)
             {
                 ShowDebugMSG(ex.ToString());
             }
             frmFlash.AddPostion(10);
-            ///////////////////////////////////////////////////
-            ///打开显示曲线和故障图线
-            //DBConnection.SetDBGrid(dbvError);
+
             frmFlash.AddPostion(10);
             frmLogin.INIForm();
             //
             frmFlash.CloseFlashForm();
 
-            //tneMax.SetIntValue(  frmSet.MaxGridKW );
-            //tneMin.SetIntValue(frmSet.MinGridKW);
-            Control.CheckForIllegalCrossThreadCalls = false;
 
-            //if (frmSet.GPIO_Select_Mode == 0) frmSet.SetGPIOState(11, 1);
-            //else frmSet.SetGPIOState(11, 0);
-            //frmSet.SetGPIOState(15, 0);//Power on LED
-            //Thread.Sleep(1000);
-            //frmSet.SetGPIOState(15, 1);//Power on LED
-            //Thread.Sleep(1000);
-            //frmSet.SetGPIOState(15, 0);//Power on LED
+            Control.CheckForIllegalCrossThreadCalls = false;*/
+
         }
 
         static public bool CheckUserInf(string astrName, string astrPassword)
