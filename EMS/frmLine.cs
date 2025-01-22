@@ -65,7 +65,7 @@ namespace EMS
             try
             {
                 //2.21
-                if (frmMain.Selffrm.AllEquipment.BMS != null)
+                if (frmMain.Selffrm.AllEquipment != null && frmMain.Selffrm.AllEquipment.BMS != null)
                 {
                     for (int i = 0; i < 25; ++i)
                     {
@@ -123,40 +123,47 @@ namespace EMS
                         plDehumidifie.BackColor = Color.Red;
                     }
                 }
-                if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
-                {
-                    plBalaRun.BackColor = Color.GreenYellow;
-                }
-                else
-                {
-                    plBalaRun.BackColor = Color.Red;
-                }
 
-                if (frmMain.Selffrm.AllEquipment.ErrorState[2])
+                if (frmMain.Selffrm.AllEquipment != null)
                 {
-                    plEMSState3.BackColor = Color.Red;
-                }
-                else
-                {
-                    plEMSState3.BackColor = Color.GreenYellow;
-                }
+                    if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                    {
+                        plBalaRun.BackColor = Color.GreenYellow;
+                    }
+                    else
+                    {
+                        plBalaRun.BackColor = Color.Red;
+                    }
 
-                if ((frmMain.Selffrm.AllEquipment.PCSList.Count>0) &&
-                    (frmMain.Selffrm.AllEquipment.PCSList[0].State == 2))
-                {
-                    plT.BackColor = Color.YellowGreen;
-                    plL.BackColor = Color.YellowGreen;
-                }
-                else if ((frmMain.Selffrm.AllEquipment.PCSList.Count > 0)&&
-                    (frmMain.Selffrm.AllEquipment.PCSList[0].State > 2))
-                {
-                    plT.BackColor = Color.White;
-                    plL.BackColor = Color.White;
-                }
-                else if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
-                {
-                    plT.BackColor = Color.Gray;
-                    plL.BackColor = Color.Gray;
+
+                    if (frmMain.Selffrm.AllEquipment.ErrorState[2])
+                    {
+                        plEMSState3.BackColor = Color.Red;
+                    }
+                    else
+                    {
+                        plEMSState3.BackColor = Color.GreenYellow;
+                    }
+                
+
+                    if ((frmMain.Selffrm.AllEquipment.PCSList.Count>0) &&
+                        (frmMain.Selffrm.AllEquipment.PCSList[0].State == 2))
+                    {
+                        plT.BackColor = Color.YellowGreen;
+                        plL.BackColor = Color.YellowGreen;
+                    }
+                    else if ((frmMain.Selffrm.AllEquipment.PCSList.Count > 0)&&
+                        (frmMain.Selffrm.AllEquipment.PCSList[0].State > 2))
+                    {
+                        plT.BackColor = Color.White;
+                        plL.BackColor = Color.White;
+                    }
+                    else if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+                    {
+                        plT.BackColor = Color.Gray;
+                        plL.BackColor = Color.Gray;
+                    }
+
                 }
 
                 if (frmMain.Selffrm.AllEquipment.BMS!=null)
@@ -172,17 +179,20 @@ namespace EMS
                         plBMS.BackColor = Color.Red;
                 }
                 //
-                if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+                if (frmMain.Selffrm.AllEquipment != null)
                 {
-                    PCSClass onePCS = frmMain.Selffrm.AllEquipment.PCSList[0];
-                    tbUkva.Text = onePCS.allUkva.ToString();
-                    tbHZ.Text = onePCS.hz.ToString();
-                    tbPCSTemp.Text = onePCS.PCSTemp.ToString();
-                    tbFactor.Text = onePCS.allPFactor.ToString();
-                    if (onePCS.Prepared)
-                        plPCS.BackColor = Color.GreenYellow;
-                    else
-                        plPCS.BackColor = Color.Red;
+                    if (frmMain.Selffrm.AllEquipment.PCSList.Count > 0)
+                    {
+                        PCSClass onePCS = frmMain.Selffrm.AllEquipment.PCSList[0];
+                        tbUkva.Text = onePCS.allUkva.ToString();
+                        tbHZ.Text = onePCS.hz.ToString();
+                        tbPCSTemp.Text = onePCS.PCSTemp.ToString();
+                        tbFactor.Text = onePCS.allPFactor.ToString();
+                        if (onePCS.Prepared)
+                            plPCS.BackColor = Color.GreenYellow;
+                        else
+                            plPCS.BackColor = Color.Red;
+                    }
                 }
                 //关口表
                 if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
@@ -278,11 +288,14 @@ namespace EMS
 
                 //tbAllPUkwh.Text = frmMain.Selffrm.AllEquipment.SE2PKWH[0].ToString();//Elemeter2.Ukwh[0].ToString();
                 //tbAllOUkwh.Text = frmMain.Selffrm.AllEquipment.SE2OKWH[0].ToString(); 
-                tbPCSInKWH.Text = frmMain.Selffrm.AllEquipment.E2PKWH[0].ToString();
-                tbPCSOutKWH.Text = frmMain.Selffrm.AllEquipment.E2OKWH[0].ToString();
 
+                if (frmMain.Selffrm.AllEquipment != null)
+                {
+                    tbPCSInKWH.Text = frmMain.Selffrm.AllEquipment.E2PKWH[0].ToString();
+                    tbPCSOutKWH.Text = frmMain.Selffrm.AllEquipment.E2OKWH[0].ToString();
+                    tbe3kva.Text = frmMain.Selffrm.AllEquipment.AuxiliaryKVA.ToString();
+                }
 
-                tbe3kva.Text = frmMain.Selffrm.AllEquipment.AuxiliaryKVA.ToString();
                 if (frmMain.Selffrm.AllEquipment.Elemeter3!=null)
                     tbe3kwh.Text = frmMain.Selffrm.AllEquipment.Elemeter3.Akwh[0].ToString();
 

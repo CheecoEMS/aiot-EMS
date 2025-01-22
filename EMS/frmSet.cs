@@ -128,10 +128,10 @@ namespace EMS
 
         }
 
-        //系统重启
+        //系统重启 :问题代码
         public static void RestartWindows()
         {
-            if (frmSet.historyDatas != null &&  frmSet.historyDatas.RebootCount > 0)
+/*            if (frmSet.historyDatas != null &&  frmSet.historyDatas.RebootCount > 0)
             {
                 historyDatas.RebootCount--;
 
@@ -153,7 +153,7 @@ namespace EMS
 
                 Thread.Sleep(120000);
                 SysIO.Reboot();
-            }
+            }*/
         }
 
         //EMS重启
@@ -2368,7 +2368,7 @@ namespace EMS
                 return;
             //SysIO.Reboot();
 
-            RestartWindows();
+            //RestartWindows();
         }
 
         public void btnClose_Click(object sender, EventArgs e)
@@ -2751,41 +2751,35 @@ namespace EMS
             try
             {
                 //判断是否处于策略时段
-                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
+                string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
+                log.Error("更新文件版本: " + version);
+
+                // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
+                //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
+                using (var mgr = new UpdateManager(updateUrl))
                 {
-                    string updateUrl = $"https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/{version}";
-                    log.Error("更新文件版本: " + version);
-
-                    // 配置远程更新的 URL，指向包含 RELEASES 文件和 .nupkg 文件的服务器路径
-                    //using (var mgr = new UpdateManager("https://aiot-data-ems.oss-cn-shanghai.aliyuncs.com/EMS/v1.0.0"))
-                    using (var mgr = new UpdateManager(updateUrl))
+                    var updateInfo = await mgr.CheckForUpdate();
+                    if (updateInfo.ReleasesToApply.Count > 0)
                     {
-                        var updateInfo = await mgr.CheckForUpdate();
-                        if (updateInfo.ReleasesToApply.Count > 0)
-                        {
-                            // 下载和应用更新
-                            //mgr.UpdateApp().GetAwaiter().GetResult();
-                            await mgr.UpdateApp();
-                            log.Error("更新完成，准备重启应用。");
+                        // 下载和应用更新
+                        //mgr.UpdateApp().GetAwaiter().GetResult();
+                        await mgr.UpdateApp();
+                        log.Error("更新完成，准备重启应用。");
 
-                            MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("更新完成，应用将重启以加载新版本。", "更新成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                            // 调用重启逻辑
-                            await UpdateManager.RestartAppWhenExited();
-                            return true;
-                        }
-                        else
-                        {
-                            // 已是最新版本
-                            MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            return false;
-                        }
+                        // 调用重启逻辑
+                        await UpdateManager.RestartAppWhenExited();
+                        return true;
+                    }
+                    else
+                    {
+                        // 已是最新版本
+                        MessageBox.Show("当前已是最新版本，无需更新。", "版本已同步", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
                     }
                 }
-                else
-                {
-                    return false;
-                }
+
             }
             catch (Exception ex)
             {
