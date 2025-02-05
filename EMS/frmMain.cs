@@ -63,7 +63,7 @@ namespace EMS
         //对接104电网
         public TCPClientClass TCPCloud = new TCPClientClass();
         public TCPServerClass TCPserver = new TCPServerClass();
-        public CIEC104Slave   Slave104 = new CIEC104Slave();
+        public CIEC104Slave Slave104 = new CIEC104Slave();
         //test 
 
         //private delegate void TCPserver.OnReceiveDataEventDelegate(int DataSourceType, byte[] aByteData);//建立事件委
@@ -82,7 +82,7 @@ namespace EMS
         private static System.Threading.Timer TemperControl_Timer;
 
         private static bool isUiExecuting = false; //判断UI_timer是否正在执行
-        private static bool isBalaTacticExecuting = false; 
+        private static bool isBalaTacticExecuting = false;
         private static bool isPublicExecuting = false;
         private static bool isCXFNExecuting = false;
         private static bool isLedLoopExecuting = false;
@@ -106,8 +106,8 @@ namespace EMS
         public TCPClientClass ModbusTcpClient = new TCPClientClass();
 
 
-        public DateTime receive_time_start ;
-        public DateTime receive_time_end ;
+        public DateTime receive_time_start;
+        public DateTime receive_time_end;
         public DateTime receive_time_send;
 
 
@@ -173,10 +173,10 @@ namespace EMS
 
                 //数据库展示
                 DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);//必须在LoadForm();之后
-                
+
                 frmFlash.CloseFlashForm();
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 log.Error("new frmMain 失败: " + ex.Message);
 
@@ -203,7 +203,7 @@ namespace EMS
 
             //解析命令
             iData = GetCMDFunctionID(aByteData, ref SysID, ref CMDID, ref iAddr, ref iLen);
-            
+
             AllEquipment.NetCtlTime = DateTime.Now;
             AllEquipment.Clock_Watch.RestartMeasurement();
             frmSet.config.SysMode = 2;
@@ -282,7 +282,7 @@ namespace EMS
             Slave104.iec104_packet_parser(msg);
 
         }
-  
+
         //人员的权限管理
         public void SetFormPower(int aPower)
         {
@@ -294,13 +294,13 @@ namespace EMS
         }
 
 
-        private long GetCMDFunctionID(byte[] aByteData,ref int aID, ref int aCommID, ref short aAddr, ref short aDataLen)
+        private long GetCMDFunctionID(byte[] aByteData, ref int aID, ref int aCommID, ref short aAddr, ref short aDataLen)
         {  //012700010001a5cd  
             int iResult = 0;
             try
             {
                 if (aByteData.Length > 0)
-                {  
+                {
                     //设备ID
                     aID = (int)aByteData[0]; //还原第1字节（低位） 
                     //取得ComandID
@@ -315,8 +315,8 @@ namespace EMS
                     iResult = 0;
                     if (aCommID == 6) //只有6 才能写入到设备
                     {
-                        iResult=(Int16) aDataLen;
-                    } 
+                        iResult=(Int16)aDataLen;
+                    }
                 }
             }
             catch { }
@@ -328,7 +328,7 @@ namespace EMS
         /// </summary>
         /// <param name="byteDatas"></param>
         /// <returns></returns>
-        public string ToHexStrFromByte( byte[] byteDatas)
+        public string ToHexStrFromByte(byte[] byteDatas)
         {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < byteDatas.Length; i++)
@@ -662,7 +662,7 @@ namespace EMS
             }
             catch (Exception err)
             {
-               log.Error("启动报错：" + err);
+                log.Error("启动报错：" + err);
             }
             return Selffrm;
         }
@@ -786,7 +786,7 @@ namespace EMS
                                 // 保存当天收益到数据库
                                 //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
                                 //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
-                                
+
                                 frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
                                 log.Error("保存当天收益到数据库");
 
@@ -1082,9 +1082,9 @@ namespace EMS
         public static void ShowMainForm()
         {
             if (Selffrm == null)
-                return; 
+                return;
             //增加自适应屏幕
-           int iW= Screen.PrimaryScreen.Bounds.Width;
+            int iW = Screen.PrimaryScreen.Bounds.Width;
             int iH = Screen.PrimaryScreen.Bounds.Height;
             if (iW != 1024)
             {
@@ -1098,10 +1098,10 @@ namespace EMS
                 Selffrm.StartPosition = FormStartPosition.CenterScreen;
                 Selffrm.WindowState = FormWindowState.Maximized;
             }
-                
 
-            Selffrm.Show(); 
-            
+
+            Selffrm.Show();
+
             Selffrm.BringToFront();
             //Selffrm.Activate();
             Selffrm.BeFoused = true;
@@ -1113,7 +1113,7 @@ namespace EMS
             // MessageBox.Show(astrError);
 #endif
         }
-         
+
 
         /// <summary>
         /// 委托更新显示
@@ -1125,54 +1125,54 @@ namespace EMS
 
         //加载
         private void frmMain_Load(object sender, EventArgs e)
-        {  
-/*            this.DoubleBuffered = true;
-            this.Width = 1024;
-            this.Height = 768;
-            SetFormPower(UserPower);
-                 
-            //链接网络 ----非拨号网络无效
-            SysIO.Connect4G();
-            //检查是否有断网数据
-            if (!NetTime.IsConnectInternet())
-                frmMain.ShowDebugMSG("网络连接异常！");
+        {
+            /*            this.DoubleBuffered = true;
+                        this.Width = 1024;
+                        this.Height = 768;
+                        SetFormPower(UserPower);
 
-            frmFlash.AddPostion(10);
-            //-------打开监视操作进程或者time，在无人操作时候进入休眠并关闭屏幕和注销用户 
-            frmFlash.AddPostion(10);
-            //初始化窗体，提高将来的速度
-            frmSet.INIForm();
-            frmFlash.AddPostion(10);
-            frmoneUser.INIForm();
-            frmFlash.AddPostion(10);
-            frmKeyBoard.INIForm();
-            frmFlash.AddPostion(10);
-            frmState.INIForm();
-            frmFlash.AddPostion(10);
-            frmLogin.INIForm();
-            ////////////////////////////////////// 
-            Thread.Sleep(500);
-            frmFlash.AddPostion(10);
-            //AllEquipment.Report2Cloud.mqttConnect();
-            frmFlash.AddPostion(10);
-            //打开debug的串口
-            try
-            {
+                        //链接网络 ----非拨号网络无效
+                        SysIO.Connect4G();
+                        //检查是否有断网数据
+                        if (!NetTime.IsConnectInternet())
+                            frmMain.ShowDebugMSG("网络连接异常！");
 
-            }
-            catch (Exception ex)
-            {
-                ShowDebugMSG(ex.ToString());
-            }
-            frmFlash.AddPostion(10);
+                        frmFlash.AddPostion(10);
+                        //-------打开监视操作进程或者time，在无人操作时候进入休眠并关闭屏幕和注销用户 
+                        frmFlash.AddPostion(10);
+                        //初始化窗体，提高将来的速度
+                        frmSet.INIForm();
+                        frmFlash.AddPostion(10);
+                        frmoneUser.INIForm();
+                        frmFlash.AddPostion(10);
+                        frmKeyBoard.INIForm();
+                        frmFlash.AddPostion(10);
+                        frmState.INIForm();
+                        frmFlash.AddPostion(10);
+                        frmLogin.INIForm();
+                        ////////////////////////////////////// 
+                        Thread.Sleep(500);
+                        frmFlash.AddPostion(10);
+                        //AllEquipment.Report2Cloud.mqttConnect();
+                        frmFlash.AddPostion(10);
+                        //打开debug的串口
+                        try
+                        {
 
-            frmFlash.AddPostion(10);
-            frmLogin.INIForm();
-            //
-            frmFlash.CloseFlashForm();
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowDebugMSG(ex.ToString());
+                        }
+                        frmFlash.AddPostion(10);
+
+                        frmFlash.AddPostion(10);
+                        frmLogin.INIForm();
+                        //
+                        frmFlash.CloseFlashForm();
 
 
-            Control.CheckForIllegalCrossThreadCalls = false;*/
+                        Control.CheckForIllegalCrossThreadCalls = false;*/
 
         }
 
@@ -1216,10 +1216,10 @@ namespace EMS
             {
                 BeFoused = false;
                 frmLogin.ShowForm();
-                if (frmMain.UserID != "") 
-                    Selffrm.btnLogin.Text = "注销登录";  
+                if (frmMain.UserID != "")
+                    Selffrm.btnLogin.Text = "注销登录";
             }
-             SetFormPower(UserPower);
+            SetFormPower(UserPower);
 
         }
 
@@ -1266,7 +1266,7 @@ namespace EMS
         }
 
 
-       
+
         private void button2_Click_1(object sender, EventArgs e)
         {
             ////关闭空调
@@ -1277,7 +1277,7 @@ namespace EMS
             //AllEquipment.PCSList[0].SetSysData(82, 0xFF00);
             //AllEquipment.PCSList[0].ExcSetPCSPower(false);
             //清理故障
-           // AllEquipment.PCSList[0].SetSysData(76, 0xFF00);
+            // AllEquipment.PCSList[0].SetSysData(76, 0xFF00);
             //AllEquipment.[0].SetSysData(76, 0xFF00);
             //远程
             //AllEquipment.PCSList[0].SetSysData(82, 0xFF00);
@@ -1375,7 +1375,7 @@ namespace EMS
             //    if (AllEquipment.Elemeter2 != null)
             //AllEquipment.Elemeter2.SetTime  (aTime); 
         }
-         
+
         private void button1_Click_3(object sender, EventArgs e)
         {
             TacticsList.AddOneStep(ctMain, DateTime.Now, -1 * AllEquipment.Elemeter2.AllUkva, AllEquipment.Elemeter2.Gridkva, AllEquipment.Elemeter2.Subkw);
@@ -1385,11 +1385,11 @@ namespace EMS
         {
             TacticsList.LoadHistay(ctMain);
         }
- 
+
         private void label2_Click(object sender, EventArgs e)
         {
             //this.AllEquipment.Elemeter3.Save2DataSource(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-           // Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//qiao
+            // Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//qiao
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
@@ -1397,19 +1397,19 @@ namespace EMS
             System.Environment.Exit(0);
         }
 
-        private bool GetCommandID(byte[] Resoursedata,ref int aCommandID,ref int aAddr)
+        private bool GetCommandID(byte[] Resoursedata, ref int aCommandID, ref int aAddr)
         {
             bool bResult = ModbusBase.CheckResponse(Resoursedata);
             if (bResult)
             {
                 //qiao
-               // aCommandID= Resoursedata
+                // aCommandID= Resoursedata
                 return true;
             }
             else
                 return false;
         }
-        
+
 
         private void btnControl_Click(object sender, EventArgs e)
         {

@@ -199,9 +199,9 @@ namespace EMS
                     }
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                log.Error("LoadJFPGFromSQL: " + ex.Message); 
+                log.Error("LoadJFPGFromSQL: " + ex.Message);
             }
             finally
             {
@@ -406,7 +406,7 @@ namespace EMS
                 Thread_CheckTactics.IsBackground = true;
                 Thread_CheckTactics.Priority = ThreadPriority.Highest;
                 Thread_CheckTactics.Start();
-                Thread_CheckTactics.Name = "";               
+                Thread_CheckTactics.Name = "";
             }
             catch (Exception ex)
             {
@@ -593,7 +593,7 @@ namespace EMS
                     return false;
             }
             else
-            { 
+            {
                 return false;
             }
         }
@@ -758,18 +758,18 @@ namespace EMS
                     aOneChart.Series[0].Points.AddXY(strData, iData);
 
             }
-             //aOneChart.ChartAreas[0].AxisX.ScaleView.Size = 1500;
-           // aOneChart.ChartAreas[0].AxisX.Minimum = DateTime.Parse("00:00:00").ToOADate();
-           // aOneChart.ChartAreas[0].AxisX.Maximum = DateTime.Parse("23:59:59").ToOADate();
+            //aOneChart.ChartAreas[0].AxisX.ScaleView.Size = 1500;
+            // aOneChart.ChartAreas[0].AxisX.Minimum = DateTime.Parse("00:00:00").ToOADate();
+            // aOneChart.ChartAreas[0].AxisX.Maximum = DateTime.Parse("23:59:59").ToOADate();
             //aOneChart.ChartAreas[0].AxisX.IntervalType = DateTimeIntervalType.Minutes;//如果是时间类型的数据，间隔方式可以是秒、分、时
             //chart1.ChartAreas[0].AxisX.Interval = DateTime.Parse("00:05:00").Millisecond;//间隔为5分钟
             // aOneChart.ChartAreas[0].AxisX.Interval = DateTime.Parse("00:01:00").Second;//TODO 测试--间隔为5秒 
-           // aOneChart.ChartAreas[0].AxisX.LabelStyle.Format = "HH:mm";         //毫秒格式： hh:mm:ss.fff ，后面几个f则保留几位毫秒小数，此时要注意轴的最大值和最小值不要差太大
+            // aOneChart.ChartAreas[0].AxisX.LabelStyle.Format = "HH:mm";         //毫秒格式： hh:mm:ss.fff ，后面几个f则保留几位毫秒小数，此时要注意轴的最大值和最小值不要差太大
             aOneChart.ChartAreas[0].AxisX.LabelStyle.IntervalType = DateTimeIntervalType.Days;
             aOneChart.ChartAreas[0].AxisX.MajorGrid.IntervalType = DateTimeIntervalType.Days;
             aOneChart.ChartAreas[0].AxisX.Minimum = -30;
-            aOneChart.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount; 
-            aOneChart.ChartAreas[0].AxisX.Interval = 120; 
+            aOneChart.ChartAreas[0].AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
+            aOneChart.ChartAreas[0].AxisX.Interval = 120;
         }
 
 

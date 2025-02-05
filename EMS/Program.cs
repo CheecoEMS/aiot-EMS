@@ -46,7 +46,7 @@ namespace EMS
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main()
+        static async Task Main()
         {
             /*            try
                         {
@@ -78,8 +78,7 @@ namespace EMS
 
             try
             {
-
-                if (!CheckAppExists())
+                //if (!CheckAppExists())  注意这个函数使用会导致EMS生成快捷方式无法启动程序，可能与快捷方式会生成EMS.exe同名启动程序
                 {
                     // 定义要执行的命令
                     string[] commands = new string[2];
@@ -120,7 +119,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-               log.Error($"应用程序的主入口点发生错误: {ex.Message}");
+                log.Error($"应用程序的主入口点发生错误: {ex.Message}");
             }
 
 

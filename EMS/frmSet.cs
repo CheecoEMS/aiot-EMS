@@ -128,7 +128,7 @@ namespace EMS
 
         }
 
-        //系统重启 :问题代码
+        //系统重启
         public static void RestartWindows()
         {
 /*            if (frmSet.historyDatas != null &&  frmSet.historyDatas.RebootCount > 0)
@@ -2059,6 +2059,7 @@ namespace EMS
             DBConnection.SetDBGrid(oneForm.dbgTactics);
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
             btnE.BackColor = Color.Transparent;

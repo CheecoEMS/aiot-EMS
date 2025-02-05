@@ -49,7 +49,6 @@ namespace EMS
     {
         static private frmAbout oneForm = null;
         private static ILog log = LogManager.GetLogger("frmAbout");
-
         public frmAbout()
         {
             try
@@ -76,7 +75,6 @@ namespace EMS
             if (oneForm == null)
                 oneForm = new frmAbout();
         }
-
 
         static public void CloseForm()
         {

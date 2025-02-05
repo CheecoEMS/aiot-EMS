@@ -9,7 +9,6 @@ namespace EMS
     {
         static public frmLine oneForm = null;
         private static ILog log = LogManager.GetLogger("frmLine");
-
         public frmLine()
         {
             InitializeComponent();
@@ -144,7 +143,7 @@ namespace EMS
                     {
                         plEMSState3.BackColor = Color.GreenYellow;
                     }
-                
+
 
                     if ((frmMain.Selffrm.AllEquipment.PCSList.Count>0) &&
                         (frmMain.Selffrm.AllEquipment.PCSList[0].State == 2))

@@ -27,7 +27,7 @@ namespace EMS
     {
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems2023888888";
-        public double[] DaliyAuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0};     //当天总辅助电量 （辅助电表）
+        public double[] DaliyAuxiliaryKWH { get; set; } = { 0, 0, 0, 0, 0 };     //当天总辅助电量 （辅助电表）
         public double[] DaliyE2PKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当天总充电量（positive 正向）
         public double[] DaliyE2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //当天总放电量（opposite反向，逆向） 
         public double[] DaliyPrice { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //电价
@@ -65,7 +65,7 @@ namespace EMS
     /// </summary>
     public enum ComType { M485, MUDP, MTCPClient, MTCPServer, M232, Can, SPI, IIC };
     public enum WorkTypes { 充电, 放电 };
-    public enum PCSTypes { 待机, 恒压, 恒流, 恒功率,AC恒压};
+    public enum PCSTypes { 待机, 恒压, 恒流, 恒功率, AC恒压 };
     /// <summary>
     /// 通讯数据类型
     /// </summary>
@@ -111,7 +111,7 @@ namespace EMS
 
         public int PreparedCount = 0;//记录通信失联次数
         //8.8
-        public  static ILog log = LogManager.GetLogger("BaseEquipmentClass");
+        public static ILog log = LogManager.GetLogger("BaseEquipmentClass");
 
         public BaseEquipmentClass()
         {
@@ -145,7 +145,7 @@ namespace EMS
         }
 
         //获取一个modbus协议地址指令
-        private bool strData2Park(string astrData, ref ModbusCommand aoneCommand,int aPC)
+        private bool strData2Park(string astrData, ref ModbusCommand aoneCommand, int aPC)
         {
             try
             {
@@ -370,7 +370,7 @@ namespace EMS
 
         //把类的当时数据保存到数据库
         public virtual void Save2DataSource(string arDate)//虚方法，由继承类重写（每个部件相应的插入SQL语句）
-        { } 
+        { }
 
         //从设备上读取数据
         public virtual void GetDataFromEqipment()//虚方法，由继承类重写（子类根据对应的Comlist，获取数据）
@@ -790,8 +790,8 @@ namespace EMS
             return bResult;
         }
 
-            //设置一个Short数据
-            public bool SetSysData(int aDataIndex, ushort aData,bool bLocksp)
+        //设置一个Short数据
+        public bool SetSysData(int aDataIndex, ushort aData, bool bLocksp)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -817,7 +817,7 @@ namespace EMS
         }
 
         //设置一个Short数据
-        public bool SetSysData(int aDataIndex, short aData,bool bLocksp)
+        public bool SetSysData(int aDataIndex, short aData, bool bLocksp)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -842,7 +842,7 @@ namespace EMS
         }
 
         //设置一个Int32数据
-        public bool SetSysData(int aDataIndex, Int32 aData,bool bLocksp)
+        public bool SetSysData(int aDataIndex, Int32 aData, bool bLocksp)
         {
             bool bResult = false;
             if (aDataIndex > ComList.Count)
@@ -864,13 +864,13 @@ namespace EMS
                             break;
                         case 6:
                             bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                  (ushort)aData, bLocksp) ;
+                                  (ushort)aData, bLocksp);
                             break;
                         case 16:
                             bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
                                  (ushort)tempComand.DataLongth, Datas, bLocksp);
-                            break; 
-                    } 
+                            break;
+                    }
                     break;
                 case 1:
                     break;
@@ -881,7 +881,7 @@ namespace EMS
         }
 
         //设置一个1个Short的浮点数
-        public bool SetSysData(int aDataIndex, float aData,bool bLockcp)
+        public bool SetSysData(int aDataIndex, float aData, bool bLockcp)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -904,7 +904,7 @@ namespace EMS
         }
 
         //设置一个2个Short的浮点数
-        public bool SetSysData(int aDataIndex, double aData,bool bLocksp)
+        public bool SetSysData(int aDataIndex, double aData, bool bLocksp)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -929,7 +929,7 @@ namespace EMS
 
         //设置电表尖峰平谷数据
         //设置一个bytes数组
-        public bool SetSysBytes(int aDataIndex, byte[] aData,bool bLocksp)
+        public bool SetSysBytes(int aDataIndex, byte[] aData, bool bLocksp)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -963,7 +963,7 @@ namespace EMS
             DateTime dtTemp = DateTime.Now;
             //删除清理数据库
             string strSQL = "delete   from errorstate";
-           DBConnection.ExecSQL(strSQL);
+            DBConnection.ExecSQL(strSQL);
             //
             frmMain.Selffrm.ErrorGridFreshCount = 0;
             //qiao 保存所有的故障设备的值
@@ -1126,7 +1126,8 @@ namespace EMS
                     {
                         SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);//开启手动模式
                     }
-                    else {
+                    else
+                    {
                         SetSysData(11, 0X00FF, false);//开启自动模式
                     }
                 }
@@ -1177,16 +1178,16 @@ namespace EMS
                 }
             }
             Prepared = bPrepared;
-            
+
         }
 
     }
     //5.05 新增led
     public class LEDClass : BaseEquipmentClass
     {
-        public int Led_on  = 0xFFFF;//常亮
+        public int Led_on = 0xFFFF;//常亮
         public int Led_blink = 0xCCCC;//闪烁
-        public int Led_off  = 0x0000;//关闭
+        public int Led_off = 0x0000;//关闭
         public LEDClass()
         {
             strCommandFile = "LED.txt";
@@ -1263,7 +1264,7 @@ namespace EMS
             //{
             //    Set_LED(i + 3, i <= (Op+20) / 20 ? Led_on : Led_off);
             //}
-            switch(Op)
+            switch (Op)
             {
                 case 0:
                     SetLEDE5(Led_off);
@@ -1274,7 +1275,7 @@ namespace EMS
                     break;
                 case 1:
                     SetLEDE5(Led_off);
-                    SetLEDE4(Led_off); 
+                    SetLEDE4(Led_off);
                     SetLEDE3(Led_off);
                     SetLEDE2(Led_off);
                     SetLEDE1(Led_on);
@@ -1383,7 +1384,7 @@ namespace EMS
 
 
         /*********************设置灯板待机 ***** 告警**************************/
-        public void Set_Led_Standby_N( )
+        public void Set_Led_Standby_N()
         {
             SetLEDRun(Led_on);
             SetLEDWarn(Led_off);
@@ -1395,7 +1396,7 @@ namespace EMS
             SetLEDWarn(Led_on);
             SetLEDError(Led_off);
         }
-        public void Set_Led_Standby_E( )
+        public void Set_Led_Standby_E()
         {
             SetLEDRun(Led_off);
             SetLEDWarn(Led_off);
@@ -1593,9 +1594,9 @@ namespace EMS
     public class DSP2Class : BaseEquipmentClass
     {
         public int DSP2 = 1;//1：晶石
-/*        public static string[] PCSStates = { "待机", "停机", "充电", "放电" };
-        public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "AC恒压", "自适应需量" };
-        public static string[] PCSNetState = { "停机", "待机", "运行", "总故障状态", "总警告状态", "1远程/0就地状态", "急停输入状态", "并网", "离网", "过载降容" };*/
+        /*        public static string[] PCSStates = { "待机", "停机", "充电", "放电" };
+                public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "AC恒压", "自适应需量" };
+                public static string[] PCSNetState = { "停机", "待机", "运行", "总故障状态", "总警告状态", "1远程/0就地状态", "急停输入状态", "并网", "离网", "过载降容" };*/
         public int State = 0;
         public double aV { get; set; }
         public double bV { get; set; }
@@ -1767,30 +1768,30 @@ namespace EMS
             {
                 bPrepared = true;
                 double dTemp = 0;
-/*                //1
-                if (Get3strData(14, ref strTemp, ref strData))
-                {
-                    PCSTemp = Math.Round(float.Parse(strData), 1);
-                    if (PCSTemp > 150)
-                        PCSTemp = 0;
-                    IGBTTemp1 = PCSTemp;
-                }
-                //2
-                if (Get3strData(15, ref strTemp, ref strData))
-                {
-                    dTemp = Math.Round(float.Parse(strData), 1);
-                    if ((dTemp > PCSTemp) && (PCSTemp < 150))
-                        PCSTemp = dTemp;
-                    IGBTTemp2 = PCSTemp;
-                }
-                //3
-                if (Get3strData(16, ref strTemp, ref strData))
-                {
-                    dTemp = Math.Round(float.Parse(strData), 1);
-                    if ((dTemp > PCSTemp) && (PCSTemp < 150))
-                        PCSTemp = dTemp;
-                    IGBTTemp3 = PCSTemp;
-                }*/
+                /*                //1
+                                if (Get3strData(14, ref strTemp, ref strData))
+                                {
+                                    PCSTemp = Math.Round(float.Parse(strData), 1);
+                                    if (PCSTemp > 150)
+                                        PCSTemp = 0;
+                                    IGBTTemp1 = PCSTemp;
+                                }
+                                //2
+                                if (Get3strData(15, ref strTemp, ref strData))
+                                {
+                                    dTemp = Math.Round(float.Parse(strData), 1);
+                                    if ((dTemp > PCSTemp) && (PCSTemp < 150))
+                                        PCSTemp = dTemp;
+                                    IGBTTemp2 = PCSTemp;
+                                }
+                                //3
+                                if (Get3strData(16, ref strTemp, ref strData))
+                                {
+                                    dTemp = Math.Round(float.Parse(strData), 1);
+                                    if ((dTemp > PCSTemp) && (PCSTemp < 150))
+                                        PCSTemp = dTemp;
+                                    IGBTTemp3 = PCSTemp;
+                                }*/
                 //4
                 if (Get3strData(17, ref strTemp, ref strData))
                 {
@@ -1957,23 +1958,23 @@ namespace EMS
         override public void Save2DataSource(string arDate)
         {
             //基本信息
-/*            DBConnection.ExecSQL("insert DSP2 (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
-                + " aUkwa,  bUkwa,  cUkwa,  allUkwa,   aNUkwr, bNUkwr,   cNUkwr, allNUkwr, "
-                + " aAkwa,  bAkwa,  cAkwa,  allAkwa, aPFactor, bPFactor,   cPFactor,  allPFactor,"
-                + " inputPower, inputV,  inputA, PCSTemp, "
-                + " ACInkwh,ACOutkwh,DCInkwh,DCOutkwh,"
-                + "Error1,Error2,Error3,Error4,Error7 )value('"
-                 + arDate + "','" + State.ToString() + "','"  // rTime.ToString("yyyy-M-d H:m:s")
-                 + aV.ToString() + "','" + bV.ToString() + "','" + cV.ToString() + "','"
-                 + aA.ToString() + "','" + bA.ToString() + "','" + cA.ToString() + "','" + hz.ToString() + "','"
-                 + aUkva.ToString() + "','" + bUkva.ToString() + "','" + cUkva.ToString() + "','" + allUkva.ToString() + "','"
-                 + aNUkvar.ToString() + "','" + bNUkvar.ToString() + "','" + cNUkvar.ToString() + "','" + allNUkvar.ToString() + "','"
-                 + aAkva.ToString() + "','" + bAkva.ToString() + "','" + cAkva.ToString() + "','" + allAkva.ToString() + "','"
-                 + aPFactor.ToString() + "','" + bPFactor.ToString() + "','" + cPFactor.ToString() + "','" + allPFactor.ToString() + "','"
-                 + inputkva.ToString() + "','" + inputV.ToString() + "','" + inputA.ToString() + "','" + PCSTemp.ToString() + "','"
-                 + ACInkwh.ToString() + "','" + ACOutkwh.ToString() + "','" + DCInkwh.ToString() + "','" + DCOutkwh.ToString() + "','"
-                + Error[0].ToString() + "','" + Error[1].ToString() + "','" + Error[2].ToString() + "','"
-                + Error[3].ToString() + "','" + Error[7].ToString() + "')");*/
+            /*            DBConnection.ExecSQL("insert DSP2 (rTime, State,aV, bV, cV, aA ,bA , cA , hz ,"
+                            + " aUkwa,  bUkwa,  cUkwa,  allUkwa,   aNUkwr, bNUkwr,   cNUkwr, allNUkwr, "
+                            + " aAkwa,  bAkwa,  cAkwa,  allAkwa, aPFactor, bPFactor,   cPFactor,  allPFactor,"
+                            + " inputPower, inputV,  inputA, PCSTemp, "
+                            + " ACInkwh,ACOutkwh,DCInkwh,DCOutkwh,"
+                            + "Error1,Error2,Error3,Error4,Error7 )value('"
+                             + arDate + "','" + State.ToString() + "','"  // rTime.ToString("yyyy-M-d H:m:s")
+                             + aV.ToString() + "','" + bV.ToString() + "','" + cV.ToString() + "','"
+                             + aA.ToString() + "','" + bA.ToString() + "','" + cA.ToString() + "','" + hz.ToString() + "','"
+                             + aUkva.ToString() + "','" + bUkva.ToString() + "','" + cUkva.ToString() + "','" + allUkva.ToString() + "','"
+                             + aNUkvar.ToString() + "','" + bNUkvar.ToString() + "','" + cNUkvar.ToString() + "','" + allNUkvar.ToString() + "','"
+                             + aAkva.ToString() + "','" + bAkva.ToString() + "','" + cAkva.ToString() + "','" + allAkva.ToString() + "','"
+                             + aPFactor.ToString() + "','" + bPFactor.ToString() + "','" + cPFactor.ToString() + "','" + allPFactor.ToString() + "','"
+                             + inputkva.ToString() + "','" + inputV.ToString() + "','" + inputA.ToString() + "','" + PCSTemp.ToString() + "','"
+                             + ACInkwh.ToString() + "','" + ACOutkwh.ToString() + "','" + DCInkwh.ToString() + "','" + DCOutkwh.ToString() + "','"
+                            + Error[0].ToString() + "','" + Error[1].ToString() + "','" + Error[2].ToString() + "','"
+                            + Error[3].ToString() + "','" + Error[7].ToString() + "')");*/
         }
 
     }
@@ -1993,12 +1994,12 @@ namespace EMS
         //设置数据
         public int LCModel { get; set; } //运行模式
         public ushort[] Error { get; set; } = { 0, 0 };
-        public ushort[] OldError = { 0, 0  };
+        public ushort[] OldError = { 0, 0 };
         ushort errorTemp = 0;
         public int state { get; set; }  //开关状态   开机1 关机0
         public bool PowerOn = false;
         public int TemperSelect; //控制温度选择
-       public int WaterPump = 0;   //水泵选择
+        public int WaterPump = 0;   //水泵选择
 
         private static ILog log = LogManager.GetLogger("LiquidCoolClass");
 
@@ -2149,7 +2150,7 @@ namespace EMS
                 Parent.EMSError[0] &= 0xDFFF;
                 count = 0;
             }
-            
+
         }
 
         override public void GetDataFromEqipment()
@@ -2383,7 +2384,7 @@ namespace EMS
                 + ExgasTemp.ToString() + "','"
                 + InwaterPressure.ToString() + "','"
                 + OutwaterPressure.ToString() + "','"
-                + Error[0].ToString() + "','" 
+                + Error[0].ToString() + "','"
                 + Error[1].ToString() + "')");
         }
 
@@ -2394,7 +2395,8 @@ namespace EMS
         public double v { get; set; } //电池电压
         public double a { get; set; } //电池电流
 
-        public UPSClass() {
+        public UPSClass()
+        {
             strCommandFile = "ups.txt";
             Prepared = false;
         }
@@ -2403,7 +2405,7 @@ namespace EMS
         {
             string strTemp = "";
             bool bPrepared = false;
-            
+
             //UPS电池电压
             if (GetSysData(0, ref strTemp))
             {
@@ -2448,9 +2450,9 @@ namespace EMS
 
         //
         override public void GetDataFromEqipment()
-        {  
+        {
             if (Parent.WaterLog1 != null)
-               Waterlogging1= Parent.WaterLog1.WaterlogData;
+                Waterlogging1= Parent.WaterLog1.WaterlogData;
             if (Parent.WaterLog2 != null)
                 Waterlogging2 = Parent.WaterLog2.WaterlogData;
             if (Parent.co != null)
@@ -2461,7 +2463,7 @@ namespace EMS
             {
                 Temp = Parent.TempHum.TempData;
                 Humidity = Parent.TempHum.TempData;
-            } 
+            }
         }
 
         //
@@ -2478,17 +2480,17 @@ namespace EMS
                 + Waterlogging2.ToString() + "','"
                 + Smoke.ToString() + "','"
                 + Co.ToString() +  "')");
-               // + iot_code +//"','"
+            // + iot_code +//"','"
         }
     }
- 
+
 
     //水浸
     public class WaterloggingClass : BaseEquipmentClass
     {
         public int WaterlogData;
         public int Num;
-        
+
         public WaterloggingClass(int num)
         {
             strCommandFile = "Fire.txt";
@@ -2497,7 +2499,7 @@ namespace EMS
 
         //
         override public void GetDataFromEqipment()
-        { 
+        {
             string strTemp = "";
 
             if (GetSysData(0, ref strTemp))
@@ -2557,18 +2559,18 @@ namespace EMS
                 }
 
                 Prepared = true;//通讯正常
-            } 
+            }
             else
                 Prepared = false;//通讯异常
         }
     }
 
     //温湿度
-    public class TempHumClass: BaseEquipmentClass   
+    public class TempHumClass : BaseEquipmentClass
     {
         public double TempData;                //温度-40---80，浮点型
         public double HumidityData;           //湿度0-100RH，浮点型
-        public bool[]   IsError = { false,false,false, false , false, false };
+        public bool[] IsError = { false, false, false, false, false, false };
 
         //private static ILog log = LogManager.GetLogger("TempHumClass");
         public TempHumClass()
@@ -2586,7 +2588,7 @@ namespace EMS
             {
                 TempData = Math.Round(float.Parse(strTemp), 3); //温度
                 bPrepared = true;
-                
+
                 if (TempData > frmSet.cloudLimits.BoxHTemperAlarm)
                 {
                     GetSysData(1, ref strTemp);
@@ -2618,7 +2620,7 @@ namespace EMS
                         {
                             Parent.EMSError[1] |= 0x100;
                         }
-                    }                 
+                    }
                 }
                 else
                 {
@@ -2639,7 +2641,7 @@ namespace EMS
     }
 
     //烟雾
-    public class SmokeClass : BaseEquipmentClass   
+    public class SmokeClass : BaseEquipmentClass
     {
         public int SmokeData;                  //烟感100-10000ppm 
         public bool IsError = false;
@@ -2655,7 +2657,7 @@ namespace EMS
             if (GetSysData(3, ref strTemp))
             {
                 SmokeData = int.Parse(strTemp); //烟感100 - 10000ppm
-                  Prepared = true;
+                Prepared = true;
                 if (SmokeData > 3000)
                 {
                     if (GetSysData(3, ref strTemp))
@@ -2670,26 +2672,27 @@ namespace EMS
                         }
                     }
                 }
-                else 
+                else
                 {
                     lock (Parent.EMSError)
                     {
                         Parent.EMSError[1] &= 0xFFFB;
                     }
                 }
- 
+
             }
             else
                 Prepared = false;
         }
-    } 
-   
+    }
+
     //一氧化碳
-    public class CoClass : BaseEquipmentClass    
+    public class CoClass : BaseEquipmentClass
     {
         public double CoData;//一氧化碳浓度  0.001精度 ppm
         public bool IsError = false;
-        public CoClass() {
+        public CoClass()
+        {
             strCommandFile = "Fire.txt";
         }
         //
@@ -2771,8 +2774,8 @@ namespace EMS
         {
             lock (m485.sp)
             {
-                SetSysData(53, aPT,false);
-                SetSysData(54, aCT,false);
+                SetSysData(53, aPT, false);
+                SetSysData(54, aCT, false);
             }
         }
 
@@ -2799,7 +2802,7 @@ namespace EMS
         /// <param name="aTime"秒分时日月年></param>
         public void SetTime(byte[] aTime)
         {
-            SetSysBytes(55, aTime,true);
+            SetSysBytes(55, aTime, true);
             //SetSysBytes(56, aTime);
             //SetSysBytes(57, aTime);
             // SetSysBytes(58, aTime);
@@ -2811,7 +2814,7 @@ namespace EMS
         {
             lock (this.m485.sp)
             {
-                SetSysBytes(59, a4Zoon,false);//12字节的一年四区间的尖峰平谷设计
+                SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 SetSysBytes(61, aBFTGs1, false);//42字节的1尖峰平谷设计
                 SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
             }
@@ -2846,7 +2849,7 @@ namespace EMS
 
         //
         override public void GetDataFromEqipment()
-        {  
+        {
             bool bPrepared = false;
             string strTemp = "";
             string strData = "";
@@ -2902,7 +2905,7 @@ namespace EMS
                 }
                 if (Get3strData(74, ref strTemp, ref strData))
                 {
-                    minute =  Convert.ToInt32(strData.Substring(0, 2), 16);                
+                    minute =  Convert.ToInt32(strData.Substring(0, 2), 16);
                     hour   =  Convert.ToInt32(strData.Substring(2, 2), 16);
                 }
                 if (Get3strData(75, ref strTemp, ref strData))
@@ -2910,9 +2913,9 @@ namespace EMS
                     day =  Convert.ToInt32(strData.Substring(0, 2), 16);
                     month   = Convert.ToInt32(strData.Substring(2, 2), 16);
                 }
-                
+
                 PUMdemand_Max_Time = $"{month}月{day}日{hour}时{minute}分";
-                
+
                 if (Get3strData(76, ref strTemp, ref strData))
                 {
                     Re_PUMdemand_Max = Math.Round(float.Parse(strData), 2);
@@ -2939,7 +2942,7 @@ namespace EMS
             }
             else
             {
-                Parent.EMSError[0] &= 0xFFFE; 
+                Parent.EMSError[0] &= 0xFFFE;
             }
         }
 
@@ -3004,7 +3007,7 @@ namespace EMS
         public double CPFactor { get; set; } = 0;  //;
         public double HZ { get; set; } = 0;  //;             //频率
         public double Gridkva = 0;          //电网功率
-        public double Totalkva = 0  ;       //总共功率
+        public double Totalkva = 0;       //总共功率
         public double Subkw = 0;            //辅表功率 
         public double Subkwh = 0;          //辅表电能
 
@@ -3045,8 +3048,8 @@ namespace EMS
         //设置电压变比 PT008DH，电流变比 CT008EH
         public void SetPTandCT(short aPT, short aCT)
         {
-            SetSysData(53, aPT,true);
-            SetSysData(54, aCT,true);
+            SetSysData(53, aPT, true);
+            SetSysData(54, aCT, true);
         }
 
 
@@ -3060,7 +3063,7 @@ namespace EMS
             //frmMain.Selffrm.Invoke(new Action(() =>  {
             //GetSysData(63, ref tempSTR);
             //MessageBox.Show(tempSTR);
-            SetSysBytes(55, aTime,false);
+            SetSysBytes(55, aTime, false);
             //SetSysBytes(56, new byte[] { aTime[0], aTime[1] });
             //SetSysBytes(57, new byte[] { aTime[2], aTime[3] });
             //SetSysBytes(58, new byte[] { aTime[4], aTime[5] });
@@ -3073,13 +3076,13 @@ namespace EMS
         //设置波峰评估的时间段
         public void SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
         {
-            if(m485 ==null)
-                return ;
+            if (m485 ==null)
+                return;
             lock (m485.sp)
             {
-                SetSysBytes(59, a4Zoon,false);//12字节的一年四区间的尖峰平谷设计  
+                SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
                 SetSysBytes(60, aBFTGs, false);//42字节的1尖峰平谷设计
-               // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                                               // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
             }
         }
 
@@ -3091,7 +3094,7 @@ namespace EMS
             {
                 SetSysBytes(122, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
                 SetSysBytes(123, aBFTGs, false);//42字节的1尖峰平谷设计
-                                               // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                                                // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
             }
         }
 
@@ -3109,7 +3112,7 @@ namespace EMS
             lock (m485.sp)
             {
                 SetSysBytes(123, tempJFPG, false);//42字节的1尖峰平谷设计
-                                                // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                                                  // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
             }
         }
 
@@ -3205,7 +3208,7 @@ namespace EMS
                         }*/
 
             if (GetSysData(121, ref strTemp))//一次读取批量数据，再对数据进行拆分
-            {             
+            {
                 bPrepared = true;
                 if (Get3strData(74, ref strTemp, ref strData))
                     Ukwh[0] = Math.Round(float.Parse(strData), 2);
@@ -3397,7 +3400,7 @@ namespace EMS
             time = DateTime.Now;
             Totalkva = Gridkva + AllAkva;
 
-          
+
             Prepared = bPrepared;
             if (!Prepared)
             {
@@ -3429,7 +3432,7 @@ namespace EMS
                  + "ONukwh, ONukwhJ,ONukwhF,ONukwhP,ONukwhG,ONukwh5,ONukwh6,ONukwh7,ONukwh8,"
                 + "AllUkva, AUkva, BUkva, CUkva,   "
                 + "AllNukva,  ANukva, BNukva,  CNukva, "
-                + " AllAAkva, AAkva, BAkva, CAkva," 
+                + " AllAAkva, AAkva, BAkva, CAkva,"
                 + " Aa,Ba,Ca, Akv, Bkv,Ckv, ABkv,  BCkv,  CAkv, AllPFoctor, APFoctor,  BPFoctor, CPFoctor, HZ, "
                 + "Gridkva,Totalkva,Subkw,Subkwh ,PlanKW)VALUES( '"
                 + arDate + "','"//rTime.ToString("yyyy-M-d H:m:s")
@@ -3479,7 +3482,7 @@ namespace EMS
         /// <param name="aTime"></param>
         public void SetTime(byte[] aTime)
         {
-            SetSysBytes(37, aTime,false);
+            SetSysBytes(37, aTime, false);
         }
         //
 
@@ -3505,7 +3508,7 @@ namespace EMS
         {
             lock (m485.sp)
             {
-                SetSysBytes(41, a4Zoon,false);//12字节的一年四区间的尖峰平谷设计
+                SetSysBytes(41, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 SetSysBytes(43, aBFTGs, false);//42字节的一年四区间的尖峰平谷设计
                 //SetSysBytes(43, aBFTGs2, false);
             }
@@ -3538,7 +3541,7 @@ namespace EMS
             // HZ = Math.Round(float.Parse(strTemp), 2);
             //综合有功电表 
             if (GetSysData(45, ref strTemp))
-            { 
+            {
                 bPrepared = true;
                 if (Get3strData(0, ref strTemp, ref strData))
                     Akwh[0] = Math.Round(float.Parse(strData), 2);
@@ -3603,7 +3606,7 @@ namespace EMS
         public int PCS = 1;//0:英博；1：晶石
         public static string[] PCSStates = { "待机", "停机", "充电", "放电" };
         public static string[] PCSTypes = { "待机", "恒流", "恒压", "恒功率", "AC恒压", "自适应需量" };
-        public static string[] PCSNetState = { "停机","待机", "运行", "总故障状态", "总警告状态" , "1远程/0就地状态","急停输入状态","并网","离网","过载降容"};
+        public static string[] PCSNetState = { "停机", "待机", "运行", "总故障状态", "总警告状态", "1远程/0就地状态", "急停输入状态", "并网", "离网", "过载降容" };
         public int State = 0;
         public double aV { get; set; }
         public double bV { get; set; }
@@ -3645,7 +3648,7 @@ namespace EMS
         public double InTemp { get; set; }           //入口温度
         public double OutTemp { get; set; }             //出口温度
         public ushort[] Error { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        public int[] Error_2  = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        public int[] Error_2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public ushort[] OldError = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -3656,7 +3659,7 @@ namespace EMS
         public ushort PCSwaType = 0;
 
         public double IGBTTemp1 { get; set; }
-        public double IGBTTemp2{ get; set; }
+        public double IGBTTemp2 { get; set; }
         public double IGBTTemp3 { get; set; }
         public double IGBTTemp4 { get; set; }
         public double IGBTTemp5 { get; set; }
@@ -3679,7 +3682,7 @@ namespace EMS
         //public double DSP2bNUkvar { get; set; }
         //public double DSP2cNUkvar { get; set; }
         public double DSP2allNUkvar { get; set; }
-       // public double DSP2aAkva { get; set; }              //A视在功率   
+        // public double DSP2aAkva { get; set; }              //A视在功率   
         //public double DSP2bAkva { get; set; }
         //public double DSP2cAkva { get; set; }
         public double DSP2allAkva { get; set; }             //总视在功率
@@ -3713,7 +3716,7 @@ namespace EMS
         public string SoftwareVersion { get; set; }
         public string HardwareVersion { get; set; }
 
-        public int test = 0 ;
+        public int test = 0;
 
 
         public PCSClass(int aPCS)
@@ -3744,10 +3747,10 @@ namespace EMS
                 case 1:
                     ExcSetPCSPower2(aPowerOn);
                     break;
-            } 
+            }
         }
 
-            public void ExcSetPCSPower1(bool aPowerOn)
+        public void ExcSetPCSPower1(bool aPowerOn)
         {
             //判断SOC师傅可以充放电
             //判断允许充放电的电流是否满足要求
@@ -3760,13 +3763,13 @@ namespace EMS
                     SetSysData(77, 0xff00, false);
                 else
                     SetSysData(78, 0xff00, false);//qiao 
-                                           //SetSysData(79, 0xff00);//qiao急停 
-                                           //获取BMS返回状态
-                                           //修正状态
+                                                  //SetSysData(79, 0xff00);//qiao急停 
+                                                  //获取BMS返回状态
+                                                  //修正状态
             }
         }
 
-       //晶石
+        //晶石
         public void ExcSetPCSPower2(bool aPowerOn)
         {
             if (aPowerOn)
@@ -3780,7 +3783,7 @@ namespace EMS
         }
 
 
-        public bool ExecCommand( string aPCSType, int aData, double aBMSSOC)
+        public bool ExecCommand(string aPCSType, int aData, double aBMSSOC)
         {
             frmMain.Selffrm.receive_time_end = DateTime.Now;
             bool bResult = false;
@@ -3791,7 +3794,7 @@ namespace EMS
                     break;
                 case 1:
                     bResult= ExecCommand2(aPCSType, aData, aBMSSOC);
-                    break;  
+                    break;
             }
             return bResult;
         }
@@ -3806,7 +3809,7 @@ namespace EMS
         /// <param name="aBMSSOC"></param>
         /// <param name="aError"></param>
         /// <returns></returns>
-        public bool ExecCommand1(  string aPCSType, int aData, double aBMSSOC)
+        public bool ExecCommand1(string aPCSType, int aData, double aBMSSOC)
         {
             bool bResult = false;
 
@@ -3831,8 +3834,8 @@ namespace EMS
                 {
                     if (aData * Parent.waValueActive == 0)//qiao
                         SetSysData(47, 0, false);
-                   if(frmSet.config.PCSForceRun == 0)
-                   {
+                    if (frmSet.config.PCSForceRun == 0)
+                    {
                         if ((aData < 0) && (Parent.BMS.MaxChargeA == 0))
                             aData = 0;
                         if ((aData > 0) && (Parent.BMS.MaxDischargeA == 0))
@@ -3842,8 +3845,8 @@ namespace EMS
                     switch (iPCSTypes)//0待机1恒流2、恒压、3恒功率
                     {
                         case 0://待机  
-                             SetSysData(84, frmSet.config.PCSGridModel, false);//0并网,1离网
-                             SetSysData(82, 0xFF00,false);//1远程、0本地
+                            SetSysData(84, frmSet.config.PCSGridModel, false);//0并网,1离网
+                            SetSysData(82, 0xFF00, false);//1远程、0本地
                             iPower = ((aData * 10) / 3);////负给电网放电，正从电网充电
                             SetSysData(55, iPower, false);//三相四线
                             SetSysData(56, iPower, false);
@@ -3863,7 +3866,7 @@ namespace EMS
                             ExcSetPCSPower1(true);
                             break;
                         case 3://恒功率  
-                            if((aData<0) && (Parent.BMS.MaxChargeA == 0))
+                            if ((aData<0) && (Parent.BMS.MaxChargeA == 0))
                                 aData = 0;
                             if ((aData > 0) && (Parent.BMS.MaxDischargeA == 0))
                                 aData = 0;
@@ -3880,8 +3883,8 @@ namespace EMS
                 bResult = true;
             }
             catch (Exception ex)
-            { 
-               log.Error("英博ExecCommand1错误："+ex.ToString()); 
+            {
+                log.Error("英博ExecCommand1错误："+ex.ToString());
             }
             finally
             {
@@ -3898,12 +3901,12 @@ namespace EMS
         /// <param name="aBMSSOC"></param>
         /// <param name="aError"></param>
         /// <returns></returns>
-        public bool ExecCommand2( string aPCSWorkType, int aData, double aBMSSOC)
+        public bool ExecCommand2(string aPCSWorkType, int aData, double aBMSSOC)
         {
             bool bResult = false;
             aData = -aData;
             try
-            { 
+            {
                 //设置PCS 
                 int iPCSTypes = Array.IndexOf(PCSTypes, aPCSWorkType);
                 //如果不是强制开机，判断BMS属性是否满足PCS运行条件
@@ -3924,7 +3927,7 @@ namespace EMS
                             SetSysData(41, 6, false); //设置PCS的为6 - AC恒功率
                             break;
                         case 1://1恒流 ---交流
-                            SetSysData(53, aData * 10,false);
+                            SetSysData(53, aData * 10, false);
                             SetSysData(41, 5, false); //设置PCS的为//0待机1恒流2、恒压、3恒功率
                             break;
                         case 2://恒压----DC  
@@ -3942,7 +3945,7 @@ namespace EMS
                                //73 50000
                             SetSysData(54, 5000, false); //50hz
                             SetSysData(41, 4, false); //设置PCS的为//0待机1恒流2、恒压、3恒功率 
-                            break;                      
+                            break;
                         case 5://自适应需量并非PCS原有功率，执行上等同于恒功率
                             SetSysData(42, aData * 10, false);//有功设定
                             SetSysData(41, 6, false); //设置PCS的为//0待机1恒流2、恒压、3恒功率 
@@ -3952,8 +3955,8 @@ namespace EMS
                 bResult = true;
             }
             catch (Exception ex)
-            { 
-                log.Error("精石ExecCommand2错误 :" +ex.ToString()); 
+            {
+                log.Error("精石ExecCommand2错误 :" +ex.ToString());
             }
             finally
             {
@@ -3981,7 +3984,7 @@ namespace EMS
                         GetDataFromEqipment2();
                     }
                     break;
-            } 
+            }
         }
 
         /// <summary>
@@ -3989,11 +3992,11 @@ namespace EMS
         /// </summary>
         public void GetDataFromEqipment1()
         {//pcs 
-             
+
             string strTemp = "";
             string strData = "";
             bool bPrepared = false;
- 
+
             //
             //if (GetSysData(85, ref strTemp))//41984
             {//10100100
@@ -4160,30 +4163,30 @@ namespace EMS
             if (GetSysData(39, ref strTemp))
             {
                 bPrepared = true;
-                Error[0] = Convert.ToUInt16(strTemp); 
-            } 
+                Error[0] = Convert.ToUInt16(strTemp);
+            }
             if (GetSysData(40, ref strTemp))
             {
-                bPrepared = true; 
+                bPrepared = true;
                 Error[1] = Convert.ToUInt16(strTemp);
-            } 
+            }
             if (GetSysData(41, ref strTemp))
             {
                 bPrepared = true;
                 Error[2] = Convert.ToUInt16(strTemp);
-            } 
+            }
             if (GetSysData(42, ref strTemp))
             {
-                bPrepared = true; 
+                bPrepared = true;
                 Error[3] = Convert.ToUInt16(strTemp);
-            } 
+            }
             if (GetSysData(86, ref strTemp))
             {
                 bPrepared = true;
                 Error[4] = Convert.ToUInt16(strTemp);
-                Error[4] = (ushort)( Error[4] & 63);
+                Error[4] = (ushort)(Error[4] & 63);
             }
-               
+
             //if (GetSysData(43, ref strTemp))
             //    Error[5] = Convert.ToUInt16(strTemp);
             //if (GetSysData(44, ref strTemp))
@@ -4249,7 +4252,7 @@ namespace EMS
 
                 if (sData != sOldData)//sOldData ！= sData :说明Error更新 
                 {
-                    sOldData = (ushort)(sOldData ^ sData); 
+                    sOldData = (ushort)(sOldData ^ sData);
                     for (int j = 0; j < 16; j++)
                     {
                         sKey = (ushort)(1 << j);
@@ -4277,7 +4280,7 @@ namespace EMS
                 bPrepared = true;
                 allUkva = Convert.ToDouble(strTemp);
             }
-            Prepared = bPrepared; 
+            Prepared = bPrepared;
         }
 
         /// <summary>
@@ -4341,7 +4344,7 @@ namespace EMS
                 //状态  
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData);                
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4420,7 +4423,7 @@ namespace EMS
             }
 
             //设备掉电ems告警 : 仅限风冷
-            if (aV < 10 && bV < 10 && cV < 10 )
+            if (aV < 10 && bV < 10 && cV < 10)
             {
                 //判断条件 要在明确一下
                 if (frmMain.Selffrm.AllEquipment.Elemeter1List[0] != null && frmMain.Selffrm.AllEquipment.Elemeter1List[0].Prepared)  //判断是并网柜侧断电还是客户侧断电
@@ -4432,7 +4435,7 @@ namespace EMS
                     Parent.EMSError[3] |= 0x08;  //客户侧断电
                 }
             }
-            else 
+            else
             {
                 Parent.EMSError[3] &= 0xFFF3;   //将并网柜侧以及客户侧断电掉电告警清除
             }
@@ -4526,9 +4529,9 @@ namespace EMS
                 double dTemp = 0;
                 //1
                 if (Get3strData(14, ref strTemp, ref strData))
-                { 
+                {
                     PCSTemp = Math.Round(float.Parse(strData), 1);
-                    if (PCSTemp > 150) 
+                    if (PCSTemp > 150)
                         PCSTemp = 0;
                     IGBTTemp1 = PCSTemp;
                 }
@@ -4574,9 +4577,9 @@ namespace EMS
                 }
 
                 if (Get3strData(20, ref strTemp, ref strData))
-                    InTemp = Math.Round(float.Parse(strData), 1); 
+                    InTemp = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(21, ref strTemp, ref strData))
-                    OutTemp = Math.Round(float.Parse(strData), 1); 
+                    OutTemp = Math.Round(float.Parse(strData), 1);
             }
             //
             if (GetSysData(58, ref strTemp))
@@ -4598,7 +4601,7 @@ namespace EMS
                 //状态
                 //Get3strData(26, ref strTemp, ref strData);
                 if (Get3strData(27, ref strTemp, ref strData))
-                    Error[0] = Convert.ToUInt16(strData); 
+                    Error[0] = Convert.ToUInt16(strData);
                 if (Get3strData(28, ref strTemp, ref strData))
                     Error[1] = Convert.ToUInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
@@ -4625,7 +4628,7 @@ namespace EMS
                 bPrepared = true;
                 PCSwaType = Convert.ToUInt16(strTemp);
             }
-            
+
             //判断PCS的通讯状态
             Prepared = bPrepared;
             if (!Prepared)
@@ -4659,13 +4662,13 @@ namespace EMS
                 State = 2;
             else
                 State = 0;
-             
+
             time = DateTime.Now;
             //设置运行指示灯
             if (State > 0)
             {
                 frmSet.RunStateGPIO(1);
-            }  
+            }
             else
             {
                 frmSet.RunStateGPIO(0);
@@ -4766,7 +4769,7 @@ namespace EMS
         public int ChargKey { get; set; } = 0;//预充接触器
 
         public int batteryID;
-       
+
         public short prochargState { get; set; } //预充电状态
         public short SwitchState { get; set; }   //接触器状态
         public short chargState { get; set; }    //充放电指示-静置、放电、充电
@@ -4794,7 +4797,7 @@ namespace EMS
         public short cellIDMintemp { get; set; }
         public double averageV { get; set; }
         public double averageTemp { get; set; }
-        public  int runState { get; set; }      //运行状态
+        public int runState { get; set; }      //运行状态
         public ushort[] Error { get; set; } = { 0, 0, 0, 0, 0 };//故障，警告123，BMU通讯故障
         public ushort[] OldError = { 0, 0, 0, 0, 0 };
 
@@ -4825,7 +4828,7 @@ namespace EMS
 
         public double BMSCap { get; set; } // BMS当前容量 
 
-        
+
 
         private int ProjectNumber;//项目版本号
         private int MajorVersionNumber;//主版本号
@@ -4935,22 +4938,22 @@ namespace EMS
                 log.Error("File not found.");
             }
         }
-    
 
-    /****************************************************************
-    *
-    *
-    *                        Level 1 Function
-    *
-    /****************************************************************/
 
-    /******************************
-    *
-    *           均衡
-    *
-    /******************************/
+        /****************************************************************
+        *
+        *
+        *                        Level 1 Function
+        *
+        /****************************************************************/
 
-    public void ClearBmsBala()
+        /******************************
+        *
+        *           均衡
+        *
+        /******************************/
+
+        public void ClearBmsBala()
         {
             for (int i = 0; i < 25; i++)
             {
@@ -5219,9 +5222,9 @@ namespace EMS
         public void PowerOn(bool aOnData)
         {
             if (aOnData)
-                SetSysData(37, 0x001,true);// 启动
+                SetSysData(37, 0x001, true);// 启动
             else
-                SetSysData(37, 0x000,true);// 关闭
+                SetSysData(37, 0x000, true);// 关闭
         }
 
         /***************************************************************************************************/
@@ -5266,7 +5269,7 @@ namespace EMS
                                 UpdateCellTemp_160(aCellTemps, 144, aData);
                             }
                             break;
-                        
+
                         default:
                             if (Group == 1)
                             {
@@ -5279,27 +5282,27 @@ namespace EMS
                             break;
                     }
                     break;
-                
-/*                default:
-                    switch (frmSet.config.CellTNum)
-                    {
-                        case 168:
-                            UpdateCellTemp_168(aCellTemps, 0, aData);
-                            break;
-                        case 140:
 
-                            break;
-                        default:
-                            UpdateCellTemp_168(aCellTemps, 0, aData);
-                            break;
-                    }
-                    break;*/
+                    /*                default:
+                                        switch (frmSet.config.CellTNum)
+                                        {
+                                            case 168:
+                                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                                                break;
+                                            case 140:
+
+                                                break;
+                                            default:
+                                                UpdateCellTemp_168(aCellTemps, 0, aData);
+                                                break;
+                                        }
+                                        break;*/
             }
         }
 
         private void UpdateCellTemp_168(double[] aCellTemps, int aStart, string aData)
-        { 
-            double dTemp;  
+        {
+            double dTemp;
             for (int i = 0; i < 6; i++)
             {
                 //1-10
@@ -5307,10 +5310,10 @@ namespace EMS
                 {
                     dTemp = (double)(Convert.ToInt32("0X" + aData.Substring(0, 4), 16) * 0.1);
                     aData = aData.Substring(4, aData.Length - 4);
-                    aCellTemps[aStart + i * 20 + j] = Math.Round(dTemp, 1); 
+                    aCellTemps[aStart + i * 20 + j] = Math.Round(dTemp, 1);
                 }
-              
-            } 
+
+            }
         }
 
         private void UpdatePTemp_168(double[] aCellTemps, string aData)
@@ -5426,8 +5429,8 @@ namespace EMS
                             }
                             break;
                     }
-                break;
-                  
+                    break;
+
             }
         }
 
@@ -5449,7 +5452,7 @@ namespace EMS
 
                 }
             }
-            catch    {  }
+            catch { }
         }
         /******************************** 液冷 ********************************/
 
@@ -5654,12 +5657,12 @@ namespace EMS
             //单独区分接触器状态
 
             //隔离开关
-            if ((SwitchState & 8) > 0)   AllKey = 1;
-            else                         AllKey = 0;
+            if ((SwitchState & 8) > 0) AllKey = 1;
+            else AllKey = 0;
 
             //预充接触器状态
-            if ((SwitchState & 2) > 0)  ChargKey = 1;
-            else                        ChargKey = 0;
+            if ((SwitchState & 2) > 0) ChargKey = 1;
+            else ChargKey = 0;
 
             //总负接触器
             if ((SwitchState & 4) > 0)
@@ -5754,7 +5757,7 @@ namespace EMS
             bool bPrepared = false;
 
             if (GetSysData(1, ref strTemp))
-            { 
+            {
                 bPrepared = true;
                 if (Get3strData(2, ref strTemp, ref strData))
                     runState = Convert.ToInt16(strData);
@@ -5800,7 +5803,7 @@ namespace EMS
                     MaxChargeA = Math.Round(float.Parse(strData), 1);
                 if (Get3strData(21, ref strTemp, ref strData))
                     MaxDischargeA = Math.Round(float.Parse(strData), 1);
-                
+
                 if (Get3strData(22, ref strTemp, ref strData))
                     cellIDMaxV = Convert.ToInt16(strData);
                 if (Get3strData(23, ref strTemp, ref strData))
@@ -5817,7 +5820,7 @@ namespace EMS
                     cellIDMintemp = Convert.ToInt16(strData);
                 if (Get3strData(29, ref strTemp, ref strData))
                     cellMinTemp = Math.Round(float.Parse(strData), 1);
-                
+
                 if (Get3strData(30, ref strTemp, ref strData))
                     averageV = Math.Round(float.Parse(strData), 3);
                 if (Get3strData(31, ref strTemp, ref strData))
@@ -5882,7 +5885,7 @@ namespace EMS
         //public double SetHumiReturn;
         public TempControlClass()
         {
-            strCommandFile = "aircontrol.txt"; 
+            strCommandFile = "aircontrol.txt";
         }
 
         public bool ExecCommand(bool aWithAllSet)
@@ -5892,9 +5895,9 @@ namespace EMS
                 lock (this.m485.sp)
                 {
                     //11.23添加740,741 外风机工作模式，风机最高温度， 风机最低温度
- /*                   SetSysData(35,(short)frmSet.FenMode,false);
-                    SetSysData(36, (short)frmSet.FenMaxTemp, false);
-                    SetSysData(37, (short)frmSet.FenMinTemp, false);*/
+                    /*                   SetSysData(35,(short)frmSet.FenMode,false);
+                                       SetSysData(36, (short)frmSet.FenMaxTemp, false);
+                                       SetSysData(37, (short)frmSet.FenMinTemp, false);*/
 
                     SetSysData(11, (short)frmSet.componentSettings.SetCoolTemp, false);
                     SetSysData(12, (short)frmSet.componentSettings.CoolTempReturn, false);
@@ -5934,18 +5937,18 @@ namespace EMS
         /// </summary>
         /// <param name="aPowerOn"></param>
         public void TCPowerOn(bool aACOn)
-        { 
+        {
             PowerOn = aACOn;
             try
             {
                 if (aACOn)
                 {
-                    SetSysData(28, 0xff00,true);//01/05 //176 开机  
+                    SetSysData(28, 0xff00, true);//01/05 //176 开机  
                     // SetSysData(30, 1);     // 遥控 开机  
                 }
                 else
                 {
-                    SetSysData(29, 0x0000,true);//01/05 //176 关机
+                    SetSysData(29, 0x0000, true);//01/05 //176 关机
                     //SetSysData(31, 2);     //遥控 开机  
                 }
             }
@@ -5958,23 +5961,23 @@ namespace EMS
         /// 复位故障码
         /// </summary>
         public void TCCleanError()
-        { 
-            SetSysData(25, 0xff00,true);//01/05 
+        {
+            SetSysData(25, 0xff00, true);//01/05 
         }
 
 
         override public void GetDataFromEqipment()
         {//tc
 
-/*            DateTime oldTemp = new DateTime(1970, 1, 1, 8, 0, 0);
-            DateTime newTemp;
-            int count = 0;*/
+            /*            DateTime oldTemp = new DateTime(1970, 1, 1, 8, 0, 0);
+                        DateTime newTemp;
+                        int count = 0;*/
 
             string strData = "";
             string strTemp = "";
             bool bPrepared = false;
             if (GetSysData(32, ref strData))
-            { 
+            {
                 bPrepared = true;
                 if (Get3strData(1, ref strData, ref strTemp))
                     indoorHumidity = Math.Round(float.Parse(strTemp), 1);//室内湿度 
@@ -5984,10 +5987,10 @@ namespace EMS
                     condenserTemp = Math.Round(float.Parse(strTemp), 1);  //冷凝/供液温度
                 if (Get3strData(4, ref strData, ref strTemp))
                     evaporationTemp = Math.Round(float.Parse(strTemp), 1);//蒸发/出风温度
-/*                if (Get3strData(5, ref strData, ref strTemp))
-                    condenserTemp = Math.Round(float.Parse(strTemp), 1);  //送风/户温度
-                if (Get3strData(6, ref strData, ref strTemp))
-                    fanControl = Convert.ToInt32(strTemp);//风机状态/加湿器*/
+                /*                if (Get3strData(5, ref strData, ref strTemp))
+                                    condenserTemp = Math.Round(float.Parse(strTemp), 1);  //送风/户温度
+                                if (Get3strData(6, ref strData, ref strTemp))
+                                    fanControl = Convert.ToInt32(strTemp);//风机状态/加湿器*/
             }
             //11.16
             if (Get3strData(5, ref strData, ref strTemp))
@@ -6023,21 +6026,21 @@ namespace EMS
                 error = Convert.ToUInt32(strTemp);
                 bPrepared = true;
             }
-               
+
             time = DateTime.Now;
 
             //考虑到问询是稳定性，一个返回信息代表通讯成功
             Prepared = bPrepared;
             if (!Prepared)
             {
-                if(count < 10)
+                if (count < 10)
                 {
                     count++;
                 }
 
                 //TimeSpan ts = newTemp - oldTemp;
                 //如果故障时间超过5分钟，则认为空调通讯故障
-                if ( count > 8 )
+                if (count > 8)
                 {
                     lock (Parent.EMSError)
                     {
@@ -6050,7 +6053,7 @@ namespace EMS
             else
             {
                 Parent.EMSError[0] &= 0xFFBF;
-                count = 0;          
+                count = 0;
             }
 
 
@@ -6128,8 +6131,8 @@ namespace EMS
         //public modbus485 m485 = null;
         public double ShedulePCSKVA = -1;
         //public double ActivePCSKVA = 0;//从机PCS实际运行功率
-        public int PCSType { get; set; } 
-        public double  WorkType { get; set; }//0充电1放电2待机
+        public int PCSType { get; set; }
+        public double WorkType { get; set; }//0充电1放电2待机
         //public bool Prepared = true;
         public double waValueActive { get; set; }
         //public AllEquipmentClass Parent = null;
@@ -6155,7 +6158,7 @@ namespace EMS
         {
             string strTemp = "";
             int count = 100;//发送100条数据
-            int rec = 0 ; //成功通信次数
+            int rec = 0; //成功通信次数
 
             while (count > 0)
             {
@@ -6199,7 +6202,7 @@ namespace EMS
 
 
         public void ExcPCSOn(bool aOn)//0off,1off
-        { 
+        {
             //打开PCS
             if (aOn)
                 m485.Send6MSG((byte)ID, 6, 0x6000, (ushort)1, true);
@@ -6209,10 +6212,10 @@ namespace EMS
 
 
 
-        public void ExcPCSCommand(string aWorkType, string aPCSType, double aPCSValueRate,bool bAllParam )
+        public void ExcPCSCommand(string aWorkType, string aPCSType, double aPCSValueRate, bool bAllParam)
         {
             bool bPrepared = false;
-            string[] wTpyes = { "充电","放电"};
+            string[] wTpyes = { "充电", "放电" };
             int itemp = Array.IndexOf(wTpyes, aWorkType);
 
             if (m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp, true))
@@ -6236,12 +6239,12 @@ namespace EMS
         }
 
         public void SetPCSScheduleKVA(double aPCSScheduleKVA)
-        { 
+        {
             if (m485.Send6MSG((byte)ID, 6, 0x6001, (ushort)aPCSScheduleKVA, true))
             {
-                Prepared = true; 
+                Prepared = true;
                 ShedulePCSKVA = aPCSScheduleKVA;
-            } 
+            }
         }
     }
 
@@ -6292,9 +6295,9 @@ namespace EMS
         //考虑到多PCS
         public List<PCSClass> PCSList = new List<PCSClass>();
         //BMS
-        public  BMSClass  BMS;
+        public BMSClass BMS;
         //空调可能有多个
-        public  TempControlClass TempControl;
+        public TempControlClass TempControl;
         //UPS
         public UPSClass UPS;
         //主机EMS 8.7
@@ -6328,9 +6331,9 @@ namespace EMS
 
         //当前策略的功率情况
         public int eState;    //手工、策略、网控 
-        //public string wType;  //充电、放电                 /应该状态
-       // public string PCSType;//待机、恒流、恒压、恒功率--设置项目/策略状态 
-        public int    MaxBMXValue=110;   //BMS限流的功率 kw
+                              //public string wType;  //充电、放电                 /应该状态
+                              // public string PCSType;//待机、恒流、恒压、恒功率--设置项目/策略状态 
+        public int MaxBMXValue = 110;   //BMS限流的功率 kw
 
         //2.21
         public volatile string PrewTypeActive;//策略预备执行动作（准备充电/放电）
@@ -6341,7 +6344,7 @@ namespace EMS
         public volatile string PCSTypeActive;//待机、恒压、恒流恒、恒功率 , AC恒压（离网） ，自适应需量
         public double waValueActive; //对应的 电压(恒压模式) /电流 (恒流模式)/ 功率（恒功率模式）
 
-        public int  ConversionRate = 1; //实际转换率
+        public int ConversionRate = 1; //实际转换率
 
         public string rDate { get; set; } = ""; //日期
         public string mDate = ""; //月份
@@ -6355,7 +6358,7 @@ namespace EMS
         public bool[] ErrorState = { false, false, false };//1.2.3级别
 
 
-        public ushort[] OldEMSError = {0,0,0,0,0 };
+        public ushort[] OldEMSError = { 0, 0, 0, 0, 0 };
         public ushort[] EMSError = { 0, 0, 0, 0, 0 }; //问题？为什么有5个 和errorclass不同 
 
         //5.07 新增led显示故障
@@ -6414,7 +6417,7 @@ namespace EMS
         public volatile int AllUkvaWindowSize = 4; // 1分钟的窗口大小，每秒一个值
 
         public double WorkKVA { get; set; } = 0;    //实时数据负载功率==电网+pcs功率（放电）、、、、电网+充电功率
-        public  double PCSScheduleKVA { get; set; } = 0;     //实施的功率（手工设置或策略功率）
+        public double PCSScheduleKVA { get; set; } = 0;     //实施的功率（手工设置或策略功率）
         public double AllPCSScheduleKVA = 0;   //主从结构的全部计划功率
         public double AllwaValue = 0;            //主从结构的全部实际功率
         public double PCSKVA { get; set; } = 0;     //实时数据pcs功率 
@@ -6424,11 +6427,11 @@ namespace EMS
         public double BMSKVA { get; set; }   //实时电池的功率
 
         //7.25 BMS 均衡
-        double CellV_Gap = 0.03 ;//定义最低单体电压和理想最高单体电压的差值30mv
+        double CellV_Gap = 0.03;//定义最低单体电压和理想最高单体电压的差值30mv
         public List<double> balaCellV = new List<double>(); //单体电压数据
         public List<double> balaCellID = new List<double>(); //单体电压数据
         public double O_sigma { get; set; } = 0;            //上次的电压方差
-        public  int BalaRun { get; set; } = 0;         //是否运行均衡标识位
+        public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
         public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
 
 
@@ -6436,12 +6439,12 @@ namespace EMS
         // public int[] BMSErrorState = { 0, 0 };
         public bool NetControl = false; //记录当前状态是否为网络控制
         public bool NetConnect = false; //记录当前状态是否连接主机
-        public DateTime NetCtlTime =DateTime.Now; //最后通讯时间
+        public DateTime NetCtlTime = DateTime.Now; //最后通讯时间
 
         //2.21
-        public static string[] EquipNameList = { "用户侧电表", "设备电表", "辅组电表", "PCS逆变器", "BMS", "空调系统" 
+        public static string[] EquipNameList = { "用户侧电表", "设备电表", "辅组电表", "PCS逆变器", "BMS", "空调系统"
                    , "消防","计量电表" ,"水浸传感器","一氧化碳传感器","温湿度传感器","烟雾传感器","UPS","液冷机" ,"DSP2" ,"汇流柜电表","储能电站总表","灯板","除湿机"};
-        public  bool ChechPower;// = (frmMain.Selffrm.AllEquipment.Elemeter1 != null);
+        public bool ChechPower;// = (frmMain.Selffrm.AllEquipment.Elemeter1 != null);
 
 
         //8.8
@@ -6466,7 +6469,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "";
+        public string EMSVersion { get; set; } = "1.0.4";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6522,11 +6525,11 @@ namespace EMS
             Fire = new FireClass();
 
             // 获取版本信息
-/*            Assembly assembly = Assembly.GetExecutingAssembly();
-            Version version = assembly.GetName().Version;
-            EMSVersion = version.ToString();*/
+            /*            Assembly assembly = Assembly.GetExecutingAssembly();
+                        Version version = assembly.GetName().Version;
+                        EMSVersion = version.ToString();*/
 
-            EMSVersion = "1.0.4";
+
         }
 
         //析构函数
@@ -6706,7 +6709,7 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
                 {
                     //frmSet.RestartWindows();
-                }          
+                }
             }
         }
 
@@ -6785,7 +6788,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.ExecCommand(aWithAllSet); 
+            frmMain.Selffrm.AllEquipment.TempControl.ExecCommand(aWithAllSet);
         }
         //除湿器设置 5.05 swp
         public void DHIni()
@@ -6801,7 +6804,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(aACOn); 
+            frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(aACOn);
         }
 
         //复位空调故障
@@ -6809,7 +6812,7 @@ namespace EMS
         {
             if (frmMain.Selffrm.AllEquipment.TempControl == null)
                 return;
-            frmMain.Selffrm.AllEquipment.TempControl.TCCleanError(); 
+            frmMain.Selffrm.AllEquipment.TempControl.TCCleanError();
         }
 
         /// <summary>
@@ -6820,7 +6823,7 @@ namespace EMS
             //执行 策略
             for (int j = 0; j < PCSList.Count; j++)
             {
-                PCSList[j].SetSysData(76, 0xff00,true);
+                PCSList[j].SetSysData(76, 0xff00, true);
             }
         }
 
@@ -6927,7 +6930,7 @@ namespace EMS
                             }
                             log.Debug("EMS下发功率：" + aData + "aPCSType: " + aPCSType);
                             if (aData != 0)
-                            {  
+                            {
                                 if (PCSList[j].ExecCommand(aPCSType, aData, BMSSOC)) //检查是否满足开启PCS条件，设置PCS的功率（不满足条件，设为0）
                                 {
                                     if (frmMain.Selffrm.AllEquipment.PCSList[j].PcsRun == 255)
@@ -7041,7 +7044,7 @@ namespace EMS
                             }
                         }
                     }
-                }        
+                }
             }
             catch (Exception ex)
             {
@@ -7253,7 +7256,7 @@ namespace EMS
             {
                 log.Error("init_LiquidCool: " + ex.Message);
             }
-                        
+
         }
 
 
@@ -7317,7 +7320,7 @@ namespace EMS
             {
                 log.Error("init_LED: " + ex.Message);
             }
-            
+
         }
         //保存到文件
         public void Save2DataSoure(DateTime atempTime)
@@ -7344,10 +7347,10 @@ namespace EMS
                 for (i = 0; i < PCSList.Count; i++)
                     PCSList[i].Save2DataSource(tempDate);
                 //BMS                
-               if(BMS!=null)
+                if (BMS!=null)
                     BMS.Save2DataSource(tempDate);
                 //空调
-               if(TempControl!=null)
+                if (TempControl!=null)
                     TempControl.Save2DataSource(tempDate);
                 //液冷
                 if (LiquidCool!=null)
@@ -7356,8 +7359,8 @@ namespace EMS
                 if (Fire != null)
                     Fire.Save2DataSource(tempDate);
                 //UPS
-/*                if (UPS != null)
-                    UPS.Save2DataSource(tempDate);*/
+                /*                if (UPS != null)
+                                    UPS.Save2DataSource(tempDate);*/
                 //其他 
             }
             catch (Exception ex)
@@ -7589,7 +7592,7 @@ namespace EMS
                 catch (Exception ex)
                 {
                     log.Error("LiquidCold_HeartBeat_TimerCallback encountered an error: " + ex.Message);
-                }           
+                }
             }
         }
 
@@ -7744,7 +7747,8 @@ namespace EMS
 
 
         /******************************485 control*************************************/
-        public void ControlEMS() {
+        public void ControlEMS()
+        {
             while (true)
             {
                 try
@@ -7769,7 +7773,8 @@ namespace EMS
             }
         }
 
-        public void AutoControlEMS() {
+        public void AutoControlEMS()
+        {
             try
             {
                 //实例化等待连接的线程
@@ -7835,7 +7840,7 @@ namespace EMS
                         E2_PUMdemand_now = Elemeter1Z.PUMdemand_now;
                     }
                 }
-                catch (Exception ex) 
+                catch (Exception ex)
                 {
                     log.Error("ReadPointGrid: " + ex.Message);
                 }
@@ -7982,7 +7987,7 @@ namespace EMS
             {
                 oneEMSE.GetDataFromEqipment2(oneEMSE.ID);
             }
-          
+
         }
 
         //Com1 readThread1
@@ -8000,7 +8005,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-               log.Error("AutoReadDataCom1: " + ex.ToString());
+                log.Error("AutoReadDataCom1: " + ex.ToString());
             }
         }
 
@@ -8438,7 +8443,7 @@ namespace EMS
         }
 
         //主从模式下，主机控制从机
-        public void SetAllPCSCommand(string awType,string  aPCSType, double aPCSValueRate, bool bAllParam)
+        public void SetAllPCSCommand(string awType, string aPCSType, double aPCSValueRate, bool bAllParam)
         {
             if (SlaveStart)
             {
@@ -8596,12 +8601,12 @@ namespace EMS
                                 {
                                     frmMain.Selffrm.AllEquipment.GotoSchedule = false;
                                 }
-                                FineToCharge = false;                         
+                                FineToCharge = false;
                             }
                             else
                             {
                                 if (GridKVA >=  Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100)
-                                { 
+                                {
                                     dValue = GridKVA - Client_PUMdemand_Max*frmSet.cloudLimits.PumScale/100;
                                     if (dValue > Math.Abs(AllwaValue))
                                     {
@@ -8913,7 +8918,7 @@ namespace EMS
                                             frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(false);
                                         }
                                     }
-                                    NetControl = false;                                
+                                    NetControl = false;
                                 }
                                 else
                                 {
@@ -8975,15 +8980,15 @@ namespace EMS
                 frmSet.Set_HistoryData();
             }
 
-/*            //限制客户当月最大需量低于100时，不进行充放
-            if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
-            {
-                continue;
-            }*/
+            /*            //限制客户当月最大需量低于100时，不进行充放
+                        if (Client_PUMdemand_Max < 100 && frmMain.Selffrm.AllEquipment.PrePCSTypeActive == "自适应需量")
+                        {
+                            continue;
+                        }*/
         }
 
 
-        
+
         //Com2 readThread2
 
 
@@ -9034,7 +9039,7 @@ namespace EMS
                     for (int i = 0; i < 9; i++)
                     {
                         E2OKWH[i] = Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
-                        E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];                    
+                        E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
                     }
                 }
                 //汇流柜电表
@@ -9100,7 +9105,7 @@ namespace EMS
                 }
                 //电表4---设备电表
                 if (Elemeter4 != null)
-                    Elemeter4.GetDataFromEqipment();               
+                    Elemeter4.GetDataFromEqipment();
                 GetBaseEquipment();
                 //UPS
                 if (UPS != null)
@@ -9111,7 +9116,7 @@ namespace EMS
                 if (LiquidCool != null)
                     LiquidCool.GetDataFromEqipment();
                 //除湿机
-                if(Dehumidifier != null)
+                if (Dehumidifier != null)
                     Dehumidifier.GetDataFromEqipment();
 
             }
@@ -9150,7 +9155,7 @@ namespace EMS
             {
                 Thread.Sleep(1000);
                 try
-                {                 
+                {
                     if (BMS == null)
                     {
                         Thread.Sleep(1000);
@@ -9218,7 +9223,7 @@ namespace EMS
                 {
                     log.Error("ReadEquipmentDataBMS读取线程故障" + ex.ToString());
                 }
-            } 
+            }
         }
 
         //Com4 readThread4
@@ -9279,7 +9284,7 @@ namespace EMS
                     }
                     catch (Exception ex)
                     {
-                       log.Error("frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();故障" + ex.ToString());
+                        log.Error("frmMain.Selffrm.AllEquipment.BMS.GetBaseInfo();故障" + ex.ToString());
                     }
                     endTime = DateTime.Now;
                     //Console.WriteLine("#********* IEC104***  start  **** IEC104**********#" + (endTime - startTime).TotalSeconds);
@@ -9291,7 +9296,7 @@ namespace EMS
                     endTime = DateTime.Now;
                     //Console.WriteLine("*");
 
-                   // Console.WriteLine("*");
+                    // Console.WriteLine("*");
                     //Console.WriteLine("#********* IEC104***  end   **** IEC104**********#" + (endTime - startTime).TotalSeconds);
                     //PCS的
                     //2 11.27
@@ -9299,7 +9304,7 @@ namespace EMS
                     {
                         DSP2.GetDataFromEqipment();
                     }
-                    
+
                     //消防
                     FireFBGPIO();
                     //急停
@@ -9324,7 +9329,7 @@ namespace EMS
 
         //Com8 readThread4
         //级联
-        public  void FireFBGPIO()
+        public void FireFBGPIO()
         {
             switch (frmSet.config.GPIOSelect)
             {
@@ -9418,67 +9423,68 @@ namespace EMS
             }
         }
 
-        public void EmergencyStopFBGPIO() {
+        public void EmergencyStopFBGPIO()
+        {
 
             switch (frmSet.config.GPIOSelect)
-            { 
-            case 0:                    
-                if (frmSet.GetGPIOState(1) == 2)
-                {
-                    ExcPCSPowerOff();
-                    lock (ErrorState)
+            {
+                case 0:
+                    if (frmSet.GetGPIOState(1) == 2)
                     {
-                        ErrorState[2] = true;
+                        ExcPCSPowerOff();
+                        lock (ErrorState)
+                        {
+                            ErrorState[2] = true;
+                        }
+                        lock (EMSError)
+                        {
+                            EMSError[2] &= 0xF7FF;
+                            EMSError[2] |= 0x0800;
+                        }
                     }
-                    lock (EMSError)
-                    {
-                        EMSError[2] &= 0xF7FF;
-                        EMSError[2] |= 0x0800;
-                    }
-                }
-                else
-                {
-                    EMSError[2] &= 0xF7FF;
-                }                    
-                break ;
-            case 1:
-                if (frmSet.GetGPIOState(1) == 2)
-                {
-                    ExcPCSPowerOff();
-                    lock (ErrorState)
-                    {
-                        ErrorState[2] = true;
-                    }
-                    lock (EMSError)
+                    else
                     {
                         EMSError[2] &= 0xF7FF;
-                        EMSError[2] |= 0x0800;
                     }
-                }
-                else
-                {
-                    EMSError[2] &= 0xF7FF;
-                }
-                break;
-            case 2:
-                if (frmSet.GetGPIOState(1) == 2)
-                {
-                    ExcPCSPowerOff();
-                    lock (ErrorState)
+                    break;
+                case 1:
+                    if (frmSet.GetGPIOState(1) == 2)
                     {
-                        ErrorState[2] = true;
+                        ExcPCSPowerOff();
+                        lock (ErrorState)
+                        {
+                            ErrorState[2] = true;
+                        }
+                        lock (EMSError)
+                        {
+                            EMSError[2] &= 0xF7FF;
+                            EMSError[2] |= 0x0800;
+                        }
                     }
-                    lock (EMSError)
+                    else
                     {
                         EMSError[2] &= 0xF7FF;
-                        EMSError[2] |= 0x0800;
                     }
-                }
-                else
-                {
-                    EMSError[2] &= 0xF7FF;
-                }
-                break;
+                    break;
+                case 2:
+                    if (frmSet.GetGPIOState(1) == 2)
+                    {
+                        ExcPCSPowerOff();
+                        lock (ErrorState)
+                        {
+                            ErrorState[2] = true;
+                        }
+                        lock (EMSError)
+                        {
+                            EMSError[2] &= 0xF7FF;
+                            EMSError[2] |= 0x0800;
+                        }
+                    }
+                    else
+                    {
+                        EMSError[2] &= 0xF7FF;
+                    }
+                    break;
             }
 
 
@@ -9514,7 +9520,7 @@ namespace EMS
 
                         //记录单体电压 温度 电流
                         frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
-                        
+
                         //7.25 BMS均衡策略提供排序
                         double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
 
@@ -9606,7 +9612,7 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        
+
                         //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
                     }
                 }
@@ -9616,7 +9622,7 @@ namespace EMS
                     {
                         lock (frmSet.variCharge)
                             frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-                        
+
                         //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
                     }
                 }
@@ -9654,7 +9660,7 @@ namespace EMS
                 BMSKVA = Math.Round(BMSPower, 2);
                 //检查BMS故障限流
                 CheckBMSWrror(Errors);
-                if (( Errors[1] + Errors[2] + Errors[3]) == 0)
+                if ((Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
                     if (frmSet.variCharge.UBmsPcsState != 100 || frmSet.variCharge.OBmsPcsState != 100)
                     {
@@ -9684,10 +9690,10 @@ namespace EMS
             bool res = false;
             try
             {
-                
+
                 //如果日期不符返回false，并赋值当前的值为起始数据
                 if (!frmSet.LoadPeElesticFromMySQL())
-                { 
+                {
                     if (Elemeter2 != null)
                     {
                         Elemeter2.GetDataFromEqipment();
@@ -9973,7 +9979,7 @@ namespace EMS
 
                 frmSet.Set_PeElesticData(arDate);
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 log.Error(e);
             }
@@ -10010,7 +10016,7 @@ namespace EMS
                 for (int j = 0; j < 5; j++)
                 {
                     AuxiliaryKWH[j] = Elemeter3.Akwh[j] - frmSet.peElestic.SAuxiliaryKWH[j]; //辅助电表当天用电量  
-                    Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];               
+                    Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];
                 }
             }
             return true;
@@ -10070,52 +10076,52 @@ namespace EMS
                     }
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 log.Error("InitE2Power: " + ex.Message);
             }
         }
 
 
-/*        public bool CalculateE2Power()
-        {
-            if (Elemeter2 == null)
-                return false;
+        /*        public bool CalculateE2Power()
+                {
+                    if (Elemeter2 == null)
+                        return false;
 
-            double dProfit = 0;
-            //计算尖峰平谷数据的当天充放电量---电表2为计量表
-            for (int i = 0; i < 9; i++)
-            {
-                E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i]; //当前表值--当天开始的值
-                E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
-                Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
-                Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
+                    double dProfit = 0;
+                    //计算尖峰平谷数据的当天充放电量---电表2为计量表
+                    for (int i = 0; i < 9; i++)
+                    {
+                        E2PKWH[i] = Elemeter2.PUkwh[i] - SE2PKWH[i]; //当前表值--当天开始的值
+                        E2OKWH[i] = Elemeter2.OUkwh[i] - SE2OKWH[i];
+                        Profit2Cloud.DaliyE2PKWH[i] = E2PKWH[i];
+                        Profit2Cloud.DaliyE2OKWH[i] = E2OKWH[i];
 
-                //计算成本和价格 :因为  下发的电价不包括frmSet.Prices[1, 0]，所以 E2OKWH[0]表示的总电能不会计价
-                dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
-                Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
-            }
-            //返回今日省的钱数
-            Profit = dProfit / 100;//按分
-            Profit2Cloud.DaliyProfit = Profit;
+                        //计算成本和价格 :因为  下发的电价不包括frmSet.Prices[1, 0]，所以 E2OKWH[0]表示的总电能不会计价
+                        dProfit += E2OKWH[i] * frmSet.Prices[1, i] - E2PKWH[i] * frmSet.Prices[0, i];//qiao 辅电接入计量表内 - AuxiliaryKWH[i] * frmSet.Prices[0, i];
+                        Profit2Cloud.DaliyPrice[i] = frmSet.Prices[0, i];
+                    }
+                    //返回今日省的钱数
+                    Profit = dProfit / 100;//按分
+                    Profit2Cloud.DaliyProfit = Profit;
 
-            return true;
-        }
+                    return true;
+                }
 
-        public bool CalculateE3Power()
-        {
-            if (Elemeter3 == null)
-                return false;
+                public bool CalculateE3Power()
+                {
+                    if (Elemeter3 == null)
+                        return false;
 
-            for (int j = 0; j < 5; j++)
-            {
-                AuxiliaryKWH[j] = Elemeter3.Akwh[j] - SAuxiliaryKWH[j]; //辅助电表当天用电量  
-                Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];      
-            }
+                    for (int j = 0; j < 5; j++)
+                    {
+                        AuxiliaryKWH[j] = Elemeter3.Akwh[j] - SAuxiliaryKWH[j]; //辅助电表当天用电量  
+                        Profit2Cloud.DaliyAuxiliaryKWH[j] = AuxiliaryKWH[j];      
+                    }
 
-            return true;
-        }
-*/
+                    return true;
+                }
+        */
         /// <summary>
         /// 计算电量
         /// </summary>
@@ -10128,7 +10134,7 @@ namespace EMS
         public bool CalculateNowPower()
         {
 
-            if (Elemeter2 == null )
+            if (Elemeter2 == null)
                 return false;
             //计算尖峰平谷数据的当天充放电量---电表2为计量表
             if (Elemeter2.Prepared)
@@ -10196,73 +10202,73 @@ namespace EMS
 
         //日期更换时候保存当天数据
 
-/*        public void SaveDataInoneDay(string astrDate)
-        {
-            bool res1 = false;
-            bool res2 = false;
-
-            try
-            {
-                //计算尖峰平谷数据的当天充放电量
-                if (astrDate != "")
+        /*        public void SaveDataInoneDay(string astrDate)
                 {
-                    Profit2Cloud.time = Convert.ToDateTime(astrDate + " 23:59:59");
-                    
-                    if (CalculateE2Power())
-                    {
-                        res1 = true;
-                        //更新当天的其实电表电能值
-                        for (int i = 0; i < 9; i++)
-                        {
-                            SE2PKWH[i] = Elemeter2.PUkwh[i]; //当前表值--当天开始的值
-                            SE2OKWH[i] = Elemeter2.OUkwh[i];
-                        }
-                    }
+                    bool res1 = false;
+                    bool res2 = false;
 
-                    if (CalculateE3Power())
+                    try
                     {
-                        res2 = true;
-                        for (int i = 0; i < 5; i++)
+                        //计算尖峰平谷数据的当天充放电量
+                        if (astrDate != "")
                         {
-                            SAuxiliaryKWH[i] = Elemeter3.Akwh[i]; //辅助电表当天用电量
-                        }
-                    }
+                            Profit2Cloud.time = Convert.ToDateTime(astrDate + " 23:59:59");
 
-
-                    if (res1 && res2)
-                    {
-                        string strData = "";
-                        for (int i = 1; i < 9; i++)
-                        {
-                            if (i < 5)
+                            if (CalculateE2Power())
                             {
-                                strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
-                                        + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
-                                        + "','" + frmSet.Prices[0, i].ToString();
+                                res1 = true;
+                                //更新当天的其实电表电能值
+                                for (int i = 0; i < 9; i++)
+                                {
+                                    SE2PKWH[i] = Elemeter2.PUkwh[i]; //当前表值--当天开始的值
+                                    SE2OKWH[i] = Elemeter2.OUkwh[i];
+                                }
                             }
-                            else
+
+                            if (CalculateE3Power())
                             {
-                                strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
-                                    + E2PKWH[i].ToString() + "','" + frmSet.Prices[0, i].ToString();
+                                res2 = true;
+                                for (int i = 0; i < 5; i++)
+                                {
+                                    SAuxiliaryKWH[i] = Elemeter3.Akwh[i]; //辅助电表当天用电量
+                                }
+                            }
+
+
+                            if (res1 && res2)
+                            {
+                                string strData = "";
+                                for (int i = 1; i < 9; i++)
+                                {
+                                    if (i < 5)
+                                    {
+                                        strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
+                                                + E2PKWH[i].ToString() + "','" + AuxiliaryKWH[i].ToString()
+                                                + "','" + frmSet.Prices[0, i].ToString();
+                                    }
+                                    else
+                                    {
+                                        strData += "','" + E2OKWH[i].ToString() + "','" + frmSet.Prices[1, i].ToString() + "','"
+                                            + E2PKWH[i].ToString() + "','" + frmSet.Prices[0, i].ToString();
+                                    }
+                                }
+
+                                //保存到数据库   
+                                DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
+                                + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
+                                + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price,"
+                                + "out5kwh,out5Price,in5kwh,in5Price,out6kwh,out6Price,in6kwh,in6Price,"
+                                + "out7kwh,out7Price,in7kwh,in7Price,out8kwh,out8Price,in8kwh,in8Price"
+                                + ")value('" + astrDate + "','" + Profit.ToString() + "','"
+                                + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
                             }
                         }
-
-                        //保存到数据库   
-                        DBConnection.ExecSQL("insert profit (rTime, profit,inPower,outPower,auxkwhAll,"
-                        + "out1kwh,out1Price,in1kwh,auxkwh1,in1Price,out2kwh,out2Price,in2kwh,auxkwh2,in2Price,"
-                        + "out3kwh,out3Price,in3kwh,auxkwh3,in3Price,out4kwh,out4Price,in4kwh,auxkwh4,in4Price,"
-                        + "out5kwh,out5Price,in5kwh,in5Price,out6kwh,out6Price,in6kwh,in6Price,"
-                        + "out7kwh,out7Price,in7kwh,in7Price,out8kwh,out8Price,in8kwh,in8Price"
-                        + ")value('" + astrDate + "','" + Profit.ToString() + "','"
-                        + E2OKWH[0].ToString() + "','" + E2PKWH[0].ToString() + "','" + AuxiliaryKWH[0].ToString() + strData + "')");
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error("SaveDataInoneDay: " + ex.ToString());
-            }
-        }*/
+                    catch (Exception ex)
+                    {
+                        log.Error("SaveDataInoneDay: " + ex.ToString());
+                    }
+                }*/
 
 
         public void SaveDataInoneDaySQL(string astrDate)
@@ -10273,7 +10279,7 @@ namespace EMS
                 if (astrDate != "")
                 {
                     if (CalculatePower())
-                    {                             
+                    {
                         string strData = "";
                         for (int i = 1; i < 9; i++)
                         {
