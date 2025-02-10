@@ -302,12 +302,13 @@ namespace EMS
             int item = tcbtest.SelectItemIndex;
             switch (item)
             { 
-                case 0:               
-                    string sqlQuery = $"SELECT* FROM profit WHERE rTime BETWEEN '2024-11-06 00:00:00' AND '2024-11-06 23:59:59'";
-                    DBConnection.UploadCloud(sqlQuery);
+                case 0:
+                    UInt32 res = frmSet.GetGPIOState(8);
+                    log.Error("res8: " + res);
                     break;
                 case 1:
-                    //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                    UInt32 res1 = frmSet.GetGPIOState(1);
+                    log.Error("res1: " + res1);
                     break;
                 default: 
                     break;

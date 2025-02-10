@@ -17,7 +17,6 @@ namespace EMS
             tmInterval.Interval = 1000;
             tmInterval.Enabled = true;
             DoubleBuffered = true;
-            ShowData();
         }
 
         static public void INIForm()
@@ -28,11 +27,18 @@ namespace EMS
 
         static public void ShowForm()
         {
-            if (oneForm == null)
-                oneForm = new frmLine();
-            //frmMain.Selffrm.Hide();
-            oneForm.SetFormPower(frmMain.UserPower);
-            oneForm.ShowDialog();
+            try
+            {
+                if (oneForm == null)
+                    oneForm = new frmLine();
+                //frmMain.Selffrm.Hide();
+                oneForm.SetFormPower(frmMain.UserPower);
+                oneForm.ShowDialog();
+            }
+            catch (Exception ex) 
+            {
+                log.Error("ShowForm: " + ex.Message);
+            }
         }
         public void SetFormPower(int aPower)
         {

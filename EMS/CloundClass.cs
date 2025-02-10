@@ -115,29 +115,40 @@ namespace EMS
 
 
         
-        public void InitCloudClass_Threads()
+        public bool InitCloudClass_Threads()
         {
-            StartUploadDataThread();
-            StartHeartbeatThread();
-            StartDownloadDataThread();
+            if (!StartUploadDataThread()) return false;
+            if (!StartHeartbeatThread()) return false;
+            if (!StartDownloadDataThread()) return false;
+
+            return true;
         }
 
         /********************************DownloadDataThread*************************************/
 
-        public void StartDownloadDataThread()
+        public bool StartDownloadDataThread()
         {
-            // 创建取消令牌源
-            downloadDataCancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = downloadDataCancellationTokenSource.Token;
-
-            // 创建并启动 DownloadData 线程
-            DownloadDataThread = new Thread(() => DownloadDataThreadCallback(cancellationToken))
+            try
             {
-                IsBackground = true,
-                Priority = ThreadPriority.Normal,
-                Name = "DownloadDataThread"
-            };
-            DownloadDataThread.Start();
+                // 创建取消令牌源
+                downloadDataCancellationTokenSource = new CancellationTokenSource();
+                var cancellationToken = downloadDataCancellationTokenSource.Token;
+
+                // 创建并启动 DownloadData 线程
+                DownloadDataThread = new Thread(() => DownloadDataThreadCallback(cancellationToken))
+                {
+                    IsBackground = true,
+                    Priority = ThreadPriority.Normal,
+                    Name = "DownloadDataThread"
+                };
+                DownloadDataThread.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("StartDownloadDataThread: " + ex.Message);
+                return false;
+            }
         }
 
         private void DownloadDataThreadCallback(CancellationToken cancellationToken)
@@ -307,7 +318,7 @@ namespace EMS
         }
 
         /********************************tHeartbeatThread*************************************/
-        private void StartHeartbeatThread()
+        private bool StartHeartbeatThread()
         {
             try
             {
@@ -317,10 +328,12 @@ namespace EMS
                 HeartbeatThread.Priority = ThreadPriority.Normal;
                 HeartbeatThread.Name = "HeartbeatThread";
                 HeartbeatThread.Start();
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Error starting HeartbeatThread: " + ex.Message);
+                return false;
             }
         }
 
@@ -357,16 +370,27 @@ namespace EMS
          * 
          * *****************************************************************************************/
 
-        public void InitCloudClass_Timer()
+        public bool InitCloudClass_Timer()
         {
-            InitializeDownloadData_timer();
+            if(!InitializeDownloadData_timer()) return false;
+
+            return true;
         }
 
 
-        private void InitializeDownloadData_timer()
+        private bool InitializeDownloadData_timer()
         {
             //每60秒 数据上云  
-            DownloadData_timer = new System.Threading.Timer(DownloadDataCallback, null, 0, 60000);
+            try
+            {
+                DownloadData_timer = new System.Threading.Timer(DownloadDataCallback, null, 0, 60000);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("InitializeDownloadData_timer: " + ex.Message);
+                return false;
+            }
         }
         private void DownloadDataCallback(Object state)
         {
@@ -532,7 +556,7 @@ namespace EMS
         }
 
         // 建立MQTT连接
-        public void mqttConnect()
+        public bool mqttConnect()
         {
             try
             {
@@ -541,11 +565,17 @@ namespace EMS
                     ListernAllTopic();
                     FirstRun = true;
                     receivedHeartbeatResponse = true;
+                    return true;
+                }
+                else
+                { 
+                    return false;
                 }
             }
             catch (Exception ex)
             {
                 log.Error("mqttConnect: " + ex.Message);
+                return false;
             }
         }
 

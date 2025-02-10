@@ -674,11 +674,16 @@ namespace EMS
         /// <returns></returns>
 
 
-        public static void UpdateDatabaseTable(string tableName, List<Column> targetColumns)
+        public static bool UpdateDatabaseTable(string tableName, List<Column> targetColumns)
         {
             if (TableExists(tableName))
             {
                 List<Column> existingColumns = GetTableColumns(tableName);
+                if (existingColumns == null)
+                {
+                    log.Error($"获取表 {tableName} 的列信息失败");
+                    return false;
+                }
 
                 if (!TableStructureMatches(existingColumns, targetColumns))
                 {
@@ -686,24 +691,44 @@ namespace EMS
                     // Backup the existing table
                     string backupTableName = tableName + "_backup";
                     string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
-                    ExecSQL(createBackupTableQuery);
+                    if (!ExecSQL(createBackupTableQuery))
+                    {
+                        log.Error($"创建备份表 {backupTableName} 失败");
+                        return false;
+                    }
 
                     // Drop the original table
                     string dropTableQuery = $"DROP TABLE {tableName};";
-                    ExecSQL(dropTableQuery);
+                    if (!ExecSQL(dropTableQuery))
+                    {
+                        log.Error($"删除原表 {tableName} 失败");
+                        return false;
+                    }
 
                     // Create the new table with the target structure
-                    CreateTable(tableName, targetColumns);
+                    if (!CreateTable(tableName, targetColumns))
+                    {
+                        log.Error($"创建新表 {tableName} 失败");
+                        return false;
+                    }
 
                     // Insert the data back into the new table
                     List<string> commonColumns = GetCommonColumns(existingColumns, targetColumns);
                     string columnsList = string.Join(", ", commonColumns);
                     string insertDataQuery = $"INSERT INTO {tableName} ({columnsList}) SELECT {columnsList} FROM {backupTableName};";
-                    ExecSQL(insertDataQuery);
+                    if (!ExecSQL(insertDataQuery))
+                    {
+                        log.Error($"恢复数据到表 {tableName} 失败");
+                        return false;
+                    }
 
                     // Drop the backup table
                     string dropBackupTableQuery = $"DROP TABLE {backupTableName};";
-                    ExecSQL(dropBackupTableQuery);
+                    if (!ExecSQL(dropBackupTableQuery))
+                    {
+                        log.Error($"删除备份表 {backupTableName} 失败");
+                        return false;
+                    }
                 }
                 else
                 {
@@ -716,15 +741,23 @@ namespace EMS
                     foreach (var columnName in columnsToDrop)
                     {
                         string dropColumnQuery = $"ALTER TABLE {tableName} DROP COLUMN {columnName};";
-                        ExecSQL(dropColumnQuery);
+                        if (!ExecSQL(dropColumnQuery))
+                        {
+                            log.Error($"删除列 {columnName} 失败");
+                            return false;
+                        }
                     }
                 }
             }
             else
             {
                 log.Error("创建新表");
-                CreateTable(tableName, targetColumns);
+                if (!CreateTable(tableName, targetColumns))
+                {
+                    return false;
+                }
             }
+            return true;
         }
 
         public static bool TableExists(string tableName)
@@ -782,7 +815,7 @@ namespace EMS
             return columns;
         }
 
-        public static void CreateTable(string tableName, List<Column> columns)
+        public static bool CreateTable(string tableName, List<Column> columns)
         {
             // 基础的 CREATE TABLE 语句
             string createTableQuery = $"CREATE TABLE `{tableName}` (";
@@ -817,7 +850,7 @@ namespace EMS
             //log.Error(createTableQuery);
 
             // 执行 SQL 语句
-            ExecSQL(createTableQuery); // Wait for table creation to complete
+            return ExecSQL(createTableQuery); // Wait for table creation to complete
         }
 
 
@@ -853,7 +886,7 @@ namespace EMS
         /// <returns></returns>
         /// 
 
-        public static void CheckTables()
+        public static bool CheckTables()
         {
             // 定义多个表的结构
             var tableStructures = new Dictionary<string, List<Column>>
@@ -2063,8 +2096,13 @@ namespace EMS
                 List<Column> columns = tableStructure.Value;
 
                 // 检查表是否存在
-                UpdateDatabaseTable(tableName, columns);
+                if (!UpdateDatabaseTable(tableName, columns))
+                {
+                    log.Error($"更新表 {tableName} 失败");
+                    return false;
+                }
             }
+            return true;
         }
     }
 }

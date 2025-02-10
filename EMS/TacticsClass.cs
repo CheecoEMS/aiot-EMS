@@ -132,7 +132,7 @@ namespace EMS
         }
 
 
-        public void LoadJFPGFromSQL()
+        public bool LoadJFPGFromSQL()
         {
             cleanJFPGFromMysql();
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
@@ -198,14 +198,12 @@ namespace EMS
                         }
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("LoadJFPGFromSQL: " + ex.Message);
-            }
-            finally
-            {
-
+                return false;
             }
         }
 
@@ -302,11 +300,12 @@ namespace EMS
                                         TacticsList.Add(oneTactics);
                                     }
                                 }
-                                Result = true;
+                                
                             }
                         }
                     }
                 }
+                Result = true;
             }
             catch (Exception ex)
             {
@@ -398,7 +397,7 @@ namespace EMS
         /// </summary>
         /// 
 
-        public void AutoCheckTactics()
+        public bool AutoCheckTactics()
         {
             try
             {
@@ -407,10 +406,12 @@ namespace EMS
                 Thread_CheckTactics.Priority = ThreadPriority.Highest;
                 Thread_CheckTactics.Start();
                 Thread_CheckTactics.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error(ex.ToString());
+                return false;
             }
         }
 

@@ -112,7 +112,7 @@ namespace EMS
         /// <summary>
         /// 策略监视线程
         /// </summary>
-        public void AutoCheckBalaTactics()
+        public bool AutoCheckBalaTactics()
         {
             try
             {
@@ -121,10 +121,12 @@ namespace EMS
                 Thread_CheckBalaTactics.IsBackground = true;
                 Thread_CheckBalaTactics.Priority = ThreadPriority.Normal;
                 Thread_CheckBalaTactics.Start();
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoCheckBalaTactics: " + ex.Message);
+                return false;
             }
         }
         //每分钟检查一次

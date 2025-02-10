@@ -40,6 +40,7 @@ namespace EMS
         public const int WM_SYSCOMMAND = 0x0112;
         public const int SC_MAXIMIZE = 0xF030;//窗体最大化消息
         public const int SC_NOMAL = 0xF120;//窗体还原消息
+        private const int MAX_RETRY = 3;
 
         private static ILog log = LogManager.GetLogger("Program");
         /// <summary>
@@ -110,11 +111,24 @@ namespace EMS
                     //启动EMS主程序
                     Application.EnableVisualStyles();
 
-                    frmFlash.ShowFlashForm();
-                    frmFlash.AddPostion(10);
+                    //frmFlash.ShowFlashForm();
+                    //frmFlash.AddPostion(10);
                     frmMain.Selffrm = new frmMain();
-
-                    Application.Run(frmMain.Selffrm);
+                    // 创建并初始化主窗体
+                    for (int i = 0; i < MAX_RETRY; i++)
+                    {
+                        if (frmMain.Selffrm != null)
+                        {
+                            frmMain.Selffrm.Initialize();
+                            Application.Run(frmMain.Selffrm);
+                            break;
+                        }
+                        else
+                        {
+                            log.Error("frmMain.Selffrm创建失败");
+                            frmMain.Selffrm = new frmMain();
+                        }
+                    }
                 }
             }
             catch (Exception ex)

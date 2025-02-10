@@ -42,7 +42,7 @@ namespace EMS
 
 
         //数据库中装载电价的阶梯数据
-        public void LoadFromMySQL()
+        public bool LoadFromMySQL()
         {
             string astrSQL = "select section ,startTime, eName  from electrovalence ";
 
@@ -78,10 +78,13 @@ namespace EMS
                         }
                     }
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
+                return false;
             }
         }
     }

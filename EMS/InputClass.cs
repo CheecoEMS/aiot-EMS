@@ -258,70 +258,6 @@ namespace EMS
             return res;
         }
 
-
-        /*        public bool LoadCommandFromFile()
-                {
-                    string version;
-                    int maxRetry = 3;  // 最大重试次数
-                    int attempt = 0;   // 当前重试次数
-                    bool res = false;
-
-                    while (attempt < maxRetry)
-                    {
-                        try
-                        {
-                            attempt++; // 每次开始新尝试时增加计数
-
-                            string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
-                            string fullPath = strSysPath + strCommandFile;
-                            log.Error("文件在： " + fullPath);
-
-                            if (!File.Exists(fullPath))
-                            {
-                                log.Error("文件不存在：" + fullPath);
-                                return false;
-                            }
-
-                            // 读取数据
-                            using (StreamReader srFile = File.OpenText(fullPath))
-                            {
-                                string strData = srFile.ReadLine();
-                                log.Error("协议内容：" + strData);
-                                ComList.Clear();
-
-                                while (strData != null)
-                                {
-                                    strData = strData.Trim(); // 去掉首尾空格字符
-
-                                    // 遇到空白行、以"#"或"*"开头的行跳过
-                                    if ((strData == "") || (strData.Substring(0, 1) == "#") || (strData.Substring(0, 1) == "*"))
-                                    {
-                                        strData = srFile.ReadLine();
-                                        continue;
-                                    }
-
-                                    ModbusCommand oneCommand = new ModbusCommand();
-                                    if (strData2Park(strData, ref oneCommand, this.pc))
-                                        ComList.Add(oneCommand);
-
-                                    strData = srFile.ReadLine();
-                                }
-                            }
-
-                            // 成功执行后退出循环
-                            res = true;
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error($"读取协议失败 (尝试 {attempt}/{maxRetry})：" + ex.ToString());
-                        }
-                    }
-
-                    return res;
-                }*/
-
-
         public string LoadVersionFromFile()
         {
             string version = "";
@@ -6322,10 +6258,12 @@ namespace EMS
         //虚拟设备EMS
         //public VisualEmsClass visualEms = new VisualEmsClass();
 
+        //替换数据库，暂时保留
         public string DofD = "";
 
         //2.21
-        public string DoPU = "";
+        //public string DoPU = "";
+
         //8.5
         //public string PCSfD = "";
 
@@ -6714,7 +6652,7 @@ namespace EMS
         }
 
 
-        public void MeterCalibration()
+        public bool MeterCalibration()
         {
             try
             {
@@ -6742,10 +6680,12 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("MeterCalibration: " + ex.Message);
+                return false;
             }
         }
 
@@ -6995,7 +6935,7 @@ namespace EMS
         }
 
         ////从文件中读取故障信息
-        public void LoadErrorState()
+        public bool LoadErrorState()
         {
             string astrSQL = "select id, TCError,PCSError1,PCSError2,PCSError3,PCSError4,PCSError5,"
                 + "PCSError6,PCSError7,PCSError8,BMSError1,BMSError2,BMSError3,BMSError4,BMSError5,EMSError1,EMSError2,EMSError3,EMSError4 "
@@ -7045,10 +6985,12 @@ namespace EMS
                         }
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("LoadErrorState: " + ex.Message);
+                return false;
             }
         }
 
@@ -7239,28 +7181,27 @@ namespace EMS
             {
 
             }
-            Report2Cloud = new CloudClass();
-            Report2Cloud.Parent = this;
-
             return res;
         }
 
 
-        public void init_LiquidCool() //初始化
+        public bool init_LiquidCool() //初始化
         {
             try
             {
-                frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand();
+                if (!frmMain.Selffrm.AllEquipment.LiquidCool.ExecCommand()) return false;
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("init_LiquidCool: " + ex.Message);
+                return false;
             }
 
         }
 
 
-        public void init_LED() //LED初始化
+        public bool init_LED() //LED初始化
         {
             try
             {
@@ -7315,10 +7256,12 @@ namespace EMS
                     }
 
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("init_LED: " + ex.Message);
+                return false;
             }
 
         }
@@ -7376,70 +7319,66 @@ namespace EMS
         /// <summary>
         /// 自动读取进程
         /// </summary>
-        public void AutoReadData()
+        public bool AutoReadData()
         {
-            try
+            /***************Highest*************/
+
+            //采集
+            if (!AutoReadDataCom1()) return false; //超限防逆控制
+            if (!AutoReadDataCom3()) return false;//BMS关键数据采集
+            if (!AutoReadPointPower()) return false;
+            if (ChechPower || Elemeter1Z !=null)
             {
-
-                /***************Highest*************/
-
-                //采集
-                AutoReadDataCom1(); //超限防逆控制
-                AutoReadDataCom3();//BMS关键数据采集
-                AutoReadPointPower();
-                if (ChechPower || Elemeter1Z !=null)
-                    AutoReadPointGrid();
-
-                //控制与接收
-                if (frmSet.config.IsMaster == 1)
-                {
-                    if (frmSet.config.ConnectStatus == "485")
-                    {
-                        if (frmSet.config.SysCount > 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.AutoControlEMS();
-                        }
-                    }
-                    else if (frmSet.config.ConnectStatus == "tcp")
-                    {
-                        if (frmSet.config.SysCount > 1)
-                        {
-                            frmMain.Selffrm.AllEquipment.AutoControlEMSTCP();
-                        }
-                    }
-                }
-                else
-                {
-                    if (frmSet.config.ConnectStatus == "485")
-                    {
-                        frmMain.Selffrm.AllEquipment.Auto_Read_Serial();
-                    }
-                }
-
-                //液冷心跳定时器
-                if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
-                    AutoLiquidCold_HeartBeat();
-                }
-
-                /***************Normal*************/
-                AutoReadDataCom2();//表2、3、4，空调,液冷机
-                AutoReadDataCom4(); //PCS 
-                AutoReadE1();//表1
-
-                if (frmMain.Selffrm.AllEquipment.Led != null)
-                {
-                    AutoLed_Control();
-                }
-
-                AutoTemperControl();//温控
-                AutoTestSignalStrength();//4G信号检测
+                if (!AutoReadPointGrid()) return false;
             }
-            catch (Exception ex)
+
+            //控制与接收
+            if (frmSet.config.IsMaster == 1)
             {
-                log.Error("AutoReadData错误: " + ex.ToString());
+                if (frmSet.config.ConnectStatus == "485")
+                {
+                    if (frmSet.config.SysCount > 1)
+                    {
+                        if (!frmMain.Selffrm.AllEquipment.AutoControlEMS()) return false;
+                    }
+                }
+                else if (frmSet.config.ConnectStatus == "tcp")
+                {
+                    if (frmSet.config.SysCount > 1)
+                    {
+                        if (!frmMain.Selffrm.AllEquipment.AutoControlEMSTCP()) return false;
+                    }
+                }
             }
+            else
+            {
+                if (frmSet.config.ConnectStatus == "485")
+                {
+                    if (!frmMain.Selffrm.AllEquipment.Auto_Read_Serial()) return false;
+                }
+            }
+
+            //液冷心跳定时器
+            if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
+            {
+                frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
+                if (!AutoLiquidCold_HeartBeat()) return false;
+            }
+
+            /***************Normal*************/
+            if (!AutoReadDataCom2()) return false;//表2、3、4，空调,液冷机
+            if (!AutoReadDataCom4()) return false; //PCS 
+            if (!AutoReadE1()) return false;//表1
+
+            if (frmMain.Selffrm.AllEquipment.Led != null)
+            {
+                if (!AutoLed_Control()) return false;
+            }
+
+            if (!AutoTemperControl()) return false;//温控
+            if (!AutoTestSignalStrength()) return false;//4G信号检测
+
+            return true;
         }
 
         /// <summary>
@@ -7451,7 +7390,7 @@ namespace EMS
         /// </summary>
         /// 
 
-        private void AutoTestSignalStrength()
+        private bool AutoTestSignalStrength()
         {
             try
             {
@@ -7461,10 +7400,12 @@ namespace EMS
                 Thread_TestSignalStrength.Priority = ThreadPriority.Normal;
                 Thread_TestSignalStrength.Start();
                 Thread_TestSignalStrength.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Error starting PublicThread: " + ex.Message);
+                return false;
             }
         }
 
@@ -7486,7 +7427,7 @@ namespace EMS
             }
         }
 
-        private void AutoTemperControl()
+        private bool AutoTemperControl()
         {
             try
             {
@@ -7496,10 +7437,12 @@ namespace EMS
                 Thread_TemperControl.Priority = ThreadPriority.Normal;
                 Thread_TemperControl.Start();
                 Thread_TemperControl.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Error starting PublicThread: " + ex.Message);
+                return false;
             }
         }
 
@@ -7559,7 +7502,7 @@ namespace EMS
             }
         }
 
-        private void AutoLiquidCold_HeartBeat()
+        private bool AutoLiquidCold_HeartBeat()
         {
             try
             {
@@ -7569,10 +7512,12 @@ namespace EMS
                 Thread_LiquidCold_HeartBeat.Priority = ThreadPriority.Highest;
                 Thread_LiquidCold_HeartBeat.Start();
                 Thread_LiquidCold_HeartBeat.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Error starting PublicThread: " + ex.Message);
+                return false;
             }
         }
 
@@ -7596,7 +7541,7 @@ namespace EMS
             }
         }
 
-        private void AutoLed_Control()
+        private bool AutoLed_Control()
         {
             try
             {
@@ -7606,10 +7551,12 @@ namespace EMS
                 Thread_Led_Control.Priority = ThreadPriority.Normal;
                 Thread_Led_Control.Start();
                 Thread_Led_Control.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Error starting PublicThread: " + ex.Message);
+                return false;
             }
         }
 
@@ -7664,7 +7611,7 @@ namespace EMS
             }
         }
 
-        public void Auto_Read_Serial()
+        public bool Auto_Read_Serial()
         {
             try
             {
@@ -7674,10 +7621,12 @@ namespace EMS
                 Thread_Read_Serial.Priority = ThreadPriority.Highest;
                 Thread_Read_Serial.Start();
                 Thread_Read_Serial.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Auto_Read_Serial: " + ex.ToString());
+                return false;
             }
         }
 
@@ -7726,7 +7675,7 @@ namespace EMS
             }
         }
 
-        public void AutoControlEMSTCP()
+        public bool AutoControlEMSTCP()
         {
             try
             {
@@ -7736,10 +7685,12 @@ namespace EMS
                 Thread_ControlEMSTCP.Priority = ThreadPriority.Highest;
                 Thread_ControlEMSTCP.Start();
                 Thread_ControlEMSTCP.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoControlEMSTCP错误:" + ex.ToString());
+                return false;
             }
         }
 
@@ -7773,7 +7724,7 @@ namespace EMS
             }
         }
 
-        public void AutoControlEMS()
+        public bool AutoControlEMS()
         {
             try
             {
@@ -7783,10 +7734,12 @@ namespace EMS
                 Thread_ControlEMS.Priority = ThreadPriority.Highest;
                 Thread_ControlEMS.Start();
                 Thread_ControlEMS.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoControlEMS: " + ex.ToString());
+                return false;
             }
         }
         /******************************485 control*************************************/
@@ -7850,7 +7803,7 @@ namespace EMS
 
 
 
-        public void AutoReadPointGrid()
+        public bool AutoReadPointGrid()
         {
             try
             {
@@ -7860,10 +7813,12 @@ namespace EMS
                 Thread_ReadPointGrid.Priority = ThreadPriority.Highest;
                 Thread_ReadPointGrid.Start();
                 Thread_ReadPointGrid.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadPointGrid: " + ex.ToString());
+                return false;
             }
         }
 
@@ -7913,7 +7868,7 @@ namespace EMS
 
 
 
-        public void AutoReadPointPower()
+        public bool AutoReadPointPower()
         {
             try
             {
@@ -7923,10 +7878,12 @@ namespace EMS
                 Thread_ReadPointPower.Priority = ThreadPriority.Highest;
                 Thread_ReadPointPower.Start();
                 Thread_ReadPointPower.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadPointPower: "+ex.ToString());
+                return false;
             }
         }
 
@@ -7964,7 +7921,7 @@ namespace EMS
                 }
             }
         }
-        public void AutoReadE1()
+        public bool AutoReadE1()
         {
             try
             {
@@ -7974,10 +7931,12 @@ namespace EMS
                 Thread_ReadDataE1.Priority = ThreadPriority.Normal;
                 Thread_ReadDataE1.Start();
                 Thread_ReadDataE1.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadE1: " + ex.ToString());
+                return false;
             }
         }
 
@@ -7992,7 +7951,7 @@ namespace EMS
 
         //Com1 readThread1
         //实例化等待连接的线程
-        public void AutoReadDataCom1()
+        public bool AutoReadDataCom1()
         {
             try
             {
@@ -8002,10 +7961,12 @@ namespace EMS
                 Thread_ReadDataCom1.Priority = ThreadPriority.Highest;
                 Thread_ReadDataCom1.Start();
                 Thread_ReadDataCom1.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadDataCom1: " + ex.ToString());
+                return false;
             }
         }
 
@@ -8992,7 +8953,7 @@ namespace EMS
         //Com2 readThread2
 
 
-        public void AutoReadDataCom2()
+        public bool AutoReadDataCom2()
         {
             try
             {
@@ -9002,10 +8963,12 @@ namespace EMS
                 Thread_ReadCOM2Data.Priority = ThreadPriority.Normal;
                 Thread_ReadCOM2Data.Start();
                 Thread_ReadCOM2Data.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadDataCom2错误:" + ex.ToString());
+                return false;
             }
         }
 
@@ -9129,7 +9092,7 @@ namespace EMS
 
         /// 读取表3信息 
         //Com3 readThread3 
-        public void AutoReadDataCom3()
+        public bool AutoReadDataCom3()
         {
             try
             {
@@ -9139,12 +9102,12 @@ namespace EMS
                 Thread_ReadEquipmentDataBMS.Priority = ThreadPriority.Highest;
                 Thread_ReadEquipmentDataBMS.Start();
                 Thread_ReadEquipmentDataBMS.Name = "";
+                return true;    
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadDataCom3错误: " +ex.ToString());
-
-
+                return false;
             }
         }
 
@@ -9228,7 +9191,7 @@ namespace EMS
 
         //Com4 readThread4
 
-        public void AutoReadDataCom4()
+        public bool AutoReadDataCom4()
         {
             try
             {
@@ -9238,11 +9201,13 @@ namespace EMS
                 Thread_ReadEquipmentDataPCS.Priority = ThreadPriority.Normal;
                 Thread_ReadEquipmentDataPCS.Start();
                 Thread_ReadEquipmentDataPCS.Name = "";
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("AutoReadDataCom4错误：" + ex.ToString());
-            }
+                return false;
+            } 
         }
         /// <summary>
         /// 读取pcs信息
@@ -9365,6 +9330,8 @@ namespace EMS
                 case 1:
                     if (frmSet.GetGPIOState(0) == 2)
                     {
+                        log.Error("FireFBGPIO: "  );
+                        log.Error("FireFBGPIO: " + frmSet.GetGPIOState(0));
                         if (frmSet.GetGPIOState(0) == 2)
                         {
                             if (Fire.FireState == 0)
@@ -10062,7 +10029,7 @@ namespace EMS
             return true;
         }
 
-        public void InitE2Power()
+        public bool InitE2Power()
         {
             try
             {
@@ -10075,10 +10042,12 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.E2PKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("InitE2Power: " + ex.Message);
+                return false;
             }
         }
 
@@ -10164,7 +10133,7 @@ namespace EMS
             return true;
         }
 
-        public void Power_CRC()
+        public bool Power_CRC()
         {
             try
             {
@@ -10192,10 +10161,12 @@ namespace EMS
                         frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("Power_CRC: " + ex.Message);
+                return false;
             }
         }
 

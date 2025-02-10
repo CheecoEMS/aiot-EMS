@@ -38,7 +38,7 @@ namespace EMS
         public volatile static HistoryDataClass historyDatas = new HistoryDataClass();
         public volatile static PeElesticClass peElestic = new PeElesticClass();
 
-        public static string INIPath = ""; //ini文件的地址和文件名称
+        //public static string INIPath = ""; //ini文件的地址和文件名称
         public static string BalaPath = "";
         public static int FreshInterval;
         public static string PCSType;
@@ -1096,16 +1096,16 @@ namespace EMS
         static private IntPtr hDriver;
 
         //GPIO初始化
-        public static void InitGPIO()
+        public static bool InitGPIO()
         {
             try
             {
                 switch (config.GPIOSelect)
                 {
                     case 0://FA,FB 无RTC: 初始化：输入、输出 电平置高
-                        frmSet.Init0_GPIO();
+                        if(!frmSet.Init0_GPIO()) return false;  
 
-                        /*Fix:冗余*/
+                        /*Fix:冗余*//*
                         frmSet.SetGPIOState(0, 3);  //急停
                         frmSet.SetGPIOState(1, 3);  //消防
                         frmSet.SetGPIOState(2, 3);
@@ -1120,13 +1120,13 @@ namespace EMS
                         frmSet.SetGPIOState(10, 1);  //2 error
                         frmSet.SetGPIOState(11, 1); //3 error
                                                     //frmSet.SetGPIOState(12, 1);
-                        frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）
+                        frmSet.SetGPIOState(15, 0);//EMS LED （特殊：初始化置低开启灯）*/
                         break;
                     case 1://液冷 初始化：输入、输出 电平置低
-                        frmSet.Init1_GPIO();
+                        if (!frmSet.Init1_GPIO()) return false;
 
                         /*Fix:冗余*/
-                        frmSet.SetGPIOState(0, 2);//消防
+/*                        frmSet.SetGPIOState(0, 2);//消防
                         frmSet.SetGPIOState(1, 2);//急停
                         frmSet.SetGPIOState(2, 2);//门禁
                         frmSet.SetGPIOState(3, 2);
@@ -1142,13 +1142,13 @@ namespace EMS
                         frmSet.SetGPIOState(12, 0);
                         frmSet.SetGPIOState(13, 0);
                         frmSet.SetGPIOState(14, 1);//EMS LED （特殊：初始化置高开启灯）
-                        frmSet.SetGPIOState(15, 0);
+                        frmSet.SetGPIOState(15, 0);*/
                         break;
                     case 2://FB +RTC
-                        frmSet.Init2_GPIO();
+                        if (!frmSet.Init2_GPIO()) return false;
 
                         /*Fix:冗余*/
-                        frmSet.SetGPIOState(0, 2);//消防
+/*                        frmSet.SetGPIOState(0, 2);//消防
                         frmSet.SetGPIOState(1, 2);//急停
                         frmSet.SetGPIOState(2, 2);
                         frmSet.SetGPIOState(3, 2);
@@ -1164,27 +1164,31 @@ namespace EMS
                         frmSet.SetGPIOState(12, 0);
                         frmSet.SetGPIOState(13, 0);
                         frmSet.SetGPIOState(14, 0);
-                        frmSet.SetGPIOState(15, 1);//EMS LED （特殊：初始化置高开启灯）
+                        frmSet.SetGPIOState(15, 1);//EMS LED （特殊：初始化置高开启灯）*/
                         break;
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error("InitGPIOL " + ex.Message);
+                return false;
             }
         }
-        public static void Init0_GPIO()  //原版未修改 FA
+        public static bool Init0_GPIO()  //原版未修改 FA
         {
             {
                 if (hDriver == IntPtr.Zero)
                 {
-                    IntPtr hDriver = InitializeWinIo();//打开 //初始化dll和driver
-                                                       //frmMain.ShowDebugMSG("GPIO初始化失败"); 
+                    hDriver = InitializeWinIo(); // 初始化dll和driver
+                    if (hDriver == IntPtr.Zero)
+                    {
+                        log.Error("打开 //初始化dll和driver失败");
+                        return false;
+                    }
                 }
-                if (hDriver == IntPtr.Zero)
-                {
-                    return;
-                }
+
                 try
                 {
                     //前8个为输入，后8个输出 02out,0200 0201
@@ -1192,43 +1196,50 @@ namespace EMS
                     //配置成输入：BIT[2, 1, 0] = Value[0, 1, x]   = 2
                     //配置成输出高：BIT[2, 1, 0] = Value[0, 0, 1] = 1
                     //配置成输出低：BIT[2, 1, 0] = Value[0, 0, 0] = 0
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[0], 2);//写入  消防出点
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[1], 2);//写入  紧急停机
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[2], 2);//写入  预留 断路器
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[3], 2);//写入  预留 断路器
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[4], 2);//写入  预留 门禁系统
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[5], 3);//写入  UPS
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[6], 3);//写入  市电
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[7], 2);//写入 
-                                                               ////////////////////////////////////////////////////////
-                                                               //输出
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[8], 0);//写出  电源指示灯
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[9], 1);//写出  运行指示灯，充放电点亮 
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[10], 1);//写出  一般故障1、2级不影响工作
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[11], 1);//写出  综合控制箱风机控制 
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[12], 1);//输出 
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[13], 1);//输出  
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[14], 1);//输出   预留 主动消防控制
-                    SysIO.SetPhysLong(hDriver, GPOIAddr[15], 1);//输出 严重故障、导致不可恢复的停机 
 
+                    // 配置GPIO引脚为输入或输出
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[0], 3)) return false; // 消防出点
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[1], 3)) return false; // 紧急停机
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[2], 3)) return false; // 预留 断路器
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[3], 3)) return false; // 预留 断路器
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[4], 3)) return false; // 预留 门禁系统
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[5], 3)) return false; // UPS
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[6], 3)) return false; // 市电
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[7], 3)) return false;
+
+                    // 配置GPIO引脚为输出并设置状态
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[8], 0)) return false; // 电源指示灯
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[9], 1)) return false; // 运行指示灯，充放电点亮
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[10], 1)) return false; // 告警指示灯
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[11], 1)) return false; // 故障指示灯
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[12], 1)) return false; // 预留
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[13], 1)) return false; // 分励脱扣
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[14], 1)) return false; // 预留 
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr[15], 0)) return false; // 控制箱上的EMS电源灯
+
+                    return true;
                 }
-                catch { }
-                //ShutdownWinIo(hDriver);//关闭
+                catch (Exception ex)
+                {
+                    log.Error("Init0_GPIO异常：" + ex.Message);
+                    return false;
+                }
             }
         }
 
-        public static void Init1_GPIO()   //新版-功能取反
+        public static bool Init1_GPIO()   //新版-功能取反
         {
             {
                 if (hDriver == IntPtr.Zero)
                 {
-                    IntPtr hDriver = InitializeWinIo();//打开 //初始化dll和driver
-                                                       //frmMain.ShowDebugMSG("GPIO初始化失败"); 
+                    hDriver = InitializeWinIo();//打开 //初始化dll和driver
+                    if (hDriver == IntPtr.Zero)
+                    {
+                        log.Error("打开 //初始化dll和driver失败");
+                        return false;
+                    }
                 }
-                if (hDriver == IntPtr.Zero)
-                {
-                    return;
-                }
+
                 try
                 {
                     //前8个为输入，后8个输出 02out,0200 0201
@@ -1236,17 +1247,38 @@ namespace EMS
                     //配置成输入：BIT[2, 1, 0] = Value[0, 1, x]   = 2
                     //配置成输出高：BIT[2, 1, 0] = Value[0, 0, 1] = 1
                     //配置成输出低：BIT[2, 1, 0] = Value[0, 0, 0] = 0
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[0], 3);//写入  消防出点
+
+                    // 输入配置
+                    /*                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[0], 3)) return false; // 消防出点
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[1], 3)) return false; // 紧急停机
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[2], 3)) return false; // 门禁系统
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[3], 3)) return false; // 消防反馈2
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[4], 3)) return false; // 市电
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 3)) return false; // UPS
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 3)) return false; // 预留
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3)) return false; // 预留
+                                                                                                        ////////////////////////////////////////////////////////                                                                                
+                                                                                                        // 输出配置
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 1)) return false; // 电源指示
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0)) return false; //   
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0)) return false; //
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[11], 0)) return false; // 
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[12], 0)) return false; // 输出 KA5-主动消防
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[13], 0)) return false; // 输出 KA6-泄爆阀
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[14], 1)) return false; // 输出 电源指示灯（预留，主动消防控制）
+                                        if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[15], 0)) return false; //*/
+
+/*                    SysIO.SetPhysLong(hDriver, GPOIAddr2[0], 3);//写入  消防出点
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[1], 3);//写入  紧急停机
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[2], 3);//写入  门禁系统
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[3], 3);//写入  消防反馈2
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[4], 3);//写入  市电
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 2);//写入  UPS
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 2);//写入  
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3);//写入 
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 3);//写入  UPS
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 3);//写入  
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3);//写入 */
                                                                 ////////////////////////////////////////////////////////
                                                                 //输出
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 0);//写出  
+                    SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 1);//写出  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0);//写出  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0);//写出  
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[11], 0);//写出  
@@ -1255,24 +1287,30 @@ namespace EMS
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[14], 1);//输出  电源指示灯 预留 主动消防控制
                     SysIO.SetPhysLong(hDriver, GPOIAddr2[15], 0);//
 
+
+                    return true;
                 }
-                catch { }
-                //ShutdownWinIo(hDriver);//关闭
+                catch (Exception ex)
+                {
+                    return false;
+                }
+                
             }
         }
 
-        public static void Init2_GPIO()   //新风冷 FB
+        public static bool Init2_GPIO()   //新风冷 FB
         {
             {
                 if (hDriver == IntPtr.Zero)
                 {
-                    IntPtr hDriver = InitializeWinIo();//打开 //初始化dll和driver
-                                                       //frmMain.ShowDebugMSG("GPIO初始化失败"); 
+                    hDriver = InitializeWinIo();//打开 //初始化dll和driver
+                    if (hDriver == IntPtr.Zero)
+                    {
+                        log.Error("打开 //初始化dll和driver失败");
+                        return false;
+                    }
                 }
-                if (hDriver == IntPtr.Zero)
-                {
-                    return;
-                }
+
                 try
                 {
                     //前8个为输入，后8个输出 02out,0200 0201
@@ -1280,26 +1318,32 @@ namespace EMS
                     //配置成输入：BIT[2, 1, 0] = Value[0, 1, x]   = 2
                     //配置成输出高：BIT[2, 1, 0] = Value[0, 0, 1] = 1
                     //配置成输出低：BIT[2, 1, 0] = Value[0, 0, 0] = 0
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[0], 3);//写入  消防反馈
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[1], 3);//写入  紧急停机
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[2], 3);//写入  脱扣反馈1
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[3], 3);//写入  消防反馈2
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[4], 3);//写入  市电
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 3);//写入  门禁
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 3);//写入  反馈
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3);//写入 
 
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 1);//输出  电源指示
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0);//输出  运行指示
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0);//输出  告警指示
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[11], 0);//输出  故障指示
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[12], 0);//输出  
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[13], 0);//输出  分励脱扣
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[14], 0);//输出  
-                    SysIO.SetPhysLong(hDriver, GPOIAddr2[15], 1);//输出  电源指示
+                    // 输入配置（反馈输入）
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[0], 3)) return false; // 消防反馈
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[1], 3)) return false; // 紧急停机
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[2], 3)) return false; // 脱扣反馈1
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[3], 3)) return false; // 消防反馈2
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[4], 3)) return false; // 市电
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[5], 3)) return false; // 门禁
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[6], 3)) return false; // 反馈（未具体说明）
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[7], 3)) return false; // 
 
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[8], 1)) return false; // 电源指示
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[9], 0)) return false; // 运行指示
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[10], 0)) return false; // 告警指示
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[11], 0)) return false; // 故障指示
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[12], 0)) return false; // 未命名输出
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[13], 0)) return false; // 分励脱扣
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[14], 0)) return false; //输出  
+                    if (!SysIO.SetPhysLong(hDriver, GPOIAddr2[15], 1)) return false; //输出  电源指示
+
+                    return true;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    return false;
+                }
                 //ShutdownWinIo(hDriver);//关闭
             }
         }

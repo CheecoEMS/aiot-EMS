@@ -599,29 +599,47 @@ namespace Modbus
         }
 
         //tcp
-        public void StartMonitor502()
+        public bool StartMonitor502()
         {
-            //新建一个委托线程
-            ThreadStart myThreadDelegate = new ThreadStart(WaitConnectRequest502);
-            //实例化等待连接的线程
-            Listen502Thread = new Thread(WaitConnectRequest502);
-            Listen502Thread.IsBackground = true;
-            Listen502Thread.Priority = ThreadPriority.Normal;
-            Listen502Thread.Start();
+            try
+            {
+                //新建一个委托线程
+                ThreadStart myThreadDelegate = new ThreadStart(WaitConnectRequest502);
+                //实例化等待连接的线程
+                Listen502Thread = new Thread(WaitConnectRequest502);
+                Listen502Thread.IsBackground = true;
+                Listen502Thread.Priority = ThreadPriority.Normal;
+                Listen502Thread.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("StartMonitor2404线程创建失败：" + ex.Message);
+                return false;
+            }
         }
 
 
 
         //开始监控
-        public void StartMonitor2404()
+        public bool StartMonitor2404()
         {
-            //新建一个委托线程
-            ThreadStart myThreadDelegate = new ThreadStart(WaitConnectRequest2404);
-            //实例化等待连接的线程
-            Listen2404Thread = new Thread(WaitConnectRequest2404);
-            Listen2404Thread.IsBackground = true;
-            Listen2404Thread.Priority = ThreadPriority.Normal;
-            Listen2404Thread.Start();
+            try
+            {
+                //新建一个委托线程
+                ThreadStart myThreadDelegate = new ThreadStart(WaitConnectRequest2404);
+                //实例化等待连接的线程
+                Listen2404Thread = new Thread(WaitConnectRequest2404);
+                Listen2404Thread.IsBackground = true;
+                Listen2404Thread.Priority = ThreadPriority.Normal;
+                Listen2404Thread.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("StartMonitor2404线程创建失败：" + ex.Message);
+                return false;
+            }
         }
         //等待连接Soket Server的请求
 
@@ -1204,12 +1222,24 @@ namespace Modbus
         }
 
         //  servierIpAddress  服务器iP地址或者域名，sevierPort 服务器监听端口
-        public void TCPClientIni(string aServierIpAddress, int aSevierPort)
+        public bool TCPClientIni(string aServierIpAddress, int aSevierPort)
         {
-            iSevierPort = aSevierPort;
-            ipAddress = IPAddress.Parse(aServierIpAddress);
-            ipEndpoint = new IPEndPoint(ipAddress, iSevierPort);
-            ConnectTCP();//连接服务器端口
+            try
+            {
+                iSevierPort = aSevierPort;
+                ipAddress = IPAddress.Parse(aServierIpAddress);
+                ipEndpoint = new IPEndPoint(ipAddress, iSevierPort);
+
+                //连接服务器端口
+                if (!ConnectTCP()) return false;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("TCPClientIni 初始化失败：" + ex.Message);
+                return false;
+            }
         }
 
         private void CheckBackground()

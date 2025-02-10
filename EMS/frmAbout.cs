@@ -51,25 +51,10 @@ namespace EMS
         private static ILog log = LogManager.GetLogger("frmAbout");
         public frmAbout()
         {
-            try
-            {
-                InitializeComponent();
-                DoubleBuffered = true;
-                if (frmSet.config != null)
-                {
-                    labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
-                }
-                else
-                {
-                    log.Error("frmSet.config 为null");
-                }
-                labSoftVerb.Text = "软件版本：EmsMaster1.0.4";
-            }
-            catch (Exception ex)
-            {
-                log.Error("new frmAbout失败：" + ex.Message);
-            }
+            InitializeComponent();
+            DoubleBuffered = true;
         }
+
         static public void INIForm()
         {
             if (oneForm == null)
@@ -88,10 +73,19 @@ namespace EMS
 
         static public void ShowForm()
         {
-            if (oneForm == null)
-                oneForm = new frmAbout();
-            oneForm.SetFormPower(frmMain.UserPower);
-            oneForm.ShowDialog();
+            try
+            {
+                if (oneForm == null)
+                    oneForm = new frmAbout();
+                oneForm.SetFormPower(frmMain.UserPower);
+                oneForm.labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
+                oneForm.labSoftVerb.Text = "软件版本：EmsMaster1.0.4.1";
+                oneForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                log.Error("ShowForm异常:" + ex.Message);
+            }
         }
 
         public void SetFormPower(int aPower)
