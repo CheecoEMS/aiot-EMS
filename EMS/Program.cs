@@ -111,8 +111,8 @@ namespace EMS
                     //启动EMS主程序
                     Application.EnableVisualStyles();
 
-                    //frmFlash.ShowFlashForm();
-                    //frmFlash.AddPostion(10);
+                    frmFlash.ShowFlashForm();
+                    frmFlash.AddPostion(10);
                     frmMain.Selffrm = new frmMain();
                     // 创建并初始化主窗体
                     for (int i = 0; i < MAX_RETRY; i++)

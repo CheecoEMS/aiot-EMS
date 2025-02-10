@@ -147,6 +147,8 @@ namespace EMS
                     ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);
                 });
 
+                frmFlash.AddPostion(10);
+
                 // 初始化各个窗体
                 InitializationManager.InitializeComponent(InitializationManager.InitStep.FormControl, () =>
                 {
@@ -188,6 +190,8 @@ namespace EMS
                     frmLine.INIForm();
                 });
 
+                frmFlash.AddPostion(10);
+
                 // 加载主要功能
                 InitializationManager.InitializeComponent(InitializationManager.InitStep.LoadForm, () =>
                 {
@@ -195,7 +199,7 @@ namespace EMS
                 });
 
                 
-                //frmFlash.CloseFlashForm();
+                frmFlash.CloseFlashForm();
             }
             catch (Exception ex)
             {
@@ -1294,8 +1298,6 @@ namespace EMS
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SysThreathStoped = true;
-            //关闭gpio
-            frmSet.GPIOClose();
         }
 
         /// <summary>
