@@ -25,8 +25,8 @@ namespace EMS
 
         static public void INIForm()
         {
-            //if (oneForm == null)
-            //    oneForm = new frmLogin();
+            if (oneForm == null)
+                oneForm = new frmLogin();
         }
 
 

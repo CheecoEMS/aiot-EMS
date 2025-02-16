@@ -119,9 +119,17 @@ namespace EMS
                     {
                         if (frmMain.Selffrm != null)
                         {
-                            frmMain.Selffrm.Initialize();
-                            Application.Run(frmMain.Selffrm);
-                            break;
+                            if (frmMain.Selffrm.Initialize())
+                            {
+                                Application.Run(frmMain.Selffrm);
+                                break;
+                            }
+                            else
+                            {
+                                //Initilize初始化失败，重试
+                                log.Error("Initilize初始化失败，重试");
+                                RestartApplication();
+                            }
                         }
                         else
                         {
@@ -167,6 +175,42 @@ namespace EMS
                 Application.ExitThread(); *//*
             }*/
         }
+
+        public static void RestartApplication()
+        {
+            try
+            {
+                if (frmSet.historyDatas != null &&  frmSet.historyDatas.RebootCount > 0)
+                {
+                    frmSet.historyDatas.RebootCount--;
+
+                    frmSet.PowerGPIO(0);
+                    frmSet.Set_HistoryData();
+
+                    string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
+                    try
+                    {
+                        Process.Start(exePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("无法重启应用程序: " + ex.Message);
+                    }
+
+                    // 退出当前进程  
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    log.Error("重启失败，FrmSet未初始化或重启次数耗尽");
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("RestartApplication: " + ex.Message);
+            }
+        }
+
 
         static void StartCrashMonitor(string crashDumpFolder)
         {

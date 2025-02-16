@@ -57,16 +57,6 @@ namespace EMS
         public frmSet()
         {
             InitializeComponent();
-            //DBConnection.SetDBGrid(dbgUsers);
-            //DBConnection.ShowData2DBGrid(dbgUsers, "select * from users");
-            //DBConnection.SetDBGrid(dbgEquipment);
-            //DBConnection.ShowData2DBGrid(dbgEquipment, "select * from equipment");
-            //DBConnection.SetDBGrid(dbgElectrovalence);
-            //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
-            //DBConnection.SetDBGrid(dbgTactics);
-            //DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics order by starttime");
-            //DBConnection.SetDBGrid(dbgLog);
-            //DBConnection.ShowData2DBGrid(dbgLog, "select * from log"); 
         }
         static public void INIForm()
         {
@@ -75,13 +65,21 @@ namespace EMS
         }
         static public void CloseForm()
         {
-
-            if (oneForm != null)
+            try
             {
-                //oneForm.Dispose();
-                //oneForm = null;
-                oneForm.Hide();
-                frmMain.ShowMainForm();
+                if (oneForm != null)
+                {
+                    oneForm.Hide();
+                    frmMain.ShowMainForm();
+
+                    //oneForm.Close();
+                    //oneForm.Dispose();
+                    //oneForm = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CloseForm异常：" + ex.Message);
             }
         }
 
@@ -92,25 +90,27 @@ namespace EMS
                 if (oneForm == null)
                     oneForm = new frmSet();
 
-                frmSet.LoadCloudLimitsFromMySQL();
-                frmSet.LoadConfigFromMySQL();
-                frmSet.LoadComponentSettingsFromMySQL();
+                if (oneForm != null)
+                {
+                    frmSet.LoadCloudLimitsFromMySQL();
+                    frmSet.LoadConfigFromMySQL();
+                    frmSet.LoadComponentSettingsFromMySQL();
 
-                oneForm.ShowVersion();
-                oneForm.ShowINIdata();
-                oneForm.btnBaseInf_Click(null, EventArgs.Empty);
-                oneForm.bTCDataChanged = false;
-                oneForm.bEDataChanged = false;
-                oneForm.bSheduleChanged = false;
-                oneForm.SetFormPower(frmMain.UserPower);
-                oneForm.Show();
-                oneForm.BringToFront();
+                    oneForm.ShowVersion();
+                    oneForm.ShowINIdata();
+                    oneForm.btnBaseInf_Click(null, EventArgs.Empty);
+                    oneForm.bTCDataChanged = false;
+                    oneForm.bEDataChanged = false;
+                    oneForm.bSheduleChanged = false;
+                    oneForm.SetFormPower(frmMain.UserPower);
+                    oneForm.Show();
+                    oneForm.BringToFront();
+                }
                 //oneForm.ShowDialog();
             }
-            catch
+            catch (Exception ex)
             {
-                oneForm.Dispose();
-                oneForm = null;
+                log.Error("ShowForm: " + ex.Message);
             }
         }
 
@@ -440,7 +440,6 @@ namespace EMS
          ********************************************/
         public static bool LoadHistoryDataFromMySQL()
         {
-            bool result = false;
             string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
                             + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData;";
 
@@ -480,7 +479,7 @@ namespace EMS
                                 historyDatas.RebootCount = rd.IsDBNull(22) ? 5 : rd.GetInt32(22);
                                 historyDatas.YDstatus = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
 
-                                result = true;
+                                return  true;
                             }
                         }
                     }
@@ -489,18 +488,16 @@ namespace EMS
             catch (MySqlException ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
-            finally
-            {
-                // 可以在这里添加任何需要在最后执行的代码
-            }
-            return result;
+
+            log.Error("HistoryData加载失败");
+            return false;
         }
 
         public static bool Set_HistoryData()
@@ -564,7 +561,6 @@ namespace EMS
          ********************************************/
         public static bool LoadCloudLimitsFromMySQL()
         {
-            bool result = false;
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
                 + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount FROM CloudLimits;";
 
@@ -600,7 +596,7 @@ namespace EMS
                                 cloudLimits.SignalDelayAlarm = rd.IsDBNull(18) ? 80 : rd.GetInt32(18);
                                 cloudLimits.SignalDelayCount = rd.IsDBNull(19) ? 10 : rd.GetInt32(19);
 
-                                result = true;
+                                return true;
                             }
                         }
                     }
@@ -609,19 +605,16 @@ namespace EMS
             catch (MySqlException ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
-            finally
-            {
 
-
-            }
-            return result;
+            log.Error("CloudLimits加载失败");
+            return false;
         }
 
 
@@ -682,7 +675,6 @@ namespace EMS
 
         public static bool LoadConfigFromMySQL()
         {
-            bool result = false;
             string astrSQL = "SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime,"
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
@@ -732,9 +724,8 @@ namespace EMS
                                 config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
                                 config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
 
-                                result = true;
+                                return true;
                             }
-                            config.OldSysID = config.SysID;
                         }
                     }
                 }
@@ -742,19 +733,16 @@ namespace EMS
             catch (MySqlException ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
-                result = false;
-            }
-            finally
-            {
-
+                return false;
             }
 
-            return result;
+            log.Error("config加载失败");
+            return false;
         }
 
         public static bool Set_Config()
@@ -799,7 +787,6 @@ namespace EMS
             {
                 if (DBConnection.ExecSQL(astrSQL))
                 {
-                    config.OldSysID = config.SysID;
                     result = true;
                 }
                 else
@@ -826,7 +813,6 @@ namespace EMS
 
         public static bool LoadVariChargeFromMySQL()
         {
-            bool result = false;
             string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge;";
 
             try
@@ -842,7 +828,7 @@ namespace EMS
                             {
                                 variCharge.UBmsPcsState = rd.IsDBNull(0) ? 50 : rd.GetInt32(0);
                                 variCharge.OBmsPcsState = rd.IsDBNull(1) ? 50 : rd.GetInt32(1);
-                                result = true;
+                                return true;
                             }
                         }
                     }
@@ -851,19 +837,16 @@ namespace EMS
             catch (MySqlException ex)
             {
                 log.Error(ex.Message);
-                result = false;
+                return false;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
-                result = false;
-            }
-            finally
-            {
-
+                return false;
             }
 
-            return result;
+            log.Error("VariCharge加载失败");
+            return false;
         }
 
         public static bool Set_VariCharge()
@@ -906,7 +889,6 @@ namespace EMS
 
         public static bool LoadComponentSettingsFromMySQL()
         {
-            bool result = false;
             string astrSQL = @"
                     SELECT SetHotTemp, SetCoolTemp, CoolTempReturn, HotTempReturn, SetHumidity, HumiReturn, 
                            TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi, 
@@ -954,28 +936,25 @@ namespace EMS
                                 componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetInt32(26);
                                 componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetInt32(27);
 
-                                result = true;
+                                return true;
                             }
                         }
                     }
                 }
             }
             catch (MySqlException ex)
-            {
-                result = false;
+            {               
                 log.Error(ex.Message);
+                return false;
             }
             catch (Exception ex)
             {
-                result = false;
                 log.Error(ex.Message);
-            }
-            finally
-            {
-
+                return false;
             }
 
-            return result;
+            log.Error("Component加载失败");
+            return false;
         }
 
 
@@ -2464,7 +2443,6 @@ namespace EMS
         public class ConfigClass
         {
             public string SysID { get; set; } // varchar(255) PRIMARY KEY
-            public string OldSysID { get; set; }
             public int Open104 { get; set; } // int 是否开启104服务 0关1开
             public int NetTick { get; set; } // int 判断超时的时间间隔
             public string SysName { get; set; } // varchar(255)

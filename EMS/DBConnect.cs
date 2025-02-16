@@ -137,8 +137,6 @@ namespace EMS
         static public bool ExecSQL(string astrSQL)
         {
             ChecMysql80();
-            bool bResult = false;
-
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(connectionStr))
@@ -146,28 +144,22 @@ namespace EMS
                     connection.Open();
                     using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        if (sqlCmd.ExecuteNonQuery() > 0)
-                            bResult = true;
-                        else
-                            bResult = false;
+                        sqlCmd.ExecuteNonQuery();
                     }
                 }
+                return true;
             }
             catch (MySqlException ex)
             {
                 log.Error(ex.Message);
-                bResult = false;
+                return false;
             }
             catch (Exception ex)
             {
                 log.Error(ex.Message);
-                bResult = false;
+                return false;
             }
-            finally
-            {
 
-            }     
-            return bResult;
         }
 
         //获取最后一个记录的ID

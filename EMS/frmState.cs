@@ -1,5 +1,7 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Drawing;
+using System.Linq.Expressions;
 using System.Windows.Forms;
 
 namespace EMS
@@ -7,6 +9,7 @@ namespace EMS
     public partial class frmState : Form
     {
         static public frmState oneForm = null;
+        private static ILog log = LogManager.GetLogger("frmState");
         public int DataIndex = 0;
         public int BoxIndex = 0;
         public frmState()
@@ -36,41 +39,61 @@ namespace EMS
         }
         static public void INIForm()
         {
-            oneForm = new frmState();
+            if (oneForm == null)
+                oneForm = new frmState();
         }
 
         static public void CloseForm()
         {
-
-            if (oneForm != null)
+            try
             {
-                oneForm.tmInterva.Enabled = false;
-                oneForm.Hide();
-                //oneForm.Close();
-                //oneForm.Dispose();
-                //oneForm = null; 
+                if (oneForm != null)
+                {
+                    oneForm.tmInterva.Enabled = false;
+                    oneForm.Hide();
+                    frmMain.ShowMainForm();
+
+                    //oneForm.Close();
+                    //oneForm.Dispose();
+                    //oneForm = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CloseForm异常：" + ex.Message);
             }
         }
 
         static public void ShowForm()
         {
-            if (oneForm == null)
-                oneForm = new frmState();
+            try
+            {
+                if (oneForm == null)
+                    oneForm = new frmState();
 
-            oneForm.FreshData2Form(1);
-            oneForm.FreshData2Form(2);
-            oneForm.FreshData2Form(3);
-            oneForm.FreshData2Form(4);
-            oneForm.FreshData2Form(5);
-            oneForm.FreshData2Form(6);
-            oneForm.tmInterva.Interval = 1000;
-            oneForm.tmInterva.Enabled = true;
-            oneForm.btnE_Click(null, EventArgs.Empty);
-            oneForm.SetFormPower(frmMain.UserPower);
-            oneForm.Show();
-            //oneForm.ShowDialog();
-            oneForm.BringToFront();
+                if (oneForm != null)
+                {
+                    oneForm.FreshData2Form(1);
+                    oneForm.FreshData2Form(2);
+                    oneForm.FreshData2Form(3);
+                    oneForm.FreshData2Form(4);
+                    oneForm.FreshData2Form(5);
+                    oneForm.FreshData2Form(6);
+                    oneForm.tmInterva.Interval = 1000;
+                    oneForm.tmInterva.Enabled = true;
+                    oneForm.btnE_Click(null, EventArgs.Empty);
+                    oneForm.SetFormPower(frmMain.UserPower);
+                    oneForm.Show();
+                    //oneForm.ShowDialog();
+                    oneForm.BringToFront();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("ShowForm: " + ex.Message);
+            }
         }
+
         public void SetFormPower(int aPower)
         {
             btnLine.Visible = (aPower >= 0);

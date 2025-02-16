@@ -128,7 +128,7 @@ namespace EMS
             this.Height = 768;
         }
 
-        public void Initialize()
+        public bool Initialize()
         {
             try
             {
@@ -136,75 +136,120 @@ namespace EMS
                 SetFormPower(UserPower);
 
                 // TCP服务器事件
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
                 {
                     TCPserver.OnReceiveDataEvent2 += new Modbus.TCPServerClass.OnReceiveDataEventDelegate2(OnReceive104CMD2);
-                });
+                }))
+                {
+                    log.Error("TCPserver.OnReceiveDataEvent2绑定失败");
+                    return false;
+                }
 
                 // ModbusTcp客户端事件
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.ModbusTcpClientEvent, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.ModbusTcpClientEvent, () =>
                 {
                     ModbusTcpClient.OnReceiveDataEvent2 += new Modbus.TCPClientClass.OnReceiveDataEventDelegate2(OnReceiveModbusTcpClientCMD);
-                });
+                }))
+                {
+                    log.Error("ModbusTcpClient.OnReceiveDataEvent2绑定失败");
+                    return false;
+                }
 
                 frmFlash.AddPostion(10);
 
                 // 初始化各个窗体
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormControl, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormControl, () =>
                 {
                     frmControl.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmControl页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormUser, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormUser, () =>
                 {
                     frmoneUser.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmoneUser页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormKeyBoard, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormKeyBoard, () =>
                 {
                     frmKeyBoard.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmKeyBoard页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormSet, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormSet, () =>
                 {
                     frmSet.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmSet页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormState, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormState, () =>
                 {
                     frmState.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmState页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLogin, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLogin, () =>
                 {
                     frmLogin.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmLogin页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormAbout, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormAbout, () =>
                 {
                     frmAbout.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmAbout页面初始化失败");
+                    return false;
+                }
 
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLine, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLine, () =>
                 {
                     frmLine.INIForm();
-                });
+                }))
+                {
+                    log.Error("frmLine页面初始化失败");
+                    return false;
+                }
 
                 frmFlash.AddPostion(10);
 
                 // 加载主要功能
-                InitializationManager.InitializeComponent(InitializationManager.InitStep.LoadForm, () =>
+                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.LoadForm, () =>
                 {
                     return LoadForm();
-                });
+                }))
+                {
+                    log.Error("LoadForm加载失败");
+                    return false;
+                }
 
-                
                 frmFlash.CloseFlashForm();
+
+                return true;
             }
             catch (Exception ex)
             {
                 log.Error($"frmMain构造函数失败: {ex.Message}");
-                InitializationManager.RestartApplication();
+                return false;            
             }
         }
 
@@ -499,21 +544,21 @@ namespace EMS
             //检查数据库结构是否一致
             if(!DBConnection.CheckTables()) return false;
 
-            // 加载数据库配置
+            // 加载数据库配置（必填）
             if (!frmSet.LoadCloudLimitsFromMySQL()) return false;
             if (!frmSet.LoadConfigFromMySQL()) return false;
             if (!frmSet.LoadVariChargeFromMySQL()) return false;
             if (!frmSet.LoadComponentSettingsFromMySQL()) return false;
             if (!frmSet.LoadHistoryDataFromMySQL()) return false;
 
-            // 加载策略相关数据
+            // 加载策略相关数据（选填）
             if (!ElectrovalenceList.LoadFromMySQL()) return false;
             if (!TacticsList.LoadFromMySQL()) return false;
             if (!TacticsList.LoadJFPGFromSQL()) return false;
             if (!BalaTacticsList.LoadFromMySQL()) return false;
 
-            //读取数据库中的故障
-            if(!Selffrm.AllEquipment.LoadErrorState()) return false;
+            //读取数据库中的故障（选填）
+            if (!Selffrm.AllEquipment.LoadErrorState()) return false;
 
             //数据看板展示
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -644,9 +689,12 @@ namespace EMS
                 TacticsList.TacticsOn = false; //关闭策略
 
                 //初始化设置
-                AllEquipment.PCSScheduleKVA = 0;
-                AllEquipment.HostStart = true;
-                AllEquipment.SlaveStart = true;
+                lock(AllEquipment)
+                 {
+                    AllEquipment.PCSScheduleKVA = 0;
+                    AllEquipment.HostStart = true;
+                    AllEquipment.SlaveStart = true;
+                }
             }
 
             while (!AllEquipment.HostStart)
@@ -661,7 +709,7 @@ namespace EMS
             if (!TCPserver.TCPServerIni(2404)) return false;
 
             //监听客户端连接
-            TCPserver.StartMonitor2404();
+            if(TCPserver.StartMonitor2404()) return false;
 
             return true;
         }
@@ -692,7 +740,7 @@ namespace EMS
                     return false;
                 }
 
-                ModbusTcpServer.StartMonitor502();
+                if(ModbusTcpServer.StartMonitor502()) return false;
                 return true;
             }
             catch (Exception ex)
@@ -864,7 +912,7 @@ namespace EMS
             if (!InitFrmMainClass_Threads()) return false;
             if(!AllEquipment.Report2Cloud.InitCloudClass_Timer()) return false;
             if (!AllEquipment.Report2Cloud.InitCloudClass_Threads()) return false;
-            AllEquipment.AutoReadData();
+            if(!AllEquipment.AutoReadData()) return false;
 
             return true;
         }
@@ -1715,7 +1763,6 @@ public class InitializationManager
         catch (Exception ex)
         {
             log.Error($"初始化失败 {stepDescriptions[step]}: {ex.Message}");
-            RestartApplication();
             return false;
         }
     }
@@ -1741,42 +1788,7 @@ public class InitializationManager
         catch (Exception ex)
         {
             log.Error($"初始化失败 {stepDescriptions[step]}: {ex.Message}");
-            RestartApplication();
             return false;
         }
-    }
-
-    public static void RestartApplication()
-    {
-        try
-        {
-            log.Error("初始化失败，准备重启应用程序");
-
-            // 清理资源
-            CleanupResources();
-
-            // 启动新进程
-            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EMS.exe");
-            if (File.Exists(exePath))
-            {
-                Process.Start(exePath);
-            }
-            else
-            {
-                log.Error($"找不到程序文件: {exePath}");
-            }
-
-            // 退出当前进程
-            Environment.Exit(0);
-        }
-        catch (Exception ex)
-        {
-            log.Error($"重启应用程序失败: {ex.Message}");
-        }
-    }
-
-    private static void CleanupResources()
-    {
-        //资源释放
     }
 }

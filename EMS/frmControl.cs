@@ -47,11 +47,17 @@ namespace EMS
             {
                 if (oneForm == null)
                     oneForm = new frmControl();
-                oneForm.ShowINIData();
-                oneForm.SetFormPower(frmMain.UserPower);
-                oneForm.ShowDialog();
+                if (oneForm != null)
+                {
+                    oneForm.ShowINIData();
+                    oneForm.SetFormPower(frmMain.UserPower);
+                    oneForm.ShowDialog();
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                log.Error("ShowForm异常：" + ex.Message);
+            }
         }
         public void SetFormPower(int aPower)
         {
@@ -167,33 +173,40 @@ namespace EMS
             //frmSet.LoadSetInf();
             //frmSet.LoadFromGlobalSet();
 
-            frmSet.LoadCloudLimitsFromMySQL();
-            frmSet.LoadConfigFromMySQL();
-            frmSet.LoadComponentSettingsFromMySQL();
-
-            tcbSYSModel.SetSelectItemIndex(frmSet.config.SysMode); 
-            tcbPCSType.SetstrText(frmSet.PCSType);
-            if (frmSet.PCSwaValue > 0)
-                tcbPCSMode.SetSelectItemIndex(0);
-            else
-                tcbPCSMode.SetSelectItemIndex(1);
-            tnePCSwaValue.SetIntValue(Math.Abs(frmSet.PCSwaValue));
-            //tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
-/*            tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
-            tneSetCoolTemp.SetIntValue((int)(frmSet.componentSettings.SetCoolTemp));
-            tneCoolTempReturn.SetIntValue((int)(frmSet.componentSettings.CoolTempReturn));
-            tneHotTempReturn.SetIntValue((int)(frmSet.componentSettings.HotTempReturn));*/
-
-            //12.4
-            tcbEMSstatus.SetSelectItemIndex(frmSet.config.EMSstatus);
-
-            if (frmSet.config.ConnectStatus == "485")
+            try
             {
-                tcbConnectStatus.SetSelectItemIndex(0);
+                frmSet.LoadCloudLimitsFromMySQL();
+                frmSet.LoadConfigFromMySQL();
+                frmSet.LoadComponentSettingsFromMySQL();
+
+                tcbSYSModel.SetSelectItemIndex(frmSet.config.SysMode);
+                tcbPCSType.SetstrText(frmSet.PCSType);
+                if (frmSet.PCSwaValue > 0)
+                    tcbPCSMode.SetSelectItemIndex(0);
+                else
+                    tcbPCSMode.SetSelectItemIndex(1);
+                tnePCSwaValue.SetIntValue(Math.Abs(frmSet.PCSwaValue));
+                //tneBMSwaValue.SetIntValue((int)Math.Abs(frmSet.cloudLimits.BmsDerateRatio));//7.24
+                /*            tneSetHotTemp.SetIntValue((int)(frmSet.componentSettings.SetHotTemp));
+                            tneSetCoolTemp.SetIntValue((int)(frmSet.componentSettings.SetCoolTemp));
+                            tneCoolTempReturn.SetIntValue((int)(frmSet.componentSettings.CoolTempReturn));
+                            tneHotTempReturn.SetIntValue((int)(frmSet.componentSettings.HotTempReturn));*/
+
+                //12.4
+                tcbEMSstatus.SetSelectItemIndex(frmSet.config.EMSstatus);
+
+                if (frmSet.config.ConnectStatus == "485")
+                {
+                    tcbConnectStatus.SetSelectItemIndex(0);
+                }
+                else if (frmSet.config.ConnectStatus == "tcp")
+                {
+                    tcbConnectStatus.SetSelectItemIndex(1);
+                }
             }
-            else if (frmSet.config.ConnectStatus == "tcp")
+            catch (Exception ex)
             {
-                tcbConnectStatus.SetSelectItemIndex(1);
+                log.Error("ShowINIData: " + ex.Message);
             }
         }
 

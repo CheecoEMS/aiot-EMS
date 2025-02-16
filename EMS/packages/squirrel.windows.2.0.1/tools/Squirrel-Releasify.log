@@ -3827,3 +3827,48 @@ Usage: WriteZipToSetup [Setup.exe template] [Zip File]
 [05/02/25 10:55:52] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
 [05/02/25 10:55:52] info: Program: Building embedded zip file for Setup.exe
 [05/02/25 10:55:56] info: Program: Finished Squirrel Updater
+[11/02/25 11:13:16] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[11/02/25 11:13:16] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[11/02/25 11:13:16] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[11/02/25 11:13:16] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[11/02/25 11:13:16] info: ReleasePackage: Extracting dependent packages: []
+[11/02/25 11:13:16] info: ReleasePackage: Removing unnecessary data
+[11/02/25 11:13:16] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[11/02/25 11:13:17] info: Program: Building embedded zip file for Setup.exe
+[11/02/25 11:13:20] info: Program: Finished Squirrel Updater
+[11/02/25 11:27:25] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[11/02/25 11:27:25] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[11/02/25 11:27:25] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[11/02/25 11:27:25] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[11/02/25 11:27:25] info: ReleasePackage: Extracting dependent packages: []
+[11/02/25 11:27:25] info: ReleasePackage: Removing unnecessary data
+[11/02/25 11:27:25] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[11/02/25 11:27:26] info: Program: Building embedded zip file for Setup.exe
+[11/02/25 11:27:30] info: Program: Finished Squirrel Updater
+[11/02/25 11:51:45] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[11/02/25 11:51:45] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[11/02/25 11:51:45] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[11/02/25 11:51:45] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[11/02/25 11:51:45] info: ReleasePackage: Extracting dependent packages: []
+[11/02/25 11:51:45] info: ReleasePackage: Removing unnecessary data
+[11/02/25 11:51:45] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[11/02/25 11:51:46] info: Program: Building embedded zip file for Setup.exe
+[11/02/25 11:51:51] info: Program: Finished Squirrel Updater
+[11/02/25 18:07:38] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[11/02/25 18:07:38] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[11/02/25 18:07:38] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[11/02/25 18:07:38] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[11/02/25 18:07:38] info: ReleasePackage: Extracting dependent packages: []
+[11/02/25 18:07:38] info: ReleasePackage: Removing unnecessary data
+[11/02/25 18:07:38] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[11/02/25 18:07:39] info: Program: Building embedded zip file for Setup.exe
+[11/02/25 18:07:43] info: Program: Finished Squirrel Updater
+[16/02/25 19:01:24] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[16/02/25 19:01:24] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[16/02/25 19:01:24] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[16/02/25 19:01:24] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[16/02/25 19:01:24] info: ReleasePackage: Extracting dependent packages: []
+[16/02/25 19:01:24] info: ReleasePackage: Removing unnecessary data
+[16/02/25 19:01:25] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[16/02/25 19:01:25] info: Program: Building embedded zip file for Setup.exe
+[16/02/25 19:01:29] info: Program: Finished Squirrel Updater

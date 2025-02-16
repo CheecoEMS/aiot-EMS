@@ -254,7 +254,7 @@ namespace EMS
                 if (UploadDataThread.IsAlive)
                 {
                     isUploadDataThreadRunning = true;
-                    log.Info("UploadDataThread 启动成功。");
+                    log.Error("UploadDataThread 启动成功。");
                 }
                 else
                 {
@@ -266,6 +266,7 @@ namespace EMS
             {
                 log.Error($"启动 UploadDataThread 时发生异常: {ex.Message}");
                 isUploadDataThreadRunning = false;
+                return false;
             }
 
             return isUploadDataThreadRunning;

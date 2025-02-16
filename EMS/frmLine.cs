@@ -33,6 +33,8 @@ namespace EMS
                     oneForm = new frmLine();
                 //frmMain.Selffrm.Hide();
                 oneForm.SetFormPower(frmMain.UserPower);
+                oneForm.tmInterval.Interval = 1000;
+                oneForm.tmInterval.Enabled = true;
                 oneForm.ShowDialog();
             }
             catch (Exception ex) 
@@ -50,13 +52,22 @@ namespace EMS
         }
         static public void CloseForm()
         {
-
-            if (oneForm != null)
+            try
             {
-                oneForm.Hide();
-                oneForm.Close();
-                oneForm.Dispose();
-                oneForm = null;
+                if (oneForm != null)
+                {
+                    oneForm.tmInterval.Enabled = false;
+                    oneForm.Hide();
+                    frmMain.ShowMainForm();
+
+                    //oneForm.Close();
+                    //oneForm.Dispose();
+                    //oneForm = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CloseForm异常：" + ex.Message);
             }
         }
 

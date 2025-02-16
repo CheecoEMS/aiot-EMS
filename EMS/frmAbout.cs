@@ -63,11 +63,21 @@ namespace EMS
 
         static public void CloseForm()
         {
-            if (oneForm != null)
-            { 
-                oneForm.Close();
-                oneForm.Dispose();
-                oneForm = null;
+            try
+            {
+                if (oneForm != null)
+                {
+                    oneForm.Hide();
+                    frmMain.ShowMainForm();
+
+                    //oneForm.Close();
+                    //oneForm.Dispose();
+                    //oneForm = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("CloseForm异常：" + ex.Message);
             }
         }
 
@@ -77,10 +87,14 @@ namespace EMS
             {
                 if (oneForm == null)
                     oneForm = new frmAbout();
-                oneForm.SetFormPower(frmMain.UserPower);
-                oneForm.labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
-                oneForm.labSoftVerb.Text = "软件版本：EmsMaster1.0.4.1";
-                oneForm.ShowDialog();
+
+                if (oneForm != null)
+                {
+                    oneForm.SetFormPower(frmMain.UserPower);
+                    oneForm.labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
+                    oneForm.labSoftVerb.Text = "软件版本：EmsMaster1.0.4";
+                    oneForm.ShowDialog();
+                }
             }
             catch (Exception ex)
             {
