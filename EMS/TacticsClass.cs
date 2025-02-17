@@ -151,7 +151,14 @@ namespace EMS
                 //清空费率表
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                 {
-                    frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
+                    if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
+                    {
+                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
+                    }
+                    else
+                    {
+                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_4();
+                    }
                 }
 
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
@@ -177,7 +184,24 @@ namespace EMS
                                 //只有储能能够设置8段费率
                                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                                 {
-                                    frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG);
+                                    if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG);
+                                    }
+                                    else
+                                    {
+                                        // 检查并处理 tempJFPG 数组中每个时段的费率号
+                                        for (int j = 0; j < 14; j++)
+                                        {
+                                            if (tempJFPG[j * 3 + 0] > 4)
+                                            {
+                                                tempJFPG[j * 3 + 0] = 0;
+                                                tempJFPG[j * 3 + 1] = 0;
+                                                tempJFPG[j * 3 + 2] = 0;
+                                            }
+                                        }
+                                        frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable1, tempJFPG);
+                                    }
                                 }
 
                                 if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)

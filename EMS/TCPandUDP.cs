@@ -582,6 +582,7 @@ namespace Modbus
                         log.Error("开启监听502端口");
                         return true;
                     default:
+                        log.Error("未定义端口");
                         return false;
                 }
 

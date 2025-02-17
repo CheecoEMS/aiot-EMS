@@ -42,7 +42,7 @@ namespace EMS
         private event OnReceiveCMDDelegate OnReceiveCMDEvent;
         /////策略相关
         //时段电价
-        static public ElectrovalenceListClass ElectrovalenceList = new ElectrovalenceListClass();
+        //static public ElectrovalenceListClass ElectrovalenceList = new ElectrovalenceListClass();
         //充放电策略时段 
         static public TacticsListClass TacticsList = new TacticsListClass();
         //均衡策略时段
@@ -501,6 +501,11 @@ namespace EMS
                 log.Error("LoadForm - InitializeDeviceData失败");
                 return false;
             }
+            if (!InitializeLoadDatabase())
+            {
+                log.Error("LoadForm - InitializeLoadDatabase失败");
+                return false;
+            }
             if (!InitializeCloudServices())
             {
                 log.Error("LoadForm - InitializeCloudServices失败");
@@ -551,8 +556,13 @@ namespace EMS
             if (!frmSet.LoadComponentSettingsFromMySQL()) return false;
             if (!frmSet.LoadHistoryDataFromMySQL()) return false;
 
+            return true;
+        }
+
+        //必须在InitializeDeviceData之后，因为LoadJFPGFromSQL依赖确定电表版本
+        private bool InitializeLoadDatabase()
+        {
             // 加载策略相关数据（选填）
-            if (!ElectrovalenceList.LoadFromMySQL()) return false;
             if (!TacticsList.LoadFromMySQL()) return false;
             if (!TacticsList.LoadJFPGFromSQL()) return false;
             if (!BalaTacticsList.LoadFromMySQL()) return false;
@@ -603,11 +613,7 @@ namespace EMS
             //初始化液冷机
             if (AllEquipment.LiquidCool != null)
             {
-                if (!AllEquipment.init_LiquidCool())
-                {
-                    log.Error("LoadForm - InitializeEquipment - init_LiquidCool失败");
-                    //return false;
-                }
+                AllEquipment.init_LiquidCool();
             }
 
             //初始化BMS功能等级,不同等级不同功能
@@ -621,6 +627,10 @@ namespace EMS
 
         private bool InitializeDeviceData()
         {
+            //校验储能表是否是八费率
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                frmMain.Selffrm.AllEquipment.Elemeter2.Check_Version();
+
             // 初始化电表数据，无需校验是否成功
             if (AllEquipment.Elemeter1List != null)
             {
@@ -709,7 +719,7 @@ namespace EMS
             if (!TCPserver.TCPServerIni(2404)) return false;
 
             //监听客户端连接
-            if(TCPserver.StartMonitor2404()) return false;
+            if(!TCPserver.StartMonitor2404()) return false;
 
             return true;
         }
@@ -740,7 +750,7 @@ namespace EMS
                     return false;
                 }
 
-                if(ModbusTcpServer.StartMonitor502()) return false;
+                if(!ModbusTcpServer.StartMonitor502()) return false;
                 return true;
             }
             catch (Exception ex)
