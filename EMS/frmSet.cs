@@ -2252,14 +2252,21 @@ namespace EMS
 
         public void btnClose_Click(object sender, EventArgs e)
         {
-            PowerGPIO(0);
-            Set_Cloudlimits();
-            if (frmMain.Selffrm.AllEquipment.Led != null)
+            try
             {
-                frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                PowerGPIO(0);
+                Set_Cloudlimits();
+                if (frmMain.Selffrm.AllEquipment.Led != null)
+                {
+                    frmMain.Selffrm.AllEquipment.Led.Set_Led_ShutDown();
+                }
+                this.Close();
+                frmMain.Selffrm.Close();
             }
-            this.Close();
-            frmMain.Selffrm.Close();
+            catch (Exception ex)
+            {
+                log.Error("btnClose_Click: " + ex.Message);
+            }
         }
 
         private void btnUpdata_Click(object sender, EventArgs e)
