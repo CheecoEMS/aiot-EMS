@@ -251,6 +251,38 @@ namespace EMS
          *          peElestic
          * 
          ********************************************/
+        public static bool CheckPeElestic()
+        {
+            string astrSQL = "SELECT COUNT(*) FROM PeElestic;";
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    {
+                        object result = sqlCmd.ExecuteScalar(); // 使用ExecuteScalar获取计数
+                        if (result != null && Convert.ToInt32(result) > 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                log.Error($"MySqlException in CheckPeElestic: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in CheckPeElestic: {ex.Message}");
+                return false;
+            }
+            return false;
+        }
+
+
         public static bool LoadPeElesticFromMySQL()
         {
             bool result = false;
@@ -2352,6 +2384,8 @@ namespace EMS
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
         }
 
+       
+
         /************************* DB Class *********************************/
         public class PeElesticClass
         {
@@ -2735,4 +2769,6 @@ namespace EMS
         }
   
     }
+
+
 }

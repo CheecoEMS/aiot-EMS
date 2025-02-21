@@ -979,6 +979,7 @@ namespace EMS
                         {
                             Parent.ErrorState[2] = true;
                         }
+                        frmSet.ErrorGPIO(1);
                     }
                     if (awLevels == 2)
                     {
@@ -9710,13 +9711,16 @@ namespace EMS
 
         public bool ReadDataInoneDaySQL()
         {
-            bool res = false;
             try
             {
-
-                //如果日期不符返回false，并赋值当前的值为起始数据
-                if (!frmSet.LoadPeElesticFromMySQL())
+                if (frmSet.CheckPeElestic())
                 {
+                    //存在PeElestic历史数据
+                    if (!frmSet.LoadPeElesticFromMySQL()) return false;
+                }
+                else
+                {
+                    //读取当前值，并赋予数据库a
                     if (Elemeter2 != null)
                     {
                         Elemeter2.GetDataFromEqipment();
@@ -9736,17 +9740,18 @@ namespace EMS
                             frmSet.peElestic.SAuxiliaryKWH[i] = Elemeter3.Akwh[i];
                         }
                     }
-                }
 
-                res = true;
+                    frmSet.peElestic.rDate = DateTime.Now;
+                    if(!frmSet.Insert_PeElesticData(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"))) return false;
+                }
             }
             catch (Exception ex)
             {
-                frmMain.ShowDebugMSG(ex.ToString());
+                log.Error(ex.ToString());
                 return false;
             }
 
-            return res;
+            return true;
         }
 
         public void ReadDataInoneDayINI()
@@ -9979,7 +9984,7 @@ namespace EMS
                     }
                 }*/
 
-        public void WriteDataInoneDaySQL(string arDate)
+        public bool WriteDataInoneDaySQL(string arDate)
         {
             try
             {
@@ -10000,12 +10005,14 @@ namespace EMS
                     }
                 }
 
-                frmSet.Set_PeElesticData(arDate);
+                if (!frmSet.Set_PeElesticData(arDate)) return false;
             }
             catch (Exception e)
             {
                 log.Error(e);
+                return false;
             }
+            return true;
         }
 
         public bool CalculateProfit(string strdate)
