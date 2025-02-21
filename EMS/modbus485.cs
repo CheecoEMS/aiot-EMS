@@ -103,7 +103,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    frmMain.ShowDebugMSG(ex.ToString());
+                    log.Error("OpenEMSÊ§°Ü£º" + ex.ToString());
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";

@@ -1232,7 +1232,7 @@ namespace Modbus
                 ipEndpoint = new IPEndPoint(ipAddress, iSevierPort);
 
                 //连接服务器端口
-                if (!ConnectTCP()) return false;
+                ConnectTCP();
 
                 return true;
             }

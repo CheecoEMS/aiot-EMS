@@ -979,7 +979,6 @@ namespace EMS
                         {
                             Parent.ErrorState[2] = true;
                         }
-                        frmSet.ErrorGPIO(1);
                     }
                     if (awLevels == 2)
                     {
@@ -6198,9 +6197,9 @@ namespace EMS
         {
             //打开PCS
             if (aOn)
-                m485.Send6MSG((byte)ID, 6, 0x6000, (ushort)1, true);
+               m485.Send6MSG((byte)ID, 6, 0x6000, (ushort)1, true);
             else
-                m485.Send6MSG((byte)ID, 6, 0x6000, 0, true);
+               m485.Send6MSG((byte)ID, 6, 0x6000, 0, true);
         }
 
 

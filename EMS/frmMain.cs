@@ -764,6 +764,14 @@ namespace EMS
         {
             try
             {
+                //打开主机串口
+                ems.m485 = new modbus485();
+                ems.m485.OpenEMS(
+                    frmSet.config.DebugComName,
+                    38400,
+                    8,
+                    System.IO.Ports.Parity.None,
+                    System.IO.Ports.StopBits.One);
                 // 初始化从机列表
                 for (int i = 0; i < frmSet.config.SysCount - 1; i++)
                 {
@@ -776,19 +784,7 @@ namespace EMS
 
                     oneEMSEquipment.ID = i + 2;
                     oneEMSEquipment.Parent = AllEquipment;
-                    oneEMSEquipment.m485 = new modbus485();
-                    oneEMSEquipment.m485.ParentEquipment = AllEquipment;
-
-                    if (!oneEMSEquipment.m485.Open(
-                        frmSet.config.DebugComName,
-                        38400,
-                        8,
-                        System.IO.Ports.Parity.None,
-                        System.IO.Ports.StopBits.One))
-                    {
-                        log.Error($"打开从机{i + 2}串口失败");
-                        return false;
-                    }
+                    oneEMSEquipment.m485 = ems.m485;
 
                     AllEquipment.EMSList.Add(oneEMSEquipment);
                 }
