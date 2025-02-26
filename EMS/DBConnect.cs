@@ -239,6 +239,28 @@ namespace EMS
             return bResult;
         }
 
+        public static bool CheckTableExists(string tableName)
+        {
+            ChecMysql80();
+            try
+            {
+                string checkTableQuery = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '{tableName}'";
+                using (MySqlConnection connection = new MySqlConnection(connectionStr))
+                {
+                    connection.Open();
+                    using (MySqlCommand sqlCmd = new MySqlCommand(checkTableQuery, connection))
+                    {
+                        object result = sqlCmd.ExecuteScalar();
+                        return Convert.ToInt32(result) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Error checking if table exists: {ex.Message}");
+                return false;
+            }
+        }
 
         /// <summary>
         /// 检查用户的权限
@@ -682,6 +704,17 @@ namespace EMS
                     log.Error("修改表结构");
                     // Backup the existing table
                     string backupTableName = tableName + "_backup";
+
+                    //// 检查并删除已存在的备份表
+                    if (CheckTableExists(backupTableName))
+                    {
+                        if (!ExecSQL($"DROP TABLE {backupTableName};"))
+                        {
+                            log.Error($"删除已存在的备份表 {backupTableName} 失败");
+                            return false;
+                        }
+                    }
+
                     string createBackupTableQuery = $"CREATE TABLE {backupTableName} AS SELECT * FROM {tableName};";
                     if (!ExecSQL(createBackupTableQuery))
                     {

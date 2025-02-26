@@ -3953,3 +3953,12 @@ Usage: WriteZipToSetup [Setup.exe template] [Zip File]
 [21/02/25 14:38:48] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
 [21/02/25 14:38:49] info: Program: Building embedded zip file for Setup.exe
 [21/02/25 14:38:53] info: Program: Finished Squirrel Updater
+[26/02/25 11:38:01] info: Program: Starting Squirrel Updater: --releasify EMS.1.0.4.nupkg
+[26/02/25 11:38:01] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[26/02/25 11:38:01] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg
+[26/02/25 11:38:01] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.0.4.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.0.4-full.nupkg
+[26/02/25 11:38:01] info: ReleasePackage: Extracting dependent packages: []
+[26/02/25 11:38:01] info: ReleasePackage: Removing unnecessary data
+[26/02/25 11:38:01] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[26/02/25 11:38:02] info: Program: Building embedded zip file for Setup.exe
+[26/02/25 11:38:07] info: Program: Finished Squirrel Updater
