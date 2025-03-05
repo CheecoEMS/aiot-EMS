@@ -6463,7 +6463,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.0.4";
+        public string EMSVersion { get; set; } = "1.0.4_damao";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";

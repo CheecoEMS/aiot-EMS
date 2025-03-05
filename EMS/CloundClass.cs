@@ -453,8 +453,17 @@ namespace EMS
                         {
                             try
                             {
+                                string aFileCap;
                                 string fileName = Path.GetFileName(file);
-                                string aFileCap = fileName.Substring(1, 3); // 确保这里的索引和长度是有效的  
+                                bool containsDamao = fileName.Contains("Damao");
+                                if (containsDamao)
+                                {
+                                    aFileCap = fileName.Substring(1, 8);
+                                }
+                                else
+                                {
+                                    aFileCap = fileName.Substring(1, 3); // 确保这里的索引和长度是有效的                            
+                                }
                                 string strData = File.ReadAllText(file);
                                 Write2Topic(aFileCap, strData);
                                 File.Delete(file);
@@ -1263,6 +1272,9 @@ namespace EMS
             //EMS
             Parent.time = tempTime;
             ConvertToJson(Parent, strUpPath, "\\0ems" + strTime + ".json");
+
+            //达卯数据
+            ConvertToJson(Parent, strUpPath, "\\0DamaoEms" + strTime + ".json");
         }
         
         public void SaveProfit2Cloud(string astrDate)
