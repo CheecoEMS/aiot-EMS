@@ -3186,6 +3186,10 @@ namespace EMS
             time = DateTime.Now;
             Totalkva = Gridkva + AllAkva;
 
+            // 同步云总正负累计电能
+            Parent.E2_PUkwh = PUkwh[0];
+            Parent.E2_OUkwh = OUkwh[0];
+
 
             Prepared = bPrepared;
             if (!Prepared)
@@ -6419,6 +6423,10 @@ namespace EMS
         public double BMSSOC { get; set; }   //实时数据SOC
         public double BMSSOH { get; set; }   //实时数据SOH
         public double BMSKVA { get; set; }   //实时电池的功率
+
+        public double E2_PUkwh { get; set; }           //正向有功尖峰平谷电表;累计总充电
+        public double E2_OUkwh { get; set; }           //反向有功尖峰平谷电表;累计总放电
+        public string PCSScheduleType { get; set; }    //策略充放电模式: 待机、充电、放电
 
         //7.25 BMS 均衡
         double CellV_Gap = 0.03;//定义最低单体电压和理想最高单体电压的差值30mv

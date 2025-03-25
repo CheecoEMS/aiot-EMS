@@ -458,6 +458,7 @@ namespace EMS
                             TacticsOn = true;
                         continue;
                     }
+
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
                     {
@@ -476,6 +477,8 @@ namespace EMS
                             //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
                             frmMain.Selffrm.AllEquipment.HostStart = false;
                             frmMain.Selffrm.AllEquipment.SlaveStart = false;
+
+                            frmMain.Selffrm.AllEquipment.PCSScheduleType = "待机";
                         }
                     }
                     //判断时间所在的区间和工作内容
@@ -498,6 +501,8 @@ namespace EMS
                             //主机停止中断PCS执行线程，中断向从机发送pcs工作指令
                             frmMain.Selffrm.AllEquipment.HostStart = false;
                             frmMain.Selffrm.AllEquipment.SlaveStart= false;
+
+                            frmMain.Selffrm.AllEquipment.PCSScheduleType = "待机";
                         }
                         continue;
                     }
@@ -575,6 +580,9 @@ namespace EMS
                             }
                         }
                     }
+
+                    //同步云 策略充放状态
+                    frmMain.Selffrm.AllEquipment.PCSScheduleType = frmMain.Selffrm.AllEquipment.wTypeActive;
                 }
                 catch (Exception ex)
                 {

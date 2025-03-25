@@ -1623,7 +1623,7 @@ namespace EMS
 
                                 if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
                                 {
-                                    strategyDate = jsonObject["params"]["strategy"][i]["value"].ToString();
+                                    strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
                                 }
                                 else
                                 {
