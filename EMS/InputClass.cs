@@ -4810,7 +4810,7 @@ namespace EMS
         public float DisChargeAmount = 0; //可放电量
 
         //11.30 新增字段 ， 云平台判断水冷和液冷
-        public int BMStype { get; set; } = 0; //默认未0  1：风冷 2：液冷
+        public int BMStype { get; set; } = 0; //默认未0  1：风冷 2：液冷 3:125/260
 
         public double BMSCap { get; set; } // BMS当前容量 
 
@@ -4836,6 +4836,14 @@ namespace EMS
         {
             strCommandFile = "BMS.txt";
             BmsVersionPath =  Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory) + "BmsVersion.txt";
+        }
+
+        public void CheckBMStype()
+        {
+            if (frmSet.config != null)
+            {
+                BMStype = frmSet.config.BMStype;
+            }
         }
 
         //根据bms的版本信息，决定开放的工程
@@ -5866,6 +5874,12 @@ namespace EMS
 
         public bool PowerOn = false;
 
+        public double SetCoolTemp;      //空调采集的参数设定值
+        public double CoolTempReturn;
+        public double SetHotTemp;
+        public double HotTempReturn;
+
+
         private static ILog log = LogManager.GetLogger("TempControlClass");
 
         DateTime oldTemp;
@@ -5893,7 +5907,7 @@ namespace EMS
 
                     SetSysData(11, (short)frmSet.componentSettings.SetCoolTemp, false);
                     SetSysData(12, (short)frmSet.componentSettings.CoolTempReturn, false);
-                    SetSysData(13, (short)frmSet.componentSettings.SetCoolTemp, false);
+                    SetSysData(13, (short)frmSet.componentSettings.SetHotTemp, false);
                     SetSysData(14, (short)frmSet.componentSettings.HotTempReturn, false);
                     if (aWithAllSet)
                     {
@@ -5921,6 +5935,21 @@ namespace EMS
             }
             catch
             { return false; }
+
+        }
+
+        public void ReadTCparams()
+        {
+            string strData = "";
+            string strTemp = "";
+            if (Get3strData(38, ref strData, ref strTemp))
+                SetCoolTemp = Math.Round(float.Parse(strTemp), 1);
+            if (Get3strData(39, ref strData, ref strTemp))
+                CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
+            if (Get3strData(40, ref strData, ref strTemp))
+                SetHotTemp = Math.Round(float.Parse(strTemp), 1);
+            if (Get3strData(41, ref strData, ref strTemp))
+                HotTempReturn = Math.Round(float.Parse(strTemp), 1);
 
         }
 
@@ -7417,7 +7446,6 @@ namespace EMS
             //液冷心跳定时器
             if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
             {
-                frmMain.Selffrm.AllEquipment.BMS.BMStype = 2;//云判断液冷或风冷：用于对齐电池数据展示
                 if (!AutoLiquidCold_HeartBeat()) return false;
             }
 

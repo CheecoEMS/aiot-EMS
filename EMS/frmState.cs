@@ -248,10 +248,11 @@ namespace EMS
                     //lbCondenserTemp.Text = oneTempControl.condenserTemp.ToString();//冷凝/供液温度; 
                     lbindoorHumidity.Text = oneTempControl.indoorHumidity.ToString();
                     //lbfanControl.Text = oneTempControl.fanControl.ToString();
-                    tneSetHotTemp.SetValue(0.1 * frmSet.componentSettings.SetCoolTemp);
-                    tneSetCoolTemp.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
-                    tneCoolTempReturn.SetValue(0.1 * (frmSet.componentSettings.CoolTempReturn));
-                    tneHotTempReturn.SetValue(0.1 * (frmSet.componentSettings.SetCoolTemp));
+                    tbAirSetCoolTemp.Text = oneTempControl.SetCoolTemp.ToString();
+                    tbAirCoolTempReturn.Text = oneTempControl.CoolTempReturn.ToString();
+                    tbAirSetHotTemp.Text = oneTempControl.SetHotTemp.ToString();
+                    tbAirHotTempReturn.Text = oneTempControl.HotTempReturn.ToString();
+
                     //tneSetHumidity.SetIntValue((int)(SetHumidity));
                     //tneHumiReturn.SetIntValue((int)(HumiReturn));
                     //tcbTCRunWithSys.SetValue(TCRunWithSys);

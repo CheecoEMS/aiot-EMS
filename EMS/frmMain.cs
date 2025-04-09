@@ -621,6 +621,7 @@ namespace EMS
             if (AllEquipment.BMS != null)
             {
                 AllEquipment.BMS.CheckFunctionLevel();
+                AllEquipment.BMS.CheckBMStype();
             }
 
             return true;

@@ -711,7 +711,7 @@ namespace EMS
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum FROM config; ";
+                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype FROM config; ";
             try
             {
 
@@ -755,6 +755,7 @@ namespace EMS
                                 config.ConnectStatus = rd.IsDBNull(28) ? "485" : rd.GetString(28);
                                 config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
                                 config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
+                                config.BMStype = rd.IsDBNull(31) ? 1 : rd.GetInt32(31);
 
                                 return true;
                             }
@@ -811,6 +812,7 @@ namespace EMS
                         + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
                         + "', CellVNum = '" + frmSet.config.CellVNum.ToString()
                         + "', CellTNum = '" + frmSet.config.CellTNum.ToString()
+                        + "', BMStype = '" + frmSet.config.BMStype.ToString()
                         +"';";
 
             bool result = false;
@@ -2317,6 +2319,13 @@ namespace EMS
             frmMain.Selffrm.AllEquipment.TCIni(true);
         }
 
+        //控制模式->空调设置->读取
+        private void btnAirRead_Click(object sender, EventArgs e)
+        {
+            if (frmMain.Selffrm.AllEquipment.TempControl == null)
+                return;
+            frmMain.Selffrm.AllEquipment.TempControl.ReadTCparams();
+        }
 
         //液冷设置->液冷设置->应用
         private void btnLCRun_Click(object sender, EventArgs e)
@@ -2514,7 +2523,8 @@ namespace EMS
             public string ConnectStatus { get; set; }
 
             public int CellVNum { get; set; }
-            public int CellTNum { get; set; } //168：风冷 160：液冷
+            public int CellTNum { get; set; } //168, 160
+            public int BMStype { get; set; } 
         }
 
         public class ComponentSettingsClass
@@ -2767,7 +2777,6 @@ namespace EMS
             this.Close();
             frmMain.Selffrm.Close();
         }
-  
     }
 
 

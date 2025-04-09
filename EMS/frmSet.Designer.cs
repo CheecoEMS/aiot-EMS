@@ -203,11 +203,12 @@ namespace EMS
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tpLog = new System.Windows.Forms.TabPage();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label100 = new System.Windows.Forms.Label();
-            this.tbNowVersion = new System.Windows.Forms.TextBox();
-            this.btnOK = new System.Windows.Forms.Button();
-            this.label101 = new System.Windows.Forms.Label();
             this.tbVersion = new System.Windows.Forms.TextBox();
+            this.tbNowVersion = new System.Windows.Forms.TextBox();
+            this.label101 = new System.Windows.Forms.Label();
+            this.btnOK = new System.Windows.Forms.Button();
             this.tbCTL = new System.Windows.Forms.TabPage();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnBMSRead = new System.Windows.Forms.Button();
@@ -333,7 +334,7 @@ namespace EMS
             this.btnQuery = new System.Windows.Forms.Button();
             this.btnWarning = new System.Windows.Forms.Button();
             this.pbTimer = new System.Windows.Forms.ProgressBar();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnAirRead = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.tbAll.SuspendLayout();
             this.plSetMain.SuspendLayout();
@@ -359,6 +360,7 @@ namespace EMS
             this.panel4.SuspendLayout();
             this.panel3.SuspendLayout();
             this.tpLog.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.tbCTL.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -367,7 +369,6 @@ namespace EMS
             this.groupBox5.SuspendLayout();
             this.panel9.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -2730,6 +2731,21 @@ namespace EMS
             this.tpLog.TabIndex = 6;
             this.tpLog.Text = "云设置";
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.label100);
+            this.groupBox2.Controls.Add(this.tbVersion);
+            this.groupBox2.Controls.Add(this.tbNowVersion);
+            this.groupBox2.Controls.Add(this.label101);
+            this.groupBox2.Controls.Add(this.btnOK);
+            this.groupBox2.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.groupBox2.Location = new System.Drawing.Point(15, 8);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(533, 138);
+            this.groupBox2.TabIndex = 51;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "更新";
+            // 
             // label100
             // 
             this.label100.AutoSize = true;
@@ -2742,12 +2758,31 @@ namespace EMS
             this.label100.TabIndex = 50;
             this.label100.Text = "当前版本：";
             // 
+            // tbVersion
+            // 
+            this.tbVersion.Location = new System.Drawing.Point(113, 102);
+            this.tbVersion.Name = "tbVersion";
+            this.tbVersion.Size = new System.Drawing.Size(210, 26);
+            this.tbVersion.TabIndex = 45;
+            // 
             // tbNowVersion
             // 
             this.tbNowVersion.Location = new System.Drawing.Point(113, 47);
             this.tbNowVersion.Name = "tbNowVersion";
             this.tbNowVersion.Size = new System.Drawing.Size(210, 26);
             this.tbNowVersion.TabIndex = 49;
+            // 
+            // label101
+            // 
+            this.label101.AutoSize = true;
+            this.label101.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label101.ForeColor = System.Drawing.Color.White;
+            this.label101.Location = new System.Drawing.Point(22, 102);
+            this.label101.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label101.Name = "label101";
+            this.label101.Size = new System.Drawing.Size(90, 21);
+            this.label101.TabIndex = 46;
+            this.label101.Text = "更新版本：";
             // 
             // btnOK
             // 
@@ -2766,25 +2801,6 @@ namespace EMS
             this.btnOK.Text = "确定";
             this.btnOK.UseVisualStyleBackColor = false;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // label101
-            // 
-            this.label101.AutoSize = true;
-            this.label101.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label101.ForeColor = System.Drawing.Color.White;
-            this.label101.Location = new System.Drawing.Point(22, 102);
-            this.label101.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label101.Name = "label101";
-            this.label101.Size = new System.Drawing.Size(90, 21);
-            this.label101.TabIndex = 46;
-            this.label101.Text = "更新版本：";
-            // 
-            // tbVersion
-            // 
-            this.tbVersion.Location = new System.Drawing.Point(113, 102);
-            this.tbVersion.Name = "tbVersion";
-            this.tbVersion.Size = new System.Drawing.Size(210, 26);
-            this.tbVersion.TabIndex = 45;
             // 
             // tbCTL
             // 
@@ -3152,6 +3168,7 @@ namespace EMS
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnAirRead);
             this.groupBox1.Controls.Add(this.tcbFenMode);
             this.groupBox1.Controls.Add(this.label63);
             this.groupBox1.Controls.Add(this.label62);
@@ -4539,20 +4556,20 @@ namespace EMS
             this.pbTimer.TabIndex = 25;
             this.pbTimer.Visible = false;
             // 
-            // groupBox2
+            // btnAirRead
             // 
-            this.groupBox2.Controls.Add(this.label100);
-            this.groupBox2.Controls.Add(this.tbVersion);
-            this.groupBox2.Controls.Add(this.tbNowVersion);
-            this.groupBox2.Controls.Add(this.label101);
-            this.groupBox2.Controls.Add(this.btnOK);
-            this.groupBox2.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.groupBox2.Location = new System.Drawing.Point(15, 8);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(533, 138);
-            this.groupBox2.TabIndex = 51;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "更新";
+            this.btnAirRead.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnAirRead.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnAirRead.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnAirRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAirRead.ForeColor = System.Drawing.Color.White;
+            this.btnAirRead.Location = new System.Drawing.Point(711, 220);
+            this.btnAirRead.Name = "btnAirRead";
+            this.btnAirRead.Size = new System.Drawing.Size(88, 44);
+            this.btnAirRead.TabIndex = 94;
+            this.btnAirRead.Text = "读取";
+            this.btnAirRead.UseVisualStyleBackColor = true;
+            this.btnAirRead.Click += new System.EventHandler(this.btnAirRead_Click);
             // 
             // frmSet
             // 
@@ -4602,6 +4619,8 @@ namespace EMS
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
             this.tpLog.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.tbCTL.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
@@ -4614,8 +4633,6 @@ namespace EMS
             this.groupBox5.PerformLayout();
             this.panel9.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -4925,5 +4942,6 @@ namespace EMS
         private System.Windows.Forms.Label label101;
         private System.Windows.Forms.TextBox tbVersion;
         private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Button btnAirRead;
     }
 }
