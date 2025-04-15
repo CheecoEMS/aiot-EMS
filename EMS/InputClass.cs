@@ -5491,7 +5491,7 @@ namespace EMS
                             break;
 
                         case 260:
-                            for (int i = 0; i < 130; i++)//aCellTemps.Length
+                            for (int i = 0; i < 65; i++)//aCellTemps.Length
                             {
                                 if (aData.Length >= 4)
                                 {
@@ -5631,15 +5631,25 @@ namespace EMS
                     break;
 
                 case 260:
-                    if (GetSysData(113, ref strTemp))
+                    if (GetSysData(160, ref strTemp))
                     {
                         bPrepared = true;
                         UpdateCellV(CellVs, 0, strTemp);//CellList
                     }
-                    if (GetSysData(114, ref strTemp))
+                    if (GetSysData(161, ref strTemp))
                     {
                         bPrepared = true;
-                        UpdateCellV(CellVs, 130, strTemp);
+                        UpdateCellV(CellVs, 65, strTemp);//CellList
+                    }
+                    if (GetSysData(162, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 130, strTemp);//CellList
+                    }
+                    if (GetSysData(163, ref strTemp))
+                    {
+                        bPrepared = true;
+                        UpdateCellV(CellVs, 195, strTemp);//CellList
                     }
                     break;
             }
@@ -5916,7 +5926,7 @@ namespace EMS
                         SetSysData(18, (short)frmSet.componentSettings.TCMaxTemp, false);
                         SetSysData(19, (short)frmSet.componentSettings.TCMinTemp, false);
                         SetSysData(20, (short)frmSet.componentSettings.TCMaxHumi, false);
-                        SetSysData(21, (short)frmSet.componentSettings.TCMinTemp, false);
+                        SetSysData(21, (short)frmSet.componentSettings.TCMinHumi, false);
                         SetSysData(22, 0, false);//设置强制自动模式 803 强制模式
                                                  //设置强制自动模式
                         SetSysData(23, Convert.ToInt16(frmSet.componentSettings.TCMode), false);
@@ -5941,16 +5951,15 @@ namespace EMS
         public void ReadTCparams()
         {
             string strData = "";
-            string strTemp = "";
-            if (Get3strData(38, ref strData, ref strTemp))
-                SetCoolTemp = Math.Round(float.Parse(strTemp), 1);
-            if (Get3strData(39, ref strData, ref strTemp))
-                CoolTempReturn = Math.Round(float.Parse(strTemp), 1);
-            if (Get3strData(40, ref strData, ref strTemp))
-                SetHotTemp = Math.Round(float.Parse(strTemp), 1);
-            if (Get3strData(41, ref strData, ref strTemp))
-                HotTempReturn = Math.Round(float.Parse(strTemp), 1);
 
+            if (GetSysData(38, ref strData))
+                SetCoolTemp = Math.Round(float.Parse(strData), 1);
+            if (GetSysData(39, ref strData))
+                CoolTempReturn = Math.Round(float.Parse(strData), 1);
+            if (GetSysData(40, ref strData))
+                SetHotTemp = Math.Round(float.Parse(strData), 1);
+            if (GetSysData(41, ref strData))
+                HotTempReturn = Math.Round(float.Parse(strData), 1);
         }
 
         /// <summary>
@@ -6883,8 +6892,16 @@ namespace EMS
                 }
                 //限额 
                 aData = Math.Abs(aData);
-                if (aData > 110)
-                    aData = 110;
+                if (frmSet.config != null)
+                {
+                    if (aData > frmSet.config.PcsLimit)
+                        aData = frmSet.config.PcsLimit;
+                }
+                else
+                {
+                    if (aData > 110)
+                        aData = 110;
+                }
 
                 if (frmMain.Selffrm.AllEquipment.BMS !=null)
                 {

@@ -711,7 +711,7 @@ namespace EMS
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype FROM config; ";
+                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit FROM config; ";
             try
             {
 
@@ -756,6 +756,7 @@ namespace EMS
                                 config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
                                 config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
                                 config.BMStype = rd.IsDBNull(31) ? 1 : rd.GetInt32(31);
+                                config.PcsLimit = rd.IsDBNull(32) ? 110 : rd.GetInt32(32);
 
                                 return true;
                             }
@@ -813,6 +814,7 @@ namespace EMS
                         + "', CellVNum = '" + frmSet.config.CellVNum.ToString()
                         + "', CellTNum = '" + frmSet.config.CellTNum.ToString()
                         + "', BMStype = '" + frmSet.config.BMStype.ToString()
+                        + "', PcsLimit = '" + frmSet.config.PcsLimit.ToString()
                         +"';";
 
             bool result = false;
@@ -1639,9 +1641,6 @@ namespace EMS
                 if (tempPCSwaValue < 0)
                     tempPCSwaValue = 0;
             }
-            //限制功率
-            if (tempPCSwaValue > 110)
-                tempPCSwaValue = 110;
 
             //对上位机页面显示：充电为负 放电为正  对写入PCS执行功率：充电为正，放电为负
             if (strWorkType == "放电")
@@ -2525,6 +2524,7 @@ namespace EMS
             public int CellVNum { get; set; }
             public int CellTNum { get; set; } //168, 160
             public int BMStype { get; set; } 
+            public int PcsLimit { get; set; }
         }
 
         public class ComponentSettingsClass

@@ -1496,7 +1496,8 @@ namespace EMS
                         new Column { Name = "ConnectStatus", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "主从通讯方式" },
                         new Column { Name = "CellVNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池电压数量" },
                         new Column { Name = "CellTNum", Type = "int", IsNullable = true, Key = "" , Comment = "电池温度数量" },
-                        new Column { Name = "BMStype", Type = "int", IsNullable = true, Key = "" , Comment = "云电池规格处理判断参数" }
+                        new Column { Name = "BMStype", Type = "int", IsNullable = true, Key = "" , Comment = "云电池规格处理判断参数" },
+                        new Column { Name = "PcsLimit", Type = "int", IsNullable = true, Key = "" , Comment = "PCS功率限定" }
                     }
                 },
                 {
