@@ -1823,7 +1823,9 @@ namespace EMS
                         new Column { Name = "BoxHTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内高温告警值" },
                         new Column { Name = "BoxLTemperAlarm", Type = "int", IsNullable = true, Key = "", Comment = "柜内低温告警值" },
                         new Column { Name = "SignalDelayAlarm", Type = "int", IsNullable = true, Key = "", Comment = "4G信号延迟上限值" },
-                        new Column { Name = "SignalDelayCount", Type = "int", IsNullable = true, Key = "", Comment = "4G信号延迟触发次数" }
+                        new Column { Name = "SignalDelayCount", Type = "int", IsNullable = true, Key = "", Comment = "4G信号延迟触发次数" },
+                        new Column { Name = "CellV_Gap", Type = "int", IsNullable = true, Key = "", Comment = "定义最低单体电压和理想最高单体电压的差值,单位mv" },
+                        new Column { Name = "OpenBala", Type = "int", IsNullable = true, Key = "", Comment = "是否开启均衡" }
                     }
                 },
                 {

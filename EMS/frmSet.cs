@@ -594,7 +594,7 @@ namespace EMS
         public static bool LoadCloudLimitsFromMySQL()
         {
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
-                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount FROM CloudLimits;";
+                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount, CellV_Gap, OpenBala FROM CloudLimits;";
 
             try
             {
@@ -627,6 +627,8 @@ namespace EMS
                                 cloudLimits.BoxLTemperAlarm = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
                                 cloudLimits.SignalDelayAlarm = rd.IsDBNull(18) ? 80 : rd.GetInt32(18);
                                 cloudLimits.SignalDelayCount = rd.IsDBNull(19) ? 10 : rd.GetInt32(19);
+                                cloudLimits.CellV_Gap = rd.IsDBNull(20) ? 30 : rd.GetInt32(20);
+                                cloudLimits.OpenBala = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
 
                                 return true;
                             }
@@ -673,6 +675,8 @@ namespace EMS
                 + "', BoxLTemperAlarm = '" + frmSet.cloudLimits.BoxLTemperAlarm.ToString()
                 + "', SignalDelayAlarm = '" + frmSet.cloudLimits.SignalDelayAlarm.ToString()
                 + "', SignalDelayCount = '" + frmSet.cloudLimits.SignalDelayCount.ToString()
+                + "', CellV_Gap = '" + frmSet.cloudLimits.CellV_Gap.ToString()
+                + "', OpenBala = '" + frmSet.cloudLimits.OpenBala.ToString()
                 + "';";
 
             bool result = false;
@@ -2478,6 +2482,8 @@ namespace EMS
             public volatile int BoxLTemperAlarm;
             public volatile int SignalDelayAlarm;
             public volatile int SignalDelayCount;
+            public volatile int CellV_Gap;
+            public volatile int OpenBala;
         }
 
 

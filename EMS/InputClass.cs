@@ -4,6 +4,7 @@ using log4net.Core;
 using Modbus;
 using MySql.Data.MySqlClient;
 using Mysqlx.Prepare;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,9 +20,82 @@ using System.Threading;
 using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
+using System.Timers;
+
+
 
 namespace EMS
 {
+    public class CountdownTimer
+    {
+        private System.Timers.Timer _timer;
+        private const double Interval = 24 * 60 * 60 * 1000; // 24 小时，单位为毫秒
+        //private const double Interval =  60 * 1000; // 1分钟，单位为毫秒
+
+        public event EventHandler CountdownCompleted;
+
+        private static ILog log = LogManager.GetLogger("CountdownTimer");
+
+        public CountdownTimer()
+        {
+            _timer = new System.Timers.Timer(Interval);
+            _timer.Elapsed += OnTimedEvent;
+            _timer.AutoReset = false;
+        }
+
+        public void Start()
+        {
+            // 定时器开启时调用指定函数
+            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+
+            using (StreamReader reader = new StreamReader(frmSet.BalaPath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                }
+            }
+            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+            {
+                frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                log.Error("开启均衡定时器");
+            }
+
+            _timer.Start();
+        }
+
+        public void Reset()
+        {
+            _timer.Stop();
+            _timer.Start();
+            log.Error("刷新均衡定时器");
+        }
+
+        private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            _timer.Stop();
+            // 定时器关闭时调用指定函数
+            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+            log.Error("关闭均衡定时器");
+            CountdownCompleted?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Stop()
+        {
+            _timer.Stop();
+            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+            log.Error("关闭均衡定时器");
+        }
+
+
+        public void Dispose()
+        {
+            _timer.Dispose();
+        }
+    }
+
     //收益类，只用于向云汇报一天的收益
     public class ProfitClass
     {
@@ -4828,6 +4902,7 @@ namespace EMS
 
         private static ILog log = LogManager.GetLogger("BMSClass");
 
+        public CountdownTimer countdownTimer;
 
         //单电池的信息列表
         //public List<CellClass> CellList = new List<CellClass>();
@@ -6551,6 +6626,10 @@ namespace EMS
         //信号
         public volatile int WaitRecPem; //1:等待确认消息送达 0：确认已送达
         public volatile bool KeepStill; //true:放空或者充满 
+
+        //
+        
+
 
         public AllEquipmentClass()
         {
@@ -9613,6 +9692,50 @@ namespace EMS
                             }
                         }
 
+                        // 充电末期数据上云
+
+                        List<Dictionary<string, double>> cellsVinfoList = new List<Dictionary<string, double>>();
+                        int length = CellVs_ID.GetLength(0);
+                        for (int i = 0; i < length; i++)
+                        {
+                            Dictionary<string, double> cellVinfo = new Dictionary<string, double>();
+                            cellVinfo["ID"] = CellVs_ID[i, 1];
+                            cellVinfo["CellV"] = CellVs_ID[i, 0];
+                            cellsVinfoList.Add(cellVinfo);
+                        }
+
+                        List<Dictionary<string, double>> cellsTinfoList = new List<Dictionary<string, double>>();
+                        for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellTemps.Length; ++i)
+                        {
+                            Dictionary<string, double> cellTinfo = new Dictionary<string, double>();
+                            cellTinfo["CellTemper"] = frmMain.Selffrm.AllEquipment.BMS.CellTemps[i];
+                            cellsTinfoList.Add(cellTinfo);
+                        }
+
+                        // 创建最终的 JSON 对象
+                        DateTime tempTime = DateTime.Now;
+                        string strTime = tempTime.ToString("yyyyMMddHHmmss");
+
+                        Dictionary<string, object> finalJson = new Dictionary<string, object>();
+                        finalJson["cellsVinfo"] = cellsVinfoList;
+                        finalJson["cellsTinfo"] = cellsTinfoList;
+                        finalJson["cellMaxV"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxV;
+                        finalJson["cellMinV"] = frmMain.Selffrm.AllEquipment.BMS.cellMinV;
+                        finalJson["cellMaxTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp;
+                        finalJson["cellMinTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMinTemp;
+                        finalJson["averageV"] = frmMain.Selffrm.AllEquipment.BMS.averageV;
+                        finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
+                        finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
+                        finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
+                        finalJson["timestamp"] = strTime;
+                        finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
+
+                        // 将 JSON 对象序列化为字符串
+                        string jsonString = JsonConvert.SerializeObject(finalJson);
+                        // 将 JSON 字符串写入文件
+                        string filePath = Path.Combine(frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath, "0cel.json");
+                        File.WriteAllText(filePath, jsonString);
+
                         //抓取二级告警时最高最低单体电压差
                         frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
 
@@ -9623,7 +9746,7 @@ namespace EMS
                         //配置均衡电池文件地址
                         for (int k = 1; k < CellVs_ID.Length/2; k++)
                         {
-                            if (CellVs_ID[k, 0] - CellVs_ID[0, 0] > CellV_Gap)
+                            if (CellVs_ID[k, 0] - CellVs_ID[0, 0] > frmSet.cloudLimits.CellV_Gap/1000)
                             {
                                 frmMain.Selffrm.AllEquipment.balaCellID.Add(CellVs_ID[k, 1]);
                             }
@@ -9636,6 +9759,10 @@ namespace EMS
                                 writer.WriteLine(frmMain.Selffrm.AllEquipment.balaCellID[m]);
                             }
                         }
+
+                        // 重置均衡定时器
+                        frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
+
                         //判断均衡的效果 
 
                         for (int y = 0; y < CellVs_ID.Length/2; y++)

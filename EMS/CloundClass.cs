@@ -47,7 +47,6 @@ namespace EMS
         public string HeartbeatTopic;
         public string UploadTopic;
         public string OtaTopic;
-
         public string checkPemTopic;
 
         public MqttClient mqttClient { get; set; }
@@ -890,6 +889,19 @@ namespace EMS
 
                         }
                     }
+                    // 开启均衡倒计时
+                    if (frmSet.cloudLimits.OpenBala == 1)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
+                        {
+                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
+                        }
+                        else
+                        {
+                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
+                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
+                        }
+                    }
                 }
                 else if (topic == HeartbeatTopic)
                 {
@@ -1481,22 +1493,8 @@ namespace EMS
                     return "";
                 //9.11
                 int iBalaStart = int.Parse(jsonObject["params"]["table"]["BalaStart"].ToString());
-                if (FirstRun)
-                {
-                    FirstRun = false;
-                }
-                else
-                {
-                   //从机器不执行网络命令(不开放离网模式)
-                   frmControl.SetBala(iBalaStart);
-                }
-                /*
-                 mode:    0手工模式,1预设策略,2网络控制
-                 charge:  0待机、1恒压、2恒流、3恒功率、4AC恒压
-                 pcsSet:  0充电、1放电
-                 pcsSetValue：正整数
-                 on: 0关机、1运行
-                 */
+                frmSet.cloudLimits.OpenBala = iBalaStart;
+                frmSet.Set_Cloudlimits();
             }
             catch(Exception ex)
             {

@@ -574,6 +574,19 @@ namespace EMS
             //数据看板展示
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
 
+            //配置均衡定时器
+            if (frmMain.Selffrm.AllEquipment.BMS != null && frmSet.cloudLimits != null)
+            {
+                if (frmSet.cloudLimits.OpenBala == 1)
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
+                }
+                else
+                {
+                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Stop();
+                }
+            }
+
             return true;
         }
 
