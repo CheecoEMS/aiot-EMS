@@ -4902,7 +4902,7 @@ namespace EMS
 
         private static ILog log = LogManager.GetLogger("BMSClass");
 
-        public CountdownTimer countdownTimer;
+        public CountdownTimer countdownTimer = new CountdownTimer();
 
         //单电池的信息列表
         //public List<CellClass> CellList = new List<CellClass>();
