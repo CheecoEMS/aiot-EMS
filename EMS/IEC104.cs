@@ -809,9 +809,9 @@ namespace IEC104
 
             //3 运行状态 ： （0正常运行，1故障）
             if (frmMain.Selffrm.AllEquipment.runState == 1)
-                message[Index++] = 0x01;
-            else if (frmMain.Selffrm.AllEquipment.runState == 0)
                 message[Index++] = 0x00;
+            else
+                message[Index++] = 0x01;
             data_count++;
 
             //4 BMS通信 ： （ 1：通信 0：失联 ）
