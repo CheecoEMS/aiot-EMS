@@ -543,11 +543,7 @@ namespace EMS
         //记录LOg事件
         static public void RecordLOG(string aEClasse, string aEvemt, string aMemo)
         {
-/*            DBConnection.ExecSQL("insert into log (eTime,eClass,Event,Memo)values ('"
-                + DateTime.Now.ToString("yyyy-M-d H:m:s") + "','"
-                + aEClasse + "','"
-                + aEvemt + "','"
-                 + aMemo + "')");*/
+            //log表已经删除
         }
 
         static public bool UploadCloud(string astrSQL)
@@ -1842,17 +1838,6 @@ namespace EMS
                         new Column { Name = "OutwaterPressure", Type = "float", IsNullable = true, Key = "", Comment = "出水压力" },
                         new Column { Name = "Error1", Type = "int", IsNullable = true, Key = "", Comment = "故障码" },
                         new Column { Name = "Error2", Type = "int", IsNullable = true, Key = "", Comment = "故障码" }
-                    }
-                },
-                {
-                   "log", new List<Column>
-                   {
-                       new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
-                        new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
-                        new Column {Name = "eClass", Type = "varchar(20)", IsNullable = true, Key = "", Comment = ""},
-                        new Column {Name = "Event", Type = "varchar(255)", IsNullable = true, Key = "", Comment = ""},
-                        new Column { Name = "eTime", Type = "datetime", IsNullable = true, Key = "", Comment = "" },
-                        new Column { Name = "Memo", Type = "text", IsNullable = true, Key = "", Comment = "" }
                     }
                 },
                 {

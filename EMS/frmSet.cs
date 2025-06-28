@@ -1740,7 +1740,6 @@ namespace EMS
             "delete from elemeter4 where rTime<'"+astrData+"'",
             "delete from errorstate where rTime<'"+astrData+"'",
             "delete from fire where rTime<'"+astrData+"'",
-            //"delete from log where rTime<'"+astrData+"'", 暂时注释
             "delete from pcs where rTime<'"+astrData+"'",
             "delete from pncontroler where rTime<'"+astrData+"'",
             "delete from profit where rTime<'"+astrData+"'",
@@ -2261,7 +2260,6 @@ namespace EMS
             "delete from elemeter4; ",
             "delete from errorstate; ",
             "delete from fire; ",
-            "delete from log; ",
             "delete from pcs; ",
             "delete from pncontroler; ",
             "delete from profit; ",

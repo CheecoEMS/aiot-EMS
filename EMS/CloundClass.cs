@@ -1888,7 +1888,10 @@ namespace EMS
                         {
                             frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
                         }
-
+                        if (parameters["CellV_Gap"] != null)
+                        {
+                            frmSet.cloudLimits.CellV_Gap = int.Parse(parameters["CellV_Gap"].ToString());
+                        }
 
                         if (frmSet.Set_Cloudlimits())
                         {
