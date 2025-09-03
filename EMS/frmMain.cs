@@ -134,7 +134,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：20240226_ems_1.0.4"  );
+                log.Error("初始化EMS版本：20250820_ems_1.0.6"  );
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -564,7 +564,7 @@ namespace EMS
         private bool InitializeLoadDatabase()
         {
             // 加载策略相关数据（选填）
-            if (!TacticsList.LoadFromMySQL()) return false;
+            if (!TacticsList.LoadFromMySQL(0)) return false;
             if (!TacticsList.LoadJFPGFromSQL()) return false;
             if (!BalaTacticsList.LoadFromMySQL()) return false;
 
@@ -643,42 +643,44 @@ namespace EMS
         private bool InitializeDeviceData()
         {
             //校验储能表是否是八费率
-            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null) {
                 frmMain.Selffrm.AllEquipment.Elemeter2.Check_Version();
 
-            // 初始化电表数据，无需校验是否成功
-            if (AllEquipment.Elemeter1List != null)
-            {
-                foreach (var tempEleMeter in AllEquipment.Elemeter1List)
+
+                /*                if (AllEquipment.Elemeter1List != null)
+                                {
+                                    foreach (var tempEleMeter in AllEquipment.Elemeter1List)
+                                    {
+                                        //if (!tempEleMeter.GetDataFromEqipment()) return false;
+                                        tempEleMeter.GetDataFromEqipment();
+                                    }
+                                }
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+                                if (frmMain.Selffrm.AllEquipment.Elemeter4 != null)
+                                    frmMain.Selffrm.AllEquipment.Elemeter4.GetDataFromEqipment();*/
+
+
+                /*            if (AllEquipment.Elemeter2?.GetDataFromEqipment() == false) return false;
+                            if (AllEquipment.Elemeter3?.GetDataFromEqipment() == false) return false;
+                            if (AllEquipment.Elemeter4?.GetDataFromEqipment() == false) return false;*/
+
+                //必须在设备初始化结束后
+                if (!AllEquipment.ReadDataInoneDaySQL()) return false;
+
+                // 初始化电表数据，需校验是否成功
+                if (frmMain.Selffrm.AllEquipment.Elemeter2.InitE2Power())
                 {
-                    //if (!tempEleMeter.GetDataFromEqipment()) return false;
-                    tempEleMeter.GetDataFromEqipment();
+                    log.Error("初始化电表数据成功");
+                    //校验电表数据
+                    if (!AllEquipment.Power_CRC()) return false;
+
+                    //初始化今日充放数据
+                    if (!AllEquipment.InitE2Power()) return false;
                 }
             }
-            if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
-            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
-            if (frmMain.Selffrm.AllEquipment.Elemeter4 != null)
-                frmMain.Selffrm.AllEquipment.Elemeter4.GetDataFromEqipment();
-
-
-            /*            if (AllEquipment.Elemeter2?.GetDataFromEqipment() == false) return false;
-                        if (AllEquipment.Elemeter3?.GetDataFromEqipment() == false) return false;
-                        if (AllEquipment.Elemeter4?.GetDataFromEqipment() == false) return false;*/
-
-
-            //必须在设备初始化结束后
-            if (!AllEquipment.ReadDataInoneDaySQL()) return false;
-            
-            //校验电表数据
-            if (!AllEquipment.Power_CRC()) return false;
-
-            //初始化今日充放数据
-            if (!AllEquipment.InitE2Power()) return false;
-
-            //校准电表日期
-            if (!AllEquipment.MeterCalibration()) return false;
 
             return true;
         }
@@ -888,7 +890,6 @@ namespace EMS
                 if (!AllEquipment.Report2Cloud.mqttConnect())
                 {
                     log.Error("MQTT连接失败");
-                    return false;
                 }
 
                 // 初始化策略
@@ -1026,6 +1027,7 @@ namespace EMS
             {
                 try
                 {
+                    log.Error("frmMain.Selffrm.AllEquipment.SignalAlarmActive:" + frmMain.Selffrm.AllEquipment.SignalAlarmActive);
                     // 检查月份是否更新
                     if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
                     {
@@ -1102,7 +1104,15 @@ namespace EMS
                         {
                             try
                             {
-                                frmMain.TacticsList.LoadFromMySQL();//重新装载策略
+                                if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                                {
+                                    log.Error("监测到4G通信异常，使用情况1来装载策略");
+                                    frmMain.TacticsList.LoadFromMySQL(1);//重新装载策略
+                                }
+                                else {
+                                    log.Error("监测到4G通信正常，使用情况0来装载策略");
+                                    frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
+                                }                               
                             }
                             catch (Exception ex)
                             {
@@ -1119,6 +1129,13 @@ namespace EMS
                         {
                             log.Error("00:00更新均衡策略失败: " + ex.Message);
                         }
+
+                        // 检查网络是否正常: 可能出现储能表通讯不正常且4G不通导致反复重启得问题
+/*                        if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                        {
+                            log.Error("检查网络不正常");
+                            Program.RestartDevice();
+                        }*/
                     }
                     else
                     {

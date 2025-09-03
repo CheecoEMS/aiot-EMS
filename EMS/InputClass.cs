@@ -21,8 +21,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 using System.Timers;
-
-
+using System.Net;
 
 namespace EMS
 {
@@ -3086,16 +3085,29 @@ namespace EMS
         //
 
         //设置波峰评估的时间段
-        public void SetJFTG_4(byte[] a4Zoon, byte[] aBFTGs)
+        public bool SetJFTG_4(byte[] a4Zoon, byte[] aBFTGs)
         {
+            bool res = false;
+
             if (m485 ==null)
-                return;
+                return false;
             lock (m485.sp)
             {
-                SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
-                SetSysBytes(60, aBFTGs, false);//42字节的1尖峰平谷设计
-                                               // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                //SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
+                //SetSysBytes(60, aBFTGs, false);//42字节的1尖峰平谷设计
+
+                if (SetSysBytes(59, a4Zoon, false)) {
+                    log.Error("四费率储能表配置时区成功");
+                    res = true;
+                }
+
+                if (SetSysBytes(60, aBFTGs, false)) {
+                    log.Error("四费率储能表配置费率成功");
+                    res = true;
+                }
             }
+
+            return res;
         }
 
         public void clearJFPG_4()
@@ -3116,22 +3128,37 @@ namespace EMS
             }
         }
 
-        public void SetJFTG_8(byte[] a4Zoon, byte[] aBFTGs)
+        public bool SetJFTG_8(byte[] a4Zoon, byte[] aBFTGs)
         {
+            bool res = false;
             if (m485 ==null)
-                return;
+                return false;
             lock (m485.sp)
             {
-                SetSysBytes(122, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
-                SetSysBytes(123, aBFTGs, false);//42字节的1尖峰平谷设计
-                                                // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                //SetSysBytes(122, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计  
+                if (SetSysBytes(122, a4Zoon, false)) {
+                    log.Error("八费率储能表时区设置成功");
+                    res = true;
+                }
+
+                /*                SetSysBytes(123, aBFTGs, false);//42字节的1尖峰平谷设计
+                                                                // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计*/
+                if (SetSysBytes(123, aBFTGs, false))
+                {
+                    log.Error("八费率储能表费率设置成功");
+                    res = true;
+                }
             }
+
+            return res;
         }
 
-        public void clearJFPG_8()
+        public bool clearJFPG_8()
         {
+            bool res = false;
+
             if (m485 ==null)
-                return;
+                return false;
 
             byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -3141,9 +3168,16 @@ namespace EMS
 
             lock (m485.sp)
             {
-                SetSysBytes(123, tempJFPG, false);//42字节的1尖峰平谷设计
-                                                  // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
+                /*                SetSysBytes(123, tempJFPG, false);//42字节的1尖峰平谷设计
+                                                                  // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计*/
+                if (SetSysBytes(123, tempJFPG, false))
+                {
+                    log.Error("八费率储能表费率清零成功");
+                    res = true;
+                }
             }
+
+            return res;
         }
 
         //获取需量
@@ -3158,6 +3192,52 @@ namespace EMS
                 bPrepared = true;
             }
             Prepared = bPrepared;
+        }
+
+        public bool InitE2Power()
+        {
+            // 尝试最多10次初始化
+            for (int count = 0; count < 10; count++)
+            {
+                switch (Version)
+                {
+                    case 4:
+                        if (Get_Data_From_4())
+                            return true;
+                        break;
+                    case 8:
+                        if (Get_Data_From_8())
+                            return true;
+                        break;
+                    default:
+                        log.Error("Version版本不对");
+                        return false; 
+                }
+                
+                Thread.Sleep(100);
+            }
+
+            // 经过10次尝试仍未成功
+            return false;
+        }
+
+        public bool GetE2Power()
+        {
+            switch (Version)
+            {
+                case 4:
+                    if (Get_Data_From_4())
+                        return true;
+                    break;
+                case 8:
+                    if (Get_Data_From_8())
+                        return true;
+                    break;
+                default:
+                    log.Error("Version版本不对");
+                    return false;
+            }
+            return false;
         }
 
         //
@@ -3280,21 +3360,45 @@ namespace EMS
             }
         }
 
+
         public void Check_Version()
         {
-            string strTemp = "";
-            if (GetSysData(121, ref strTemp))
+            const int maxRetries = 3;
+            bool is8RateAvailable = false;
+
+            // 尝试最多10次获取八费率数据
+            for (int attempt = 0; attempt < maxRetries; attempt++)
+            {
+                if (Get_Data_From_8())
+                {
+                    is8RateAvailable = true;
+                    break;
+                }
+
+                Thread.Sleep(100);
+            }
+
+            if (is8RateAvailable)
             {
                 Version = 8;
+                log.Error("储能表为八费率（经过" + (Array.IndexOf(Enumerable.Range(0, maxRetries).ToArray(), Array.FindIndex(Enumerable.Range(0, maxRetries).ToArray(), i => Get_Data_From_8())) + 1) + "次尝试成功）");
+            }
+            else
+            {
+                Version = 4;
+                log.Error("经过" + maxRetries + "次尝试仍无法读取八费率数据，判定为四费率");
             }
         }
 
-        public void Get_Data_From_4()
+
+        public bool Get_Data_From_4()
         {
+            bool bPrepared = false;
             string strTemp = "";
             string strData = "";
             if (GetSysData(64, ref strTemp))//一次读取批量数据，再对数据进行拆分
             {
+                bPrepared = true;
                 if (Get3strData(0, ref strTemp, ref strData))
                     Ukwh[0] = Math.Round(float.Parse(strData), 2);
                 if (Get3strData(1, ref strTemp, ref strData))
@@ -3362,14 +3466,17 @@ namespace EMS
                 if (Get3strData(29, ref strTemp, ref strData))
                     ONukwh[4] = Math.Round(float.Parse(strData), 2);
             }
+            return bPrepared;
         }
 
-        public void Get_Data_From_8()
+        public bool Get_Data_From_8()
         {
+            bool bPrepared = false;
             string strTemp = "";
             string strData = "";
             if (GetSysData(121, ref strTemp))//一次读取批量数据，再对数据进行拆分
             {
+                bPrepared = true;
                 if (Get3strData(74, ref strTemp, ref strData))
                     Ukwh[0] = Math.Round(float.Parse(strData), 2);
                 if (Get3strData(75, ref strTemp, ref strData))
@@ -3475,6 +3582,8 @@ namespace EMS
                 if (Get3strData(120, ref strTemp, ref strData))
                     ONukwh[8] = Math.Round(float.Parse(strData), 2);
             }
+
+            return bPrepared;
         }
 
 
@@ -3565,14 +3674,25 @@ namespace EMS
         }
 
         //设置波峰评估的时间段
-        public void SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
+        public bool SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
         {
+            bool res = false;
             lock (m485.sp)
             {
-                SetSysBytes(41, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
-                SetSysBytes(43, aBFTGs, false);//42字节的一年四区间的尖峰平谷设计
-                //SetSysBytes(43, aBFTGs2, false);
+                //SetSysBytes(41, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
+                //SetSysBytes(43, aBFTGs, false);//42字节的一年四区间的尖峰平谷设计
+                if (SetSysBytes(41, a4Zoon, false)) {
+                    log.Error("四费率辅助表时区设置成功");
+                    res = true;
+                }
+
+                if (SetSysBytes(43, aBFTGs, false)) {
+                    log.Error("四费率辅助表费率设置成功");
+                    res = true;
+                }
             }
+
+            return res;
         }
 
         //
@@ -4900,6 +5020,9 @@ namespace EMS
         List<(string, int)> BmsVersions = new List<(string, int)>();
         public int FunctionLevel = 0;//功能等级
         private static string BmsVersionPath = "";//BMS版本
+
+        public int StopAcdcState = 0; //停充标识位 
+        public int StopDcacState = 0; //停放标识位 
 
         private static ILog log = LogManager.GetLogger("BMSClass");
 
@@ -6591,7 +6714,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.0.5";
+        public string EMSVersion { get; set; } = "1.0.6";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6616,7 +6739,7 @@ namespace EMS
 
         private int delayExceedCount = 0;
         private int delayBelowCount = 0;
-        private bool SignalAlarmActive = false;  // Track if the alarm is currently active
+        public bool SignalAlarmActive = false;  // Track if the alarm is currently active
 
         public int RebootCount { get; set; }    //今日剩余重启次数
 
@@ -6754,87 +6877,78 @@ namespace EMS
         {
             try
             {
-                foreach (NetworkInterface networkInterface in interfaces)
+                log.Error("TestSignalStrength测试");
+
+
+                // 获取Ping类实例并设置Ping选项
+                Ping pingSender = new Ping();
+                PingOptions options = new PingOptions();
+                options.DontFragment = true;
+
+                // 设置Ping数据包的大小
+                byte[] buffer = new byte[32];
+                int timeout = 1000;
+
+                // Ping目标地址并获取延迟信息
+                PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
+                if (reply.Status == IPStatus.Success)
                 {
-                    // 排除非物理接口和回环接口
-                    if (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ppp ||
-                        networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
-                        networkInterface.OperationalStatus != OperationalStatus.Up)
+                    log.Error("ping成功");
+                    SignalDelay =  reply.RoundtripTime;
+                    SignalDelayJitter =  reply.Options.Ttl;
+
+                    //延迟过高触发2级别告警
+                    if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
                     {
-                        continue;
-                    }
-
-                    /*                log.Error("接口名称:"+ networkInterface.Name);
-                                    log.Error("上传速率: "+ networkInterface.GetIPv4Statistics().BytesSent+" bps");
-                                    log.Error("下载速率:"+ networkInterface.GetIPv4Statistics().BytesReceived + " bps");*/
-
-                    // 获取Ping类实例并设置Ping选项
-                    Ping pingSender = new Ping();
-                    PingOptions options = new PingOptions();
-                    options.DontFragment = true;
-
-                    // 设置Ping数据包的大小
-                    byte[] buffer = new byte[32];
-                    int timeout = 1000;
-
-                    // Ping目标地址并获取延迟信息
-                    PingReply reply = pingSender.Send("139.224.192.206", timeout, buffer, options);
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        SignalDelay =  reply.RoundtripTime;
-                        SignalDelayJitter =  reply.Options.Ttl;
-
-                        //延迟过高触发2级别告警
-                        if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
+                        if (delayExceedCount < frmSet.cloudLimits.SignalDelayCount)
                         {
-                            if (delayExceedCount < frmSet.cloudLimits.SignalDelayCount)
-                            {
-                                delayExceedCount++;
-                            }
-                            delayBelowCount = 0;  // Reset the below delay counter
-
-                            if (delayExceedCount ==  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
-                            {
-                                lock (EMSError)
-                                {
-                                    EMSError[0] |= 0x4000;
-                                    SignalAlarmActive = true;  // Mark the alarm as active
-                                }
-                            }
+                            delayExceedCount++;
                         }
-                        else
-                        {
-                            if (delayBelowCount < frmSet.cloudLimits.SignalDelayCount)
-                            {
-                                delayBelowCount++;
-                            }
-                            delayExceedCount = 0;  // Reset the exceed delay counter
+                        delayBelowCount = 0;  // Reset the below delay counter
 
-                            if (delayBelowCount == frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                        if (delayExceedCount ==  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
+                        {
+                            lock (EMSError)
                             {
-                                lock (EMSError)
-                                {
-                                    EMSError[0] &= 0xBFFF;
-                                    SignalAlarmActive = false;  // Mark the alarm as inactive
-                                }
+                                EMSError[0] |= 0x4000;
+                                SignalAlarmActive = true;  // Mark the alarm as active
                             }
                         }
                     }
                     else
                     {
-                        log.Error("Ping失败"+ reply.Status);
-                    }
+                        log.Error("ping失败");
+                        if (delayBelowCount < frmSet.cloudLimits.SignalDelayCount)
+                        {
+                            delayBelowCount++;
+                        }
+                        delayExceedCount = 0;  // Reset the exceed delay counter
 
+                        if (delayBelowCount == frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                        {
+                            lock (EMSError)
+                            {
+                                EMSError[0] &= 0xBFFF;
+                                SignalAlarmActive = false;  // Mark the alarm as inactive
+                            }
+                        }
+                    }
                 }
+                else
+                {
+                    log.Error("Ping失败"+ reply.Status);
+                }
+
+                
             }
             catch (Exception ex)
             {
                 log.Error("Ping异常：" + ex.Message);
 
-                //判断策略功率是否为0
-                if (frmMain.Selffrm.AllEquipment.PCSScheduleKVA == 0)
+                lock (EMSError)
                 {
-                    //frmSet.RestartWindows();
+                    EMSError[0] |= 0x4000;
+                    SignalAlarmActive = true;  // Mark the alarm as active
                 }
             }
         }
@@ -6880,23 +6994,31 @@ namespace EMS
 
         public double GetGridKVA_window(double newValue)
         {
-            AllUkvaWindow.Enqueue(newValue);
-            if (AllUkvaWindow.Count > frmSet.cloudLimits.AllUkvaWindowSize)
+            if (frmSet.cloudLimits.AllUkvaWindowSize == 0)
             {
-                if (AllUkvaWindow.Count > 0)
+                return newValue;
+            }
+            else
+            {
+                AllUkvaWindow.Enqueue(newValue);
+                if (AllUkvaWindow.Count > frmSet.cloudLimits.AllUkvaWindowSize)
                 {
-                    AllUkvaWindow.Dequeue();
+                    if (AllUkvaWindow.Count > 0)
+                    {
+                        AllUkvaWindow.Dequeue();
+                    }
                 }
-            }
 
-            double sum = 0;
-            foreach (var value in AllUkvaWindow)
-            {
-                sum += value;
-            }
+                double sum = 0;
+                foreach (var value in AllUkvaWindow)
+                {
+                    sum += value;
+                }
 
-            double average = sum / AllUkvaWindow.Count;
-            return average;
+                double average = sum / AllUkvaWindow.Count;
+
+                return average;
+            }
         }
 
 
@@ -6967,7 +7089,7 @@ namespace EMS
             bool bResult = false;
             double fPower = frmMain.Selffrm.AllEquipment.GridKVA;
 
-            log.Debug("HostStart: " + HostStart + "PCSList.Count: " + PCSList.Count + "aWorkType:" + aWorkType + "ErrorState[2]: " + ErrorState[2]);
+            log.Debug("HostStart: " + HostStart + "PCSList.Count: " + PCSList.Count + "aWorkType:" + aWorkType + "ErrorState[2]: " + ErrorState[2] + "StopAcdcState: " +  frmMain.Selffrm.AllEquipment.BMS.StopAcdcState +"StopDcacState: " + frmMain.Selffrm.AllEquipment.BMS.StopDcacState);
 
             if (HostStart)
             {
@@ -7005,7 +7127,7 @@ namespace EMS
                             aData = 0;
                             break;
                         case "充电":
-                            aData = (int)(Math.Abs(aData) * frmSet.variCharge.UBmsPcsState/100);
+                            aData = (int)(Math.Abs(aData) * frmSet.variCharge.UBmsPcsState/100 * frmMain.Selffrm.AllEquipment.BMS.StopAcdcState);
                             if ((BMSSOC > frmSet.cloudLimits.MaxSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "充电失败", "SOC过高");
@@ -7020,7 +7142,7 @@ namespace EMS
                             }
                             break;
                         case "放电":
-                            aData = -1 * (int)(Math.Abs(aData) * frmSet.variCharge.OBmsPcsState/100);
+                            aData = -1 * (int)(Math.Abs(aData) * frmSet.variCharge.OBmsPcsState/100  * frmMain.Selffrm.AllEquipment.BMS.StopDcacState);
                             if ((BMSSOC < frmSet.cloudLimits.MinSOC) && (aData != 0))
                             {
                                 DBConnection.RecordLOG("系统", "放电失败", "SOC过低");
@@ -7652,14 +7774,15 @@ namespace EMS
                         // 温控
                         if (frmMain.Selffrm.AllEquipment.TempControl != null)
                         {
-                            if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                            log.Info("BMS.cellMaxTemp"+ frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp  + "| TempData: " + frmMain.Selffrm.AllEquipment.TempHum.TempData + "| FrigOpenLower :" + frmSet.cloudLimits.FrigOpenLower);
+                            if ((frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower || frmMain.Selffrm.AllEquipment.TempHum.TempData > frmSet.cloudLimits.FrigOpenLower)&&
                                 frmMain.Selffrm.AllEquipment.TempControl.state != 1)
                             {
                                 frmMain.Selffrm.AllEquipment.TempControl.TCPowerOn(true); // 开启空调
                             }
                             else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
                                      frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
-                                     frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                                     frmMain.Selffrm.AllEquipment.TempHum.TempData < frmSet.cloudLimits.FrigOffUpper)
                             {
                                 if (frmMain.Selffrm.AllEquipment.TempControl.state == 1)
                                 {
@@ -7671,7 +7794,7 @@ namespace EMS
                         // 液冷控制
                         if (frmMain.Selffrm.AllEquipment.LiquidCool != null)
                         {
-                            if (frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower &&
+                            if ((frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower || frmMain.Selffrm.AllEquipment.TempHum.TempData > frmSet.cloudLimits.FrigOpenLower)&&
                                 frmMain.Selffrm.AllEquipment.LiquidCool.state != 1)
                             {
                                 frmMain.Selffrm.AllEquipment.LiquidCool.LCPowerOn(true); // 开启液冷机
@@ -7679,7 +7802,7 @@ namespace EMS
                             }
                             else if (frmMain.Selffrm.AllEquipment.PCSList[0].PcsRun == 255 &&
                                      frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp < frmSet.cloudLimits.FrigOffUpper &&
-                                     frmMain.Selffrm.AllEquipment.BMS.cellMinTemp > frmSet.cloudLimits.FrigOffLower)
+                                     frmMain.Selffrm.AllEquipment.TempHum.TempData < frmSet.cloudLimits.FrigOffUpper)
                             {
                                 if (frmMain.Selffrm.AllEquipment.LiquidCool.state == 1)
                                 {
@@ -8180,8 +8303,8 @@ namespace EMS
                 +"超限防逆PCS单机实际功率：" + PCSKVA + " "
                 +"超限防逆PCS单机计划功率：" + PCSScheduleKVA + " "
                 +"超限防逆PCS功率：" + PCSScheduleKVA * dRate + " "
-                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
-                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100 + " "
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState + " "
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
@@ -8666,8 +8789,8 @@ namespace EMS
                 +"超限防逆PCS主从实际功率：" + Math.Abs(AllwaValue) + " "
                 +"超限防逆整体计划功率：" +  Math.Abs(AllPCSScheduleKVA) + " "
                 +"超限防逆PCS本机实际计划功率：" + PCSScheduleKVA * dRate + " "
-                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
-                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100 + " "
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState + " "
                 +"超限防逆PCS本机当前功率：" + PCSKVA);
         }
 
@@ -8676,8 +8799,8 @@ namespace EMS
             log.Debug(
                 "超限防逆PCS本机实际计划功率：" + PCSScheduleKVA  + " "
                 +"超限防逆PCS本机当前功率：" + PCSKVA + " "
-                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState/100 + " "
-                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState/100
+                +"放电功率变比：" + frmSet.variCharge.OBmsPcsState + " "
+                +"充电功率变比：" + frmSet.variCharge.UBmsPcsState
                 );
         }
 
@@ -9194,10 +9317,14 @@ namespace EMS
                 if (Elemeter2 != null)
                 {
                     Elemeter2.GetDataFromEqipment();
-                    for (int i = 0; i < 9; i++)
+
+                    if (frmMain.Selffrm.AllEquipment.Elemeter2.GetE2Power())
                     {
-                        E2OKWH[i] = Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
-                        E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
+                        for (int i = 0; i < 9; i++)
+                        {
+                            E2OKWH[i] = Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
+                            E2PKWH[i] = Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
+                        }
                     }
                 }
                 //汇流柜电表
@@ -9659,199 +9786,499 @@ namespace EMS
         /// 检查BMS的故障信息并进行限流处理, 录入均衡单体电池数据
         /// </summary>
         /// <param name="Errors"></param>
+        /// 
+        /// <summary>
+        /// 检查BMS的故障信息并进行限流处理, 录入均衡单体电池数据
+        /// </summary>
+        /// <param name="Errors">告警数组，假设索引0=三级告警,1=一级告警,2=二级告警</param>
         public void CheckBMSWrror(ushort[] aErrors)
         {
-            //BMS发生二级告警，如果ErrorState没有2级告警，修改ErrorState的2级标志。设置告警指示灯
-            if ((aErrors[2]>0) && (!ErrorState[1]))
+            // 验证告警数组有效性
+            if (aErrors == null || aErrors.Length < 4)
+            {
+                // 记录告警数据缺失日志
+                log.Error("BMS告警数据缺失，无法进行故障判断");
+                return;
+            }
+            
+            ushort level1Error = aErrors[1];  // 一级告警
+            ushort level2Error = aErrors[2];  // 二级告警
+            ushort level3Error = aErrors[3];  // 三级告警
+
+            // 二级告警指示灯控制（保留原有功能）
+            if (level2Error > 0 && !ErrorState[1])
             {
                 frmSet.BMS2warningGPIO(1);
                 ErrorState[1] = true;
             }
-            else if ((aErrors[2]==0) && (ErrorState[1]))
+            else if (level2Error == 0 && ErrorState[1])
             {
                 frmSet.BMS2warningGPIO(0);
                 ErrorState[1] = false;
             }
 
-            if (aErrors[0] + aErrors[3]+ aErrors[2] > 0)//发生二级告警
+            //处理停充停放标识位：单体过温二级、单体欠温二级、温差过大二级、压差过大二级
+            HandleStopState(level2Error);
+
+            // 处理充电相关告警（0x05为充电相关告警掩码）
+            HandleChargeAlarms(level1Error, level2Error, level3Error);
+
+            // 处理放电相关告警（0x800a为放电相关告警掩码）
+            HandleDischargeAlarms(level1Error, level2Error, level3Error);
+
+            //log.Error("UBmsPcsState: " + frmSet.variCharge.UBmsPcsState + " OBmsPcsState: " + frmSet.variCharge.OBmsPcsState);
+
+        }
+
+        private void HandleStopState(ushort level2) 
+        {
+            const ushort ChargeAlarmMask = 0x7f20;      // 充电相关告警掩码
+            const ushort DisChargeAlarmMask = 0x7cd0;   // 放电相关告警掩码
+
+            if ((level2 & ChargeAlarmMask) != 0)
             {
-                if (BMS.MaxChargeA == 0 && BMS.soc > 90) //双重确认为充电2级故障，修改充放阈值,记录需要进行均衡策略的单体ID
+                frmMain.Selffrm.AllEquipment.BMS.StopAcdcState = 0;
+            }
+            else {
+                frmMain.Selffrm.AllEquipment.BMS.StopAcdcState = 1;
+            }
+
+            if ((level2 & DisChargeAlarmMask) != 0)
+            {
+                frmMain.Selffrm.AllEquipment.BMS.StopDcacState = 0;
+            }
+            else {
+                frmMain.Selffrm.AllEquipment.BMS.StopDcacState = 1;
+            }
+        }
+
+        /// <summary>
+        /// 处理充电相关告警逻辑
+        /// </summary>
+        private void HandleChargeAlarms(ushort level1, ushort level2, ushort level3)
+        {
+            const ushort ChargeAlarmMask = 0x0005; // 充电相关告警掩码
+
+            // 所有级别充电告警都恢复，恢复充电
+            if ((level3 & ChargeAlarmMask) == 0 &&
+                (level2 & ChargeAlarmMask) == 0 &&
+                (level1 & ChargeAlarmMask) == 0)
+            {
+                lock (frmSet.variCharge)
+                {
+                    if (frmSet.variCharge.UBmsPcsState != 100)
+                    {
+                        frmSet.variCharge.UBmsPcsState = 100;
+                        frmSet.Set_VariCharge(); // 保存到数据库
+                    }
+                }
+                return;
+            }
+
+            // 三级或二级充电告警存在，设置禁充
+            if ((level3 & ChargeAlarmMask) != 0 || (level2 & ChargeAlarmMask) != 0)
+            {
+                lock (frmSet.variCharge)
                 {
                     if (frmSet.variCharge.UBmsPcsState != 0)
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmSet.variCharge)
-                            frmSet.variCharge.UBmsPcsState = 0;
-
-                        //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
-
-                        //7.25 BMS均衡策略提供排序
-                        double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
-
-                        for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length; i++)
-                        {
-                            CellVs_ID[i, 0] = frmMain.Selffrm.AllEquipment.BMS.CellVs[i];//单体电压
-                            CellVs_ID[i, 1] = ((double)i +1); //单体ID ,根据BMS协议单体ID从1开始
-                        }
-
-                        //对单体数据进行冒泡排序
-                        for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
-                        {
-                            for (int j = 0; j < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -i -1; j++)
-                            {
-                                if (CellVs_ID[j, 0] > CellVs_ID[j+1, 0])
-                                {
-                                    //使用元组交换值
-                                    (CellVs_ID[j+1, 0], CellVs_ID[j, 0])=(CellVs_ID[j, 0], CellVs_ID[j+1, 0]);
-                                    (CellVs_ID[j+1, 1], CellVs_ID[j, 1])=(CellVs_ID[j, 1], CellVs_ID[j+1, 1]);
-                                }
-
-                            }
-                        }
-
-                        // 充电末期数据上云
-
-                        List<Dictionary<string, double>> cellsVinfoList = new List<Dictionary<string, double>>();
-                        int length = CellVs_ID.GetLength(0);
-                        for (int i = 0; i < length; i++)
-                        {
-                            Dictionary<string, double> cellVinfo = new Dictionary<string, double>();
-                            cellVinfo["ID"] = CellVs_ID[i, 1];
-                            cellVinfo["CellV"] = CellVs_ID[i, 0];
-                            cellsVinfoList.Add(cellVinfo);
-                        }
-
-                        List<Dictionary<string, double>> cellsTinfoList = new List<Dictionary<string, double>>();
-                        for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellTemps.Length; ++i)
-                        {
-                            Dictionary<string, double> cellTinfo = new Dictionary<string, double>();
-                            cellTinfo["CellTemper"] = frmMain.Selffrm.AllEquipment.BMS.CellTemps[i];
-                            cellsTinfoList.Add(cellTinfo);
-                        }
-
-                        // 创建最终的 JSON 对象
-                        DateTime tempTime = DateTime.Now;
-                        string strTime = tempTime.ToString("yyyyMMddHHmmss");
-
-                        Dictionary<string, object> finalJson = new Dictionary<string, object>();
-                        finalJson["cellsVinfo"] = cellsVinfoList;
-                        finalJson["cellsTinfo"] = cellsTinfoList;
-                        finalJson["cellMaxV"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxV;
-                        finalJson["cellMinV"] = frmMain.Selffrm.AllEquipment.BMS.cellMinV;
-                        finalJson["cellMaxTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp;
-                        finalJson["cellMinTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMinTemp;
-                        finalJson["averageV"] = frmMain.Selffrm.AllEquipment.BMS.averageV;
-                        finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
-                        finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
-                        finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
-                        finalJson["timestamp"] = strTime;
-                        finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
-
-                        // 将 JSON 对象序列化为字符串
-                        string jsonString = JsonConvert.SerializeObject(finalJson);
-                        // 将 JSON 字符串写入文件
-                        string filePath = Path.Combine(frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath, "0cel.json");
-                        File.WriteAllText(filePath, jsonString);
-
-                        //抓取二级告警时最高最低单体电压差
-                        frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
-
-                        //清空文件
-                        if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                            frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                        // 计算
-                        double GAP = frmSet.cloudLimits.CellV_Gap / 1000.0;
-
-                        //配置均衡电池文件地址
-                        for (int k = 1; k < CellVs_ID.Length/2; k++)
-                        {
-                            if (CellVs_ID[k, 0] - CellVs_ID[0, 0] > GAP)
-                            {
-                                frmMain.Selffrm.AllEquipment.balaCellID.Add(CellVs_ID[k, 1]);
-                            }
-                        }
-                        File.WriteAllText(frmSet.BalaPath, string.Empty);
-                        using (StreamWriter writer = new StreamWriter(frmSet.BalaPath))
-                        {
-                            for (int m = 0; m < frmMain.Selffrm.AllEquipment.balaCellID.Count; m++)
-                            {
-                                writer.WriteLine(frmMain.Selffrm.AllEquipment.balaCellID[m]);
-                            }
-                        }
-
-                        // 重置均衡定时器
-                        if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
-                        {
-                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
-                        }
-                        else 
-                        {
-                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
-                            frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
-                        }
-
-                        //判断均衡的效果 
-
-                        for (int y = 0; y < CellVs_ID.Length/2; y++)
-                        {
-                            frmMain.Selffrm.AllEquipment.balaCellV.Add(CellVs_ID[y, 0]);
-                        }
-                        var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
-                        var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
-                        frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
-
-                        //保存充放限制阀门到数据库
+                        frmSet.variCharge.UBmsPcsState = 0;
+                        frmMain.Selffrm.AllEquipment.RecodChargeinform(2); // 记录禁充状态
                         frmSet.Set_VariCharge();
-                    }
-                }
-                else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
-                {
-                    if (frmSet.variCharge.OBmsPcsState != 0)
-                    {
-                        frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
-                        lock (frmSet.variCharge)
-                            frmSet.variCharge.OBmsPcsState = 0;
-
-                        //记录单体电压 温度 电流
-                        frmMain.Selffrm.AllEquipment.RecodChargeinform(5);
-
-                        //保存充放限制阀门到数据库
-                        frmSet.Set_VariCharge();
+                        HandleBatteryBalancingAndLogging();
                     }
                 }
             }
-            else if (aErrors[1] > 0) //发生1级告警
+            // 只有一级充电告警存在且当前为满功率，设置降额
+            else if ((level1 & ChargeAlarmMask) != 0)
             {
-                //触发1级告警则减少pcs读取指令数量
-                if (!frmMain.Selffrm.AllEquipment.ReduceReadPCS)
+                lock (frmSet.variCharge)
                 {
-                    frmMain.Selffrm.AllEquipment.ReduceReadPCS = true;
-                }
-
-                if (BMS.soc >= 50 && BMS.MaxChargeA < 140)//取消1级告警中soc告警的影响
-                {
-                    if (frmSet.variCharge.UBmsPcsState != frmSet.cloudLimits.BmsDerateRatio)
+                    if (frmSet.variCharge.UBmsPcsState == 100)
                     {
-                        lock (frmSet.variCharge)
-                            frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-
-                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
-                    }
-                }
-                else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
-                {
-                    if (frmSet.variCharge.OBmsPcsState != frmSet.cloudLimits.BmsDerateRatio)
-                    {
-                        lock (frmSet.variCharge)
-                            frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
-
-                        //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
+                        frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
+                        //frmMain.Selffrm.AllEquipment.RecodChargeinform(1); // 记录充电降额状态
+                        frmSet.Set_VariCharge();
                     }
                 }
             }
         }
+
+        /// <summary>
+        /// 处理放电相关告警逻辑
+        /// </summary>
+        private void HandleDischargeAlarms(ushort level1, ushort level2, ushort level3)
+        {
+            const ushort DischargeAlarmMask = 0x000a; // 放电相关告警掩码
+            var chargeState = frmSet.variCharge;
+
+            // 所有级别放电告警都恢复，恢复放电
+            if ((level3 & DischargeAlarmMask) == 0 &&
+                (level2 & DischargeAlarmMask) == 0 &&
+                (level1 & DischargeAlarmMask) == 0)
+            {
+                lock (frmSet.variCharge)
+                {
+                    if (frmSet.variCharge.OBmsPcsState != 100)
+                    {
+                        frmSet.variCharge.OBmsPcsState = 100;
+                        //frmMain.Selffrm.AllEquipment.RecodChargeinform(6); // 记录放电恢复状态
+                        frmSet.Set_VariCharge();
+                    }
+                }
+                return;
+            }
+
+            // 三级或二级放电告警存在，设置禁放
+            if ((level3 & DischargeAlarmMask) != 0 || (level2 & DischargeAlarmMask) != 0)
+            {
+                lock (frmSet.variCharge)
+                {
+                    if (frmSet.variCharge.OBmsPcsState != 0)
+                    {
+                        frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+                        frmSet.variCharge.OBmsPcsState = 0;
+                        frmMain.Selffrm.AllEquipment.RecodChargeinform(5); // 记录禁放状态
+                        frmSet.Set_VariCharge();
+                    }
+                }
+            }
+            // 只有一级放电告警存在且当前为满功率，设置降额
+            else if ((level1 & DischargeAlarmMask) != 0)
+            {
+                lock (frmSet.variCharge)
+                {
+                    if (frmSet.variCharge.OBmsPcsState == 100)
+                    {
+                        frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
+                        //frmMain.Selffrm.AllEquipment.RecodChargeinform(4); // 记录放电降额状态
+                        frmSet.Set_VariCharge();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理电池均衡和数据记录
+        /// </summary>
+        private void HandleBatteryBalancingAndLogging()
+        {
+            //记录单体电压 温度 电流
+            frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
+
+            //7.25 BMS均衡策略提供排序
+            double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
+
+            for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length; i++)
+            {
+                CellVs_ID[i, 0] = frmMain.Selffrm.AllEquipment.BMS.CellVs[i];//单体电压
+                CellVs_ID[i, 1] = ((double)i +1); //单体ID ,根据BMS协议单体ID从1开始
+            }
+
+            //对单体数据进行冒泡排序
+            for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
+            {
+                for (int j = 0; j < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -i -1; j++)
+                {
+                    if (CellVs_ID[j, 0] > CellVs_ID[j+1, 0])
+                    {
+                        //使用元组交换值
+                        (CellVs_ID[j+1, 0], CellVs_ID[j, 0])=(CellVs_ID[j, 0], CellVs_ID[j+1, 0]);
+                        (CellVs_ID[j+1, 1], CellVs_ID[j, 1])=(CellVs_ID[j, 1], CellVs_ID[j+1, 1]);
+                    }
+
+                }
+            }
+
+            // 充电末期数据上云
+
+            List<Dictionary<string, double>> cellsVinfoList = new List<Dictionary<string, double>>();
+            int length = CellVs_ID.GetLength(0);
+            for (int i = 0; i < length; i++)
+            {
+                Dictionary<string, double> cellVinfo = new Dictionary<string, double>();
+                cellVinfo["ID"] = CellVs_ID[i, 1];
+                cellVinfo["CellV"] = CellVs_ID[i, 0];
+                cellsVinfoList.Add(cellVinfo);
+            }
+
+            List<Dictionary<string, double>> cellsTinfoList = new List<Dictionary<string, double>>();
+            for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellTemps.Length; ++i)
+            {
+                Dictionary<string, double> cellTinfo = new Dictionary<string, double>();
+                cellTinfo["CellTemper"] = frmMain.Selffrm.AllEquipment.BMS.CellTemps[i];
+                cellsTinfoList.Add(cellTinfo);
+            }
+
+            // 创建最终的 JSON 对象
+            DateTime tempTime = DateTime.Now;
+            string strTime = tempTime.ToString("yyyyMMddHHmmss");
+
+            Dictionary<string, object> finalJson = new Dictionary<string, object>();
+            finalJson["cellsVinfo"] = cellsVinfoList;
+            finalJson["cellsTinfo"] = cellsTinfoList;
+            finalJson["cellMaxV"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxV;
+            finalJson["cellMinV"] = frmMain.Selffrm.AllEquipment.BMS.cellMinV;
+            finalJson["cellMaxTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp;
+            finalJson["cellMinTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMinTemp;
+            finalJson["averageV"] = frmMain.Selffrm.AllEquipment.BMS.averageV;
+            finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
+            finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
+            finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
+            finalJson["timestamp"] = strTime;
+            finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
+
+            // 将 JSON 对象序列化为字符串
+            string jsonString = JsonConvert.SerializeObject(finalJson);
+            // 将 JSON 字符串写入文件
+            string filePath = Path.Combine(frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath, "0cel.json");
+            File.WriteAllText(filePath, jsonString);
+
+            //抓取二级告警时最高最低单体电压差
+            frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
+
+            //清空文件
+            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+
+            // 计算
+            double GAP = frmSet.cloudLimits.CellV_Gap / 1000.0;
+
+            //配置均衡电池文件地址
+            for (int k = 1; k < CellVs_ID.Length/2; k++)
+            {
+                if (CellVs_ID[k, 0] - CellVs_ID[0, 0] > GAP)
+                {
+                    frmMain.Selffrm.AllEquipment.balaCellID.Add(CellVs_ID[k, 1]);
+                }
+            }
+            File.WriteAllText(frmSet.BalaPath, string.Empty);
+            using (StreamWriter writer = new StreamWriter(frmSet.BalaPath))
+            {
+                for (int m = 0; m < frmMain.Selffrm.AllEquipment.balaCellID.Count; m++)
+                {
+                    writer.WriteLine(frmMain.Selffrm.AllEquipment.balaCellID[m]);
+                }
+            }
+
+            // 重置均衡定时器
+            if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
+            {
+                frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
+            }
+            else
+            {
+                frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
+                frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
+            }
+
+            //判断均衡的效果 
+
+            for (int y = 0; y < CellVs_ID.Length/2; y++)
+            {
+                frmMain.Selffrm.AllEquipment.balaCellV.Add(CellVs_ID[y, 0]);
+            }
+            var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
+            var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
+            frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
+
+        }
+
+
+        /*        public void CheckBMSWrror(ushort[] aErrors)
+                {
+                    //BMS发生二级告警，如果ErrorState没有2级告警，修改ErrorState的2级标志。设置告警指示灯
+                    if ((aErrors[2]>0) && (!ErrorState[1]))
+                    {
+                        frmSet.BMS2warningGPIO(1);
+                        ErrorState[1] = true;
+                    }
+                    else if ((aErrors[2]==0) && (ErrorState[1]))
+                    {
+                        frmSet.BMS2warningGPIO(0);
+                        ErrorState[1] = false;
+                    }
+
+                    if (aErrors[0] + aErrors[3]+ aErrors[2] > 0)//发生二级告警
+                    {
+                        if (BMS.MaxChargeA == 0 && BMS.soc > 90) //双重确认为充电2级故障，修改充放阈值,记录需要进行均衡策略的单体ID
+                        {
+                            if (frmSet.variCharge.UBmsPcsState != 0)
+                            {
+                                frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+                                lock (frmSet.variCharge)
+                                    frmSet.variCharge.UBmsPcsState = 0;
+
+                                //记录单体电压 温度 电流
+                                frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
+
+                                //7.25 BMS均衡策略提供排序
+                                double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
+
+                                for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length; i++)
+                                {
+                                    CellVs_ID[i, 0] = frmMain.Selffrm.AllEquipment.BMS.CellVs[i];//单体电压
+                                    CellVs_ID[i, 1] = ((double)i +1); //单体ID ,根据BMS协议单体ID从1开始
+                                }
+
+                                //对单体数据进行冒泡排序
+                                for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
+                                {
+                                    for (int j = 0; j < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -i -1; j++)
+                                    {
+                                        if (CellVs_ID[j, 0] > CellVs_ID[j+1, 0])
+                                        {
+                                            //使用元组交换值
+                                            (CellVs_ID[j+1, 0], CellVs_ID[j, 0])=(CellVs_ID[j, 0], CellVs_ID[j+1, 0]);
+                                            (CellVs_ID[j+1, 1], CellVs_ID[j, 1])=(CellVs_ID[j, 1], CellVs_ID[j+1, 1]);
+                                        }
+
+                                    }
+                                }
+
+                                // 充电末期数据上云
+
+                                List<Dictionary<string, double>> cellsVinfoList = new List<Dictionary<string, double>>();
+                                int length = CellVs_ID.GetLength(0);
+                                for (int i = 0; i < length; i++)
+                                {
+                                    Dictionary<string, double> cellVinfo = new Dictionary<string, double>();
+                                    cellVinfo["ID"] = CellVs_ID[i, 1];
+                                    cellVinfo["CellV"] = CellVs_ID[i, 0];
+                                    cellsVinfoList.Add(cellVinfo);
+                                }
+
+                                List<Dictionary<string, double>> cellsTinfoList = new List<Dictionary<string, double>>();
+                                for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellTemps.Length; ++i)
+                                {
+                                    Dictionary<string, double> cellTinfo = new Dictionary<string, double>();
+                                    cellTinfo["CellTemper"] = frmMain.Selffrm.AllEquipment.BMS.CellTemps[i];
+                                    cellsTinfoList.Add(cellTinfo);
+                                }
+
+                                // 创建最终的 JSON 对象
+                                DateTime tempTime = DateTime.Now;
+                                string strTime = tempTime.ToString("yyyyMMddHHmmss");
+
+                                Dictionary<string, object> finalJson = new Dictionary<string, object>();
+                                finalJson["cellsVinfo"] = cellsVinfoList;
+                                finalJson["cellsTinfo"] = cellsTinfoList;
+                                finalJson["cellMaxV"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxV;
+                                finalJson["cellMinV"] = frmMain.Selffrm.AllEquipment.BMS.cellMinV;
+                                finalJson["cellMaxTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp;
+                                finalJson["cellMinTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMinTemp;
+                                finalJson["averageV"] = frmMain.Selffrm.AllEquipment.BMS.averageV;
+                                finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
+                                finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
+                                finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
+                                finalJson["timestamp"] = strTime;
+                                finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
+
+                                // 将 JSON 对象序列化为字符串
+                                string jsonString = JsonConvert.SerializeObject(finalJson);
+                                // 将 JSON 字符串写入文件
+                                string filePath = Path.Combine(frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath, "0cel.json");
+                                File.WriteAllText(filePath, jsonString);
+
+                                //抓取二级告警时最高最低单体电压差
+                                frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
+
+                                //清空文件
+                                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                                    frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+
+                                // 计算
+                                double GAP = frmSet.cloudLimits.CellV_Gap / 1000.0;
+
+                                //配置均衡电池文件地址
+                                for (int k = 1; k < CellVs_ID.Length/2; k++)
+                                {
+                                    if (CellVs_ID[k, 0] - CellVs_ID[0, 0] > GAP)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.balaCellID.Add(CellVs_ID[k, 1]);
+                                    }
+                                }
+                                File.WriteAllText(frmSet.BalaPath, string.Empty);
+                                using (StreamWriter writer = new StreamWriter(frmSet.BalaPath))
+                                {
+                                    for (int m = 0; m < frmMain.Selffrm.AllEquipment.balaCellID.Count; m++)
+                                    {
+                                        writer.WriteLine(frmMain.Selffrm.AllEquipment.balaCellID[m]);
+                                    }
+                                }
+
+                                // 重置均衡定时器
+                                if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
+                                {
+                                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
+                                }
+                                else 
+                                {
+                                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
+                                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
+                                }
+
+                                //判断均衡的效果 
+
+                                for (int y = 0; y < CellVs_ID.Length/2; y++)
+                                {
+                                    frmMain.Selffrm.AllEquipment.balaCellV.Add(CellVs_ID[y, 0]);
+                                }
+                                var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
+                                var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
+                                frmMain.Selffrm.AllEquipment.O_sigma = Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000;//标准差 * 1000倍展示
+
+                                //保存充放限制阀门到数据库
+                                frmSet.Set_VariCharge();
+                            }
+                        }
+                        else if (BMS.MaxDischargeA == 0 && BMS.soc <10)
+                        {
+                            if (frmSet.variCharge.OBmsPcsState != 0)
+                            {
+                                frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
+                                lock (frmSet.variCharge)
+                                    frmSet.variCharge.OBmsPcsState = 0;
+
+                                //记录单体电压 温度 电流
+                                frmMain.Selffrm.AllEquipment.RecodChargeinform(5);
+
+                                //保存充放限制阀门到数据库
+                                frmSet.Set_VariCharge();
+                            }
+                        }
+                    }
+                    else if (aErrors[1] > 0) //发生1级告警
+                    {
+                        //触发1级告警则减少pcs读取指令数量
+                        if (!frmMain.Selffrm.AllEquipment.ReduceReadPCS)
+                        {
+                            frmMain.Selffrm.AllEquipment.ReduceReadPCS = true;
+                        }
+
+                        if (BMS.soc >= 50 && BMS.MaxChargeA < 140)//取消1级告警中soc告警的影响
+                        {
+                            if (frmSet.variCharge.UBmsPcsState != frmSet.cloudLimits.BmsDerateRatio)
+                            {
+                                lock (frmSet.variCharge)
+                                    frmSet.variCharge.UBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
+
+                                //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(1);
+                            }
+                        }
+                        else if (BMS.soc < 50 && BMS.MaxDischargeA < 140)//取消1级告警中soc告警的影响
+                        {
+                            if (frmSet.variCharge.OBmsPcsState != frmSet.cloudLimits.BmsDerateRatio)
+                            {
+                                lock (frmSet.variCharge)
+                                    frmSet.variCharge.OBmsPcsState = frmSet.cloudLimits.BmsDerateRatio;
+
+                                //frmMain.Selffrm.AllEquipment.BMS.RecodChargeinform(4);
+                            }
+                        }
+                    }
+                }*/
 
         //从BMS设备上读取数据
         public void GetDataFromBMS()
@@ -9884,7 +10311,8 @@ namespace EMS
                 BMSKVA = Math.Round(BMSPower, 2);
                 //检查BMS故障限流
                 CheckBMSWrror(Errors);
-                if ((Errors[1] + Errors[2] + Errors[3]) == 0)
+                //log.Error("(Errors[1] + Errors[2] + Errors[3]:" + Errors[1] + " | "+ Errors[2] + " | "+Errors[3]);
+/*                if ((Errors[1] + Errors[2] + Errors[3]) == 0)
                 {
                     if (frmSet.variCharge.UBmsPcsState != 100 || frmSet.variCharge.OBmsPcsState != 100)
                     {
@@ -9895,7 +10323,7 @@ namespace EMS
                         //保存充放限制阀门到数据库
                         frmSet.Set_VariCharge();
                     }
-                }
+                }*/
             }
             catch (Exception ex)
             {
@@ -9915,12 +10343,14 @@ namespace EMS
             {
                 if (frmSet.CheckPeElestic())
                 {
-                    //存在PeElestic历史数据
+                    log.Error("存在PeElestic历史数据");
                     if (!frmSet.LoadPeElesticFromMySQL()) return false;
+
+                    log.Error("成功读取PeElestic历史数据");
                 }
                 else
                 {
-                    //读取当前值，并赋予数据库a
+                    log.Error("读取当前值，并赋予数据库");
                     if (Elemeter2 != null)
                     {
                         Elemeter2.GetDataFromEqipment();
@@ -10303,6 +10733,10 @@ namespace EMS
                     {
                         frmMain.Selffrm.AllEquipment.E2OKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[i] - frmSet.peElestic.SE2OKWH[i];
                         frmMain.Selffrm.AllEquipment.E2PKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i] - frmSet.peElestic.SE2PKWH[i];
+
+                        log.Error("初始化今日充放电量");
+                        log.Error("E2OKWH[i]: " + frmMain.Selffrm.AllEquipment.E2OKWH[i] + "| OUkwh[i]:" + frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[i]+ "| SE2OKWH[i]:" +  frmSet.peElestic.SE2OKWH[i]);
+                        log.Error("E2PKWH[i]: " + frmMain.Selffrm.AllEquipment.E2PKWH[i] + "| PUkwh[i]:" + frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i]+ "| SE2PKWH[i]:" +  frmSet.peElestic.SE2PKWH[i]);
                     }
                 }
                 return true;
@@ -10403,7 +10837,7 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                 {
                     if (Elemeter2.PUkwh[0] < frmSet.peElestic.SE2PKWH[0] || Elemeter2.OUkwh[0] < frmSet.peElestic.SE2OKWH[0])  //判断总正总负电能是否小于上次电能
-                    {
+                    {                   
                         frmSet.peElestic.SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
                         frmSet.peElestic.SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
                         frmSet.peElestic.SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
@@ -10422,6 +10856,7 @@ namespace EMS
                         frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
                         frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
                         frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
+                        log.Error("出现电表更换，SE2PKWH[0]： " +  frmSet.peElestic.SE2PKWH[0] + "| Elemeter2.PUkwh[0]:" +  Elemeter2.PUkwh[0] +"| DaliyE2PKWH_Z:"+ frmSet.historyDatas.DaliyE2PKWH_Z);
                     }
                 }
                 return true;

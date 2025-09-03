@@ -101,11 +101,16 @@ namespace EMS
                     }
                 }*/
 
+
+
+
         public bool cleanJFPGFromMysql()
         {
-            bool Result = false;
+            bool Result = true;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string astrSQL = "DELETE from electrovalence where rTime < '" + strDate + "'";
+            // 使用参数化查询防止SQL注入
+            string astrSQL = "DELETE from electrovalence where rTime < @strDate";
+
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
@@ -113,54 +118,41 @@ namespace EMS
                     connection.Open();
                     using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        // 添加参数
+                        sqlCmd.Parameters.AddWithValue("@strDate", strDate);
+
+                        // 执行删除并获取受影响的行数
+                        int affectedRows = sqlCmd.ExecuteNonQuery();
+
+                        if (affectedRows > 0)
                         {
-                            if (rd != null && rd.HasRows)
-                            {
-                                DBConnection.ExecSQL(astrSQL);
-                                Result = true;
-                            }
+                            log.Error($"清除了 {affectedRows} 条过期电价策略");                           
+                        }
+                        else
+                        {
+                            log.Error("没有需要清除的过期电价策略");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error("清除过期电价策略时发生错误：" + ex.Message);
+                Result = false;
             }
+
             return Result;
         }
 
-
         public bool LoadJFPGFromSQL()
         {
+            bool res = true;
             cleanJFPGFromMysql();
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime, eName  from electrovalence where rTime = '" + strDate + "'";
 
             try
             {
-                byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
-                int i = 0;
-                DateTime dtTemp;
-
-                //清空费率表
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
-                    {
-                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
-                    }
-                    else
-                    {
-                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_4();
-                    }
-                }
-
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
                     connection.Open();
@@ -170,37 +162,79 @@ namespace EMS
                         {
                             if (rd != null && rd.HasRows)
                             {
-                                while (rd.Read())
+                                log.Error("存在今日电价策略");
+                                byte[] tempJFPG_4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0 };//14*3=42    14个时段 ： 号 分 时
+
+                                byte[] tempJFPG_8 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0 };//14*3=42    14个时段 ： 号 时 分
+                                int i = 0;
+                                DateTime dtTemp;
+
+/*                                //清空费率表
+                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                                 {
-                                    tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                    if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
+                                    }
+                                    else
+                                    {
+                                        frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_4();
+                                    }
+                                }*/
+
+                               
+                                while (rd.Read() && i < 14)
+                                {
                                     dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-                                    tempJFPG[i * 3 + 1] = (byte)dtTemp.Hour;
-                                    tempJFPG[i * 3 + 2] = (byte)dtTemp.Minute;
+
+                                    // 设置八费率
+                                    tempJFPG_8[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName                                    
+                                    tempJFPG_8[i * 3 + 1] = (byte)dtTemp.Hour;
+                                    tempJFPG_8[i * 3 + 2] = (byte)dtTemp.Minute;
+
+                                    // 设置四费率
+                                    tempJFPG_4[i * 3 + 0] = (byte)rd.GetInt32(1); //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName      
+                                    tempJFPG_4[i * 3 + 1] = (byte)dtTemp.Minute;
+                                    tempJFPG_4[i * 3 + 2] = (byte)dtTemp.Hour;
+
                                     i++;
                                 }
 
-                                byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1 };//使用八费率的第一套表
-                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };//储能表使用八费率的第一套表
+                                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };//辅助表使用四费率的第一套表
+                                byte[] atable3 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//储能表使用四费率的第三套表
                                 //只有储能能够设置8段费率
                                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
                                 {
                                     if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
                                     {
-                                        frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG);
+                                        if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG_8)) { 
+                                            res = false;
+                                        }
                                     }
                                     else
                                     {
                                         // 检查并处理 tempJFPG 数组中每个时段的费率号
                                         for (int j = 0; j < 14; j++)
                                         {
-                                            if (tempJFPG[j * 3 + 0] > 4)
+                                            if (tempJFPG_4[j * 3 + 0] > 4)
                                             {
-                                                tempJFPG[j * 3 + 0] = 0;
-                                                tempJFPG[j * 3 + 1] = 0;
-                                                tempJFPG[j * 3 + 2] = 0;
+                                                tempJFPG_4[j * 3 + 0] = 0;
+                                                tempJFPG_4[j * 3 + 1] = 0;
+                                                tempJFPG_4[j * 3 + 2] = 0;
                                             }
                                         }
-                                        frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable1, tempJFPG);
+                                        if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable3, tempJFPG_4)) {
+                                            res = false;
+                                        }
                                     }
                                 }
 
@@ -209,20 +243,22 @@ namespace EMS
                                     // 检查并处理 tempJFPG 数组中每个时段的费率号
                                     for (int j = 0; j < 14; j++)
                                     {
-                                        if (tempJFPG[j * 3 + 0] > 4)
+                                        if (tempJFPG_4[j * 3 + 0] > 4)
                                         {
-                                            tempJFPG[j * 3 + 0] = 0;
-                                            tempJFPG[j * 3 + 1] = 0;
-                                            tempJFPG[j * 3 + 2] = 0;
+                                            tempJFPG_4[j * 3 + 0] = 0;
+                                            tempJFPG_4[j * 3 + 1] = 0;
+                                            tempJFPG_4[j * 3 + 2] = 0;
                                         }
                                     }
-                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                    if (!frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4)) { 
+                                        res = false;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                return true;
+                return res;
             }
             catch (Exception ex)
             {
@@ -231,42 +267,284 @@ namespace EMS
             }
         }
 
-        public bool cleanTacticsFromMysql()
+
+        /*        public bool LoadJFPGFromSQL()
+                {
+                    cleanJFPGFromMysql();
+                    string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                    string astrSQL = "select startTime, eName  from electrovalence where rTime = '" + strDate + "'";
+
+                    try
+                    {
+                        byte[] tempJFPG = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0 };//14*3=42    14个时段 ： 号 时 分
+                        int i = 0;
+                        DateTime dtTemp;
+
+                        //清空费率表
+                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                        {
+                            if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
+                            {
+                                frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
+                            }
+                            else
+                            {
+                                frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_4();
+                            }
+                        }
+
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows)
+                                    {
+                                        while (rd.Read())
+                                        {
+                                            tempJFPG[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
+                                            dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
+                                            tempJFPG[i * 3 + 1] = (byte)dtTemp.Hour;
+                                            tempJFPG[i * 3 + 2] = (byte)dtTemp.Minute;
+                                            i++;
+                                        }
+
+                                        byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1 };//使用八费率的第一套表
+                                        byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };
+                                        //只有储能能够设置8段费率
+                                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
+                                        {
+                                            if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
+                                            {
+                                                frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG);
+                                            }
+                                            else
+                                            {
+                                                // 检查并处理 tempJFPG 数组中每个时段的费率号
+                                                for (int j = 0; j < 14; j++)
+                                                {
+                                                    if (tempJFPG[j * 3 + 0] > 4)
+                                                    {
+                                                        tempJFPG[j * 3 + 0] = 0;
+                                                        tempJFPG[j * 3 + 1] = 0;
+                                                        tempJFPG[j * 3 + 2] = 0;
+                                                    }
+                                                }
+                                                frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable1, tempJFPG);
+                                            }
+                                        }
+
+                                        if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+                                        {
+                                            // 检查并处理 tempJFPG 数组中每个时段的费率号
+                                            for (int j = 0; j < 14; j++)
+                                            {
+                                                if (tempJFPG[j * 3 + 0] > 4)
+                                                {
+                                                    tempJFPG[j * 3 + 0] = 0;
+                                                    tempJFPG[j * 3 + 1] = 0;
+                                                    tempJFPG[j * 3 + 2] = 0;
+                                                }
+                                            }
+                                            frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("LoadJFPGFromSQL: " + ex.Message);
+                        return false;
+                    }
+                }
+        */
+        public bool CleanTacticsFromMysql()
         {
-            bool Result = false;
-            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            string astrSQL = "DELETE from tactics where rTime < '" +strDate+"';";
+            bool result = false;
+            string currentDate = DateTime.Now.ToString("yyyy-MM-dd"); // 过期判断基准：当前日期零点前
+
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
                     connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+
+                    // 1. 查询过期数据中最近的rTime（最大的rTime）
+                    string maxExpiredTimeSql = @"
+                        SELECT MAX(rTime) 
+                        FROM tactics 
+                        WHERE rTime < @CurrentDate";
+
+                    DateTime? maxExpiredTime = null;
+                    using (MySqlCommand maxCmd = new MySqlCommand(maxExpiredTimeSql, connection))
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        maxCmd.Parameters.AddWithValue("@CurrentDate", currentDate);
+                        var resultObj = maxCmd.ExecuteScalar();
+
+                        if (resultObj != DBNull.Value)
                         {
-                            if (rd != null && rd.HasRows)
+                            maxExpiredTime = Convert.ToDateTime(resultObj);
+                        }
+                    }
+
+                    // 2. 如果存在过期数据，删除所有早于最近时间点的过期数据
+                    if (maxExpiredTime.HasValue)
+                    {
+                        string deleteSql = @"
+                            DELETE FROM tactics 
+                            WHERE rTime < @CurrentDate 
+                              AND rTime < @MaxExpiredTime";
+
+                        using (MySqlCommand deleteCmd = new MySqlCommand(deleteSql, connection))
+                        {
+                            deleteCmd.Parameters.AddWithValue("@CurrentDate", currentDate);
+                            deleteCmd.Parameters.AddWithValue("@MaxExpiredTime", maxExpiredTime.Value);
+
+                            int affectedRows = deleteCmd.ExecuteNonQuery();
+                            result = affectedRows >= 0; // 即使没有删除行也视为成功（可能没有更早的数据）
+                            log.Error($"清理过期策略完成，删除了 {affectedRows} 条记录，保留了最近时间点 {maxExpiredTime.Value} 的策略");
+                        }
+                    }
+                    else
+                    {
+                        // 没有过期数据
+                        result = true;
+                        log.Error("没有需要清理的过期策略");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("清理过期策略失败：" + ex.Message);
+                result = false;
+            }
+
+            return result;
+        }
+
+        public bool CleanTacticsFromMysqlWhen4gFail()
+        {
+            bool result = false;
+            string today = DateTime.Today.ToString("yyyy-MM-dd"); // 今天的日期（仅日期部分）
+            MySqlConnection connection = null;
+
+            try
+            {
+                using (connection = new MySqlConnection(DBConnection.connectionStr))
+                {
+                    connection.Open();
+
+                    // 步骤1：检查是否存在今天的策略（rTime日期为今天）
+                    bool hasTodayTactics = false;
+                    string checkTodaySql = "SELECT COUNT(1) FROM tactics WHERE DATE(rTime) = @Today;";
+                    using (MySqlCommand checkCmd = new MySqlCommand(checkTodaySql, connection))
+                    {
+                        checkCmd.Parameters.AddWithValue("@Today", today);
+                        int todayCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+                        hasTodayTactics = todayCount > 0;
+                    }
+
+                    if (hasTodayTactics)
+                    {
+                        // 步骤2：存在今天的策略，直接删除过期策略（rTime早于今天）
+                        string deleteExpiredSql = "DELETE FROM tactics WHERE rTime < @Today;";
+                        using (MySqlCommand deleteCmd = new MySqlCommand(deleteExpiredSql, connection))
+                        {
+                            deleteCmd.Parameters.AddWithValue("@Today", today);
+                            int rowsAffected = deleteCmd.ExecuteNonQuery();
+                            result = true; // 无论是否有删除，只要执行成功就返回true
+                            log.Error($"存在今日策略，已删除过期策略 {rowsAffected} 条");
+                        }
+                    }
+                    else
+                    {
+                        // 步骤3：不存在今天的策略，处理过期策略
+                        // 3.1 查找过期策略中最近的时间rTime1
+                        string findLatestExpiredSql = "SELECT MAX(rTime) FROM tactics WHERE DATE(rTime) < @Today;";
+                        DateTime? latestExpiredTime = null;
+                        using (MySqlCommand findCmd = new MySqlCommand(findLatestExpiredSql, connection))
+                        {
+                            findCmd.Parameters.AddWithValue("@Today", today);
+                            object rTime1Obj = findCmd.ExecuteScalar();
+                            if (rTime1Obj != DBNull.Value)
                             {
-                                DBConnection.ExecSQL(astrSQL);
-                                Result = true;
+                                latestExpiredTime = Convert.ToDateTime(rTime1Obj);
                             }
+                        }
+
+                        if (latestExpiredTime.HasValue)
+                        {
+                            // 3.2 将所有rTime等于rTime1的策略时间改为今日
+                            string updateSql = "UPDATE tactics SET rTime = @Today WHERE rTime = @RTime1;";
+                            using (MySqlCommand updateCmd = new MySqlCommand(updateSql, connection))
+                            {
+                                updateCmd.Parameters.AddWithValue("@Today", today);
+                                updateCmd.Parameters.AddWithValue("@RTime1", latestExpiredTime.Value);
+                                int updatedRows = updateCmd.ExecuteNonQuery();
+                                log.Error($"已将 {updatedRows} 条最近过期策略（时间：{latestExpiredTime.Value:yyyy-MM-dd}）更新为今日");
+                            }
+
+                            // 3.3 删除修改后仍过期的策略（rTime < 今天）
+                            string deleteAfterUpdateSql = "DELETE FROM tactics WHERE rTime < @Today;";
+                            using (MySqlCommand deleteCmd = new MySqlCommand(deleteAfterUpdateSql, connection))
+                            {
+                                deleteCmd.Parameters.AddWithValue("@Today", today);
+                                int deletedRows = deleteCmd.ExecuteNonQuery();
+                                log.Error($"更新后，删除过期策略 {deletedRows} 条");
+                                result = true;
+                            }
+                        }
+                        else
+                        {
+                            // 没有任何过期策略，无需操作
+                            log.Error("不存在今日策略，且无任何过期策略，无需处理");
+                            result = true; // 无操作也算成功
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error("清理策略失败：" + ex.Message);
+                result = false;
             }
-            return Result;
+            finally
+            {
+                if (connection != null && connection.State == System.Data.ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+            return result;
         }
 
 
-
         //数据库中重新装载策略数据
-        public bool LoadFromMySQL()
+        public bool LoadFromMySQL(int type)
         {
-            cleanTacticsFromMysql();
+            //cleanTacticsFromMysql();
+            switch (type) {
+                case 0:
+                    CleanTacticsFromMysql();
+                    break;
+                case 1:
+                    CleanTacticsFromMysqlWhen4gFail();
+                    break;
+                default:
+
+                    break;
+            }
+            
+
             bool Result = false;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
@@ -461,7 +739,7 @@ namespace EMS
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
                     {
-                        LoadFromMySQL();
+                        LoadFromMySQL(0);
                     }
 
                     DateTime now = DateTime.Now;

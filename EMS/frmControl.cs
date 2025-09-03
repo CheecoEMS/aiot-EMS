@@ -318,72 +318,7 @@ namespace EMS
             switch (item)
             { 
                 case 0:
-                    double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
-
-                    for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length; i++)
-                    {
-                        CellVs_ID[i, 0] = frmMain.Selffrm.AllEquipment.BMS.CellVs[i];//单体电压
-                        CellVs_ID[i, 1] = ((double)i +1); //单体ID ,根据BMS协议单体ID从1开始
-                    }
-
-                    //对单体数据进行冒泡排序
-                    for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
-                    {
-                        for (int j = 0; j < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -i -1; j++)
-                        {
-                            if (CellVs_ID[j, 0] > CellVs_ID[j+1, 0])
-                            {
-                                //使用元组交换值
-                                (CellVs_ID[j+1, 0], CellVs_ID[j, 0])=(CellVs_ID[j, 0], CellVs_ID[j+1, 0]);
-                                (CellVs_ID[j+1, 1], CellVs_ID[j, 1])=(CellVs_ID[j, 1], CellVs_ID[j+1, 1]);
-                            }
-
-                        }
-                    }
-
-                    // 创建用于存储电池信息的列表
-                    List<Dictionary<string, double>> cellsVinfoList = new List<Dictionary<string, double>>();
-                    int length = CellVs_ID.GetLength(0);
-                    for (int i = 0; i < length; i++)
-                    {
-                        Dictionary<string, double> cellVinfo = new Dictionary<string, double>();
-                        cellVinfo["ID"] = CellVs_ID[i, 1];
-                        cellVinfo["CellV"] = CellVs_ID[i, 0];
-                        cellsVinfoList.Add(cellVinfo);
-                    }
-
-                    List<Dictionary<string, double>> cellsTinfoList = new List<Dictionary<string, double>>();
-                    for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellTemps.Length; ++i)
-                    {
-                        Dictionary<string, double> cellTinfo = new Dictionary<string, double>();
-                        cellTinfo["CellTemper"] = frmMain.Selffrm.AllEquipment.BMS.CellTemps[i];
-                        cellsTinfoList.Add(cellTinfo);
-                    }
-
-                    // 创建最终的 JSON 对象
-                    DateTime tempTime = DateTime.Now;
-                    string strTime = tempTime.ToString("yyyyMMddHHmmss");
-
-                    Dictionary<string, object> finalJson = new Dictionary<string, object>();
-                    finalJson["cellsVinfo"] = cellsVinfoList;
-                    finalJson["cellsTinfo"] = cellsTinfoList;
-                    finalJson["cellMaxV"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxV;
-                    finalJson["cellMinV"] = frmMain.Selffrm.AllEquipment.BMS.cellMinV;
-                    finalJson["cellMaxTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp;
-                    finalJson["cellMinTemp"] = frmMain.Selffrm.AllEquipment.BMS.cellMinTemp;
-                    finalJson["averageV"] = frmMain.Selffrm.AllEquipment.BMS.averageV;
-                    finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
-                    finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
-                    finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
-                    finalJson["timestamp"] = strTime;
-                    finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
-
-                    // 将 JSON 对象序列化为字符串
-                    string jsonString = JsonConvert.SerializeObject(finalJson);
-                    // 将 JSON 字符串写入文件
-                    string filePath = Path.Combine(frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath, "0cel.json");
-                    File.WriteAllText(filePath, jsonString);
-                    
+                    frmMain.TacticsList.LoadFromMySQL(1);
                     break;
                 case 1:
                     frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();

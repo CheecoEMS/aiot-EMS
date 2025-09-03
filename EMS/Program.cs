@@ -176,6 +176,54 @@ namespace EMS
             }*/
         }
 
+        public static void RestartDevice()
+        {
+            try
+            {
+                // 先尝试正常关闭当前应用程序
+                frmSet.PowerGPIO(0);
+
+                // 使用Process启动cmd执行关机命令，/r表示重启，/t 0表示立即执行
+                ProcessStartInfo psi = new ProcessStartInfo("shutdown", "/r /t 0");
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+
+                Process.Start(psi);
+                log.Info("设备重启命令已发送");
+            }
+            catch (Exception ex)
+            {
+                log.Error("发送设备重启命令失败: " + ex.Message);
+            }
+        }
+
+
+        public static void RestartApplicationWithoutCount()
+        {
+            try
+            {
+                frmSet.PowerGPIO(0);
+                string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
+                try
+                {
+                    Process.Start(exePath);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("无法重启应用程序: " + ex.Message);
+                }
+
+                // 退出当前进程  
+                Environment.Exit(0);
+
+            }
+            catch (Exception ex)
+            {
+                log.Error("RestartApplication: " + ex.Message);
+            }
+        }
+
+
         public static void RestartApplication()
         {
             try

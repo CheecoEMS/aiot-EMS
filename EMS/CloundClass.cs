@@ -476,8 +476,11 @@ namespace EMS
             try
             {
                 PriceTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/meter/price/";
+                log.Error("PriceTopic: " + PriceTopic);
                 TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
+                log.Error("TacticTopic: " + TacticTopic);
                 EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
+                log.Error("EMSLimitTopic: " + EMSLimitTopic);
                 //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
                 string strID = frmSet.config.SysID;
                 if (strID.Length >= 7)
@@ -687,7 +690,7 @@ namespace EMS
             {
                 if (mqttClient != null && !string.IsNullOrEmpty(currentTopic) && !string.IsNullOrEmpty(content))
                 {
-                    log.Info("数据上云获取锁_lockMqtt ");
+                    //log.Info("数据上云获取锁_lockMqtt ");
                     try
                     {
                         mqttClient.Publish(currentTopic, System.Text.Encoding.UTF8.GetBytes(content), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, true);//qos
@@ -790,7 +793,7 @@ namespace EMS
                 else if (topic == PriceTopic + "request")
                 {
                     Result = GetServerEPrices(message);
-                    log.Info("接收PriceTopic，获取锁_lockMqtt");
+                    log.Error("接收PriceTopic，结果：" + Result);
                     lock (_lockMqtt)
                     {
                         if (Result)
@@ -1088,7 +1091,7 @@ namespace EMS
                 if (!Directory.Exists(aDirection))
                     Directory.CreateDirectory(aDirection);
 
-                log.Info("1数据写入文本获取锁_lockTXT ");
+                //log.Info("1数据写入文本获取锁_lockTXT ");
                 lock (_lockTXT)
                 {
                     JObject jsonObject = JObject.Parse(json);
@@ -1629,7 +1632,7 @@ namespace EMS
                                 }
                             }
 
-                            if (frmMain.TacticsList.LoadFromMySQL())
+                            if (frmMain.TacticsList.LoadFromMySQL(0))
                             {
                                 frmMain.TacticsList.ActiveIndex = -1;
                                 result  = true;
@@ -1660,7 +1663,7 @@ namespace EMS
         /// <param name="astrTacticFile"></param>
         public bool GetServerEPrices(string astrData, bool aIsFileData = false)
         {
-            bool result = false;
+            bool result = true;
             try
             {
                 if (astrData == "")
@@ -1735,13 +1738,16 @@ namespace EMS
                                             "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricdate + "')";
 
                                     //插入
-                                    if (DBConnection.ExecSQL(strInsert))
+                                    if (!DBConnection.ExecSQL(strInsert))
                                     {
-                                        result = true;
+                                        result = false;
                                     }
                                 }
                             }
-                            frmMain.TacticsList.LoadJFPGFromSQL();
+
+                            if ( !(result && frmMain.TacticsList.LoadJFPGFromSQL())) {
+                                result = false;
+                            }
                         }
                     }
                 }
@@ -1821,79 +1827,99 @@ namespace EMS
                 }
                 else
                 {
+                    // 清空之前的修改标记
+                    frmSet.cloudLimits.ModifiedFields.Clear();
+
                     if (jsonObject["params"] != null)
                     {
                         var parameters = jsonObject["params"];
                         if (parameters["requireLimit"] != null)
                         {
                             frmSet.cloudLimits.MaxGridKW = int.Parse(parameters["requireLimit"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("MaxGridKW");
                         }
                         if (parameters["invertPower"] != null)
                         {
                             frmSet.cloudLimits.MinGridKW = int.Parse(parameters["invertPower"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("MinGridKW");
                         }
                         if (parameters["socUp"] != null)
                         {
                             frmSet.cloudLimits.MaxSOC = int.Parse(parameters["socUp"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("MaxSOC");
                         }
                         if (parameters["socDown"] != null)
                         {
                             frmSet.cloudLimits.MinSOC = int.Parse(parameters["socDown"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("MinSOC");
                         }
                         if (parameters["WarnMaxGridKW"] != null)
                         {
                             frmSet.cloudLimits.WarnMaxGridKW = int.Parse(parameters["WarnMaxGridKW"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("WarnMaxGridKW");
                         }
                         if (parameters["WarnMinGridKW"] != null)
                         {
                             frmSet.cloudLimits.WarnMinGridKW = int.Parse(parameters["WarnMinGridKW"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("WarnMinGridKW");
                         }
                         if (parameters["PcsKva"] != null)
                         {
                             frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("PcsKva");
                         }
                         if (parameters["Pre_Client_PUMdemand_Max"] != null)
                         {
                             frmSet.cloudLimits.Pre_Client_PUMdemand_Max = int.Parse(parameters["Pre_Client_PUMdemand_Max"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("Pre_Client_PUMdemand_Max");
                         }
                         if (parameters["EnableActiveReduce"] != null)
                         {
                             frmSet.cloudLimits.EnableActiveReduce = int.Parse(parameters["EnableActiveReduce"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("EnableActiveReduce");
                         }
                         if (parameters["PumScale"] != null)
                         {
                             frmSet.cloudLimits.PumScale = int.Parse(parameters["PumScale"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("PumScale");
                         }
                         if (parameters["AllUkvaWindowSize"] != null)
                         {
                             frmSet.cloudLimits.AllUkvaWindowSize = int.Parse(parameters["AllUkvaWindowSize"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("AllUkvaWindowSize");
                         }
                         if (parameters["PumTime"] != null)
                         {
                             frmSet.cloudLimits.PumTime = int.Parse(parameters["PumTime"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("PumTime");
                         }
                         if (parameters["BmsDerateRatio"] != null)
                         {
                             frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("BmsDerateRatio");
                         }
                         if (parameters["FrigOpenLower"] != null)
                         {
                             frmSet.cloudLimits.FrigOpenLower = int.Parse(parameters["FrigOpenLower"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("FrigOpenLower");
                         }
                         if (parameters["FrigOffLower"] != null)
                         {
                             frmSet.cloudLimits.FrigOffLower = int.Parse(parameters["FrigOffLower"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("FrigOffLower");
                         }
                         if (parameters["FrigOffUpper"] != null)
                         {
                             frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("FrigOffUpper");
                         }
                         if (parameters["CellV_Gap"] != null)
                         {
                             frmSet.cloudLimits.CellV_Gap = int.Parse(parameters["CellV_Gap"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("CellV_Gap");
                         }
 
-                        if (frmSet.Set_Cloudlimits())
+                        if (frmSet.Set_Cloudlimits_OnlyChange())
                         {
                             bResult = true;
                         }

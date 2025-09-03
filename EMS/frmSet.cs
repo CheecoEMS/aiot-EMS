@@ -652,6 +652,95 @@ namespace EMS
         }
 
 
+        public static bool Set_Cloudlimits_OnlyChange()
+        {
+            // 只更新被修改过的字段
+            var modifiedFields = frmSet.cloudLimits.ModifiedFields;
+            if (modifiedFields.Count == 0)
+            {
+                return true;
+            }
+
+            // 构建只包含修改字段的SQL语句
+            List<string> updateClauses = new List<string>();
+            foreach (var field in modifiedFields)
+            {
+                switch (field)
+                {
+                    case "MaxGridKW":
+                        updateClauses.Add($"MaxGridKW = '{frmSet.cloudLimits.MaxGridKW}'");
+                        break;
+                    case "MinGridKW":
+                        updateClauses.Add($"MinGridKW = '{frmSet.cloudLimits.MinGridKW}'");
+                        break;
+                    case "MaxSOC":
+                        updateClauses.Add($"MaxSOC = '{frmSet.cloudLimits.MaxSOC}'");
+                        break;
+                    case "MinSOC":
+                        updateClauses.Add($"MinSOC = '{frmSet.cloudLimits.MinSOC}'");
+                        break;
+                    case "WarnMaxGridKW":
+                        updateClauses.Add($"WarnMaxGridKW = '{frmSet.cloudLimits.WarnMaxGridKW}'");
+                        break;
+                    case "WarnMinGridKW":
+                        updateClauses.Add($"WarnMinGridKW = '{frmSet.cloudLimits.WarnMinGridKW}'");
+                        break;
+                    case "PcsKva":
+                        updateClauses.Add($"PcsKva = '{frmSet.cloudLimits.PcsKva}'");
+                        break;
+                    case "Pre_Client_PUMdemand_Max":
+                        updateClauses.Add($"Pre_Client_PUMdemand_Max = '{frmSet.cloudLimits.Pre_Client_PUMdemand_Max}'");
+                        break;
+                    case "EnableActiveReduce":
+                        updateClauses.Add($"EnableActiveReduce = '{frmSet.cloudLimits.EnableActiveReduce}'");
+                        break;
+                    case "PumScale":
+                        updateClauses.Add($"PumScale = '{frmSet.cloudLimits.PumScale}'");
+                        break;
+                    case "AllUkvaWindowSize":
+                        updateClauses.Add($"AllUkvaWindowSize = '{frmSet.cloudLimits.AllUkvaWindowSize}'");
+                        break;
+                    case "BmsDerateRatio":
+                        updateClauses.Add($"BmsDerateRatio = '{frmSet.cloudLimits.BmsDerateRatio}'");
+                        break;
+                    case "FrigOpenLower":
+                        updateClauses.Add($"FrigOpenLower = '{frmSet.cloudLimits.FrigOpenLower}'");
+                        break;
+                    case "FrigOffLower":
+                        updateClauses.Add($"FrigOffLower = '{frmSet.cloudLimits.FrigOffLower}'");
+                        break;
+                    case "FrigOffUpper":
+                        updateClauses.Add($"FrigOffUpper = '{frmSet.cloudLimits.FrigOffUpper}'");
+                        break;
+                    case "CellV_Gap":
+                        updateClauses.Add($"CellV_Gap = '{frmSet.cloudLimits.CellV_Gap}'");
+                        break;
+                }
+            }
+
+            string astrSQL = $"update cloudlimits SET {string.Join(", ", updateClauses)};";
+
+            bool result = false;
+
+            try
+            {
+                if (DBConnection.ExecSQL(astrSQL))
+                {
+                    result = true;
+                }
+                else
+                {
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                log.Error(ex.Message);
+            }
+            return result;
+        }
+
         public static bool Set_Cloudlimits()
         {
             string astrSQL = "update  cloudlimits  SET "
@@ -868,6 +957,7 @@ namespace EMS
                             {
                                 variCharge.UBmsPcsState = rd.IsDBNull(0) ? 50 : rd.GetInt32(0);
                                 variCharge.OBmsPcsState = rd.IsDBNull(1) ? 50 : rd.GetInt32(1);
+                                log.Error("variCharge.OBmsPcsState: " + variCharge.OBmsPcsState);
                                 return true;
                             }
                         }
@@ -1688,7 +1778,7 @@ namespace EMS
                 case 1://策略模式
                     frmMain.Selffrm.AllEquipment.eState = 1;//记策略模式   
                     frmMain.TacticsList.TacticsOn = false;
-                    frmMain.TacticsList.LoadFromMySQL();
+                    frmMain.TacticsList.LoadFromMySQL(0);
                     frmMain.TacticsList.ActiveIndex = -1;
                     frmMain.TacticsList.TacticsOn = true;
 
@@ -2458,7 +2548,7 @@ namespace EMS
             public volatile int YDstatus;
         }
 
-        public class CloudLimitClass
+/*        public class CloudLimitClass
         {
             public volatile int MaxGridKW;
             public volatile int MinGridKW;
@@ -2482,6 +2572,35 @@ namespace EMS
             public volatile int SignalDelayCount;
             public volatile int CellV_Gap;
             public volatile int OpenBala;
+        }*/
+
+        public class CloudLimitClass
+        {
+            public int MaxGridKW { get; set; }
+            public int MinGridKW { get; set; }
+            public int MaxSOC { get; set; }
+            public int MinSOC { get; set; } 
+            public int WarnMaxGridKW { get; set; }
+            public int WarnMinGridKW { get; set; } 
+            public int PcsKva { get; set; }
+            public int Pre_Client_PUMdemand_Max { get; set; }
+            public int EnableActiveReduce { get; set; }
+            public int PumScale { get; set; }
+            public int AllUkvaWindowSize { get; set; }
+            public int PumTime { get; set; }
+            public int BmsDerateRatio { get; set; }
+            public int FrigOpenLower { get; set; }
+            public int FrigOffLower { get; set; }
+            public int FrigOffUpper { get; set; }
+            public int BoxHTemperAlarm { get; set; }
+            public int BoxLTemperAlarm { get; set; }
+
+            public int SignalDelayAlarm { get; set; }
+            public int SignalDelayCount { get; set; }
+            public int CellV_Gap { get; set; }
+            public int OpenBala { get; set; }
+
+            public HashSet<string> ModifiedFields { get; set; } = new HashSet<string>();
         }
 
 
@@ -2609,7 +2728,7 @@ namespace EMS
         /*********** 策略更新处理函数  ****************/
         private void RenewTactics()
         {
-            if (frmMain.TacticsList.LoadFromMySQL())
+            if (frmMain.TacticsList.LoadFromMySQL(0))
             {
                 frmMain.TacticsList.ActiveIndex = -1;
             }
