@@ -318,14 +318,44 @@ namespace EMS
             switch (item)
             { 
                 case 0:
-                    frmMain.TacticsList.LoadFromMySQL(1);
+                    //string portName = "COM11"; 
+
+                    // 创建EC20通信器实例
+                    using (var ec20 = new EC20Communicator())
+                    {
+                        // 连接到模块
+                        if (ec20.Connect())
+                        {
+                            try
+                            {
+                                log.Error("发送重启指令");
+                                ec20.SendRestartCommand();
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error($"操作出错: {ex.Message}");
+                            }
+                        }
+                        // using语句会自动调用Dispose()方法关闭连接
+                    }
                     break;
                 case 1:
-                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
-                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
+                    var manager = new MobileBroadbandManager();
+
+                    // 执行重启操作
+                    bool isSuccess = manager.Restart();
+
+                    // 根据结果进行处理
+                    if (isSuccess)
+                    {
+                       log.Error("移动宽带重启成功！");
+                    }
+                    else
+                    {
+                        log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
+                    }
                     break;
                 case 2:
-                    frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
                     break;
                 default: 
                     break;

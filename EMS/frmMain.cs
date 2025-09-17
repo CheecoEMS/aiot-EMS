@@ -74,7 +74,8 @@ namespace EMS
         //private delegate void TCPserver.OnReceiveDataEventDelegate(int DataSourceType, byte[] aByteData);//建立事件委
 
         //12.5
-        //public EMSEquipment Model4G = new EMSEquipment();
+
+        
 
         //定时器
         private static System.Threading.Timer UI_timer;
@@ -520,7 +521,7 @@ namespace EMS
             if (!InitializeCommunication())
             {
                 log.Error("LoadForm - InitializeCommunication失败");
-                return false;
+                //return false;
             }
             if (!InitializeTimersAndThreads())
             {
@@ -548,7 +549,7 @@ namespace EMS
             if (!DBConnection.CheckRec("select * from config")) return false;
 
             //检查数据库结构是否一致
-            if(!DBConnection.CheckTables()) return false;
+            //if(!DBConnection.CheckTables()) return false;
 
             // 加载数据库配置（必填）
             if (!frmSet.LoadCloudLimitsFromMySQL()) return false;
@@ -564,12 +565,13 @@ namespace EMS
         private bool InitializeLoadDatabase()
         {
             // 加载策略相关数据（选填）
-            if (!TacticsList.LoadFromMySQL(0)) return false;
-            if (!TacticsList.LoadJFPGFromSQL()) return false;
-            if (!BalaTacticsList.LoadFromMySQL()) return false;
+            //if (!TacticsList.LoadFromMySQL(0)) return false;
+            //if (!TacticsList.LoadJFPGFromSQL()) return false;
+            //if (!BalaTacticsList.LoadFromMySQL()) return false;
 
             //读取数据库中的故障（选填）
             if (!Selffrm.AllEquipment.LoadErrorState()) return false;
+            log.Error("数据库加载");
 
             //数据看板展示
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -614,14 +616,14 @@ namespace EMS
             if (!frmSet.InitGPIO())
             {
                 log.Error("LoadForm - InitializeEquipment - InitGPIO失败");
-                return false;
+                //return false;
             }
 
             //初始化灯板
             if (!AllEquipment.init_LED())
             {
                 log.Error("LoadForm - InitializeEquipment - init_LED失败");
-                return false;
+                //return false;
             }
 
             //初始化液冷机
@@ -636,6 +638,9 @@ namespace EMS
                 AllEquipment.BMS.CheckFunctionLevel();
                 AllEquipment.BMS.CheckBMStype();
             }
+
+            //连接硬件：4G通讯模块
+            
 
             return true;
         }
@@ -675,10 +680,12 @@ namespace EMS
                 {
                     log.Error("初始化电表数据成功");
                     //校验电表数据
-                    if (!AllEquipment.Power_CRC()) return false;
+                    //if (!AllEquipment.Power_CRC()) return false;
+                    AllEquipment.Power_CRC();
 
                     //初始化今日充放数据
-                    if (!AllEquipment.InitE2Power()) return false;
+                    //if (!AllEquipment.InitE2Power()) return false;
+                    AllEquipment.InitE2Power();
                 }
             }
 

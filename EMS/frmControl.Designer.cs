@@ -346,7 +346,6 @@ namespace EMS
             this.tcbtest.strText = "test1";
             this.tcbtest.TabIndex = 70;
             this.tcbtest.Value = 0;
-            this.tcbtest.Visible = false;
             // 
             // btnConnectChoose
             // 
@@ -425,7 +424,6 @@ namespace EMS
             this.btnTest.TabIndex = 64;
             this.btnTest.Text = "TEST";
             this.btnTest.UseVisualStyleBackColor = true;
-            this.btnTest.Visible = false;
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
             // btnBalaClear

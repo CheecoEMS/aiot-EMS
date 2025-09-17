@@ -3659,18 +3659,17 @@ namespace EMS
         public void timing(int index)
         {
             DateTime dt = DateTime.Now;
-            byte[] result = new byte[6]; // 6个字节的数组，依次为秒、分、时、日、月、年
+            byte[] result = new byte[6]; // 6个字节的数组
 
-            // 秒、分、时、日、月、年依次存储
+            //年 月 日 时 分 秒依次存储
             result[0] = (byte)(dt.Year % 100);
             result[1] = (byte)dt.Month;
-            result[2] = (byte)dt.Hour;
-            result[3] = (byte)dt.Day;
+            result[2] = (byte)dt.Day;
+            result[3] = (byte)dt.Hour;
             result[4] = (byte)dt.Minute;
             result[5] = (byte)dt.Second;
             byte[] atime = result;
             SetSysBytes(index, atime, true);
-
         }
 
         //设置波峰评估的时间段
@@ -6491,6 +6490,286 @@ namespace EMS
         }
     }
 
+    public class EC20Communicator : IDisposable
+    {
+        private SerialPort _serialPort;
+        private bool _isDisposed = false;
+
+        // 串口配置属性
+        public string PortName { get; }
+        public int BaudRate { get; }
+        public int DataBits { get; }
+        public Parity Parity { get; }
+        public StopBits StopBits { get; }
+        public bool IsConnected => _serialPort?.IsOpen ?? false;
+
+        // 构造函数
+        public EC20Communicator(string portName = "COM11", int baudRate = 115200,
+                               int dataBits = 8, Parity parity = Parity.None,
+                               StopBits stopBits = StopBits.One)
+        {
+            PortName = portName ?? throw new ArgumentNullException(nameof(portName));
+            BaudRate = baudRate;
+            DataBits = dataBits;
+            Parity = parity;
+            StopBits = stopBits;
+
+            InitializeSerialPort();
+        }
+
+        // 初始化串口
+        private void InitializeSerialPort()
+        {
+            _serialPort = new SerialPort(PortName, BaudRate, Parity, DataBits, StopBits)
+            {
+                Handshake = Handshake.None,
+                ReadTimeout = 1000,   // 延长超时时间，确保能收到响应
+                WriteTimeout = 1000,
+                Encoding = System.Text.Encoding.ASCII  // AT指令通常使用ASCII编码
+            };
+
+            // 注册数据接收事件，可用于异步接收数据
+            _serialPort.DataReceived += SerialPort_DataReceived;
+        }
+
+        // 数据接收事件处理
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            try
+            {
+                if (_serialPort.IsOpen)
+                {
+                    string data = _serialPort.ReadExisting();
+                    if (!string.IsNullOrEmpty(data))
+                    {
+                        Console.WriteLine($"异步接收数据:\n{data}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"数据接收错误: {ex.Message}");
+            }
+        }
+
+        // 打开串口连接
+        public bool Connect()
+        {
+            try
+            {
+                if (!_serialPort.IsOpen)
+                {
+                    _serialPort.Open();
+                    Console.WriteLine($"已打开串口 {PortName}");
+                    return true;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"打开串口失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        // 关闭串口连接
+        public void Disconnect()
+        {
+            if (_serialPort?.IsOpen ?? false)
+            {
+                _serialPort.Close();
+                Console.WriteLine($"已关闭串口 {PortName}");
+            }
+        }
+
+        // 发送AT指令并获取响应
+        public string SendAtCommand(string command, int timeout = 1000)
+        {
+            if (!IsConnected)
+            {
+                throw new InvalidOperationException("串口未连接，请先调用Connect()方法");
+            }
+
+            try
+            {
+                // 清空缓冲区
+                _serialPort.DiscardInBuffer();
+                _serialPort.DiscardOutBuffer();
+
+                // 确保指令以\r\n结尾
+                string formattedCommand = command.EndsWith("\r\n") ? command : command + "\r\n";
+
+                Console.WriteLine($"发送指令: {formattedCommand.Trim()}");
+                _serialPort.Write(formattedCommand);
+
+                // 等待响应
+                Thread.Sleep(timeout);
+                string response = _serialPort.ReadExisting();
+
+                Console.WriteLine($"收到响应:\n{response}");
+                return response;
+            }
+            catch (TimeoutException)
+            {
+                Console.WriteLine("读取响应超时");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"发送指令时出错: {ex.Message}");
+                return null;
+            }
+        }
+
+        // 发送AT+CFUN=1,1指令的专用方法
+        public string SendRestartCommand()
+        {
+            Console.WriteLine("发送模块重启指令: AT+CFUN=1,1");
+            string response = SendAtCommand("AT+CFUN=1,1");
+
+            // 重启需要更长时间，这里额外等待
+            if (response != null)
+            {
+                Console.WriteLine("指令已发送，模块将重启...");
+                Thread.Sleep(5000);  // 等待模块重启
+
+                // 尝试检查模块是否恢复
+                Console.WriteLine("检查模块状态...");
+                Thread.Sleep(2000);
+                return SendAtCommand("AT"); // 发送AT测试指令
+            }
+
+            return response;
+        }
+
+        // 实现IDisposable接口
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_isDisposed) return;
+
+            if (disposing)
+            {
+                // 释放托管资源
+                Disconnect();
+                _serialPort?.Dispose();
+            }
+
+            _isDisposed = true;
+        }
+
+        ~EC20Communicator()
+        {
+            Dispose(false);
+        }
+    }
+
+
+    /// <summary>
+    /// 移动宽带连接管理类，提供重启移动宽带连接的功能
+    /// </summary>
+    public class MobileBroadbandManager
+    {
+        private readonly string _connectionName;
+        private readonly int _waitMilliseconds;
+
+        /// <summary>
+        /// 初始化移动宽带管理类
+        /// </summary>
+        /// <param name="connectionName">移动宽带连接名称，默认为"移动宽带连接"</param>
+        /// <param name="waitMilliseconds">禁用和启用之间的等待时间(毫秒)，默认为10000</param>
+        public MobileBroadbandManager(string connectionName = "移动宽带连接", int waitMilliseconds = 10000)
+        {
+            if (string.IsNullOrWhiteSpace(connectionName))
+                throw new ArgumentException("连接名称不能为空", nameof(connectionName));
+
+            if (waitMilliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(waitMilliseconds), "等待时间不能为负数");
+
+            _connectionName = connectionName;
+            _waitMilliseconds = waitMilliseconds;
+        }
+
+        /// <summary>
+        /// 重启移动宽带连接（通过先禁用再启用的方式）
+        /// </summary>
+        /// <returns>是否重启成功</returns>
+        public bool Restart()
+        {
+            try
+            {
+                // 禁用连接
+                var disableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=disable");
+                if (!disableSuccess)
+                    return false;
+
+                // 等待指定时间
+                Thread.Sleep(_waitMilliseconds);
+
+                // 启用连接
+                var enableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=enable");
+                return enableSuccess;
+            }
+            catch (Exception ex)
+            {
+                // 可以在这里添加日志记录
+                Console.WriteLine($"重启移动宽带时发生错误: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 执行命令并返回执行结果
+        /// </summary>
+        /// <param name="command">要执行的命令</param>
+        /// <returns>命令是否执行成功</returns>
+        private bool ExecuteCommand(string command)
+        {
+            using (var process = new Process())
+            {
+                var startInfo = new ProcessStartInfo("cmd", $"/c {command}")
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8
+                };
+
+                process.StartInfo = startInfo;
+
+                try
+                {
+                    process.Start();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+
+                    // 输出命令执行结果，实际应用中可以改为日志记录
+                    if (!string.IsNullOrEmpty(output))
+                        Console.WriteLine($"命令输出: {output}");
+
+                    if (!string.IsNullOrEmpty(error))
+                        Console.WriteLine($"命令错误: {error}");
+
+                    // 通常0表示命令执行成功
+                    return process.ExitCode == 0;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"执行命令时发生错误: {ex.Message}");
+                    return false;
+                }
+            }
+        }
+    }
+
 
     //所有部件类都是实例作为整体设备类的属性
     //整体设备类
@@ -6714,7 +6993,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.0.6";
+        public string EMSVersion { get; set; } = "1.0.7";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -6740,6 +7019,9 @@ namespace EMS
         private int delayExceedCount = 0;
         private int delayBelowCount = 0;
         public bool SignalAlarmActive = false;  // Track if the alarm is currently active
+        private int consecutivePingErrorCount = 0;
+        private bool isProcessingAlarm = false; // 新增：用于防止重复处理的标志
+        private object lockObject = new object(); // 新增：用于锁定处理标志的对象
 
         public int RebootCount { get; set; }    //今日剩余重启次数
 
@@ -6873,13 +7155,19 @@ namespace EMS
             }
         }
 
+        public void HandleNetworkError() {
+            if (!SignalAlarmActive) { 
+                //AT
+
+                //Net Shell
+            }
+        }
+
         public void TestSignalStrength()
         {
+            // 移除延时和抖动相关变量，无需计算
             try
             {
-                log.Error("TestSignalStrength测试");
-
-
                 // 获取Ping类实例并设置Ping选项
                 Ping pingSender = new Ping();
                 PingOptions options = new PingOptions();
@@ -6887,71 +7175,197 @@ namespace EMS
 
                 // 设置Ping数据包的大小
                 byte[] buffer = new byte[32];
-                int timeout = 1000;
+                int timeout = 5000;
 
-                // Ping目标地址并获取延迟信息
+                // Ping目标地址
                 PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
                 if (reply.Status == IPStatus.Success)
                 {
-                    log.Error("ping成功");
-                    SignalDelay =  reply.RoundtripTime;
-                    SignalDelayJitter =  reply.Options.Ttl;
+                    // Ping成功时重置异常计数器
+                    consecutivePingErrorCount = 0;
 
-                    //延迟过高触发2级别告警
-                    if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
+                    // 如果当前处于告警状态，且ping成功则解除告警
+                    if (SignalAlarmActive)
                     {
-                        if (delayExceedCount < frmSet.cloudLimits.SignalDelayCount)
+                        lock (EMSError)
                         {
-                            delayExceedCount++;
-                        }
-                        delayBelowCount = 0;  // Reset the below delay counter
-
-                        if (delayExceedCount ==  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
-                        {
-                            lock (EMSError)
-                            {
-                                EMSError[0] |= 0x4000;
-                                SignalAlarmActive = true;  // Mark the alarm as active
-                            }
-                        }
-                    }
-                    else
-                    {
-                        log.Error("ping失败");
-                        if (delayBelowCount < frmSet.cloudLimits.SignalDelayCount)
-                        {
-                            delayBelowCount++;
-                        }
-                        delayExceedCount = 0;  // Reset the exceed delay counter
-
-                        if (delayBelowCount == frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
-                        {
-                            lock (EMSError)
-                            {
-                                EMSError[0] &= 0xBFFF;
-                                SignalAlarmActive = false;  // Mark the alarm as inactive
-                            }
+                            EMSError[0] &= 0xBFFF;
+                            SignalAlarmActive = false;
+                            // 重置处理标志
+                            isProcessingAlarm = false;
                         }
                     }
                 }
                 else
                 {
-                    log.Error("Ping失败"+ reply.Status);
-                }
+                    // Ping失败时增加异常计数器
+                    log.Error("reply.Status != IPStatus.Success ping失败");
+                    consecutivePingErrorCount++;
 
-                
+                    // 连续10次异常且未触发告警时，执行告警逻辑
+                    if (consecutivePingErrorCount >= 10 && !SignalAlarmActive && !isProcessingAlarm)
+                    {
+                        lock (EMSError)
+                        {
+                            EMSError[0] |= 0x4000;
+                            SignalAlarmActive = true;
+                            isProcessingAlarm = true; // 标记为正在处理
+                        }
+
+                        // 执行重启处理操作
+                        ProcessRestartOperations();
+                    }
+                }
             }
             catch (Exception ex)
             {
+                // 捕获异常时增加异常计数器
                 log.Error("Ping异常：" + ex.Message);
+                consecutivePingErrorCount++;
 
-                lock (EMSError)
+                // 连续10次异常且未触发告警时，执行告警逻辑
+                if (consecutivePingErrorCount >= 10 && !SignalAlarmActive && !isProcessingAlarm)
                 {
-                    EMSError[0] |= 0x4000;
-                    SignalAlarmActive = true;  // Mark the alarm as active
+                    lock (EMSError)
+                    {
+                        EMSError[0] |= 0x4000;
+                        SignalAlarmActive = true;
+                        isProcessingAlarm = true; // 标记为正在处理
+                    }
+
+                    // 执行重启处理操作
+                    ProcessRestartOperations();
                 }
             }
         }
+
+        // 处理重启操作的方法
+        private void ProcessRestartOperations()
+        {
+            try
+            {
+                // 执行移动宽带重启
+                var manager = new MobileBroadbandManager();
+                bool isSuccess = manager.Restart();
+
+                // 根据结果进行处理
+                if (isSuccess)
+                {
+                    log.Error("移动宽带重启成功！");
+                }
+                else
+                {
+                    log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
+                }
+
+                // 创建EC20通信器实例并发送重启指令
+                using (var ec20 = new EC20Communicator())
+                {
+                    // 连接到模块
+                    if (ec20.Connect())
+                    {
+                        try
+                        {
+                            log.Error("发送重启指令");
+                            ec20.SendRestartCommand();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"操作出错: {ex.Message}");
+                        }
+                    }
+                    // using语句会自动调用Dispose()方法关闭连接
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"重启操作过程中发生错误: {ex.Message}");
+            }
+            finally
+            {
+                // 无论成功失败，都重置处理标志
+                // 但保留告警状态，直到ping成功后才解除
+                lock (EMSError)
+                {
+                    isProcessingAlarm = false;
+                }
+            }
+        }
+
+        /*        public void TestSignalStrength()
+                {
+                    try
+                    {
+                        // 获取Ping类实例并设置Ping选项
+                        Ping pingSender = new Ping();
+                        PingOptions options = new PingOptions();
+                        options.DontFragment = true;
+
+                        // 设置Ping数据包的大小
+                        byte[] buffer = new byte[32];
+                        int timeout = 1000;
+
+                        // Ping目标地址并获取延迟信息
+                        PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            SignalDelay =  reply.RoundtripTime;
+                            SignalDelayJitter =  reply.Options.Ttl;
+
+                            //延迟过高触发2级别告警
+                            if (SignalDelay > frmSet.cloudLimits.SignalDelayAlarm)
+                            {
+                                if (delayExceedCount < frmSet.cloudLimits.SignalDelayCount)
+                                {
+                                    delayExceedCount++;
+                                }
+                                delayBelowCount = 0;  // Reset the below delay counter
+
+                                if (delayExceedCount ==  frmSet.cloudLimits.SignalDelayCount && !SignalAlarmActive)
+                                {
+                                    lock (EMSError)
+                                    {
+                                        EMSError[0] |= 0x4000;
+                                        SignalAlarmActive = true;  // Mark the alarm as active
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (delayBelowCount < frmSet.cloudLimits.SignalDelayCount)
+                                {
+                                    delayBelowCount++;
+                                }
+                                delayExceedCount = 0;  // Reset the exceed delay counter
+
+                                if (delayBelowCount == frmSet.cloudLimits.SignalDelayCount && SignalAlarmActive)
+                                {
+                                    lock (EMSError)
+                                    {
+                                        EMSError[0] &= 0xBFFF;
+                                        SignalAlarmActive = false;  // Mark the alarm as inactive
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            log.Error(" reply.Status != IPStatus.Success ping失败");
+                        }
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("Ping异常：" + ex.Message);
+
+                        lock (EMSError)
+                        {
+                            EMSError[0] |= 0x4000;
+                            SignalAlarmActive = true;  // Mark the alarm as active
+                        }
+                    }
+                }*/
 
 
         public bool MeterCalibration()
