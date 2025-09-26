@@ -22,6 +22,8 @@ using System.Windows.Forms;
 using static Mysqlx.Expect.Open.Types.Condition.Types;
 using System.Timers;
 using System.Net;
+using static EMS.EC20Communicator;
+using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
@@ -6490,10 +6492,18 @@ namespace EMS
         }
     }
 
+    public static class SerialPortCom11Lock
+    {
+        // 全局静态锁：控制所有线程对串口的访问
+        public static readonly object GlobalLock = new object();
+    }
+
+
     public class EC20Communicator : IDisposable
     {
         private SerialPort _serialPort;
         private bool _isDisposed = false;
+        private readonly object _lockObj = new object();
 
         // 串口配置属性
         public string PortName { get; }
@@ -6502,6 +6512,8 @@ namespace EMS
         public Parity Parity { get; }
         public StopBits StopBits { get; }
         public bool IsConnected => _serialPort?.IsOpen ?? false;
+
+        private static ILog log = LogManager.GetLogger("EC20Communicator");
 
         // 构造函数
         public EC20Communicator(string portName = "COM11", int baudRate = 115200,
@@ -6542,13 +6554,13 @@ namespace EMS
                     string data = _serialPort.ReadExisting();
                     if (!string.IsNullOrEmpty(data))
                     {
-                        Console.WriteLine($"异步接收数据:\n{data}");
+                        log.Error($"异步接收数据:\n{data}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"数据接收错误: {ex.Message}");
+                log.Error($"数据接收错误: {ex.Message}");
             }
         }
 
@@ -6560,14 +6572,14 @@ namespace EMS
                 if (!_serialPort.IsOpen)
                 {
                     _serialPort.Open();
-                    Console.WriteLine($"已打开串口 {PortName}");
+                    log.Error($"已打开串口 {PortName}");
                     return true;
                 }
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"打开串口失败: {ex.Message}");
+                log.Error($"打开串口失败: {ex.Message}");
                 return false;
             }
         }
@@ -6578,7 +6590,7 @@ namespace EMS
             if (_serialPort?.IsOpen ?? false)
             {
                 _serialPort.Close();
-                Console.WriteLine($"已关闭串口 {PortName}");
+                log.Error($"已关闭串口 {PortName}");
             }
         }
 
@@ -6590,56 +6602,252 @@ namespace EMS
                 throw new InvalidOperationException("串口未连接，请先调用Connect()方法");
             }
 
+            bool isEventAttached = false;
+            EventInfo eventInfo = typeof(SerialPort).GetEvent("DataReceived");
+            if (eventInfo != null)
+            {
+                // 获取事件对应的字段（通常事件会有一个对应的委托字段）
+                FieldInfo fieldInfo = typeof(SerialPort).GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Instance);
+                if (fieldInfo != null)
+                {
+                    // 获取当前串口对象的DataReceived事件订阅的委托
+                    Delegate del = fieldInfo.GetValue(_serialPort) as Delegate;
+                    isEventAttached = del != null;
+                }
+            }
+
+            // 临时移除异步接收事件，防止数据被截胡
+            if (isEventAttached)
+            {
+                _serialPort.DataReceived -= SerialPort_DataReceived;
+            }
+
             try
             {
-                // 清空缓冲区
+                // 清空缓冲区（清除历史数据）
                 _serialPort.DiscardInBuffer();
                 _serialPort.DiscardOutBuffer();
 
-                // 确保指令以\r\n结尾
+                // 格式化指令（确保以\r\n结尾）
                 string formattedCommand = command.EndsWith("\r\n") ? command : command + "\r\n";
-
-                Console.WriteLine($"发送指令: {formattedCommand.Trim()}");
+                log.Error($"发送指令: {formattedCommand.Trim()}");
                 _serialPort.Write(formattedCommand);
 
-                // 等待响应
+                // 等待响应（根据指令类型调整超时）
                 Thread.Sleep(timeout);
+                // 读取响应（此时无异步事件干扰，能完整获取数据）
                 string response = _serialPort.ReadExisting();
 
-                Console.WriteLine($"收到响应:\n{response}");
+                log.Error($"收到响应:\n{response}");
                 return response;
             }
             catch (TimeoutException)
             {
-                Console.WriteLine("读取响应超时");
+                log.Error("读取响应超时");
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"发送指令时出错: {ex.Message}");
+                log.Error($"发送指令时出错: {ex.Message}");
                 return null;
+            }
+            finally
+            {
+                // 恢复异步接收事件（即使出错也会执行）
+                if (isEventAttached)
+                {
+                    _serialPort.DataReceived += SerialPort_DataReceived;
+                }
             }
         }
 
         // 发送AT+CFUN=1,1指令的专用方法
-        public string SendRestartCommand()
+        public void SendRestartCommand()
         {
-            Console.WriteLine("发送模块重启指令: AT+CFUN=1,1");
+            log.Error("发送模块重启指令: AT+CFUN=1,1");
             string response = SendAtCommand("AT+CFUN=1,1");
 
             // 重启需要更长时间，这里额外等待
             if (response != null)
             {
-                Console.WriteLine("指令已发送，模块将重启...");
-                Thread.Sleep(5000);  // 等待模块重启
-
-                // 尝试检查模块是否恢复
-                Console.WriteLine("检查模块状态...");
-                Thread.Sleep(2000);
-                return SendAtCommand("AT"); // 发送AT测试指令
+                log.Error("指令已发送，模块将重启...");
+                return ; // 发送AT测试指令
             }
 
-            return response;
+            return ;
+        }
+
+        /// <summary>
+        /// 信号质量信息模型
+        /// </summary>
+        public class SignalQualityInfo
+        {
+            /// <summary>
+            /// 信号强度指示(RSSI)：0-31（31为最强），99表示未知
+            /// </summary>
+            public int Rssi { get; set; }
+            /// <summary>
+            /// 参考信号接收功率(RSRP)：-140到-44（数值越大信号越强），127表示未知
+            /// </summary>
+            public int Rsrp { get; set; }
+            /// <summary>
+            /// 信号与干扰加噪声比(SINR)：-23到40（数值越大信号质量越好），127表示未知
+            /// </summary>
+            public int Sinr { get; set; }
+            /// <summary>
+            /// 参考信号接收质量(RSRQ)：-19.5到-3（数值越大质量越好），127表示未知
+            /// </summary>
+            public double Rsrq { get; set; }
+            /// <summary>
+            /// 解析是否成功
+            /// </summary>
+            public bool IsValid { get; set; }
+            /// <summary>
+            /// 错误信息（解析失败时）
+            /// </summary>
+            public string ErrorMessage { get; set; }
+        }
+
+        /// <summary>
+        /// 发送AT+QCSQ命令获取信号质量信息
+        /// </summary>
+        /// <returns>包含RSSI、RSRP、SINR、RSRQ的信号质量对象</returns>
+        public SignalQualityInfo GetSignalQuality()
+        {
+            var result = new SignalQualityInfo();
+
+            try
+            {
+                if (!IsConnected)
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = "串口未连接，请先调用Connect()方法";
+                    return result;
+                }
+
+                // 发送AT+QCSQ命令，延长超时时间确保获取完整响应
+                string response = SendAtCommand("AT+QCSQ", 5000);
+
+                if (string.IsNullOrEmpty(response))
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = "未收到响应";
+                    return result;
+                }
+
+                // 解析响应，典型响应格式：+QCSQ: "LTE",18,-65,30,-7
+                // 格式说明：+QCSQ: <sysmode>,<rssi>,<rsrp>,<sinr>,<rsrq>
+                string[] responseLines = response.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                string qcsqLine = responseLines.FirstOrDefault(line => line.StartsWith("+QCSQ:"));
+
+                if (string.IsNullOrEmpty(qcsqLine))
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = "未找到信号质量数据";
+                    return result;
+                }
+
+                // 提取数值部分（去除"+QCSQ: "前缀和引号）
+                string dataPart = qcsqLine.Replace("+QCSQ: ", "").Trim();
+                dataPart = System.Text.RegularExpressions.Regex.Replace(dataPart, "\"[^\"]*\"", "").Trim(); // 移除模式名称（如"LTE"）
+                string[] signalValues = dataPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                                 .Select(v => v.Trim())
+                                                 .ToArray();
+
+                // 验证解析结果
+                if (signalValues.Length < 4)
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = $"响应格式不正确，预期至少4个参数，实际：{signalValues.Length}";
+                    return result;
+                }
+
+                // 解析各参数值
+                if (int.TryParse(signalValues[0], out int rssi))
+                    result.Rssi = rssi;
+                else
+                    result.ErrorMessage += "RSSI解析失败; ";
+
+                if (int.TryParse(signalValues[1], out int rsrp))
+                    result.Rsrp = rsrp;
+                else
+                    result.ErrorMessage += "RSRP解析失败; ";
+
+                if (int.TryParse(signalValues[2], out int sinr))
+                    result.Sinr = sinr;
+                else
+                    result.ErrorMessage += "SINR解析失败; ";
+
+                // RSRQ可能为小数（如-7.5）
+                if (double.TryParse(signalValues[3], out double rsrq))
+                    result.Rsrq = rsrq;
+                else
+                    result.ErrorMessage += "RSRQ解析失败; ";
+
+                // 判断整体解析是否成功
+                result.IsValid = string.IsNullOrEmpty(result.ErrorMessage);
+                if (!result.IsValid)
+                    result.ErrorMessage = "解析错误: " + result.ErrorMessage.TrimEnd(';', ' ');
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = $"获取信号质量时出错: {ex.Message}";
+                return result;
+            }
+        }
+
+        // 使用示例（可添加到类中作为测试方法）
+        public SignalQualityInfo TestSignalQuality()
+        {
+            // 初始化默认结果（即使失败也能返回包含错误信息的对象）
+            var result = new SignalQualityInfo
+            {
+                IsValid = false,
+                ErrorMessage = "未知错误"
+            };
+
+            // 标记是否成功打开连接，用于后续确保断开
+            bool isConnected = false;
+
+            try
+            {
+                // 尝试连接
+                isConnected = Connect();
+                if (!isConnected)
+                {
+                    result.ErrorMessage = "串口连接失败";
+                    log.Error(result.ErrorMessage);
+                    return result;
+                }
+
+                // 连接成功，获取信号质量
+                var signalInfo = GetSignalQuality();
+                if (signalInfo.IsValid)
+                {
+                    log.Error("信号质量信息:");
+                    log.Error($"RSSI: {signalInfo.Rssi}");
+                    log.Error($"RSRP: {signalInfo.Rsrp} dBm");
+                    log.Error($"SINR: {signalInfo.Sinr} dB");
+                    log.Error($"RSRP: {signalInfo.Rsrq} dB");
+                    return signalInfo; // 返回有效结果
+                }
+                else
+                {
+                    result.ErrorMessage = $"获取信号质量失败: {signalInfo.ErrorMessage}";
+                    log.Error(result.ErrorMessage);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 捕获所有异常，避免程序崩溃
+                result.ErrorMessage = $"执行过程中发生异常: {ex.Message}";
+                log.Error(result.ErrorMessage);
+                return result;
+            }
         }
 
         // 实现IDisposable接口
@@ -6677,6 +6885,8 @@ namespace EMS
     {
         private readonly string _connectionName;
         private readonly int _waitMilliseconds;
+
+        private static ILog log = LogManager.GetLogger("MobileBroadbandManager");
 
         /// <summary>
         /// 初始化移动宽带管理类
@@ -6718,7 +6928,38 @@ namespace EMS
             catch (Exception ex)
             {
                 // 可以在这里添加日志记录
-                Console.WriteLine($"重启移动宽带时发生错误: {ex.Message}");
+                log.Error($"重启移动宽带时发生错误: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool DisableNet() {
+            try
+            {
+                // 禁用连接
+                var disableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=disable");
+                return disableSuccess;
+            }
+            catch (Exception ex)
+            {
+                // 可以在这里添加日志记录
+                log.Error($"重启移动宽带时发生错误: {ex.Message}");
+                return false;
+            }
+
+        }
+
+        public bool EnableNet() {
+            try
+            {
+                // 启用连接
+                var enableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=enable");
+                return enableSuccess;
+            }
+            catch (Exception ex)
+            {
+                // 可以在这里添加日志记录
+                log.Error($"重启移动宽带时发生错误: {ex.Message}");
                 return false;
             }
         }
@@ -6753,17 +6994,17 @@ namespace EMS
 
                     // 输出命令执行结果，实际应用中可以改为日志记录
                     if (!string.IsNullOrEmpty(output))
-                        Console.WriteLine($"命令输出: {output}");
+                        log.Error($"命令输出: {output}");
 
                     if (!string.IsNullOrEmpty(error))
-                        Console.WriteLine($"命令错误: {error}");
+                        log.Error($"命令错误: {error}");
 
                     // 通常0表示命令执行成功
                     return process.ExitCode == 0;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"执行命令时发生错误: {ex.Message}");
+                    log.Error($"执行命令时发生错误: {ex.Message}");
                     return false;
                 }
             }
@@ -7047,9 +7288,20 @@ namespace EMS
         public volatile int WaitRecPem; //1:等待确认消息送达 0：确认已送达
         public volatile bool KeepStill; //true:放空或者充满 
 
-        //
-        
-
+        //物联网卡信息
+        public int Rssi { get; set; }
+        /// <summary>
+        /// 参考信号接收功率(RSRP)：-140到-44（数值越大信号越强），127表示未知
+        /// </summary>
+        public int Rsrp { get; set; }
+        /// <summary>
+        /// 信号与干扰加噪声比(SINR)：-23到40（数值越大信号质量越好），127表示未知
+        /// </summary>
+        public int Sinr { get; set; }
+        /// <summary>
+        /// 参考信号接收质量(RSRQ)：-19.5到-3（数值越大质量越好），127表示未知
+        /// </summary>
+        public double Rsrq { get; set; }
 
         public AllEquipmentClass()
         {
@@ -7163,11 +7415,57 @@ namespace EMS
             }
         }
 
+        public void GetSignalStrength()
+        {
+            // 创建EC20通信器实例
+            lock (SerialPortCom11Lock.GlobalLock)
+            {
+                using (var ec20 = new EC20Communicator())
+                {
+                    if (ec20.Connect())
+                    {
+                        string atResponse = ec20.SendAtCommand("AT", 2000); // 延长超时到2000ms，确保响应完整
+                        if (!string.IsNullOrEmpty(atResponse) && atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            //log.Error("测试信号质量");
+                            var result = ec20.TestSignalQuality();
+
+                            if (result.IsValid)
+                            {
+                                frmMain.Selffrm.AllEquipment.Rssi = result.Rssi;
+                                frmMain.Selffrm.AllEquipment.Rsrp = result.Rsrp;
+                                frmMain.Selffrm.AllEquipment.Sinr = result.Sinr;
+                                frmMain.Selffrm.AllEquipment.Rsrq = result.Rsrq;
+                            }
+                            else
+                            {
+                                frmMain.Selffrm.AllEquipment.Rssi = -120;
+                                frmMain.Selffrm.AllEquipment.Rsrp = -200;
+                                frmMain.Selffrm.AllEquipment.Sinr = -10;
+                                frmMain.Selffrm.AllEquipment.Rsrq =-20;
+                            }
+                        }
+                        else
+                        {
+                            frmMain.Selffrm.AllEquipment.Rssi = -120;
+                            frmMain.Selffrm.AllEquipment.Rsrp = -200;
+                            frmMain.Selffrm.AllEquipment.Sinr = -10;
+                            frmMain.Selffrm.AllEquipment.Rsrq =-20;
+                        }
+                    }
+                }
+            }
+        }
+
+
         public void TestSignalStrength()
         {
             // 移除延时和抖动相关变量，无需计算
             try
             {
+                bool isSlbPingSuccess = false;
+                bool isNoService = false;
+
                 // 获取Ping类实例并设置Ping选项
                 Ping pingSender = new Ping();
                 PingOptions options = new PingOptions();
@@ -7177,60 +7475,143 @@ namespace EMS
                 byte[] buffer = new byte[32];
                 int timeout = 5000;
 
-                // Ping目标地址
-                PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
-                if (reply.Status == IPStatus.Success)
+                try
                 {
-                    // Ping成功时重置异常计数器
-                    consecutivePingErrorCount = 0;
+                    PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
+                    isSlbPingSuccess = reply.Status == IPStatus.Success;
 
-                    // 如果当前处于告警状态，且ping成功则解除告警
+                    if (!isSlbPingSuccess)
+                    {
+                        log.Error($"SLB Ping失败，状态：{reply.Status}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"SLB Ping异常：{ex.Message}");
+                    isSlbPingSuccess = false;
+                }
+
+                // 2. 检测信号服务状态（AT+QCSQ返回NOSERVICE）
+
+                // 创建EC20通信器实例
+                lock (SerialPortCom11Lock.GlobalLock)
+                {
+                    using (var ec20 = new EC20Communicator())
+                    {
+                        if (ec20.Connect())
+                        {
+                            string atResponse = ec20.SendAtCommand("AT", 2000); // 延长超时到2000ms，确保响应完整
+                            if (!string.IsNullOrEmpty(atResponse) && atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                string qcsqResponse = ec20.SendAtCommand("AT+QCSQ", 2000);
+                                if (!string.IsNullOrEmpty(qcsqResponse) &&
+                                    qcsqResponse.IndexOf("NOSERVICE", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    isNoService = true;
+                                    log.Error("AT+QCSQ返回NOSERVICE，模块无服务");
+                                }
+                            }
+                            else
+                            {
+                                log.Error($"模块未响应AT指令，响应内容: {atResponse ?? "空"}");
+                            }
+                        }
+                    }
+                }
+
+                bool isSignalAbnormal = !isSlbPingSuccess || isNoService;
+
+                if (!isSignalAbnormal)
+                {
+                    // 正常状态：重置异常计数器和告警
+                    consecutivePingErrorCount = 0;
+                    isProcessingAlarm = false;
+
                     if (SignalAlarmActive)
                     {
+                        SignalAlarmActive = false;
                         lock (EMSError)
                         {
                             EMSError[0] &= 0xBFFF;
-                            SignalAlarmActive = false;
-                            // 重置处理标志
-                            isProcessingAlarm = false;
                         }
+                        log.Error("信号恢复正常，解除告警");
                     }
                 }
                 else
                 {
-                    // Ping失败时增加异常计数器
-                    log.Error("reply.Status != IPStatus.Success ping失败");
+                    // 异常状态：累加计数器并判断是否触发告警
                     consecutivePingErrorCount++;
+                    log.Error($"信号异常，连续异常次数：{consecutivePingErrorCount}");
 
-                    // 连续10次异常且未触发告警时，执行告警逻辑
-                    if (consecutivePingErrorCount >= 10 && !SignalAlarmActive && !isProcessingAlarm)
+                    if (consecutivePingErrorCount >= 6 && !isProcessingAlarm)
                     {
+                        SignalAlarmActive = true;
+                        isProcessingAlarm = true;
+
                         lock (EMSError)
                         {
                             EMSError[0] |= 0x4000;
-                            SignalAlarmActive = true;
-                            isProcessingAlarm = true; // 标记为正在处理
                         }
-
-                        // 执行重启处理操作
+                        log.Error("连续6次异常，触发告警并执行重启操作");
                         ProcessRestartOperations();
                     }
                 }
+
+                /*                // Ping目标地址
+                                PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
+                                if (reply.Status == IPStatus.Success)
+                                {
+                                    // Ping成功时重置异常计数器
+                                    consecutivePingErrorCount = 0;
+
+                                    // 如果当前处于告警状态，且ping成功则解除告警
+                                    if (SignalAlarmActive)
+                                    {
+                                        lock (EMSError)
+                                        {
+                                            EMSError[0] &= 0xBFFF;
+                                            SignalAlarmActive = false;
+                                            // 重置处理标志
+                                            isProcessingAlarm = false;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // Ping失败时增加异常计数器
+                                    log.Error("reply.Status != IPStatus.Success ping失败");
+                                    consecutivePingErrorCount++;
+
+                                    // 连续10次异常且未触发告警时，执行告警逻辑
+                                    if (consecutivePingErrorCount >= 6 && !SignalAlarmActive && !isProcessingAlarm)
+                                    {
+                                        lock (EMSError)
+                                        {
+                                            EMSError[0] |= 0x4000;
+                                            SignalAlarmActive = true;
+                                            isProcessingAlarm = true; // 标记为正在处理
+                                        }
+
+                                        // 执行重启处理操作
+                                        ProcessRestartOperations();
+                                    }
+                                }*/
             }
             catch (Exception ex)
             {
                 // 捕获异常时增加异常计数器
-                log.Error("Ping异常：" + ex.Message);
+                log.Error($"信号强度检测整体异常：{ex.Message}");
                 consecutivePingErrorCount++;
 
-                // 连续10次异常且未触发告警时，执行告警逻辑
-                if (consecutivePingErrorCount >= 10 && !SignalAlarmActive && !isProcessingAlarm)
+                // 连续6次异常且未触发告警时，执行告警逻辑
+                if (consecutivePingErrorCount >= 6 && !isProcessingAlarm)
                 {
+                    SignalAlarmActive = true;
+                    isProcessingAlarm = true; // 标记为正在处理
+
                     lock (EMSError)
                     {
                         EMSError[0] |= 0x4000;
-                        SignalAlarmActive = true;
-                        isProcessingAlarm = true; // 标记为正在处理
                     }
 
                     // 执行重启处理操作
@@ -7246,36 +7627,57 @@ namespace EMS
             {
                 // 执行移动宽带重启
                 var manager = new MobileBroadbandManager();
-                bool isSuccess = manager.Restart();
+                //bool isSuccess = manager.Restart();
+
+                bool Disable = manager.DisableNet();
 
                 // 根据结果进行处理
-                if (isSuccess)
+                if (Disable)
                 {
-                    log.Error("移动宽带重启成功！");
+                    log.Error("移动宽带关闭成功！");
                 }
                 else
                 {
-                    log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
+                    log.Error("移动宽带关闭失败，请检查连接名称是否正确或权限是否足够。");
                 }
 
-                // 创建EC20通信器实例并发送重启指令
-                using (var ec20 = new EC20Communicator())
+                Thread.Sleep(10000);
+
+                // 创建EC20通信器实例
+                lock (SerialPortCom11Lock.GlobalLock)
                 {
-                    // 连接到模块
-                    if (ec20.Connect())
+                    using (var ec20 = new EC20Communicator())
                     {
-                        try
+                        if (ec20.Connect())
                         {
-                            log.Error("发送重启指令");
-                            ec20.SendRestartCommand();
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error($"操作出错: {ex.Message}");
+                            string atResponse = ec20.SendAtCommand("AT", 2000); // 延长超时到2000ms，确保响应完整
+                            if (!string.IsNullOrEmpty(atResponse) && atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                log.Error("模块状态正常，发送重启指令");
+                                ec20.SendRestartCommand();
+                            }
+                            else
+                            {
+                                log.Error($"模块未响应AT指令，响应内容: {atResponse ?? "空"}");
+                            }
                         }
                     }
-                    // using语句会自动调用Dispose()方法关闭连接
                 }
+                Thread.Sleep(300000);
+
+
+                bool Enable = manager.EnableNet();
+
+                // 根据结果进行处理
+                if (Enable)
+                {
+                    log.Error("移动宽带开启成功！");
+                }
+                else
+                {
+                    log.Error("移动宽带开启失败，请检查连接名称是否正确或权限是否足够。");
+                }
+
             }
             catch (Exception ex)
             {
@@ -7285,10 +7687,9 @@ namespace EMS
             {
                 // 无论成功失败，都重置处理标志
                 // 但保留告警状态，直到ping成功后才解除
-                lock (EMSError)
-                {
-                    isProcessingAlarm = false;
-                }
+                isProcessingAlarm = false;
+                consecutivePingErrorCount = 0;
+                
             }
         }
 
@@ -8108,6 +8509,8 @@ namespace EMS
 
             if (!AutoTemperControl()) return false;//温控
             if (!AutoTestSignalStrength()) return false;//4G信号检测
+            if (!AutoGetSignalStrength())  return false;
+
 
             return true;
         }
@@ -8120,6 +8523,43 @@ namespace EMS
         /// /////////////////////////////////////////////////////////////////////////////////////
         /// </summary>
         /// 
+
+        private bool AutoGetSignalStrength()
+        {
+            try
+            {
+                // 创建并启动 Heartbeat 线程
+                Thread_TestSignalStrength = new Thread(GetSignalStrengthCallback);
+                Thread_TestSignalStrength.IsBackground = true;
+                Thread_TestSignalStrength.Priority = ThreadPriority.Normal;
+                Thread_TestSignalStrength.Start();
+                Thread_TestSignalStrength.Name = "";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error starting PublicThread: " + ex.Message);
+                return false;
+            }
+        }
+
+        private void GetSignalStrengthCallback()
+        {
+            while (true)
+            {
+                try
+                {
+                    // 获取信号数据
+                    frmMain.Selffrm.AllEquipment.GetSignalStrength();
+                    Thread.Sleep(60000);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("TestSignalStrength_TimerCallback encountered an error: " + ex.Message);
+                }
+
+            }
+        }
 
         private bool AutoTestSignalStrength()
         {
@@ -8148,6 +8588,8 @@ namespace EMS
                 {
                     // 获取信号数据
                     frmMain.Selffrm.AllEquipment.TestSignalStrength();
+                    //Thread.Sleep(300000);
+
                     Thread.Sleep(60000);
                 }
                 catch (Exception ex)

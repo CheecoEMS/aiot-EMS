@@ -11,6 +11,7 @@ using System.IO;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Dynamic;
+using System.Threading;
 
 namespace EMS
 {
@@ -323,32 +324,33 @@ namespace EMS
                     // 创建EC20通信器实例
                     using (var ec20 = new EC20Communicator())
                     {
-                        // 连接到模块
                         if (ec20.Connect())
                         {
-                            try
+                            string atResponse = ec20.SendAtCommand("AT", 2000); // 延长超时到2000ms，确保响应完整
+                            if (!string.IsNullOrEmpty(atResponse) && atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                log.Error("发送重启指令");
+                                log.Error("模块状态正常，发送重启指令");
                                 ec20.SendRestartCommand();
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                log.Error($"操作出错: {ex.Message}");
+                                log.Error($"模块未响应AT指令，响应内容: {atResponse ?? "空"}");
+                                // 仅在确实无响应时执行重连，避免误操作
+                                Thread.Sleep(1000);
                             }
                         }
-                        // using语句会自动调用Dispose()方法关闭连接
                     }
                     break;
                 case 1:
                     var manager = new MobileBroadbandManager();
 
                     // 执行重启操作
-                    bool isSuccess = manager.Restart();
+                    bool isSuccess = manager.DisableNet();
 
                     // 根据结果进行处理
                     if (isSuccess)
                     {
-                       log.Error("移动宽带重启成功！");
+                       log.Error("移动宽带关闭成功！");
                     }
                     else
                     {
@@ -356,6 +358,21 @@ namespace EMS
                     }
                     break;
                 case 2:
+
+                    var manager1 = new MobileBroadbandManager();
+
+                    // 执行重启操作
+                    bool isSuccess1 = manager1.EnableNet();
+
+                    // 根据结果进行处理
+                    if (isSuccess1)
+                    {
+                        log.Error("移动宽带开启成功！");
+                    }
+                    else
+                    {
+                        log.Error("移动宽带开启失败，请检查连接名称是否正确或权限是否足够。");
+                    }
                     break;
                 default: 
                     break;

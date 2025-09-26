@@ -912,7 +912,7 @@ namespace EMS
             // 定义多个表的结构
             var tableStructures = new Dictionary<string, List<Column>>
             {
-                {
+ /*               {
                     "balatactics", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
@@ -1457,7 +1457,7 @@ namespace EMS
                         new Column { Name = "rTime", Type = "datetime", IsNullable = true, Key = "", Comment = "发生时间" },
                         new Column { Name = "Warning", Type = "varchar(255)", IsNullable = true, Key = "", Comment = "告警信息" },
                     }
-                },
+                },*/
                 {
                     "config", new List<Column>
                     {
@@ -1496,7 +1496,7 @@ namespace EMS
                         new Column { Name = "PcsLimit", Type = "int", IsNullable = true, Key = "" , Comment = "PCS功率限定" }
                     }
                 },
-                {
+/*                {
                     "ComponentSettings", new List<Column>
                     {
                         //空调
@@ -1796,7 +1796,7 @@ namespace EMS
                         new Column { Name = "smoke", Type = "int", IsNullable = true, Key = "", Comment = "烟感100-10000ppm" },
                         new Column { Name = "CO", Type = "int", IsNullable = true, Key = "", Comment = "一氧化碳含量 0.001精度 ppm" }
                     }
-                },
+                },*/
                 {
                     "CloudLimits", new List<Column>
                     {
@@ -1824,7 +1824,7 @@ namespace EMS
                         new Column { Name = "OpenBala", Type = "int", IsNullable = true, Key = "", Comment = "是否开启均衡" }
                     }
                 },
-                {
+ /*               {
                     "liquidcool", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
@@ -2033,7 +2033,7 @@ namespace EMS
                         new Column { Name = "rInPower", Type = "float", IsNullable = true, Key = "" , Comment = "充电电量（kwh)"},
                         new Column { Name = "operator", Type = "varchar(255)", IsNullable = true, Key = "" , Comment = "操作员"}
                     }
-                },
+                },*/
                 {
                     "VariCharge", new List<Column>
                     {
@@ -2070,7 +2070,8 @@ namespace EMS
                         new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数"},
                         new Column { Name = "YDstatus", Type = "int", IsNullable = true, Key = "" , Comment = "远动标志位" }
                     }
-                },
+                }
+/*                ,
                 {
                     "PeElestic", new List<Column>
                     {
@@ -2099,7 +2100,7 @@ namespace EMS
                         new Column { Name = "SE2PKWH8", Type = "double", IsNullable = true, Key = "" , Comment = "" },
                         new Column { Name = "SE2OKWH8", Type = "double", IsNullable = true, Key = "" , Comment = "" }
                     }
-                }
+                }*/
                 // Add more tables as needed
             };
 

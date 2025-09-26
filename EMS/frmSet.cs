@@ -957,7 +957,6 @@ namespace EMS
                             {
                                 variCharge.UBmsPcsState = rd.IsDBNull(0) ? 50 : rd.GetInt32(0);
                                 variCharge.OBmsPcsState = rd.IsDBNull(1) ? 50 : rd.GetInt32(1);
-                                log.Error("variCharge.OBmsPcsState: " + variCharge.OBmsPcsState);
                                 return true;
                             }
                         }

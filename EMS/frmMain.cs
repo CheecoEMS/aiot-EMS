@@ -549,7 +549,7 @@ namespace EMS
             if (!DBConnection.CheckRec("select * from config")) return false;
 
             //检查数据库结构是否一致
-            //if(!DBConnection.CheckTables()) return false;
+            if(!DBConnection.CheckTables()) return false;
 
             // 加载数据库配置（必填）
             if (!frmSet.LoadCloudLimitsFromMySQL()) return false;
@@ -570,8 +570,8 @@ namespace EMS
             //if (!BalaTacticsList.LoadFromMySQL()) return false;
 
             //读取数据库中的故障（选填）
-            if (!Selffrm.AllEquipment.LoadErrorState()) return false;
-            log.Error("数据库加载");
+            //if (!Selffrm.AllEquipment.LoadErrorState()) return false;
+            Selffrm.AllEquipment.LoadErrorState();
 
             //数据看板展示
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -673,7 +673,8 @@ namespace EMS
                             if (AllEquipment.Elemeter4?.GetDataFromEqipment() == false) return false;*/
 
                 //必须在设备初始化结束后
-                if (!AllEquipment.ReadDataInoneDaySQL()) return false;
+                //if (!AllEquipment.ReadDataInoneDaySQL()) return false;
+                AllEquipment.ReadDataInoneDaySQL();
 
                 // 初始化电表数据，需校验是否成功
                 if (frmMain.Selffrm.AllEquipment.Elemeter2.InitE2Power())
