@@ -53,6 +53,9 @@ namespace EMS
         public bool FirstRun = true;
         
         public volatile bool receivedHeartbeatResponse = true;  //每次发送心跳，置为false，接收到心跳置为true
+        private int _missedHeartbeatCount = 0;
+        private const int MAX_MISSED_HEARTBEATS = 10;
+
         public volatile bool ConnectToCloud = false;  //只有当接收到心跳返回，才置为true
 
         public string HeartbeatID;  //校验发送和接收得心跳uuid
@@ -435,7 +438,7 @@ namespace EMS
 
         public void SendmqttData()
         {
-            log.Info("数据上云获取锁_lockTXT ");
+            //log.Info("数据上云获取锁_lockTXT ");
             lock (_lockTXT)
             {
                 allFiles = GetAllFileNames(DataPath, Filters);
@@ -650,6 +653,9 @@ namespace EMS
             if (receivedHeartbeatResponse)
             {
                 receivedHeartbeatResponse = false;
+                _missedHeartbeatCount = 0;
+
+
                 HeartbeatID = Guid.NewGuid().ToString();
                 string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
 
@@ -675,8 +681,17 @@ namespace EMS
             }
             else
             {
-                log.Error("未监测到心跳返回，触发重连");
-                mqttReconnect();
+                _missedHeartbeatCount++;
+                log.Info($"未监测到心跳返回，连续未收到次数: {_missedHeartbeatCount}/{MAX_MISSED_HEARTBEATS}");
+                
+                // 只有当连续未收到次数达到阈值时才触发重连
+                if (_missedHeartbeatCount >= MAX_MISSED_HEARTBEATS)
+                {
+                    log.Error($"连续{MAX_MISSED_HEARTBEATS}次未收到心跳返回，触发重连");
+                    mqttReconnect();
+                    // 重连后重置计数器，避免立即再次触发重连
+                    _missedHeartbeatCount = 0;
+                }
             }      
         }
         /// <summary>
@@ -1119,7 +1134,7 @@ namespace EMS
                 if (!Directory.Exists(aDirection))
                     Directory.CreateDirectory(aDirection);
 
-                log.Info("2数据写入文本获取锁_lockTXT ");
+                //log.Info("2数据写入文本获取锁_lockTXT ");
                 lock (_lockTXT)
                 {
                     using (StreamWriter sw = new StreamWriter(aDirection + "\\" + aSavePath))
@@ -1411,6 +1426,8 @@ namespace EMS
                     {
                         ConnectToCloud = true;
                     }
+
+                    _missedHeartbeatCount = 0;
                     receivedHeartbeatResponse = true;
                 }
             }
@@ -1516,6 +1533,7 @@ namespace EMS
         ///     "value":100 
         /// </summary>
         /// <param name="astrTacticFile"></param>
+        /// 
         public bool GetServerTactics(string astrData)
         {
             bool result = false;
@@ -1556,13 +1574,8 @@ namespace EMS
 
                         if (iTacticCount > 0)
                         {
-                            string strquery = "select * from tactics where rTime = '" + strDate +"';";
-                            if (DBConnection.CheckRec(strquery))//查找同日期的策略
-                            {
-                                //删除同日期的策略
-                                string strDelete = "delete from tactics where rTime = '"+ strDate + "';";
-                                DBConnection.ExecSQL(strDelete);
-                            }
+                            // 用于跟踪已经删除过的日期，避免重复删除
+                            System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
 
                             //增加新数据
                             for (int i = 0; i < iTacticCount; i++)
@@ -1610,6 +1623,7 @@ namespace EMS
                                     value = jsonObject["params"]["strategy"][i]["value"].ToString();
                                 }
 
+                                // 获取策略日期，如果不存在则使用默认日期
                                 if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
                                 {
                                     strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
@@ -1617,6 +1631,15 @@ namespace EMS
                                 else
                                 {
                                     strategyDate = strDate;
+                                }
+
+                                // 如果该日期的策略还没有被删除，则执行删除操作
+                                if (!deletedDates.Contains(strategyDate))
+                                {
+                                    //删除同日期的策略
+                                    string strDelete = "delete from tactics where rTime = '" + strategyDate + "';";
+                                    DBConnection.ExecSQL(strDelete);
+                                    deletedDates.Add(strategyDate);
                                 }
 
                                 if (start != null && end != null && charge != null && mode != null && value != null)
@@ -1635,7 +1658,7 @@ namespace EMS
                             if (frmMain.TacticsList.LoadFromMySQL(0))
                             {
                                 frmMain.TacticsList.ActiveIndex = -1;
-                                result  = true;
+                                result = true;
                             }
                             else
                             {
@@ -1651,6 +1674,143 @@ namespace EMS
             }
             return result;
         }
+
+
+        /*        public bool GetServerTactics(string astrData)
+                {
+                    bool result = false;
+                    try
+                    {
+                        //只有设置接受云策略 且 为主机 才接收云下发的策略
+                        if (frmSet.config != null)
+                        {
+                            if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            log.Error("frmSet.config 未初始化成功，GetServerTactics无法判断");
+                            return false;
+                        }
+
+                        //判断内容是否为空
+                        if (astrData == "")
+                        {
+                            return false;
+                        }
+                        JObject jsonObject = null;
+                        jsonObject = JObject.Parse(astrData);
+
+                        if (jsonObject["method"] != null)
+                        {
+                            string strTopic = jsonObject["method"].ToString();
+                            if (strTopic != "ems/strategy")
+                                return false;
+
+                            if (jsonObject["params"]["date"] != null && jsonObject["params"]["strategy"] != null)
+                            {
+                                string strDate = jsonObject["params"]["date"].ToString();
+                                int iTacticCount = jsonObject["params"]["strategy"].Count();
+
+                                if (iTacticCount > 0)
+                                {
+                                    string strquery = "select * from tactics where rTime = '" + strDate +"';";
+                                    if (DBConnection.CheckRec(strquery))//查找同日期的策略
+                                    {
+                                        //删除同日期的策略
+                                        string strDelete = "delete from tactics where rTime = '"+ strDate + "';";
+                                        DBConnection.ExecSQL(strDelete);
+                                    }
+
+                                    //增加新数据
+                                    for (int i = 0; i < iTacticCount; i++)
+                                    {
+                                        string strInsert = "";
+                                        string start = "";
+                                        string end = "";
+                                        string charge = "";
+                                        string mode = "";
+                                        string value = "";
+                                        string strategyDate = "";
+
+                                        if (jsonObject["params"]["strategy"][i]["start"] != null)
+                                        {
+                                            start = jsonObject["params"]["strategy"][i]["start"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["end"] != null)
+                                        {
+                                            end = jsonObject["params"]["strategy"][i]["end"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["charge"] != null)
+                                        {
+                                            if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
+                                                charge = "充电";
+                                            else
+                                                charge = "放电";
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["mode"] != null)
+                                        {
+                                            if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
+                                            {
+                                                mode = "恒功率";
+                                            }
+                                            else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
+                                            {
+                                                mode = "自适应需量";
+                                            }
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["value"] != null)
+                                        {
+                                            value = jsonObject["params"]["strategy"][i]["value"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
+                                        {
+                                            strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
+                                        }
+                                        else
+                                        {
+                                            strategyDate = strDate;
+                                        }
+
+                                        if (start != null && end != null && charge != null && mode != null && value != null)
+                                        {
+                                            strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                                                    "VALUES ('" + start + "', '" + end + "', '" + charge + "', '" + mode + "', '" + value + "', '" + strategyDate + "')";
+
+                                            //插入
+                                            if (DBConnection.ExecSQL(strInsert))
+                                            {
+                                                result = true;
+                                            }
+                                        }
+                                    }
+
+                                    if (frmMain.TacticsList.LoadFromMySQL(0))
+                                    {
+                                        frmMain.TacticsList.ActiveIndex = -1;
+                                        result  = true;
+                                    }
+                                    else
+                                    {
+                                        result = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("GetServerTactics: " + ex.Message);
+                    }
+                    return result;
+                }*/
 
 
         /// <summary>

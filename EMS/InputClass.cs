@@ -293,7 +293,7 @@ namespace EMS
                             if (strData2Park(strData, ref oneCommand, this.pc))
                             {
                                 ComList.Add(oneCommand);
-                                log.Debug($"命令添加成功: {strData}");
+                                //log.Debug($"命令添加成功: {strData}");
                             }
                             else
                             {
@@ -7234,7 +7234,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.0.7";
+        public string EMSVersion { get; set; } = "1.0.8";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7477,7 +7477,7 @@ namespace EMS
 
                 try
                 {
-                    PingReply reply = pingSender.Send("netcheck.eaiot.cloud", timeout, buffer, options);
+                    PingReply reply = pingSender.Send("101.132.24.17", timeout, buffer, options);
                     isSlbPingSuccess = reply.Status == IPStatus.Success;
 
                     if (!isSlbPingSuccess)
@@ -8588,9 +8588,9 @@ namespace EMS
                 {
                     // 获取信号数据
                     frmMain.Selffrm.AllEquipment.TestSignalStrength();
-                    //Thread.Sleep(300000);
+                    Thread.Sleep(300000);
 
-                    Thread.Sleep(60000);
+                    //Thread.Sleep(60000);
                 }
                 catch (Exception ex)
                 {
