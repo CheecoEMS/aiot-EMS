@@ -2707,12 +2707,28 @@ namespace EMS
         {
             try
             {
+                //充电
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsPV1(tneBMScellPV1.Value);//BMS1级单体过压报警阈值
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV1(tneBMScellUPV1.Value);// BMS1级单体过压恢复阈值
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsPV2(tneBMScellPV2.Value);//BMS2级单体过压报警阈值
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV2(tneBMScellUPV2.Value);// BMS2级单体过压恢复阈值
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsPV3(tneBMScellPV3.Value);//BMS3级单体过压报警阈值
                 frmMain.Selffrm.AllEquipment.BMS.SetBmsUPV3(tneBMScellUPV3.Value);// BMS3级单体过压恢复阈值*/
+
+                //放电
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsOV1(tneBMScellOV1.Value);//BMS1级单体欠压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUOV1(tneBMScellUOV1.Value);// BMS1级单体欠压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsOV2(tneBMScellOV2.Value);//BMS2级单体欠压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUOV2(tneBMScellUOV2.Value);// BMS2级单体欠压恢复阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsOV3(tneBMScellOV3.Value);//BMS3级单体欠压报警阈值
+                frmMain.Selffrm.AllEquipment.BMS.SetBmsUOV3(tneBMScellUOV3.Value);// BMS3级单体欠压恢复阈值*/
+
+                //其他参数
+                frmSet.cloudLimits.BmsDerateRatio = tneBMSwaValue.Value;
+                frmSet.cloudLimits.CellV_Gap = tneBmsBalaDiff.Value;
+
+                frmSet.Set_Cloudlimits();
+
             }
             catch { }
         }

@@ -67,24 +67,12 @@ namespace EMS
             this.label113 = new System.Windows.Forms.Label();
             this.listView1 = new System.Windows.Forms.ListView();
             this.panel5 = new System.Windows.Forms.Panel();
-            this.label158 = new System.Windows.Forms.Label();
-            this.label157 = new System.Windows.Forms.Label();
             this.tbBMScellErrUPV3 = new System.Windows.Forms.TextBox();
             this.tbBMScellErrPV3 = new System.Windows.Forms.TextBox();
-            this.label156 = new System.Windows.Forms.Label();
-            this.label155 = new System.Windows.Forms.Label();
-            this.label154 = new System.Windows.Forms.Label();
-            this.label153 = new System.Windows.Forms.Label();
-            this.label152 = new System.Windows.Forms.Label();
             this.tbBMScellErrUPV2 = new System.Windows.Forms.TextBox();
             this.tbBMScellErrPV2 = new System.Windows.Forms.TextBox();
             this.tbBMScellErrUPV1 = new System.Windows.Forms.TextBox();
-            this.label151 = new System.Windows.Forms.Label();
-            this.label150 = new System.Windows.Forms.Label();
-            this.label149 = new System.Windows.Forms.Label();
-            this.label148 = new System.Windows.Forms.Label();
             this.tbBMScellErrPV1 = new System.Windows.Forms.TextBox();
-            this.label147 = new System.Windows.Forms.Label();
             this.label104 = new System.Windows.Forms.Label();
             this.label103 = new System.Windows.Forms.Label();
             this.label102 = new System.Windows.Forms.Label();
@@ -132,6 +120,10 @@ namespace EMS
             this.wClass = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.UPower = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.tbAirHotTempReturn = new System.Windows.Forms.TextBox();
+            this.tbAirSetHotTemp = new System.Windows.Forms.TextBox();
+            this.tbAirCoolTempReturn = new System.Windows.Forms.TextBox();
+            this.tbAirSetCoolTemp = new System.Windows.Forms.TextBox();
             this.label72 = new System.Windows.Forms.Label();
             this.label71 = new System.Windows.Forms.Label();
             this.label46 = new System.Windows.Forms.Label();
@@ -420,10 +412,16 @@ namespace EMS
             this.label161 = new System.Windows.Forms.Label();
             this.label160 = new System.Windows.Forms.Label();
             this.label159 = new System.Windows.Forms.Label();
-            this.tbAirSetCoolTemp = new System.Windows.Forms.TextBox();
-            this.tbAirCoolTempReturn = new System.Windows.Forms.TextBox();
-            this.tbAirSetHotTemp = new System.Windows.Forms.TextBox();
-            this.tbAirHotTempReturn = new System.Windows.Forms.TextBox();
+            this.label155 = new System.Windows.Forms.Label();
+            this.label148 = new System.Windows.Forms.Label();
+            this.label147 = new System.Windows.Forms.Label();
+            this.label149 = new System.Windows.Forms.Label();
+            this.tbBMScellErrOV1 = new System.Windows.Forms.TextBox();
+            this.tbBMScellErrOV2 = new System.Windows.Forms.TextBox();
+            this.tbBMScellErrOV3 = new System.Windows.Forms.TextBox();
+            this.tbBMScellErrUOV1 = new System.Windows.Forms.TextBox();
+            this.tbBMScellErrUOV2 = new System.Windows.Forms.TextBox();
+            this.tbBMScellErrUOV3 = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel6.SuspendLayout();
@@ -916,24 +914,22 @@ namespace EMS
             // panel5
             // 
             this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel5.Controls.Add(this.label158);
-            this.panel5.Controls.Add(this.label157);
+            this.panel5.Controls.Add(this.tbBMScellErrUOV3);
+            this.panel5.Controls.Add(this.tbBMScellErrUOV2);
+            this.panel5.Controls.Add(this.tbBMScellErrUOV1);
+            this.panel5.Controls.Add(this.tbBMScellErrOV3);
+            this.panel5.Controls.Add(this.tbBMScellErrOV2);
+            this.panel5.Controls.Add(this.tbBMScellErrOV1);
+            this.panel5.Controls.Add(this.label149);
+            this.panel5.Controls.Add(this.label147);
+            this.panel5.Controls.Add(this.label148);
             this.panel5.Controls.Add(this.tbBMScellErrUPV3);
             this.panel5.Controls.Add(this.tbBMScellErrPV3);
-            this.panel5.Controls.Add(this.label156);
             this.panel5.Controls.Add(this.label155);
-            this.panel5.Controls.Add(this.label154);
-            this.panel5.Controls.Add(this.label153);
-            this.panel5.Controls.Add(this.label152);
             this.panel5.Controls.Add(this.tbBMScellErrUPV2);
             this.panel5.Controls.Add(this.tbBMScellErrPV2);
             this.panel5.Controls.Add(this.tbBMScellErrUPV1);
-            this.panel5.Controls.Add(this.label151);
-            this.panel5.Controls.Add(this.label150);
-            this.panel5.Controls.Add(this.label149);
-            this.panel5.Controls.Add(this.label148);
             this.panel5.Controls.Add(this.tbBMScellErrPV1);
-            this.panel5.Controls.Add(this.label147);
             this.panel5.Controls.Add(this.label104);
             this.panel5.Controls.Add(this.label103);
             this.panel5.Controls.Add(this.label102);
@@ -974,31 +970,11 @@ namespace EMS
             this.panel5.Size = new System.Drawing.Size(352, 580);
             this.panel5.TabIndex = 78;
             // 
-            // label158
-            // 
-            this.label158.AutoSize = true;
-            this.label158.Location = new System.Drawing.Point(117, 522);
-            this.label158.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label158.Name = "label158";
-            this.label158.Size = new System.Drawing.Size(21, 21);
-            this.label158.TabIndex = 112;
-            this.label158.Text = "V";
-            // 
-            // label157
-            // 
-            this.label157.AutoSize = true;
-            this.label157.Location = new System.Drawing.Point(30, 522);
-            this.label157.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label157.Name = "label157";
-            this.label157.Size = new System.Drawing.Size(21, 21);
-            this.label157.TabIndex = 111;
-            this.label157.Text = "V";
-            // 
             // tbBMScellErrUPV3
             // 
             this.tbBMScellErrUPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrUPV3.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrUPV3.Location = new System.Drawing.Point(90, 477);
+            this.tbBMScellErrUPV3.Location = new System.Drawing.Point(264, 391);
             this.tbBMScellErrUPV3.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrUPV3.Name = "tbBMScellErrUPV3";
             this.tbBMScellErrUPV3.ReadOnly = true;
@@ -1009,68 +985,18 @@ namespace EMS
             // 
             this.tbBMScellErrPV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrPV3.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrPV3.Location = new System.Drawing.Point(2, 477);
+            this.tbBMScellErrPV3.Location = new System.Drawing.Point(264, 340);
             this.tbBMScellErrPV3.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrPV3.Name = "tbBMScellErrPV3";
             this.tbBMScellErrPV3.ReadOnly = true;
             this.tbBMScellErrPV3.Size = new System.Drawing.Size(84, 29);
             this.tbBMScellErrPV3.TabIndex = 109;
             // 
-            // label156
-            // 
-            this.label156.AutoSize = true;
-            this.label156.Location = new System.Drawing.Point(97, 438);
-            this.label156.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label156.Name = "label156";
-            this.label156.Size = new System.Drawing.Size(77, 21);
-            this.label156.TabIndex = 108;
-            this.label156.Text = "3级P恢复";
-            // 
-            // label155
-            // 
-            this.label155.AutoSize = true;
-            this.label155.Location = new System.Drawing.Point(6, 438);
-            this.label155.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label155.Name = "label155";
-            this.label155.Size = new System.Drawing.Size(77, 21);
-            this.label155.TabIndex = 107;
-            this.label155.Text = "3级P告警";
-            // 
-            // label154
-            // 
-            this.label154.AutoSize = true;
-            this.label154.Location = new System.Drawing.Point(289, 404);
-            this.label154.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label154.Name = "label154";
-            this.label154.Size = new System.Drawing.Size(21, 21);
-            this.label154.TabIndex = 106;
-            this.label154.Text = "V";
-            // 
-            // label153
-            // 
-            this.label153.AutoSize = true;
-            this.label153.Location = new System.Drawing.Point(208, 404);
-            this.label153.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label153.Name = "label153";
-            this.label153.Size = new System.Drawing.Size(21, 21);
-            this.label153.TabIndex = 105;
-            this.label153.Text = "V";
-            // 
-            // label152
-            // 
-            this.label152.AutoSize = true;
-            this.label152.Location = new System.Drawing.Point(117, 404);
-            this.label152.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label152.Name = "label152";
-            this.label152.Size = new System.Drawing.Size(21, 21);
-            this.label152.TabIndex = 104;
-            this.label152.Text = "V";
-            // 
             // tbBMScellErrUPV2
             // 
             this.tbBMScellErrUPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrUPV2.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrUPV2.Location = new System.Drawing.Point(264, 364);
+            this.tbBMScellErrUPV2.Location = new System.Drawing.Point(175, 391);
             this.tbBMScellErrUPV2.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrUPV2.Name = "tbBMScellErrUPV2";
             this.tbBMScellErrUPV2.ReadOnly = true;
@@ -1081,7 +1007,7 @@ namespace EMS
             // 
             this.tbBMScellErrPV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrPV2.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrPV2.Location = new System.Drawing.Point(176, 364);
+            this.tbBMScellErrPV2.Location = new System.Drawing.Point(175, 340);
             this.tbBMScellErrPV2.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrPV2.Name = "tbBMScellErrPV2";
             this.tbBMScellErrPV2.ReadOnly = true;
@@ -1092,73 +1018,23 @@ namespace EMS
             // 
             this.tbBMScellErrUPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrUPV1.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrUPV1.Location = new System.Drawing.Point(90, 364);
+            this.tbBMScellErrUPV1.Location = new System.Drawing.Point(87, 391);
             this.tbBMScellErrUPV1.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrUPV1.Name = "tbBMScellErrUPV1";
             this.tbBMScellErrUPV1.ReadOnly = true;
             this.tbBMScellErrUPV1.Size = new System.Drawing.Size(84, 29);
             this.tbBMScellErrUPV1.TabIndex = 101;
             // 
-            // label151
-            // 
-            this.label151.AutoSize = true;
-            this.label151.Location = new System.Drawing.Point(266, 329);
-            this.label151.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label151.Name = "label151";
-            this.label151.Size = new System.Drawing.Size(77, 21);
-            this.label151.TabIndex = 100;
-            this.label151.Text = "2级P恢复";
-            // 
-            // label150
-            // 
-            this.label150.AutoSize = true;
-            this.label150.Location = new System.Drawing.Point(183, 329);
-            this.label150.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label150.Name = "label150";
-            this.label150.Size = new System.Drawing.Size(77, 21);
-            this.label150.TabIndex = 99;
-            this.label150.Text = "2级P告警";
-            // 
-            // label149
-            // 
-            this.label149.AutoSize = true;
-            this.label149.Location = new System.Drawing.Point(102, 329);
-            this.label149.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label149.Name = "label149";
-            this.label149.Size = new System.Drawing.Size(77, 21);
-            this.label149.TabIndex = 98;
-            this.label149.Text = "1级P恢复";
-            // 
-            // label148
-            // 
-            this.label148.AutoSize = true;
-            this.label148.Location = new System.Drawing.Point(30, 404);
-            this.label148.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label148.Name = "label148";
-            this.label148.Size = new System.Drawing.Size(21, 21);
-            this.label148.TabIndex = 97;
-            this.label148.Text = "V";
-            // 
             // tbBMScellErrPV1
             // 
             this.tbBMScellErrPV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.tbBMScellErrPV1.ForeColor = System.Drawing.Color.White;
-            this.tbBMScellErrPV1.Location = new System.Drawing.Point(2, 364);
+            this.tbBMScellErrPV1.Location = new System.Drawing.Point(87, 340);
             this.tbBMScellErrPV1.Margin = new System.Windows.Forms.Padding(2);
             this.tbBMScellErrPV1.Name = "tbBMScellErrPV1";
             this.tbBMScellErrPV1.ReadOnly = true;
             this.tbBMScellErrPV1.Size = new System.Drawing.Size(84, 29);
             this.tbBMScellErrPV1.TabIndex = 96;
-            // 
-            // label147
-            // 
-            this.label147.AutoSize = true;
-            this.label147.Location = new System.Drawing.Point(6, 329);
-            this.label147.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label147.Name = "label147";
-            this.label147.Size = new System.Drawing.Size(77, 21);
-            this.label147.TabIndex = 95;
-            this.label147.Text = "1级P告警";
             // 
             // label104
             // 
@@ -1650,6 +1526,50 @@ namespace EMS
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(317, 500);
             this.panel4.TabIndex = 68;
+            // 
+            // tbAirHotTempReturn
+            // 
+            this.tbAirHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbAirHotTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tbAirHotTempReturn.Location = new System.Drawing.Point(149, 191);
+            this.tbAirHotTempReturn.Margin = new System.Windows.Forms.Padding(2);
+            this.tbAirHotTempReturn.Name = "tbAirHotTempReturn";
+            this.tbAirHotTempReturn.ReadOnly = true;
+            this.tbAirHotTempReturn.Size = new System.Drawing.Size(84, 29);
+            this.tbAirHotTempReturn.TabIndex = 107;
+            // 
+            // tbAirSetHotTemp
+            // 
+            this.tbAirSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbAirSetHotTemp.ForeColor = System.Drawing.Color.White;
+            this.tbAirSetHotTemp.Location = new System.Drawing.Point(149, 139);
+            this.tbAirSetHotTemp.Margin = new System.Windows.Forms.Padding(2);
+            this.tbAirSetHotTemp.Name = "tbAirSetHotTemp";
+            this.tbAirSetHotTemp.ReadOnly = true;
+            this.tbAirSetHotTemp.Size = new System.Drawing.Size(84, 29);
+            this.tbAirSetHotTemp.TabIndex = 106;
+            // 
+            // tbAirCoolTempReturn
+            // 
+            this.tbAirCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbAirCoolTempReturn.ForeColor = System.Drawing.Color.White;
+            this.tbAirCoolTempReturn.Location = new System.Drawing.Point(149, 90);
+            this.tbAirCoolTempReturn.Margin = new System.Windows.Forms.Padding(2);
+            this.tbAirCoolTempReturn.Name = "tbAirCoolTempReturn";
+            this.tbAirCoolTempReturn.ReadOnly = true;
+            this.tbAirCoolTempReturn.Size = new System.Drawing.Size(84, 29);
+            this.tbAirCoolTempReturn.TabIndex = 105;
+            // 
+            // tbAirSetCoolTemp
+            // 
+            this.tbAirSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbAirSetCoolTemp.ForeColor = System.Drawing.Color.White;
+            this.tbAirSetCoolTemp.Location = new System.Drawing.Point(149, 32);
+            this.tbAirSetCoolTemp.Margin = new System.Windows.Forms.Padding(2);
+            this.tbAirSetCoolTemp.Name = "tbAirSetCoolTemp";
+            this.tbAirSetCoolTemp.ReadOnly = true;
+            this.tbAirSetCoolTemp.Size = new System.Drawing.Size(84, 29);
+            this.tbAirSetCoolTemp.TabIndex = 104;
             // 
             // label72
             // 
@@ -5047,49 +4967,111 @@ namespace EMS
             this.label159.TabIndex = 44;
             this.label159.Text = "从机1";
             // 
-            // tbAirSetCoolTemp
+            // label155
             // 
-            this.tbAirSetCoolTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tbAirSetCoolTemp.ForeColor = System.Drawing.Color.White;
-            this.tbAirSetCoolTemp.Location = new System.Drawing.Point(149, 32);
-            this.tbAirSetCoolTemp.Margin = new System.Windows.Forms.Padding(2);
-            this.tbAirSetCoolTemp.Name = "tbAirSetCoolTemp";
-            this.tbAirSetCoolTemp.ReadOnly = true;
-            this.tbAirSetCoolTemp.Size = new System.Drawing.Size(84, 29);
-            this.tbAirSetCoolTemp.TabIndex = 104;
+            this.label155.AutoSize = true;
+            this.label155.Location = new System.Drawing.Point(9, 391);
+            this.label155.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label155.Name = "label155";
+            this.label155.Size = new System.Drawing.Size(74, 21);
+            this.label155.TabIndex = 107;
+            this.label155.Text = "充电恢复";
             // 
-            // tbAirCoolTempReturn
+            // label148
             // 
-            this.tbAirCoolTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tbAirCoolTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tbAirCoolTempReturn.Location = new System.Drawing.Point(149, 90);
-            this.tbAirCoolTempReturn.Margin = new System.Windows.Forms.Padding(2);
-            this.tbAirCoolTempReturn.Name = "tbAirCoolTempReturn";
-            this.tbAirCoolTempReturn.ReadOnly = true;
-            this.tbAirCoolTempReturn.Size = new System.Drawing.Size(84, 29);
-            this.tbAirCoolTempReturn.TabIndex = 105;
+            this.label148.AutoSize = true;
+            this.label148.Location = new System.Drawing.Point(9, 340);
+            this.label148.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label148.Name = "label148";
+            this.label148.Size = new System.Drawing.Size(74, 21);
+            this.label148.TabIndex = 111;
+            this.label148.Text = "充电告警";
             // 
-            // tbAirSetHotTemp
+            // label147
             // 
-            this.tbAirSetHotTemp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tbAirSetHotTemp.ForeColor = System.Drawing.Color.White;
-            this.tbAirSetHotTemp.Location = new System.Drawing.Point(149, 139);
-            this.tbAirSetHotTemp.Margin = new System.Windows.Forms.Padding(2);
-            this.tbAirSetHotTemp.Name = "tbAirSetHotTemp";
-            this.tbAirSetHotTemp.ReadOnly = true;
-            this.tbAirSetHotTemp.Size = new System.Drawing.Size(84, 29);
-            this.tbAirSetHotTemp.TabIndex = 106;
+            this.label147.AutoSize = true;
+            this.label147.Location = new System.Drawing.Point(9, 435);
+            this.label147.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label147.Name = "label147";
+            this.label147.Size = new System.Drawing.Size(74, 21);
+            this.label147.TabIndex = 112;
+            this.label147.Text = "放电告警";
             // 
-            // tbAirHotTempReturn
+            // label149
             // 
-            this.tbAirHotTempReturn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
-            this.tbAirHotTempReturn.ForeColor = System.Drawing.Color.White;
-            this.tbAirHotTempReturn.Location = new System.Drawing.Point(149, 191);
-            this.tbAirHotTempReturn.Margin = new System.Windows.Forms.Padding(2);
-            this.tbAirHotTempReturn.Name = "tbAirHotTempReturn";
-            this.tbAirHotTempReturn.ReadOnly = true;
-            this.tbAirHotTempReturn.Size = new System.Drawing.Size(84, 29);
-            this.tbAirHotTempReturn.TabIndex = 107;
+            this.label149.AutoSize = true;
+            this.label149.Location = new System.Drawing.Point(9, 476);
+            this.label149.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label149.Name = "label149";
+            this.label149.Size = new System.Drawing.Size(74, 21);
+            this.label149.TabIndex = 113;
+            this.label149.Text = "放电恢复";
+            // 
+            // tbBMScellErrOV1
+            // 
+            this.tbBMScellErrOV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrOV1.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrOV1.Location = new System.Drawing.Point(87, 435);
+            this.tbBMScellErrOV1.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrOV1.Name = "tbBMScellErrOV1";
+            this.tbBMScellErrOV1.ReadOnly = true;
+            this.tbBMScellErrOV1.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrOV1.TabIndex = 114;
+            // 
+            // tbBMScellErrOV2
+            // 
+            this.tbBMScellErrOV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrOV2.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrOV2.Location = new System.Drawing.Point(175, 435);
+            this.tbBMScellErrOV2.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrOV2.Name = "tbBMScellErrOV2";
+            this.tbBMScellErrOV2.ReadOnly = true;
+            this.tbBMScellErrOV2.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrOV2.TabIndex = 115;
+            // 
+            // tbBMScellErrOV3
+            // 
+            this.tbBMScellErrOV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrOV3.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrOV3.Location = new System.Drawing.Point(263, 435);
+            this.tbBMScellErrOV3.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrOV3.Name = "tbBMScellErrOV3";
+            this.tbBMScellErrOV3.ReadOnly = true;
+            this.tbBMScellErrOV3.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrOV3.TabIndex = 116;
+            // 
+            // tbBMScellErrUOV1
+            // 
+            this.tbBMScellErrUOV1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrUOV1.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrUOV1.Location = new System.Drawing.Point(87, 476);
+            this.tbBMScellErrUOV1.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrUOV1.Name = "tbBMScellErrUOV1";
+            this.tbBMScellErrUOV1.ReadOnly = true;
+            this.tbBMScellErrUOV1.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrUOV1.TabIndex = 117;
+            // 
+            // tbBMScellErrUOV2
+            // 
+            this.tbBMScellErrUOV2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrUOV2.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrUOV2.Location = new System.Drawing.Point(175, 476);
+            this.tbBMScellErrUOV2.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrUOV2.Name = "tbBMScellErrUOV2";
+            this.tbBMScellErrUOV2.ReadOnly = true;
+            this.tbBMScellErrUOV2.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrUOV2.TabIndex = 118;
+            // 
+            // tbBMScellErrUOV3
+            // 
+            this.tbBMScellErrUOV3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
+            this.tbBMScellErrUOV3.ForeColor = System.Drawing.Color.White;
+            this.tbBMScellErrUOV3.Location = new System.Drawing.Point(263, 476);
+            this.tbBMScellErrUOV3.Margin = new System.Windows.Forms.Padding(2);
+            this.tbBMScellErrUOV3.Name = "tbBMScellErrUOV3";
+            this.tbBMScellErrUOV3.ReadOnly = true;
+            this.tbBMScellErrUOV3.Size = new System.Drawing.Size(84, 29);
+            this.tbBMScellErrUOV3.TabIndex = 119;
             // 
             // frmState
             // 
@@ -5430,22 +5412,10 @@ namespace EMS
         private System.Windows.Forms.TextBox tbLCModel;
         private System.Windows.Forms.Label label144;
         private System.Windows.Forms.Button btnLiquidCool;
-        private System.Windows.Forms.Label label147;
         private System.Windows.Forms.TextBox tbBMScellErrPV1;
-        private System.Windows.Forms.Label label148;
-        private System.Windows.Forms.Label label154;
-        private System.Windows.Forms.Label label153;
-        private System.Windows.Forms.Label label152;
         private System.Windows.Forms.TextBox tbBMScellErrUPV2;
         private System.Windows.Forms.TextBox tbBMScellErrPV2;
         private System.Windows.Forms.TextBox tbBMScellErrUPV1;
-        private System.Windows.Forms.Label label151;
-        private System.Windows.Forms.Label label150;
-        private System.Windows.Forms.Label label149;
-        private System.Windows.Forms.Label label156;
-        private System.Windows.Forms.Label label155;
-        private System.Windows.Forms.Label label158;
-        private System.Windows.Forms.Label label157;
         private System.Windows.Forms.TextBox tbBMScellErrUPV3;
         private System.Windows.Forms.TextBox tbBMScellErrPV3;
         private System.Windows.Forms.TabPage tpEMS;
@@ -5536,5 +5506,15 @@ namespace EMS
         private System.Windows.Forms.TextBox tbAirHotTempReturn;
         private System.Windows.Forms.TextBox tbAirSetHotTemp;
         private System.Windows.Forms.TextBox tbAirCoolTempReturn;
+        private System.Windows.Forms.Label label148;
+        private System.Windows.Forms.Label label155;
+        private System.Windows.Forms.TextBox tbBMScellErrUOV3;
+        private System.Windows.Forms.TextBox tbBMScellErrUOV2;
+        private System.Windows.Forms.TextBox tbBMScellErrUOV1;
+        private System.Windows.Forms.TextBox tbBMScellErrOV3;
+        private System.Windows.Forms.TextBox tbBMScellErrOV2;
+        private System.Windows.Forms.TextBox tbBMScellErrOV1;
+        private System.Windows.Forms.Label label149;
+        private System.Windows.Forms.Label label147;
     }
 }

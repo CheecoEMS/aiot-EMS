@@ -877,11 +877,12 @@ namespace EMS
             {
                 // 设置设备码
                 string strID = frmSet.config.SysID;
+                AllEquipment.full_iot_code = strID;
+
                 if (strID.Length >= 7)
                 {
                     strID = strID.Substring(strID.Length - 7, 7);
-                }
-
+                }        
                 AllEquipment.iot_code = "ems" + strID;
                 AllEquipment.Fire.iot_code = "fire" + strID;
                 AllEquipment.Profit2Cloud.iot_code = "ems" + strID;

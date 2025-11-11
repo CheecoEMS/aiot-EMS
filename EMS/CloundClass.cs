@@ -49,6 +49,13 @@ namespace EMS
         public string OtaTopic;
         public string checkPemTopic;
 
+        //新版本topic
+        public string PriceTopic_new;
+        public string TacticTopic_new;
+        public string EMSLimitTopic_new;
+        public string AIOTTableTopic_new;
+        public string BalaTableTopic_new;
+
         public MqttClient mqttClient { get; set; }
         public bool FirstRun = true;
         
@@ -362,8 +369,8 @@ namespace EMS
                     log.Error("HeartbeatThreadCallback encountered an error: " + ex.Message);
                 }
 
-                // 等待 3 分钟再进行下一次心跳
-                Thread.Sleep(180000);
+                // 等待 1 分钟再进行下一次心跳
+                Thread.Sleep(60000);
             }
         }
 
@@ -479,11 +486,11 @@ namespace EMS
             try
             {
                 PriceTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/meter/price/";
-                log.Error("PriceTopic: " + PriceTopic);
+                //log.Error("PriceTopic: " + PriceTopic);
                 TacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/strategy/";//request
-                log.Error("TacticTopic: " + TacticTopic);
+                //log.Error("TacticTopic: " + TacticTopic);
                 EMSLimitTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/limit/";
-                log.Error("EMSLimitTopic: " + EMSLimitTopic);
+                //log.Error("EMSLimitTopic: " + EMSLimitTopic);
                 //AIOTTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ctl/table/";
                 string strID = frmSet.config.SysID;
                 if (strID.Length >= 7)
@@ -495,6 +502,14 @@ namespace EMS
                 UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
                 OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
                 checkPemTopic = "pem";
+
+                
+                //新版topic
+                PriceTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/meter/price/";
+                TacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code +  "/ems/strategy/";
+                EMSLimitTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/limit/";
+                AIOTTableTopic_new = "/rpc/ctl" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
+                BalaTableTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
             }
             catch (Exception ex)
             {
@@ -558,7 +573,12 @@ namespace EMS
             ListenTopic(OtaTopic + "request");
             ListenTopic(checkPemTopic);
 
-            log.Error("Topic: " + OtaTopic + "request");
+            //订阅新topic
+            ListenTopic(PriceTopic_new + "request");
+            ListenTopic(TacticTopic_new + "request");
+            ListenTopic(EMSLimitTopic_new + "request");
+            ListenTopic(AIOTTableTopic_new + "request");
+            ListenTopic(BalaTableTopic_new + "request");
         }
 
         // 建立MQTT连接
@@ -773,7 +793,7 @@ namespace EMS
                 }
                 //同时订阅两个或者以上主题时，分类收集收到的信息
 
-                if (topic == TacticTopic + "request")
+                if (topic == TacticTopic + "request" || topic == TacticTopic_new + "request")
                 {
                     Result = GetServerTactics(message);
                     log.Info("接收TacticTopic，获取锁_lockMqtt");
@@ -805,7 +825,7 @@ namespace EMS
                         }
                     }
                 }
-                else if (topic == PriceTopic + "request")
+                else if (topic == PriceTopic + "request" || topic == PriceTopic_new + "request")
                 {
                     Result = GetServerEPrices(message);
                     log.Error("接收PriceTopic，结果：" + Result);
@@ -837,7 +857,7 @@ namespace EMS
                         }
                     }
                 }
-                else if (topic == EMSLimitTopic + "request")
+                else if (topic == EMSLimitTopic + "request" || topic == EMSLimitTopic_new + "request")
                 {
                     Result = GetServerEMSLimit(message);
                     log.Info("接收EMSLimitTopic，获取锁_lockMqtt");
@@ -869,7 +889,7 @@ namespace EMS
                         }
                     }
                 }
-                else if (topic == AIOTTableTopic + "request")
+                else if (topic == AIOTTableTopic + "request" || topic == AIOTTableTopic_new + "request")
                 {
                     strID = GetAiotTable(message);
                     log.Info("接收AIOTTableTopic，获取锁_lockMqtt");
@@ -888,7 +908,7 @@ namespace EMS
                         }
                     }
                 }
-                else if (topic == BalaTableTopic + "request")
+                else if (topic == BalaTableTopic + "request" || topic == BalaTableTopic_new + "request")
                 {
                     strID = GetBalaTable(message);
                     log.Info("接收BalaTableTopic，获取锁_lockMqtt");
@@ -1675,144 +1695,6 @@ namespace EMS
             return result;
         }
 
-
-        /*        public bool GetServerTactics(string astrData)
-                {
-                    bool result = false;
-                    try
-                    {
-                        //只有设置接受云策略 且 为主机 才接收云下发的策略
-                        if (frmSet.config != null)
-                        {
-                            if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
-                            {
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            log.Error("frmSet.config 未初始化成功，GetServerTactics无法判断");
-                            return false;
-                        }
-
-                        //判断内容是否为空
-                        if (astrData == "")
-                        {
-                            return false;
-                        }
-                        JObject jsonObject = null;
-                        jsonObject = JObject.Parse(astrData);
-
-                        if (jsonObject["method"] != null)
-                        {
-                            string strTopic = jsonObject["method"].ToString();
-                            if (strTopic != "ems/strategy")
-                                return false;
-
-                            if (jsonObject["params"]["date"] != null && jsonObject["params"]["strategy"] != null)
-                            {
-                                string strDate = jsonObject["params"]["date"].ToString();
-                                int iTacticCount = jsonObject["params"]["strategy"].Count();
-
-                                if (iTacticCount > 0)
-                                {
-                                    string strquery = "select * from tactics where rTime = '" + strDate +"';";
-                                    if (DBConnection.CheckRec(strquery))//查找同日期的策略
-                                    {
-                                        //删除同日期的策略
-                                        string strDelete = "delete from tactics where rTime = '"+ strDate + "';";
-                                        DBConnection.ExecSQL(strDelete);
-                                    }
-
-                                    //增加新数据
-                                    for (int i = 0; i < iTacticCount; i++)
-                                    {
-                                        string strInsert = "";
-                                        string start = "";
-                                        string end = "";
-                                        string charge = "";
-                                        string mode = "";
-                                        string value = "";
-                                        string strategyDate = "";
-
-                                        if (jsonObject["params"]["strategy"][i]["start"] != null)
-                                        {
-                                            start = jsonObject["params"]["strategy"][i]["start"].ToString();
-                                        }
-
-                                        if (jsonObject["params"]["strategy"][i]["end"] != null)
-                                        {
-                                            end = jsonObject["params"]["strategy"][i]["end"].ToString();
-                                        }
-
-                                        if (jsonObject["params"]["strategy"][i]["charge"] != null)
-                                        {
-                                            if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
-                                                charge = "充电";
-                                            else
-                                                charge = "放电";
-                                        }
-
-                                        if (jsonObject["params"]["strategy"][i]["mode"] != null)
-                                        {
-                                            if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
-                                            {
-                                                mode = "恒功率";
-                                            }
-                                            else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
-                                            {
-                                                mode = "自适应需量";
-                                            }
-                                        }
-
-                                        if (jsonObject["params"]["strategy"][i]["value"] != null)
-                                        {
-                                            value = jsonObject["params"]["strategy"][i]["value"].ToString();
-                                        }
-
-                                        if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
-                                        {
-                                            strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
-                                        }
-                                        else
-                                        {
-                                            strategyDate = strDate;
-                                        }
-
-                                        if (start != null && end != null && charge != null && mode != null && value != null)
-                                        {
-                                            strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
-                                                    "VALUES ('" + start + "', '" + end + "', '" + charge + "', '" + mode + "', '" + value + "', '" + strategyDate + "')";
-
-                                            //插入
-                                            if (DBConnection.ExecSQL(strInsert))
-                                            {
-                                                result = true;
-                                            }
-                                        }
-                                    }
-
-                                    if (frmMain.TacticsList.LoadFromMySQL(0))
-                                    {
-                                        frmMain.TacticsList.ActiveIndex = -1;
-                                        result  = true;
-                                    }
-                                    else
-                                    {
-                                        result = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("GetServerTactics: " + ex.Message);
-                    }
-                    return result;
-                }*/
-
-
         /// <summary>
         /// 尖峰平谷的设置
         ///    "start":"11:30:00",
@@ -1821,6 +1703,7 @@ namespace EMS
         ///     "range":3 //  尖：1峰：2平：3谷：4
         /// </summary>
         /// <param name="astrTacticFile"></param>
+        /// 
         public bool GetServerEPrices(string astrData, bool aIsFileData = false)
         {
             bool result = true;
@@ -1847,13 +1730,8 @@ namespace EMS
 
                         if (iPriceCount > 0)
                         {
-                            string strquery = "select * from electrovalence where rTime = '" + strDate +"';";
-                            if (DBConnection.CheckRec(strquery))//查找同日期的策略
-                            {
-                                //删除
-                                string strDelete = "delete from electrovalence where rTime = '"+ strDate + "';";
-                                DBConnection.ExecSQL(strDelete);
-                            }
+                            // 用于跟踪已经删除过的日期，避免重复删除
+                            System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
 
                             //增加新数据
                             for (int i = 0; i < iPriceCount; i++)
@@ -1861,7 +1739,7 @@ namespace EMS
                                 string strInsert = "";
                                 int isection = -1;
                                 string start = "";
-                                string pricdate = "";
+                                string pricDate = "";
 
                                 if (jsonObject["params"]["price"][i]["range"] != null)
                                 {
@@ -1883,19 +1761,29 @@ namespace EMS
                                     start = jsonObject["params"]["price"][i]["start"].ToString();
                                 }
 
-                                if (jsonObject["params"]["price"][i]["pricdate"] != null)
+                                // 获取电价日期，如果不存在则使用默认日期
+                                if (jsonObject["params"]["price"][i]["pricDate"] != null)
                                 {
-                                    pricdate = jsonObject["params"]["price"][i]["pricdate"].ToString();
+                                    pricDate = jsonObject["params"]["price"][i]["pricDate"].ToString();
                                 }
                                 else
                                 {
-                                    pricdate = strDate;
+                                    pricDate = strDate;
+                                }
+
+                                // 如果该日期的电价还没有被删除，则执行删除操作
+                                if (!deletedDates.Contains(pricDate))
+                                {
+                                    //删除同日期的电价
+                                    string strDelete = "delete from electrovalence where rTime = '" + pricDate + "';";
+                                    DBConnection.ExecSQL(strDelete);
+                                    deletedDates.Add(pricDate);
                                 }
 
                                 if (start != null && isection != -1)
                                 {
                                     strInsert = "INSERT INTO electrovalence (startTime, eName,section, rTime) " +
-                                            "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricdate + "')";
+                                            "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricDate + "')";
 
                                     //插入
                                     if (!DBConnection.ExecSQL(strInsert))
@@ -1905,7 +1793,8 @@ namespace EMS
                                 }
                             }
 
-                            if ( !(result && frmMain.TacticsList.LoadJFPGFromSQL())) {
+                            if (!(result && frmMain.TacticsList.LoadJFPGFromSQL()))
+                            {
                                 result = false;
                             }
                         }
@@ -1920,6 +1809,106 @@ namespace EMS
             return result;
         }
 
+        /*        public bool GetServerEPrices(string astrData, bool aIsFileData = false)
+                {
+                    bool result = true;
+                    try
+                    {
+                        if (astrData == "")
+                        {
+                            return false;
+                        }
+                        JObject jsonObject = null;
+                        jsonObject = JObject.Parse(astrData);
+                        if (jsonObject["method"] != null)
+                        {
+                            string strTopic = jsonObject["method"].ToString();
+                            if (strTopic != "meter/price")
+                                return false;
+
+                            if (jsonObject["params"]["date"] != null && jsonObject["params"]["price"] != null)
+                            {
+                                //获取策略日期
+                                string strDate = jsonObject["params"]["date"].ToString();
+                                //获取数量
+                                int iPriceCount = jsonObject["params"]["price"].Count();
+
+                                if (iPriceCount > 0)
+                                {
+                                    string strquery = "select * from electrovalence where rTime = '" + strDate +"';";
+                                    if (DBConnection.CheckRec(strquery))//查找同日期的策略
+                                    {
+                                        //删除
+                                        string strDelete = "delete from electrovalence where rTime = '"+ strDate + "';";
+                                        DBConnection.ExecSQL(strDelete);
+                                    }
+
+                                    //增加新数据
+                                    for (int i = 0; i < iPriceCount; i++)
+                                    {
+                                        string strInsert = "";
+                                        int isection = -1;
+                                        string start = "";
+                                        string pricdate = "";
+
+                                        if (jsonObject["params"]["price"][i]["range"] != null)
+                                        {
+                                            isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
+
+                                            if (jsonObject["params"]["price"][i]["buyPrice"] != null)
+                                            {
+                                                frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
+                                            }
+
+                                            if (jsonObject["params"]["price"][i]["sellPrice"] != null)
+                                            {
+                                                frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
+                                            }
+                                        }
+
+                                        if (jsonObject["params"]["price"][i]["start"] != null)
+                                        {
+                                            start = jsonObject["params"]["price"][i]["start"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["price"][i]["pricdate"] != null)
+                                        {
+                                            pricdate = jsonObject["params"]["price"][i]["pricdate"].ToString();
+                                        }
+                                        else
+                                        {
+                                            pricdate = strDate;
+                                        }
+
+                                        if (start != null && isection != -1)
+                                        {
+                                            strInsert = "INSERT INTO electrovalence (startTime, eName,section, rTime) " +
+                                                    "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricdate + "')";
+
+                                            //插入
+                                            if (!DBConnection.ExecSQL(strInsert))
+                                            {
+                                                result = false;
+                                            }
+                                        }
+                                    }
+
+                                    if (!(result && frmMain.TacticsList.LoadJFPGFromSQL()))
+                                    {
+                                        result = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("GetServerEPrices: " + ex.Message);
+                    }
+                    //输出返回数据
+                    return result;
+                }
+        */
 
         //云发来的策略数据
         public string GetAiotTable(string astrData)

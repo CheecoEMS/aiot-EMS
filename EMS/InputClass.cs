@@ -4996,8 +4996,16 @@ namespace EMS
         public double cellErrUPV1; //单体过压一级恢复门限
         public double cellErrPV2; //单体过压二级报警门限
         public double cellErrUPV2; //单体过压二级恢复门限
-        public double cellErrPV3; //单体欠压三级报警门限
+        public double cellErrPV3; //单体过压三级报警门限
         public double cellErrUPV3; //单体过压三级报警门限
+
+        //11.6
+        public double cellErrOV1; //单体欠压一级报警门限
+        public double cellErrUOV1; //单体欠压一级恢复门限
+        public double cellErrOV2; //单体欠压二级报警门限
+        public double cellErrUOV2; //单体欠压二级恢复门限
+        public double cellErrOV3; //单体欠压三级报警门限
+        public double cellErrUOV3; //单体欠压三级报警门限
 
         //9.6
         public ushort[] BalaSwitch = new ushort[25];
@@ -5016,9 +5024,10 @@ namespace EMS
         private int MajorVersionNumber;//主版本号
         private int SubversionVersionNumber;//子版本号
         private int CorrectionVersionNumber;//修正版本号
-        private string BmsHardware; //BMS硬件的软件版本号
+        public string BmsHardware { get; set; } //BMS硬件的软件版本号
 
         List<(string, int)> BmsVersions = new List<(string, int)>();
+
         public int FunctionLevel = 0;//功能等级
         private static string BmsVersionPath = "";//BMS版本
 
@@ -5424,6 +5433,51 @@ namespace EMS
             }
         }
 
+        //11.4设置bms欠压告警与恢复阈值
+        public void SetBmsOV1(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(164, aData, false);
+            }
+        }
+        public void SetBmsUOV1(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(165, aData, false);
+            }
+        }
+        public void SetBmsOV2(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(166, aData, false);
+            }
+        }
+        public void SetBmsUOV2(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(167, aData, false);
+            }
+        }
+        public void SetBmsOV3(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(168, aData, false);
+            }
+        }
+        public void SetBmsUOV3(int aData)
+        {
+            if (aData != 0)
+            {
+                SetSysData(169, aData, false);
+            }
+        }
+
+
 
         /// <summary>
         /// 打开BMS
@@ -5759,6 +5813,38 @@ namespace EMS
             {
                 bPrepared = true;
                 cellErrUPV3 =  Math.Round(float.Parse(strTemp), 3);
+            }
+
+            //11.6读取BMS 1，2，3级单体欠压告警和恢复门限
+            if (GetSysData(170, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrOV1 =  Math.Round(float.Parse(strTemp), 3);
+            }
+            if (GetSysData(171, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrUOV1 =  Math.Round(float.Parse(strTemp), 3);
+            }
+            if (GetSysData(172, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrOV2 =  Math.Round(float.Parse(strTemp), 3);
+            }
+            if (GetSysData(173, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrUOV2 =  Math.Round(float.Parse(strTemp), 3);
+            }
+            if (GetSysData(174, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrOV3 =  Math.Round(float.Parse(strTemp), 3);
+            }
+            if (GetSysData(175, ref strTemp))
+            {
+                bPrepared = true;
+                cellErrUOV3 =  Math.Round(float.Parse(strTemp), 3);
             }
 
         }
@@ -7119,6 +7205,7 @@ namespace EMS
         //public double[] SE2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems208800001";
+        public string full_iot_code { get; set; } = "j00000208800001";
         public int runState { get; set; } = 0;  //运行状态 0正常，1故障，2停机
         public bool[] ErrorState = { false, false, false };//1.2.3级别
 

@@ -278,6 +278,14 @@ namespace EMS
                     tbBMScellErrPV3.Text = oneBMS.cellErrPV3.ToString();
                     tbBMScellErrUPV3.Text = oneBMS.cellErrUPV3.ToString();
 
+                    //放电门限
+                    tbBMScellErrOV1.Text = oneBMS.cellErrOV1.ToString();
+                    tbBMScellErrUOV1.Text = oneBMS.cellErrUOV1.ToString();
+                    tbBMScellErrOV2.Text = oneBMS.cellErrOV2.ToString();
+                    tbBMScellErrUOV2.Text = oneBMS.cellErrUOV2.ToString();
+                    tbBMScellErrOV3.Text = oneBMS.cellErrOV3.ToString();
+                    tbBMScellErrUOV3.Text = oneBMS.cellErrUOV3.ToString();
+
                     tbBMSv.Text = oneBMS.v.ToString();
                     tbBMSa.Text = oneBMS.a.ToString();
                     tbBMSR.Text = oneBMS.insulationR.ToString();
