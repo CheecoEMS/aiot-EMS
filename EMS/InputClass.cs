@@ -6658,7 +6658,7 @@ namespace EMS
                 if (!_serialPort.IsOpen)
                 {
                     _serialPort.Open();
-                    log.Error($"已打开串口 {PortName}");
+                    //log.Error($"已打开串口 {PortName}");
                     return true;
                 }
                 return true;
@@ -6676,7 +6676,7 @@ namespace EMS
             if (_serialPort?.IsOpen ?? false)
             {
                 _serialPort.Close();
-                log.Error($"已关闭串口 {PortName}");
+                //log.Error($"已关闭串口 {PortName}");
             }
         }
 
@@ -6716,7 +6716,7 @@ namespace EMS
 
                 // 格式化指令（确保以\r\n结尾）
                 string formattedCommand = command.EndsWith("\r\n") ? command : command + "\r\n";
-                log.Error($"发送指令: {formattedCommand.Trim()}");
+                //log.Error($"发送指令: {formattedCommand.Trim()}");
                 _serialPort.Write(formattedCommand);
 
                 // 等待响应（根据指令类型调整超时）
@@ -6724,7 +6724,7 @@ namespace EMS
                 // 读取响应（此时无异步事件干扰，能完整获取数据）
                 string response = _serialPort.ReadExisting();
 
-                log.Error($"收到响应:\n{response}");
+                //log.Error($"收到响应:\n{response}");
                 return response;
             }
             catch (TimeoutException)
@@ -6913,11 +6913,11 @@ namespace EMS
                 var signalInfo = GetSignalQuality();
                 if (signalInfo.IsValid)
                 {
-                    log.Error("信号质量信息:");
+/*                    log.Error("信号质量信息:");
                     log.Error($"RSSI: {signalInfo.Rssi}");
                     log.Error($"RSRP: {signalInfo.Rsrp} dBm");
                     log.Error($"SINR: {signalInfo.Sinr} dB");
-                    log.Error($"RSRP: {signalInfo.Rsrq} dB");
+                    log.Error($"RSRP: {signalInfo.Rsrq} dB");*/
                     return signalInfo; // 返回有效结果
                 }
                 else

@@ -216,8 +216,9 @@ namespace IEC104
             //验证消息
             //string hexString = BitConverter.ToString(message);
 
-            log.Warn("");
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            //log.Warn("");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); 
+            //log.Warn(" OK ");
             
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
@@ -262,8 +263,9 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("发送总召唤结束：" + hexString);
 
-            log.Warn("  ");
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            //log.Warn("  ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); 
+            //log.Warn(" OK ");
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
             return message;
@@ -297,7 +299,8 @@ namespace IEC104
             message[4] = 0x02;
             message[5] = 0x00;
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); 
+            //log.Warn(" OK ");
             return message;
 
         }
@@ -320,7 +323,8 @@ namespace IEC104
             string hexString = BitConverter.ToString(message);
             //log.Debug("U帧："+ hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message); 
+            //log.Warn(" OK ");
 
             app.Isconnect = true;
         }
@@ -591,8 +595,9 @@ namespace IEC104
             //log.Debug("总无功功率:" + frmMain.Selffrm.AllEquipment.Elemeter2.AllNukva);
             //log.Debug("a对地电压:" + frmMain.Selffrm.AllEquipment.PCSList[0].aV);
 
-            log.Warn(" ");
-            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message); log.Warn(" OK ");
+            //log.Warn(" ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(send_message); 
+            //log.Warn(" OK ");
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
             //return message;
@@ -720,8 +725,9 @@ namespace IEC104
             //验证消息
             string hexString = BitConverter.ToString(message);
             //log.Debug("发送遥信数据：" + hexString);
-            log.Warn("  ");
-            frmMain.Selffrm.TCPserver.SendMsg_byte(message); log.Warn(" OK ");
+            //log.Warn("  ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(message);
+            //log.Warn(" OK ");
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
             return message;
@@ -755,7 +761,8 @@ namespace IEC104
             //log.Debug("发送遥调返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            //log.Warn(" OK ");
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
@@ -870,7 +877,8 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调执行确认：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); 
+            //log.Warn(" OK ");
 
             Record_Order(TX_bytes[0], TX_bytes[1]);
             isYDACK[num] = 0;
@@ -895,7 +903,8 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调撤销确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); 
+            //log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -916,7 +925,8 @@ namespace IEC104
             isYKACK[num] = 0;
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            //log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -934,7 +944,8 @@ namespace IEC104
             msg[5] = RX_bytes[1];
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            //log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -955,7 +966,8 @@ namespace IEC104
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥调激活结束：" + hexString);
 
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            //log.Warn(" OK ");
             Record_Order(TX_bytes[0], TX_bytes[1]);
         }
 
@@ -987,7 +999,8 @@ namespace IEC104
             //log.Debug("发送遥控返校：" + hexString);
 
             //send msg
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg);
+            //log.Warn(" OK ");
         }
 
 
@@ -1030,6 +1043,7 @@ namespace IEC104
                         //记录远动连接标志位
                         frmSet.historyDatas.YDstatus = 0;
                         frmSet.Set_HistoryData();
+                        log.Warn("接收到网控模式:关闭");
                     }
                     else  //开启
                     {
@@ -1049,6 +1063,8 @@ namespace IEC104
                         //记录远动连接标志位
                         frmSet.historyDatas.YDstatus = 1;
                         frmSet.Set_HistoryData();
+
+                        log.Warn("接收到网控模式:开启");
                     }
                     break;
 
@@ -1056,7 +1072,8 @@ namespace IEC104
             //send msg
             string hexString = BitConverter.ToString(msg);
             //log.Debug("发送遥控执行确认：" + hexString);
-            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); log.Warn(" OK ");
+            frmMain.Selffrm.TCPserver.SendMsg_byte(msg); 
+            log.Warn("EMS状态：{"+ "网控模式:" + frmMain.Selffrm.AllEquipment.eState + ",远动连接标志位: " + frmSet.historyDatas.YDstatus);
             Record_Order(TX_bytes[0], TX_bytes[1]);
             isYKACK[num] = 0;
             //log.Debug("eState:" + frmMain.Selffrm.AllEquipment.eState);
@@ -1238,17 +1255,17 @@ namespace IEC104
 
             if (dif_count == 0) return;
             //IEC104Send_Event.Wait();
-            log.Warn(" 变换遥信  -- START ");
+            //log.Warn(" 变换遥信  -- START ");
             if (frmMain.Selffrm.TCPserver.SendMsg_byte(message) == true)
             {
-                log.Warn(" 变换遥信 -- OK ");
+                //log.Warn(" 变换遥信 -- OK ");
                 Record_Order(app.apci.TX_field1, app.apci.TX_field2);
                 Console.WriteLine($"变化遥tiao  ++   :");
                 Console.WriteLine(string.Join("-", message));
             }
             else
             {
-                log.Warn(" 变换遥信 -- ERROR ");
+                //log.Warn(" 变换遥信 -- ERROR ");
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
                 app.apci.RX_field3 = 0;
@@ -1259,7 +1276,7 @@ namespace IEC104
         }
         static public void ReturnSoleYCData()
         {
-            log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& start");
+            //log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& start");
 
             if (app.Isconnect == false) return;
             /****************************************************/
@@ -1367,13 +1384,13 @@ namespace IEC104
             Array.Resize(ref message, Index);
 
             //IEC104Send_Event.Wait();
-            log.Warn("        变换遥调 -- start ");
+            //log.Warn("        变换遥调 -- start ");
             if (frmMain.Selffrm.TCPserver.SendMsg_byte(message) == true)
             {
                 frmMain.Selffrm.receive_time_send = DateTime .Now;
 
-                log.Warn($"        接收 - 发送  时间 ： {(frmMain.Selffrm.receive_time_send - frmMain.Selffrm.receive_time_start).TotalSeconds }    变换数值个数 ： {dif_count} ");
-                log.Warn("        变换遥调 -- end ");
+                //log.Warn($"        接收 - 发送  时间 ： {(frmMain.Selffrm.receive_time_send - frmMain.Selffrm.receive_time_start).TotalSeconds }    变换数值个数 ： {dif_count} ");
+                //log.Warn("        变换遥调 -- end ");
 
                 Record_Order(app.apci.TX_field1, app.apci.TX_field2);
                 Console.WriteLine(string.Join("-", message));
@@ -1383,7 +1400,7 @@ namespace IEC104
             }
             else//连接戳五清空接收序号
             {
-                log.Warn(" 变换遥调 --ERROR ");
+                //log.Warn(" 变换遥调 --ERROR ");
                 app.apci.TX_field1 = 0;
                 app.apci.TX_field2 = 0;
                 app.apci.RX_field3 = 0;
@@ -1391,7 +1408,7 @@ namespace IEC104
                 app.Isconnect = false;
 
             }
-            log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& end");
+            //log.Warn("        &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& end");
 
         }
         //为主站主动发送，记录发送序号

@@ -257,13 +257,13 @@ namespace Modbus
             if (all_num == receiveNumber)
             {
                 Receive_Complete = true;
-                log.Warn($"all : {all_num} 报文数量: {ii+1} S_num: {num_s} other_num: {num_I}");
+                //log.Warn($"all : {all_num} 报文数量: {ii+1} S_num: {num_s} other_num: {num_I}");
                 return true;
             }
             else
             {
                 Receive_Complete = false;
-                log.Warn($"ERROR");
+                //log.Warn($"ERROR");
                 return false;
             }
         }
@@ -528,7 +528,7 @@ namespace Modbus
         {
             if (socketCTS_2404 != null)
             {
-                log.Warn("socketCTS_2404  ----  Close");
+                //log.Warn("socketCTS_2404  ----  Close");
                 socketCTS_2404.CloseCTS(); // 请求取消当前的接收数据操作  
                 if (socketWrapper_2404 != null)
                 {
@@ -539,7 +539,7 @@ namespace Modbus
 
             if (socketWrapper_2404 != null)
             {
-                log.Warn("socketWrapper_2404  ----  Close");
+                //log.Warn("socketWrapper_2404  ----  Close");
                 socketWrapper_2404.CloseSocket();
                 socketWrapper_2404 = null;
             }
@@ -691,28 +691,28 @@ namespace Modbus
                 try
                 {
                    
-                    log.Warn("      ########################  初始化   end ? ######################## ");
+                    //log.Warn("      ########################  初始化   end ? ######################## ");
                     Socket acceptSocket = ServerSocket_2404.Accept();//accept()阻塞方法接收客户端的连接，返回一个连接上的Socket对象                                                                
                                                                      //acceptSocket.ReceiveTimeout = 2000; ///设置从机回复消息的等待时长:2s          
-                    log.Warn("      ########################  start   ######################## ");
-                    log.Warn("  accept  accept()阻塞方法接收客户端的连接 ");
+                    //log.Warn("      ########################  start   ######################## ");
+                    //log.Warn("  accept  accept()阻塞方法接收客户端的连接 ");
                     CheckBackground();//检查是否存在资源未释放
-                    log.Warn("  CheckBackground()----检查是否存在资源未释放  -ok ");
+                    //log.Warn("  CheckBackground()----检查是否存在资源未释放  -ok ");
                     socketWrapper_2404 = new SocketWrapper(acceptSocket);
                     acceptSocket.Blocking = false; // 设置为非阻塞模式
-                    log.Warn("  新建 wrapper ");
+                    //log.Warn("  新建 wrapper ");
 
                     CancellationTokenSource aCts = new CancellationTokenSource();
                     socketCTS_2404 = new SocketCTS(aCts);
 
                     if (socketWrapper_2404 != null)
                     {
-                        log.Warn("  socketWrapper_2404 != null ");
+                        //log.Warn("  socketWrapper_2404 != null ");
                         // 初始化
                         CancellationToken cancelReceiveToken = socketCTS_2404.GetCTSToken();
                         if (cancelReceiveToken != CancellationToken.None)
                         {
-                            log.Warn(" 初始化   -  StartReceive2404 ");
+                            //log.Warn(" 初始化   -  StartReceive2404 ");
                             StartReceive2404(cancelReceiveToken);
                         }
                     }
@@ -767,14 +767,14 @@ namespace Modbus
                     }
                     else
                     {
-                        log.Warn("send false ---    关闭cts ");
+                        //log.Warn("send false ---    关闭cts ");
                         socketCTS_2404.CloseCTS();
                         return false;
                     }
                 }
                 else
                 {
-                    log.Warn("socketWrapper_2404 == null 关闭cts ");
+                    //log.Warn("socketWrapper_2404 == null 关闭cts ");
                     socketCTS_2404.CloseCTS();
                     return false;
                 }          
@@ -782,7 +782,7 @@ namespace Modbus
             catch (Exception ex)
             {
                 socketCTS_2404.CloseCTS();
-                log.Warn("  关闭cts " + ex.Message);
+                //log.Warn("  关闭cts " + ex.Message);
                 log.Error("SendMsg_byte: " + ex.Message);
                 return false;
             }
@@ -807,14 +807,14 @@ namespace Modbus
                 catch (SocketException ex)
                 {
                     log.Error("Server ReceiveData is false: " + ex.Message);
-                    log.Warn("Server ReceiveData is false: " + ex.Message);
+                    //log.Warn("Server ReceiveData is false: " + ex.Message);
                     socketCTS_2404.CloseCTS();//通知接受线程终止 
                 }
                 catch (Exception ex)
                 {
                     socketCTS_2404.CloseCTS(); ;//通知接受线程终止
                     log.Error("Server ReceiveData is false: " + ex.Message);
-                    log.Warn("Server ReceiveData is false: " + ex.Message);
+                    //log.Warn("Server ReceiveData is false: " + ex.Message);
                 }
             }
             //释放cts资源（唯一）

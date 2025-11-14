@@ -1793,10 +1793,12 @@ namespace EMS
                                 }
                             }
 
-                            if (!(result && frmMain.TacticsList.LoadJFPGFromSQL()))
+                            // 写入电表不影响返回结果
+                            frmMain.TacticsList.LoadJFPGFromSQL();
+/*                            if (!(result && frmMain.TacticsList.LoadJFPGFromSQL()))
                             {
                                 result = false;
-                            }
+                            }*/
                         }
                     }
                 }

@@ -732,6 +732,8 @@ namespace EMS
                 }
             }
 
+            log.Warn("初始化EMS连接二级EMS状态：{"+ "网控模式:" + frmMain.Selffrm.AllEquipment.eState + ",远动连接标志位: " + frmSet.historyDatas.YDstatus);
+
             while (!AllEquipment.HostStart)
             {
                 log.Error($"HostStart未置true：{AllEquipment.HostStart}");

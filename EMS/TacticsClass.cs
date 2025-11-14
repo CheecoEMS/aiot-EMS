@@ -532,7 +532,8 @@ namespace EMS
         public bool LoadFromMySQL(int type)
         {
             //cleanTacticsFromMysql();
-            switch (type) {
+            switch (type)
+            {
                 case 0:
                     CleanTacticsFromMysql();
                     break;
@@ -540,26 +541,29 @@ namespace EMS
                     CleanTacticsFromMysqlWhen4gFail();
                     break;
                 default:
-
                     break;
             }
-            
 
             bool Result = false;
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
                     + " from tactics where rTime = '" + strDate + "' order by startTime";
+
             try
             {
                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
                 {
                     connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+
+                    // 首先检查是否有今日策略
+                    bool hasTodayTactics = false;
+                    using (MySqlCommand checkCmd = new MySqlCommand(astrSQL, connection))
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        using (MySqlDataReader rd = checkCmd.ExecuteReader())
                         {
                             if (rd != null && rd.HasRows)
                             {
+                                hasTodayTactics = true;
                                 lock (TacticsList)
                                 {
                                     while (TacticsList.Count > 0)
@@ -585,7 +589,6 @@ namespace EMS
                                         //9.5 源码注释
                                         //oneTactics.PCSType = "恒功率";
 
-
                                         //限额
                                         oneTactics.waValue = Math.Abs(oneTactics.waValue);
                                         if (oneTactics.waValue > 110)
@@ -602,8 +605,101 @@ namespace EMS
                                         TacticsList.Add(oneTactics);
                                     }
                                 }
-                                
                             }
+                        }
+                    }
+
+                    // 如果没有今日策略且type为0，查找最近的过期策略并更新为今日
+                    if (!hasTodayTactics && type == 0)
+                    {
+                        log.Error("不存在今日策略，查找最近的过期策略");
+
+                        // 查找过期策略中最近的时间rTime1
+                        string findLatestExpiredSql = "SELECT MAX(rTime) FROM tactics WHERE DATE(rTime) < @Today;";
+                        DateTime? latestExpiredTime = null;
+                        using (MySqlCommand findCmd = new MySqlCommand(findLatestExpiredSql, connection))
+                        {
+                            findCmd.Parameters.AddWithValue("@Today", strDate);
+                            object rTime1Obj = findCmd.ExecuteScalar();
+                            if (rTime1Obj != DBNull.Value)
+                            {
+                                latestExpiredTime = Convert.ToDateTime(rTime1Obj);
+                            }
+                        }
+
+                        if (latestExpiredTime.HasValue)
+                        {
+                            // 将所有rTime等于rTime1的策略时间改为今日
+                            string updateSql = "UPDATE tactics SET rTime = @Today WHERE rTime = @RTime1;";
+                            using (MySqlCommand updateCmd = new MySqlCommand(updateSql, connection))
+                            {
+                                updateCmd.Parameters.AddWithValue("@Today", strDate);
+                                updateCmd.Parameters.AddWithValue("@RTime1", latestExpiredTime.Value);
+                                int updatedRows = updateCmd.ExecuteNonQuery();
+                                log.Error($"已将 {updatedRows} 条最近过期策略（时间：{latestExpiredTime.Value:yyyy-MM-dd}）更新为今日");
+                            }
+
+                            // 删除修改后仍过期的策略（rTime < 今天）
+                            string deleteAfterUpdateSql = "DELETE FROM tactics WHERE rTime < @Today;";
+                            using (MySqlCommand deleteCmd = new MySqlCommand(deleteAfterUpdateSql, connection))
+                            {
+                                deleteCmd.Parameters.AddWithValue("@Today", strDate);
+                                int deletedRows = deleteCmd.ExecuteNonQuery();
+                                log.Error($"更新后，删除过期策略 {deletedRows} 条");
+                            }
+
+                            // 更新策略后，重新查询今日策略
+                            using (MySqlCommand newCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader newRd = newCmd.ExecuteReader())
+                                {
+                                    if (newRd != null && newRd.HasRows)
+                                    {
+                                        lock (TacticsList)
+                                        {
+                                            while (TacticsList.Count > 0)
+                                            {
+                                                TacticsList.RemoveAt(0);
+                                            }
+                                            while (newRd.Read())
+                                            {
+                                                TacticsClass oneTactics = new TacticsClass();
+                                                oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + newRd.GetString(0));
+                                                oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + newRd.GetString(1));
+                                                oneTactics.tType = newRd.GetString(2);
+                                                oneTactics.PCSType = newRd.GetString(3);
+                                                if (oneTactics.PCSType == "恒流")
+                                                    oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                                                if (oneTactics.PCSType == "恒压")
+                                                {
+                                                    oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                                    if (oneTactics.waValue < 0)
+                                                        oneTactics.waValue = 0;
+                                                }
+
+                                                //限额
+                                                oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                                                if (oneTactics.waValue > 110)
+                                                    oneTactics.waValue = 110;
+                                                //修正充放电的正负功率
+                                                if (oneTactics.tType == "放电")
+                                                    oneTactics.waValue = -newRd.GetInt32(4);
+                                                else
+                                                    oneTactics.waValue = newRd.GetInt32(4);
+
+                                                //策略日期
+                                                oneTactics.strategyDate = newRd.GetDateTime(5);
+
+                                                TacticsList.Add(oneTactics);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            log.Error("不存在今日策略，且无任何过期策略");
                         }
                     }
                 }
@@ -615,6 +711,94 @@ namespace EMS
             }
             return Result;
         }
+
+
+        /*      public bool LoadFromMySQL(int type)
+              {
+                  //cleanTacticsFromMysql();
+                  switch (type) {
+                      case 0:
+                          CleanTacticsFromMysql();
+                          break;
+                      case 1:
+                          CleanTacticsFromMysqlWhen4gFail();
+                          break;
+                      default:
+
+                          break;
+                  }
+
+
+                  bool Result = false;
+                  string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                  string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
+                          + " from tactics where rTime = '" + strDate + "' order by startTime";
+                  try
+                  {
+                      using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                      {
+                          connection.Open();
+                          using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                          {
+                              using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                              {
+                                  if (rd != null && rd.HasRows)
+                                  {
+                                      lock (TacticsList)
+                                      {
+                                          while (TacticsList.Count > 0)
+                                          {
+                                              TacticsList.RemoveAt(0);
+                                          }
+                                          while (rd.Read())
+                                          {
+                                              TacticsClass oneTactics = new TacticsClass();
+                                              oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
+                                              oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
+                                              oneTactics.tType = rd.GetString(2);
+                                              oneTactics.PCSType = rd.GetString(3);
+                                              if (oneTactics.PCSType == "恒流")
+                                                  oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
+                                              if (oneTactics.PCSType == "恒压")
+                                              {
+                                                  oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
+                                                  if (oneTactics.waValue < 0)
+                                                      oneTactics.waValue = 0;
+                                              }
+
+                                              //9.5 源码注释
+                                              //oneTactics.PCSType = "恒功率";
+
+
+                                              //限额
+                                              oneTactics.waValue = Math.Abs(oneTactics.waValue);
+                                              if (oneTactics.waValue > 110)
+                                                  oneTactics.waValue = 110;
+                                              //修正充放电的正负功率
+                                              if (oneTactics.tType == "放电")
+                                                  oneTactics.waValue = -rd.GetInt32(4);
+                                              else
+                                                  oneTactics.waValue = rd.GetInt32(4);
+
+                                              //策略日期
+                                              oneTactics.strategyDate = rd.GetDateTime(5);
+
+                                              TacticsList.Add(oneTactics);
+                                          }
+                                      }
+
+                                  }
+                              }
+                          }
+                      }
+                      Result = true;
+                  }
+                  catch (Exception ex)
+                  {
+                      log.Error(ex.Message);
+                  }
+                  return Result;
+              }*/
 
         /// <summary>
         /// 检查昨天的数据是否存在
