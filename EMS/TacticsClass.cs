@@ -250,9 +250,10 @@ namespace EMS
                                             tempJFPG_4[j * 3 + 2] = 0;
                                         }
                                     }
-                                    if (!frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4)) { 
+                                    frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4);
+/*                                    if (!frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4)) { 
                                         res = false;
-                                    }
+                                    }*/
                                 }
                             }
                         }

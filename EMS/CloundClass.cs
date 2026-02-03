@@ -128,7 +128,7 @@ namespace EMS
         {
             if (!StartUploadDataThread()) return false;
             if (!StartHeartbeatThread()) return false;
-            if (!StartDownloadDataThread()) return false;
+            //if (!StartDownloadDataThread()) return false;
 
             return true;
         }
@@ -353,7 +353,7 @@ namespace EMS
             {
                 try
                 {
-                    log.Info("触发心跳定时器");
+                    //log.Info("触发心跳定时器");
                     if (frmMain.Selffrm.AllEquipment.Report2Cloud.mqttClient != null)
                     {
                         frmMain.Selffrm.AllEquipment.Report2Cloud.SendHeartbeat();
@@ -517,7 +517,70 @@ namespace EMS
             }
         }
 
+
         public bool CreateClient()
+        {
+            String iotcode = frmSet.config.SysID;
+            EMQX_CLIENT_ID = iotcode  + "_" + DateTime.Now.Ticks;
+
+            lock (_lockMqtt)
+            {
+                try
+                {
+                    // === 彻底清理旧客户端 ===
+                    if (mqttClient != null)
+                    {
+                        try
+                        {
+                            if (mqttClient.IsConnected)
+                            {
+                                mqttClient.Disconnect(); // 发送 DISCONNECT 报文
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("Disconnect old client failed", ex);
+                        }
+                        finally
+                        {
+                            // 关键：取消事件订阅，防止内存泄漏和重复注册
+                            mqttClient.MqttMsgPublishReceived -= Client_MqttMsgPublishReceived;
+                            mqttClient = null;
+                        }
+                    }
+
+                    // === 短暂延迟，让 OS/EMQX 清理资源 ===
+                    System.Threading.Thread.Sleep(1000); // 500～1500ms 足够
+
+                    // === 创建新客户端 ===
+                    mqttClient = new MqttClient(
+                        EMQX_BROKER_IP,
+                        EMQX_BROKER_PORT,
+                        true, // secure
+                        null, null,
+                        MqttSslProtocols.TLSv1_2
+                    );
+
+                    mqttClient.Connect(EMQX_CLIENT_ID,
+                                                "aiot",// user,
+                                                "Lab123123123",//pwd,
+                                                true, // cleanSession
+                                                60); // keepAlivePeriod 
+
+                    // 重新订阅事件
+                    mqttClient.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    log.Error("CreateClient failed", ex); 
+                    return false;
+                }
+            }
+        }
+
+/*        public bool CreateClient()
         {
             bool res = false;
             INIFile ConfigINI = new INIFile();
@@ -526,7 +589,7 @@ namespace EMS
             String iotcode = frmSet.config.SysID;
             EMQX_CLIENT_ID = iotcode;
 
-            log.Info("创建Client获取锁_lockMqtt");
+            //log.Info("创建Client获取锁_lockMqtt");
             lock (_lockMqtt)
             {
                 try
@@ -554,12 +617,12 @@ namespace EMS
                 }
                 catch (Exception ex)
                 {
-                    log.Error("CreateClient fail: " + ex.Message);
+                    log.Error("CreateClient fail: " + ex.ToString());
                     res = false;
                 }
             }
             return res;
-        }
+        }*/
 
         public void ListernAllTopic()
         {
@@ -605,38 +668,55 @@ namespace EMS
             }
         }
 
+        public void mqttReconnect()
+        {
+            const int maxRetries = 3;
+            const int baseDelayMs = 1000;
+
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    ConnectToCloud = false;
+
+                    StopUploadDataThread(); // 确保上传线程已停
+
+                    if (CreateClient())
+                    {
+                        ListernAllTopic();
+                        receivedHeartbeatResponse = true;
+                        ConnectToCloud = true;
+
+                        if (!isWaitUploadDataExecuting)
+                        {
+                            TryStartUploadDataThread();
+                        }
+
+                        log.Error("MQTT reconnected successfully.");
+                        return; // 成功，退出重试循环
+                    }
+                    else
+                    {
+                        log.Error($"MQTT reconnect attempt {attempt} failed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"MQTT reconnect attempt {attempt} threw exception", ex);
+                }
+
+                // 指数退避延迟（1s, 2s, 4s...）
+                if (attempt < maxRetries)
+                {
+                    int delay = baseDelayMs * (1 << (attempt - 1)); // 1000, 2000, 4000...
+                    System.Threading.Thread.Sleep(delay);
+                }
+            }
+
+            log.Error("MQTT reconnection failed after all retries.");
+        }
 
 /*        public void mqttReconnect()
-        {
-            try
-            {
-                ConnectToCloud = false;
-
-                if (!isUploadDataStopped)
-                {
-                    // 先停止定时器，以确保在重连期间不会重复触发
-                    UploadData_Timer?.Change(Timeout.Infinite, Timeout.Infinite);
-                    isUploadDataStopped = true;
-                }
-
-                if (CreateClient())
-                {
-                    ListernAllTopic();
-                    // 重连成功后重新启动定时器
-                    UploadData_Timer?.Change(0, 30000);  // 设置定时器间隔为 30 秒
-                    isUploadDataStopped = false;  // 更新状态
-                    log.Info("重连成功，定时器UploadData_Timer已重新启动。");
-                    receivedHeartbeatResponse = true;
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                log.Error("mqttReconnect: " + ex.Message);
-            }
-        }*/
-
-        public void mqttReconnect()
         {
             try
             {
@@ -663,7 +743,7 @@ namespace EMS
             {
                 log.Error("mqttReconnect: " + ex.Message);
             }
-        }
+        }*/
 
 
 
@@ -679,18 +759,18 @@ namespace EMS
                 HeartbeatID = Guid.NewGuid().ToString();
                 string heartbeatMessage = $"{{\"HeartBeatID\":\"{HeartbeatID}\"}}";
 
-                log.Info("发送心跳等待锁_lockMqtt");
+                //log.Info("发送心跳等待锁_lockMqtt");
                 lock (_lockMqtt)
                 {
                     if (mqttClient != null)
                     {
                         try
                         {
-                            log.Info("发送心跳uuid: " + HeartbeatID);
+                            //log.Info("发送心跳uuid: " + HeartbeatID);
                             mqttClient.Publish(HeartbeatTopic, System.Text.Encoding.UTF8.GetBytes(heartbeatMessage),
                                 MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE, false);
 
-                            log.Info("发送心跳结束");
+                            //log.Info("发送心跳结束");
                         }
                         catch (Exception ex)
                         { 
@@ -746,7 +826,7 @@ namespace EMS
         /// <param name="aTopic"></param>
         public void ListenTopic(string aTopic)
         {
-            log.Info("监听Topic获取锁_lockMqtt");
+            //log.Info("监听Topic获取锁_lockMqtt");
             lock (_lockMqtt)
             {
                 try
@@ -796,7 +876,7 @@ namespace EMS
                 if (topic == TacticTopic + "request" || topic == TacticTopic_new + "request")
                 {
                     Result = GetServerTactics(message);
-                    log.Info("接收TacticTopic，获取锁_lockMqtt");
+                    log.Error("接收TacticTopic:" + message + "| 结果" + Result);
                     lock (_lockMqtt)
                     {
                         if (Result)
@@ -828,7 +908,7 @@ namespace EMS
                 else if (topic == PriceTopic + "request" || topic == PriceTopic_new + "request")
                 {
                     Result = GetServerEPrices(message);
-                    log.Error("接收PriceTopic，结果：" + Result);
+                    log.Error("接收PriceTopic:" + message + "| 结果" + Result);
                     lock (_lockMqtt)
                     {
                         if (Result)
@@ -860,7 +940,7 @@ namespace EMS
                 else if (topic == EMSLimitTopic + "request" || topic == EMSLimitTopic_new + "request")
                 {
                     Result = GetServerEMSLimit(message);
-                    log.Info("接收EMSLimitTopic，获取锁_lockMqtt");
+                    log.Error("接收EMSLimitTopic:" + message + "| 结果" + Result);
                     lock (_lockMqtt)
                     {
                         if (Result)
@@ -1179,41 +1259,51 @@ namespace EMS
             {
                 if (Parent == null)
                     return;
-                string tempDate = atempTime.ToString("yyyy-MM-dd HH:mm:ss");
-                int i = 0;
-                //关口电表 
-                if (Parent.Elemeter1List != null)
+
+                // 当监测到 无电压 则停止数据库同步：pcs A相电压 < 100
+
+                if (Parent.PCSList[0] != null && Parent.PCSList[0].aV > 100)
                 {
-                    foreach (Elemeter1Class tempEM1 in Parent.Elemeter1List)
+                    log.Error("开始数据库同步");
+                    string tempDate = atempTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    int i = 0;
+                    //关口电表 
+                    if (Parent.Elemeter1List != null)
                     {
-                        tempEM1.Save2DataSource(tempDate);
+                        foreach (Elemeter1Class tempEM1 in Parent.Elemeter1List)
+                        {
+                            tempEM1.Save2DataSource(tempDate);
+                        }
                     }
+                    //电表2---设备电表
+                    if (Parent.Elemeter2 != null)
+                        Parent.Elemeter2.Save2DataSource(tempDate);
+                    //电表3---辅助电表
+                    if (Parent.Elemeter3 != null)
+                        Parent.Elemeter3.Save2DataSource(tempDate);
+                    //PCS                
+                    for (i = 0; i < Parent.PCSList.Count; i++)
+                        Parent.PCSList[i].Save2DataSource(tempDate);
+                    //BMS                
+                    if (Parent.BMS!=null)
+                        Parent.BMS.Save2DataSource(tempDate);
+                    //空调
+                    if (Parent.TempControl!=null)
+                        Parent.TempControl.Save2DataSource(tempDate);
+                    //液冷
+                    if (Parent.LiquidCool!=null)
+                        Parent.LiquidCool.Save2DataSource(tempDate);
+                    //传感器
+                    if (Parent.Fire != null)
+                        Parent.Fire.Save2DataSource(tempDate);
+                    //UPS
+                    /*                if (UPS != null)
+                                        UPS.Save2DataSource(tempDate);*/
+                    //其他 
                 }
-                //电表2---设备电表
-                if (Parent.Elemeter2 != null)
-                    Parent.Elemeter2.Save2DataSource(tempDate);
-                //电表3---辅助电表
-                if (Parent.Elemeter3 != null)
-                    Parent.Elemeter3.Save2DataSource(tempDate);
-                //PCS                
-                for (i = 0; i < Parent.PCSList.Count; i++)
-                    Parent.PCSList[i].Save2DataSource(tempDate);
-                //BMS                
-                if (Parent.BMS!=null)
-                    Parent.BMS.Save2DataSource(tempDate);
-                //空调
-                if (Parent.TempControl!=null)
-                    Parent.TempControl.Save2DataSource(tempDate);
-                //液冷
-                if (Parent.LiquidCool!=null)
-                    Parent.LiquidCool.Save2DataSource(tempDate);
-                //传感器
-                if (Parent.Fire != null)
-                    Parent.Fire.Save2DataSource(tempDate);
-                //UPS
-                /*                if (UPS != null)
-                                    UPS.Save2DataSource(tempDate);*/
-                //其他 
+                else {
+                    log.Error("关闭数据库同步");
+                }
             }
             catch (Exception ex)
             {
@@ -1439,7 +1529,7 @@ namespace EMS
                 JObject jsonObject = null;
                 jsonObject = JObject.Parse(astrData);
                 string ID = jsonObject["HeartBeatID"].ToString();
-                log.Info("接收心跳uuid: " + ID);
+                //log.Info("接收心跳uuid: " + ID);
                 if (ID == HeartbeatID)
                 {
                     if (!ConnectToCloud)
@@ -1794,11 +1884,7 @@ namespace EMS
                             }
 
                             // 写入电表不影响返回结果
-                            frmMain.TacticsList.LoadJFPGFromSQL();
-/*                            if (!(result && frmMain.TacticsList.LoadJFPGFromSQL()))
-                            {
-                                result = false;
-                            }*/
+                            frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
                         }
                     }
                 }

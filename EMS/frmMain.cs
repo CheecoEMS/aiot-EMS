@@ -75,9 +75,10 @@ namespace EMS
 
         //12.5
 
-        
+
 
         //定时器
+        private static System.Threading.Timer DO_Timer; //指示灯输出
         private static System.Threading.Timer UI_timer;
         private static System.Threading.Timer BalaTacitc_Timer;
         private static System.Threading.Timer Public_Timer;
@@ -87,6 +88,7 @@ namespace EMS
         private static System.Threading.Timer TestSignalStrength_Timer;
         private static System.Threading.Timer TemperControl_Timer;
 
+        private static bool isDOExecuting = false;
         private static bool isUiExecuting = false; //判断UI_timer是否正在执行
         private static bool isBalaTacticExecuting = false;
         private static bool isPublicExecuting = false;
@@ -135,7 +137,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：20250820_ems_1.0.6"  );
+                log.Error("初始化EMS版本：20250820_ems_1.0.9"  );
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -1038,7 +1040,22 @@ namespace EMS
             {
                 try
                 {
-                    log.Error("frmMain.Selffrm.AllEquipment.SignalAlarmActive:" + frmMain.Selffrm.AllEquipment.SignalAlarmActive);
+                    //上电启动后必须完成1次电表校准
+                    if (!frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.MeterCalibration()) {
+                            frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = true;
+                        }
+
+                    }
+
+                    if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess) {
+                        if (frmMain.TacticsList.LoadJFPGFromSQL()){
+                            frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
+                        }
+                    }
+
+                    //log.Error("frmMain.Selffrm.AllEquipment.SignalAlarmActive:" + frmMain.Selffrm.AllEquipment.SignalAlarmActive);
                     // 检查月份是否更新
                     if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
                     {
@@ -1106,9 +1123,13 @@ namespace EMS
                         }
 
                         // 校准电表日期
-                        frmMain.Selffrm.AllEquipment.MeterCalibration();
+/*                        frmMain.Selffrm.AllEquipment.MeterCalibration();
 
-                        frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段
+                        frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段*/
+
+                        frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = false;
+                        frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
+
 
                         // 每晚00:00更新策略
                         if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
@@ -1191,7 +1212,60 @@ namespace EMS
             //记录EMS功率日志
             if(!frmMain.Selffrm.InitializeCXFN_Timer()) return false;
 
+            // 控制灯板输出
+            if (!frmMain.Selffrm.InitializeDO_Timer()) return false;
+
             return true;
+        }
+
+        private bool InitializeDO_Timer()
+        {
+            try
+            {
+                int twoMinutesMs = 2 * 60 * 1000;
+                DO_Timer = new System.Threading.Timer(DO_TimerCallback, null, 0, twoMinutesMs);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("InitializeDO_Timer： " + ex.Message);
+                return false;
+            }
+        }
+
+        private void DO_TimerCallback(Object state)
+        {
+            // 检查是否已有正在执行的任务，避免重叠
+            if (isDOExecuting)
+            {
+                log.Info("GPIO_Timer_TimerCallback is still executing. Skipping this tick to avoid overlap.");
+                return;
+            }
+
+            isDOExecuting = true;
+
+            try
+            {
+                // EMS电源指示灯
+                frmSet.PowerGPIO(1);
+
+                // 电源指示灯
+                frmSet.ePowerGPIO(1);
+
+                // 故障指示灯
+                if (frmMain.Selffrm.AllEquipment.ErrorState[2])
+                {
+                    frmSet.ErrorGPIO(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("DO_TimerCallback encountered an error: " + ex.Message);
+            }
+            finally
+            {
+                isDOExecuting = false;
+            }
         }
 
 

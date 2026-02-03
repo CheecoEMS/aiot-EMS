@@ -1251,7 +1251,7 @@ namespace EMS
                         frmSet.SetGPIOState(14, 1);
                         frmSet.SetGPIOState(15, 0);//EMS电源指示（特殊：初始化置低开启灯）*/
 
-            if (!frmSet.SetGPIOState(8, 0)) return false;   //24V on(powerOn)
+            if (!frmSet.SetGPIOState(8, 1)) return false;   //24V on(powerOn)
             if (!frmSet.SetGPIOState(9, 1)) return false;   //PCS On
             if (!frmSet.SetGPIOState(10, 1)) return false;  //2 error
             if (!frmSet.SetGPIOState(11, 1)) return false; //3 error
@@ -1475,8 +1475,8 @@ namespace EMS
                 }
         }
 
-        //控制电源指示灯
-        public static void PowerGPIO(int option)
+        //控制EMS电源指示灯
+        public static void ePowerGPIO(int option)
         {
             if (option == 0)
                 switch (config.GPIOSelect)
@@ -1502,6 +1502,36 @@ namespace EMS
                         break;
                     case 2:
                         frmSet.SetGPIOState(15, 1);
+                        break;
+                }
+        }
+
+        public static void PowerGPIO(int option)
+        {
+            if (option == 0)
+                switch (config.GPIOSelect)
+                {
+                    case 0:
+                        frmSet.SetGPIOState(8, 0);
+                        break;
+                    case 1:
+                        frmSet.SetGPIOState(8, 0);
+                        break;
+                    case 2:
+                        frmSet.SetGPIOState(8, 0);
+                        break;
+                }
+            else
+                switch (config.GPIOSelect)
+                {
+                    case 0:
+                        frmSet.SetGPIOState(8, 1);
+                        break;
+                    case 1:
+                        frmSet.SetGPIOState(8, 1);
+                        break;
+                    case 2:
+                        frmSet.SetGPIOState(8, 1);
                         break;
                 }
         }

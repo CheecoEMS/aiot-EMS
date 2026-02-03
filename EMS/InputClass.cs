@@ -7321,7 +7321,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.0.8";
+        public string EMSVersion { get; set; } = "1.1.0";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7389,6 +7389,10 @@ namespace EMS
         /// 参考信号接收质量(RSRQ)：-19.5到-3（数值越大质量越好），127表示未知
         /// </summary>
         public double Rsrq { get; set; }
+
+
+        public bool MeterCalibrationSuccess = false;
+        public bool LoadJFPGSuccess = false;
 
         public AllEquipmentClass()
         {
@@ -7858,6 +7862,7 @@ namespace EMS
 
         public bool MeterCalibration()
         {
+            bool res = true;
             try
             {
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
@@ -7865,6 +7870,9 @@ namespace EMS
                     if (Elemeter2.Prepared)
                     {
                         frmMain.Selffrm.AllEquipment.Elemeter2.timing(73);
+                    }
+                    else {
+                        res = false;
                     }
                 }
                 if (frmMain.Selffrm.AllEquipment.Elemeter1List != null)
@@ -7884,7 +7892,7 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.Elemeter3.timing(47);
                     }
                 }
-                return true;
+                return res;
             }
             catch (Exception ex)
             {
@@ -8717,7 +8725,7 @@ namespace EMS
                         // 温控
                         if (frmMain.Selffrm.AllEquipment.TempControl != null)
                         {
-                            log.Info("BMS.cellMaxTemp"+ frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp  + "| TempData: " + frmMain.Selffrm.AllEquipment.TempHum.TempData + "| FrigOpenLower :" + frmSet.cloudLimits.FrigOpenLower);
+                            //log.Info("BMS.cellMaxTemp"+ frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp  + "| TempData: " + frmMain.Selffrm.AllEquipment.TempHum.TempData + "| FrigOpenLower :" + frmSet.cloudLimits.FrigOpenLower);
                             if ((frmMain.Selffrm.AllEquipment.BMS.cellMaxTemp > frmSet.cloudLimits.FrigOpenLower || frmMain.Selffrm.AllEquipment.TempHum.TempData > frmSet.cloudLimits.FrigOpenLower)&&
                                 frmMain.Selffrm.AllEquipment.TempControl.state != 1)
                             {
