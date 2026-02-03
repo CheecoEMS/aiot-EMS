@@ -168,8 +168,9 @@ namespace EMS
                 {
                     DateTime tempTime = DateTime.Now;
                     // 采集数据保存在数据库中
-                    Save2DataSoure(tempTime);
-/*                    // 采集数据上传云端
+                    //Save2DataSoure(tempTime);
+/*                  
+ *                  // 采集数据上传云端
                     Save2CloudFile(tempTime);*/
                 }
                 catch (Exception ex)
@@ -1261,10 +1262,8 @@ namespace EMS
                     return;
 
                 // 当监测到 无电压 则停止数据库同步：pcs A相电压 < 100
-
                 if (Parent.PCSList[0] != null && Parent.PCSList[0].aV > 100)
                 {
-                    log.Error("开始数据库同步");
                     string tempDate = atempTime.ToString("yyyy-MM-dd HH:mm:ss");
                     int i = 0;
                     //关口电表 
@@ -1296,13 +1295,7 @@ namespace EMS
                     //传感器
                     if (Parent.Fire != null)
                         Parent.Fire.Save2DataSource(tempDate);
-                    //UPS
-                    /*                if (UPS != null)
-                                        UPS.Save2DataSource(tempDate);*/
                     //其他 
-                }
-                else {
-                    log.Error("关闭数据库同步");
                 }
             }
             catch (Exception ex)
