@@ -391,12 +391,5 @@ namespace EMS
             SaveUiInstall();
         }
 
-        private void btnReadDofD_Click(object sender, EventArgs e)
-        {
-            if (frmMain.Selffrm.AllEquipment != null)
-            {
-                frmMain.Selffrm.AllEquipment.ReadDataInoneDayINI();
-            }
-        }
     }
 }

@@ -78,6 +78,7 @@ namespace EMS
 
 
         //定时器
+        private static System.Threading.Timer DeviceData_Timer;
         private static System.Threading.Timer DO_Timer; //指示灯输出
         private static System.Threading.Timer UI_timer;
         private static System.Threading.Timer BalaTacitc_Timer;
@@ -88,6 +89,7 @@ namespace EMS
         private static System.Threading.Timer TestSignalStrength_Timer;
         private static System.Threading.Timer TemperControl_Timer;
 
+        private static bool isDeviceDataExecuting = false;
         private static bool isDOExecuting = false;
         private static bool isUiExecuting = false; //判断UI_timer是否正在执行
         private static bool isBalaTacticExecuting = false;
@@ -105,8 +107,56 @@ namespace EMS
         //监控定时器线程
         private Thread MonitorTimer;
 
-        //8.8
+        // 日志记录器
         private static ILog log = LogManager.GetLogger("frmMain");
+
+        /// <summary>
+        /// 数据库加载重试方法
+        /// </summary>
+        /// <param name="loadAction">加载操作委托</param>
+        /// <param name="tableName">表名（用于日志）</param>
+        /// <returns>是否成功加载</returns>
+        private static bool RetryLoadDatabase(Func<bool> loadAction, string tableName)
+        {
+            const int maxRetries = 5;
+            const int retryDelayMs = 2000; // 5秒延迟
+            
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    if (loadAction())
+                    {
+                        if (attempt > 1)
+                        {
+                            log.Info($"数据库表 {tableName} 加载成功（第 {attempt} 次尝试）");
+                        }
+                        return true;
+                    }
+                    
+                    if (attempt < maxRetries)
+                    {
+                        log.Warn($"数据库表 {tableName} 加载失败（第 {attempt} 次），{retryDelayMs}ms 后重试...");
+                        Thread.Sleep(retryDelayMs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (attempt < maxRetries)
+                    {
+                        log.Warn($"数据库表 {tableName} 加载异常（第 {attempt} 次）: {ex.Message}，{retryDelayMs}ms 后重试...");
+                        Thread.Sleep(retryDelayMs);
+                    }
+                    else
+                    {
+                        log.Error($"数据库表 {tableName} 加载失败，已达到最大重试次数 ({maxRetries}): {ex.Message}");
+                    }
+                }
+            }
+            
+            log.Error($"数据库表 {tableName} 加载失败，已达到最大重试次数 ({maxRetries})");
+            return false;
+        }
 
         //tcp
         //对接主从通讯
@@ -551,14 +601,16 @@ namespace EMS
             if (!DBConnection.CheckRec("select * from config")) return false;
 
             //检查数据库结构是否一致
-            if(!DBConnection.CheckTables()) return false;
+            //if(!DBConnection.CheckTables()) return false;
+            if(!frmSet.InitializeSingletonTableIds()) return false;
 
             // 加载数据库配置（必填）
-            if (!frmSet.LoadCloudLimitsFromMySQL()) return false;
-            if (!frmSet.LoadConfigFromMySQL()) return false;
-            if (!frmSet.LoadVariChargeFromMySQL()) return false;
-            if (!frmSet.LoadComponentSettingsFromMySQL()) return false;
-            if (!frmSet.LoadHistoryDataFromMySQL()) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadCloudLimitsFromMySQL(), "CloudLimits")) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadConfigFromMySQL(), "Config")) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadVariChargeFromMySQL(), "VariCharge")) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadComponentSettingsFromMySQL(), "ComponentSettings")) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadHistoryDataFromMySQL(), "HistoryData")) return false;
+            if (!RetryLoadDatabase(() => frmSet.LoadPeElesticFromMySQL(), "PeElestic")) return false;
 
             return true;
         }
@@ -574,6 +626,8 @@ namespace EMS
             //读取数据库中的故障（选填）
             //if (!Selffrm.AllEquipment.LoadErrorState()) return false;
             Selffrm.AllEquipment.LoadErrorState();
+
+            frmMain.Selffrm.AllEquipment.currentDate  = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
 
             //数据看板展示
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
@@ -676,7 +730,7 @@ namespace EMS
 
                 //必须在设备初始化结束后
                 //if (!AllEquipment.ReadDataInoneDaySQL()) return false;
-                AllEquipment.ReadDataInoneDaySQL();
+                //AllEquipment.ReadDataInoneDaySQL();
 
                 // 初始化电表数据，需校验是否成功
                 if (frmMain.Selffrm.AllEquipment.Elemeter2.InitE2Power())
@@ -689,10 +743,12 @@ namespace EMS
                     //初始化今日充放数据
                     //if (!AllEquipment.InitE2Power()) return false;
                     AllEquipment.InitE2Power();
+
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         private bool InitializeCommunication()
@@ -1040,6 +1096,9 @@ namespace EMS
             {
                 try
                 {
+                    // 周期计算今日充放电量
+                    frmMain.Selffrm.AllEquipment.CalculateNowPower();
+
                     //上电启动后必须完成1次电表校准
                     if (!frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess)
                     {
@@ -1049,9 +1108,29 @@ namespace EMS
 
                     }
 
+                    /************************* 日切换执行 *************************************/
                     if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess) {
                         if (frmMain.TacticsList.LoadJFPGFromSQL()){
                             frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
+                        }
+                    }
+
+                    if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess) { 
+                        if (frmSet.Set_HistoryData()){
+                            frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = true;
+                        }
+                    }
+
+                    if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess) { 
+                        if (frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"))){
+                            frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = true;
+                        }
+                    }
+
+                    if (!frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess) {
+                        if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"))) {
+                            frmSet.peElestic.rDate = DateTime.Now;
+                            frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = true;
                         }
                     }
 
@@ -1063,70 +1142,78 @@ namespace EMS
                         frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
                         frmSet.historyDatas.ClientPUMdemandMax = 0;
                         frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
-
-                        frmSet.Set_HistoryData();
                         frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
                     }
 
                     // 检查日期是否更新
                     //if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
-                    if (frmSet.peElestic.rDate.ToString("yyyy-MM-dd") != DateTime.Now.ToString("yyyy-MM-dd"))
+                    if (frmMain.Selffrm.AllEquipment.currentDate != DateTime.Now.ToString("yyyy-MM-dd"))
                     {
-                        log.Error("日期更迭：" + "记录时间: " + frmSet.peElestic.rDate.ToString("yyyy-MM-dd") + "当前时间： " + DateTime.Now.ToString("yyyy-MM-dd"));
+                        log.Error("日期更迭：" + "记录时间: " + frmMain.Selffrm.AllEquipment.currentDate + "当前时间： " + DateTime.Now.ToString("yyyy-MM-dd"));
+
+                        // 更新日期
+                        frmMain.Selffrm.AllEquipment.currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+
                         // 重置EMS重启次数
                         if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
                         {
                             frmSet.historyDatas.RebootCount = 5;
-                            frmSet.Set_HistoryData();
                         }
+
+                        //每日同步今日充放电量
+                        frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = false;
 
                         // 删除180天前的数据
-                        frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+                        //frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+                        frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = false;
 
-                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
-                        {
-                            string strdate = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
-                            if (!DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'")) //防止重复插入
-                            {
-                                // 保存当天收益到数据库
-                                //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
-                                //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
+                        // 记录收益
+                        frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = false;
 
-                                frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                log.Error("保存当天收益到数据库");
+                        /*                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                                                {
+                                                    string strdate = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
+                                                    if (!DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'")) //防止重复插入
+                                                    {
+                                                        // 保存当天收益到数据库
+                                                        //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                                                        //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
 
-                                // 当日收益发送到云
-                                frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
-                                //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
-                                frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                log.Error("当日收益发送到云");
+                                                        frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                        log.Error("保存当天收益到数据库");
 
-                                // 更新日期
-                                //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                                frmSet.peElestic.rDate = DateTime.Now;
-                                log.Error("更新日期");
+                                                        // 当日收益发送到云
+                                                        frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                        frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
+                                                        //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+                                                        frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                        log.Error("当日收益发送到云");
 
-                                // 将当天的储能表和辅表的电能数据保存到INI
-                                //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+                                                        // 更新日期
+                                                        //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                                                        frmSet.peElestic.rDate = DateTime.Now;
 
-                                // 将当天的储能表和辅表的电能数据保存到SQL
-                                frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                log.Error("将当天的储能表和辅表的电能数据保存到SQL");
-                            }
-                            else
-                            {
-                                // 更新日期
-                                frmSet.peElestic.rDate = DateTime.Now;
-                                log.Error("重新更新日期");
-                            }
-                        }
+                                                        // 将当天的储能表和辅表的电能数据保存到INI
+                                                        //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+
+                                                        // 将当天的储能表和辅表的电能数据保存到SQL
+                                                        frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                        log.Error("将当天的储能表和辅表的电能数据保存到SQL");
+                                                    }
+                                                    else
+                                                    {
+                                                        // 更新日期
+                                                        frmSet.peElestic.rDate = DateTime.Now;
+                                                        log.Error("重新更新日期");
+                                                    }
+                                                }*/
+
+
+                        /*                        frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+                                                frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段*/
 
                         // 校准电表日期
-/*                        frmMain.Selffrm.AllEquipment.MeterCalibration();
-
-                        frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段*/
-
                         frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = false;
                         frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
 
@@ -1169,7 +1256,7 @@ namespace EMS
                             Program.RestartDevice();
                         }*/
                     }
-                    else
+/*                    else
                     {
                         //昨日收益重传
                         if (frmMain.Selffrm.AllEquipment.WaitRecPem == 1)
@@ -1179,10 +1266,8 @@ namespace EMS
                             string previousDayString = previousDay.ToString("yyyy-MM-dd");
                             frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(previousDayString);
                         }
-                    }
+                    }*/
 
-                    // 保存今日充放电量
-                    frmMain.Selffrm.AllEquipment.CalculateNowPower();
 
                 }
                 catch (Exception ex)
@@ -1191,7 +1276,8 @@ namespace EMS
                 }
 
                 // 等待 2分钟再进行下一次心跳
-                Thread.Sleep(120000);
+                //Thread.Sleep(120000);
+                Thread.Sleep(1000);
             }
         }
 
@@ -1204,6 +1290,18 @@ namespace EMS
         /*            定时器              */
         /*                                */
         /*********************************/
+
+        private void StopInitRetryTimer()
+        {
+
+            if (DeviceData_Timer != null)
+            {
+                DeviceData_Timer.Dispose();
+                DeviceData_Timer = null;
+            }
+            
+        }
+
         public bool IniralizeFrmMain_Timer()
         {
             //更新数据看板显示数据

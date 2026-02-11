@@ -24,6 +24,7 @@ using System.Timers;
 using System.Net;
 using static EMS.EC20Communicator;
 using MySqlX.XDevAPI.Common;
+using System.Web.Configuration;
 
 namespace EMS
 {
@@ -7321,7 +7322,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.1.0";
+        public string EMSVersion { get; set; } = "1.1.1";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -7372,7 +7373,7 @@ namespace EMS
         private Thread Thread_ReadEquipmentDataPCS;
 
         //信号
-        public volatile int WaitRecPem; //1:等待确认消息送达 0：确认已送达
+        //public volatile int WaitRecPem; //1:等待确认消息送达 0：确认已送达
         public volatile bool KeepStill; //true:放空或者充满 
 
         //物联网卡信息
@@ -7391,8 +7392,17 @@ namespace EMS
         public double Rsrq { get; set; }
 
 
+        // PublicThread任务标识位
+        public string currentDate = "";
+
         public bool MeterCalibrationSuccess = false;
         public bool LoadJFPGSuccess = false;
+        public bool SetHistoryDataSuccess = true;
+        public bool DeleOldDataSuccess = true;
+        public bool WriteDataInoneDaySuccess = true;
+
+
+
 
         public AllEquipmentClass()
         {
@@ -10207,7 +10217,6 @@ namespace EMS
                 Client_PUMdemand_Max = Client_PUMdemand_now;
                 //记录客户当月最大需量
                 frmSet.historyDatas.ClientPUMdemandMax = (int)Client_PUMdemand_now;
-                frmSet.Set_HistoryData();
             }
 
             /*            //限制客户当月最大需量低于100时，不进行充放
@@ -11288,7 +11297,7 @@ namespace EMS
         /// </summary>
         /// 
 
-        public bool ReadDataInoneDaySQL()
+/*        public bool ReadDataInoneDaySQL()
         {
             try
             {
@@ -11299,7 +11308,7 @@ namespace EMS
 
                     log.Error("成功读取PeElestic历史数据");
                 }
-                else
+*//*                else
                 {
                     log.Error("读取当前值，并赋予数据库");
                     if (Elemeter2 != null)
@@ -11324,7 +11333,7 @@ namespace EMS
 
                     frmSet.peElestic.rDate = DateTime.Now;
                     if(!frmSet.Insert_PeElesticData(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"))) return false;
-                }
+                }*//*
             }
             catch (Exception ex)
             {
@@ -11333,9 +11342,9 @@ namespace EMS
             }
 
             return true;
-        }
+        }*/
 
-        public void ReadDataInoneDayINI()
+/*        public void ReadDataInoneDayINI()
         {
             INIFile ConfigINI = new INIFile();
             try
@@ -11408,86 +11417,8 @@ namespace EMS
             }
 
         }
+*/
 
-
-        /*        public bool ReadDataInoneDayINI()
-                {
-                    INIFile ConfigINI = new INIFile();
-                    try
-                    {
-                        //如果日期不符返回false，并赋值当前的值为起始数据
-                        rDate = ConfigINI.INIRead("Recode Date", "rDate", "", DofD);
-                        if (rDate == DateTime.Now.ToString("yyyy-MM-dd"))
-                        {
-                            for (int i = 0; i < 5; i++)//总、尖峰=平谷
-                            {
-                                if (Elemeter2 == null)
-                                {
-                                    //记录当天开始充电电量（positive 正向）
-                                    SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
-                                        , "0", DofD));
-                                    //记录当天开始放电电量（opposite反向，逆向）
-                                    SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
-                                        , "0", DofD));
-                                }
-                                else
-                                {
-                                    //记录当天开始充电电量（positive 正向）
-                                    SE2PKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2PKWH" + i.ToString()
-                                        , Elemeter2.PUkwh[i].ToString(), DofD));
-                                    //记录当天开始放电电量（opposite反向，逆向）
-                                    SE2OKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SE2OKWH" + i.ToString()
-                                        , Elemeter2.OUkwh[i].ToString(), DofD));
-                                }
-                                if (Elemeter3 == null)
-                                {
-                                    //记录当天开始辅助用电量
-                                    SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
-                                        , "0", DofD));
-                                }
-                                else
-                                {
-                                    //记录当天开始辅助用电量
-                                    SAuxiliaryKWH[i] = (double)Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SAuxiliaryKWH" + i.ToString()
-                                        , Elemeter3.Akwh[i].ToString(), DofD));
-                                }
-                            }
-                            //记录PCS 开始的总充电量
-                            // SPCSInKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSInKWH", "0", DofD));
-                            //记录PCS 开始的总放电量
-                            // SPCSOutKWH=(double) Convert.ToDouble(ConfigINI.INIRead("Recode Date", "SPCSOutKWH", "0", DofD)); 
-                            return true;
-                        }
-                        else
-                        {
-                            if (Elemeter2 != null)
-                            {
-                                Elemeter2.GetDataFromEqipment();
-                            }
-
-
-
-                            if (Elemeter3 != null)
-                            {
-                                Elemeter3.GetDataFromEqipment();
-                            }
-
-
-                            WriteDataInoneDayINI(DateTime.Now.ToString("yyyy-MM-dd"));
-                            return true;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        frmMain.ShowDebugMSG(ex.ToString());
-                        return false;
-                    }
-                    finally
-                    {
-                        // ConfigINI.
-
-                    }
-                }*/
 
         /// <summary>
         /// 将从机接受主机指令数据保存到INI
@@ -11775,8 +11706,6 @@ namespace EMS
                 frmSet.historyDatas.DaliyE2OKWH_6 = (int)(Elemeter2.OUkwh[6] - frmSet.peElestic.SE2OKWH[6]); //当前表值--当天开始的值
                 frmSet.historyDatas.DaliyE2OKWH_7 = (int)(Elemeter2.OUkwh[7] - frmSet.peElestic.SE2OKWH[7]); //当前表值--当天开始的值
                 frmSet.historyDatas.DaliyE2OKWH_8 = (int)(Elemeter2.OUkwh[8] - frmSet.peElestic.SE2OKWH[8]); //当前表值--当天开始的值
-
-                frmSet.Set_HistoryData();
             }
             return true;
         }

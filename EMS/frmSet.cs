@@ -53,6 +53,13 @@ namespace EMS
         private const string strDriveDllName = "SpesTechDriverControl.dll";
         private const string strExeDllName = "SpesTechMmioRW.dll";
 
+        private static int PeElesticId = 1;
+        private static String ConfigId = "";
+        private static int HistoricalDataId = 1;
+        private static int VariChargeId = 1;
+        private static int CloudLimitsId = 1;
+        private static int ComponentSettingsId = 1;
+
 
         public frmSet()
         {
@@ -286,8 +293,9 @@ namespace EMS
         public static bool LoadPeElesticFromMySQL()
         {
             bool result = false;
+            // 使用预初始化的PeElesticId确保只查询特定记录
             string astrSQL = "SELECT rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, "
-                           + "SAuxiliaryKWH4, SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8 FROM PeElestic;";
+                           + "SAuxiliaryKWH4, SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8 FROM PeElestic WHERE id = " + PeElesticId + ";";
 
             try
             {
@@ -372,6 +380,7 @@ namespace EMS
 
         public static bool Set_PeElesticData(string tempDate)
         {
+            // 使用主键id确保只更新唯一记录，防止更新所有记录
             string astrSQL = "update  PeElestic  SET "
                 + " rDate  ='" + tempDate
                 + "', SE2PKWH0  ='" + frmSet.peElestic.SE2PKWH[0].ToString()
@@ -397,7 +406,7 @@ namespace EMS
                 + "', SE2OKWH7 ='" + frmSet.peElestic.SE2OKWH[7].ToString()
                 + "', SE2PKWH8 ='" + frmSet.peElestic.SE2PKWH[8].ToString()
                 + "', SE2OKWH8 ='" + frmSet.peElestic.SE2OKWH[8].ToString()
-                + "';";
+                + "' WHERE id = " + PeElesticId + ";";
 
             bool result = false;
 
@@ -423,7 +432,7 @@ namespace EMS
             return result;
         }
 
-        public static bool Insert_PeElesticData(string tempDate)
+/*        public static bool Insert_PeElesticData(string tempDate)
         {
             // 假设 PeElestic 表有一个自增的主键或其他唯一标识符，这里不显式插入
             string astrSQL = "INSERT INTO PeElestic (rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, " +
@@ -463,7 +472,7 @@ namespace EMS
                 log.Error(ex.Message);
             }
             return result;
-        }
+        }*/
 
         /*********************************************
          * 
@@ -473,7 +482,7 @@ namespace EMS
         public static bool LoadHistoryDataFromMySQL()
         {
             string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
-                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData;";
+                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
 
             try
             {
@@ -559,7 +568,7 @@ namespace EMS
                 + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
                 + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
                  + "', YDstatus ='" + frmSet.historyDatas.YDstatus.ToString()
-                + "';";
+                + "' WHERE id = " + HistoricalDataId + ";";
 
             bool result = false;
 
@@ -594,7 +603,7 @@ namespace EMS
         public static bool LoadCloudLimitsFromMySQL()
         {
             string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
-                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount, CellV_Gap, OpenBala FROM CloudLimits;";
+                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount, CellV_Gap, OpenBala FROM CloudLimits WHERE id = " + CloudLimitsId + ";";
 
             try
             {
@@ -718,7 +727,7 @@ namespace EMS
                 }
             }
 
-            string astrSQL = $"update cloudlimits SET {string.Join(", ", updateClauses)};";
+            string astrSQL = $"update cloudlimits SET {string.Join(", ", updateClauses)} WHERE id = {CloudLimitsId};";
 
             bool result = false;
 
@@ -766,7 +775,7 @@ namespace EMS
                 + "', SignalDelayCount = '" + frmSet.cloudLimits.SignalDelayCount.ToString()
                 + "', CellV_Gap = '" + frmSet.cloudLimits.CellV_Gap.ToString()
                 + "', OpenBala = '" + frmSet.cloudLimits.OpenBala.ToString()
-                + "';";
+                + "' WHERE id = " + CloudLimitsId + ";";
 
             bool result = false;
 
@@ -804,7 +813,8 @@ namespace EMS
                                 + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
                                 + "AutoRun, SysMode, PCSGridModel, DebugComName,"
                                 + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit FROM config; ";
+                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit, MqttBrokerIp,"
+                                + "MqttBrokerPort, MqttBrokerUser, MqttBrokerPassword FROM config WHERE SysID = '" + ConfigId + "'; ";
             try
             {
 
@@ -850,6 +860,10 @@ namespace EMS
                                 config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
                                 config.BMStype = rd.IsDBNull(31) ? 1 : rd.GetInt32(31);
                                 config.PcsLimit = rd.IsDBNull(32) ? 110 : rd.GetInt32(32);
+                                config.MqttBrokerIp = rd.IsDBNull(33) ? "mqtt.eaiot.cloud" : rd.GetString(33);
+                                config.MqttBrokerPort = rd.IsDBNull(34) ? 8883 : rd.GetInt32(34);
+                                config.MqttBrokerUser = rd.IsDBNull(35) ? "aiot" : rd.GetString(35);
+                                config.MqttBrokerPassword = rd.IsDBNull(36) ? "Lab123123123" : rd.GetString(36);
 
                                 return true;
                             }
@@ -908,7 +922,7 @@ namespace EMS
                         + "', CellTNum = '" + frmSet.config.CellTNum.ToString()
                         + "', BMStype = '" + frmSet.config.BMStype.ToString()
                         + "', PcsLimit = '" + frmSet.config.PcsLimit.ToString()
-                        +"';";
+                        + "' WHERE SysID = '" + ConfigId + "';";
 
             bool result = false;
 
@@ -942,7 +956,7 @@ namespace EMS
 
         public static bool LoadVariChargeFromMySQL()
         {
-            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge;";
+            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge WHERE id = " + VariChargeId + ";";
 
             try
             {
@@ -983,7 +997,7 @@ namespace EMS
             string astrSQL = "update  VariCharge  SET "
                 + " UBmsPcsState ='" + frmSet.variCharge.UBmsPcsState.ToString()
                 + "', OBmsPcsState ='" + frmSet.variCharge.OBmsPcsState.ToString()
-                + "';";
+                + "' WHERE id = " + VariChargeId + ";";
 
             bool result = false;
 
@@ -1023,7 +1037,7 @@ namespace EMS
                            TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi, 
                            FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump, 
                            LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
-                    FROM ComponentSettings;";
+                    FROM ComponentSettings WHERE id = " + ComponentSettingsId + ";";
 
             try
             {
@@ -1118,7 +1132,7 @@ namespace EMS
                 + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
                 + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
                 + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString()
-                + "';";
+                + "' WHERE id = " + ComponentSettingsId + ";";
 
             bool result = false;
             try
@@ -1846,7 +1860,7 @@ namespace EMS
             }
         }
 
-        static public void DeleOldData(string astrData)
+/*        static public void DeleOldData(string astrData)
         {
             //删除清理数据库
             string[] strSQL = {"delete from cellstemp where rTime<'"+astrData+"'",
@@ -1870,6 +1884,48 @@ namespace EMS
             };
             foreach (string astrSQl in strSQL)
                 DBConnection.ExecSQL(astrSQl);
+        }*/
+
+        static public bool DeleOldData(string astrData)
+        {
+            // 防御性检查：确保日期格式合法（可选）
+            if (string.IsNullOrWhiteSpace(astrData))
+            {
+                log.Error("DeleOldData: 传入的日期为空");
+                return false;
+            }
+
+            string[] strSQL = {
+                "DELETE FROM cellstemp WHERE rTime < '" + astrData + "'",
+                "DELETE FROM battery WHERE rTime < '" + astrData + "'",
+                "DELETE FROM cellsv WHERE rTime < '" + astrData + "'",
+                "DELETE FROM electrovalence WHERE rTime < '" + astrData + "'",
+                "DELETE FROM elemeter1 WHERE rTime < '" + astrData + "'",
+                "DELETE FROM elemeter2 WHERE rTime < '" + astrData + "'",
+                "DELETE FROM elemeter3 WHERE rTime < '" + astrData + "'",
+                "DELETE FROM elemeter4 WHERE rTime < '" + astrData + "'",
+                "DELETE FROM errorstate WHERE rTime < '" + astrData + "'",
+                "DELETE FROM fire WHERE rTime < '" + astrData + "'",
+                "DELETE FROM pcs WHERE rTime < '" + astrData + "'",
+                "DELETE FROM pncontroler WHERE rTime < '" + astrData + "'",
+                "DELETE FROM profit WHERE rTime < '" + astrData + "'",
+                "DELETE FROM tactics WHERE rTime < '" + astrData + "'",
+                "DELETE FROM tempcontrol WHERE rTime < '" + astrData + "'",
+                "DELETE FROM warning WHERE rTime < '" + astrData + "'",
+                "DELETE FROM liquidcool WHERE rTime < '" + astrData + "'"
+            };
+
+            foreach (string sql in strSQL)
+            {
+                if (!DBConnection.ExecSQL(sql))
+                {
+                    log.Error($"DeleOldData 失败于 SQL: {sql.Substring(0, Math.Min(80, sql.Length))}...");
+                    return false; // 任一失败即整体失败
+                }
+            }
+
+            log.Info($"DeleOldData 成功清理 {astrData} 之前的数据");
+            return true;
         }
 
         private void DelData(string aTableName, string aDataName, string aData, DataGridView aDataGrid)
@@ -2677,6 +2733,11 @@ namespace EMS
             public int CellTNum { get; set; } //168, 160
             public int BMStype { get; set; } 
             public int PcsLimit { get; set; }
+
+            public string MqttBrokerIp { get; set; }
+            public int MqttBrokerPort { get; set; } //168, 160
+            public string MqttBrokerUser { get; set; }
+            public string MqttBrokerPassword { get; set; }
         }
 
         public class ComponentSettingsClass
@@ -2944,6 +3005,99 @@ namespace EMS
             }
             this.Close();
             frmMain.Selffrm.Close();
+        }
+
+
+
+        /// <summary>
+        /// 初始化所有单行配置表的主键ID（确保每张表至少有一条记录）
+        /// 应在程序启动时调用（例如在 frmMain.Load 或 Program.Main 中）
+        /// </summary>
+        public static bool InitializeSingletonTableIds()
+        {
+            try
+            {
+                PeElesticId = EnsureSingleRowExists("PeElestic");
+                HistoricalDataId = EnsureSingleRowExists("HistoricalData");
+                VariChargeId = EnsureSingleRowExists("VariCharge");
+                CloudLimitsId = EnsureSingleRowExists("CloudLimits");
+                ComponentSettingsId = EnsureSingleRowExists("ComponentSettings");
+
+                // Config 表特殊：主键是字符串 SysID，不是自增 int id
+                // 所以单独处理（见下方 InitializeConfig）
+                InitializeConfig();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("InitializeSingletonTableIds failed: " + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 确保指定表存在且至少有一条记录，返回其 id（自增主键）
+        /// </summary>
+        private static int EnsureSingleRowExists(string tableName)
+        {
+            // 首先检查表中记录数量，确保只有一条数据
+            string sqlCount = $"SELECT COUNT(*) FROM {tableName}";
+            object countResult = DBConnection.ExecuteScalar(sqlCount);
+            int recordCount = Convert.ToInt32(countResult ?? 0);
+            
+            if (recordCount == 0)
+            {
+                // 表为空，记录日志并抛出异常，不自动插入默认数据
+                log.Error($"数据缺失：表 {tableName} 中没有找到任何记录，请手动插入初始数据");
+                throw new InvalidOperationException($"表 {tableName} 为空，需要手动初始化数据");
+            }
+            else if (recordCount > 1)
+            {
+                // 表中数据超过一条，违反单例表约束
+                log.Error($"数据异常：表 {tableName} 中存在 {recordCount} 条记录，单例表只能包含一条记录");
+                throw new InvalidOperationException($"表 {tableName} 违反单例约束：包含 {recordCount} 条记录，应只有一条");
+            }
+            
+            // 确认只有一条记录，获取其ID
+            string sqlGetId = $"SELECT id FROM {tableName} LIMIT 1";
+            object result = DBConnection.ExecuteScalar(sqlGetId);
+            
+            if (result != null && result != DBNull.Value)
+            {
+                return Convert.ToInt32(result);
+            }
+            
+            // 理论上不应该到达这里，但为了安全起见
+            log.Error($"数据异常：表 {tableName} 查询ID失败");
+            throw new InvalidOperationException($"表 {tableName} ID查询失败");
+        }
+
+        /// <summary>
+        /// 单独处理 Config 表（主键是 SysID 字符串，非自增 int）
+        /// </summary>
+        private static void InitializeConfig()
+        {
+            string sqlCheck = "SELECT COUNT(*) FROM Config;";
+            object countObj = DBConnection.ExecuteScalar(sqlCheck);
+            int count = Convert.ToInt32(countObj ?? 0);
+
+            if (count == 0)
+            {
+                // 数据为空，记录日志并抛出异常，不自动插入默认数据
+                log.Error("数据缺失：Config 表中没有找到任何记录，请手动插入初始配置数据");
+                throw new InvalidOperationException("Config 表为空，需要手动初始化配置数据");
+            }
+            else if (count > 1)
+            {
+                // Config表数据超过一条，违反单例表约束
+                log.Error($"数据异常：Config 表中存在 {count} 条记录，单例表只能包含一条记录");
+                throw new InvalidOperationException($"Config 表违反单例约束：包含 {count} 条记录，应只有一条");
+            }
+
+            // 读取 SysID 作为 ConfigId
+            object sysIdObj = DBConnection.ExecuteScalar("SELECT SysID FROM Config LIMIT 1;");
+            ConfigId = sysIdObj?.ToString() ?? "j0001";
         }
     }
 

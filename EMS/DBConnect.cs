@@ -132,34 +132,85 @@ namespace EMS
             return null;
         }
 
-
-        //运行SQL，用于增加，删除，编辑
-        static public bool ExecSQL(string astrSQL)
+        public static bool ExecSQL(string astrSQL, int commandTimeout = 10, uint connectionTimeout = 5)
         {
             ChecMysql80();
+
+            // 动态构建带超时的连接字符串
+            var csb = new MySqlConnectionStringBuilder(connectionStr)
+            {
+                ConnectionTimeout = connectionTimeout // 获取连接的等待上限（秒）
+            };
+
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(connectionStr))
+                using (var connection = new MySqlConnection(csb.ConnectionString))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    connection.Open(); // 最多等 connectionTimeout 秒
+
+                    using (var sqlCmd = new MySqlCommand(astrSQL, connection))
                     {
+                        sqlCmd.CommandTimeout = commandTimeout; // SQL 执行上限（秒）
                         sqlCmd.ExecuteNonQuery();
                     }
                 }
                 return true;
             }
-            catch (MySqlException ex)
+            catch (MySqlException ex) when (ex.Number == 1040 || ex.Number == 1203) // Too many connections / User conn limit
             {
-                log.Error(ex.Message);
+                log.Warn("数据库连接池已满，拒绝请求");
+                return false;
+            }
+            catch (MySqlException ex) when (ex.Message.Contains("Connect Timeout") || ex.Message.Contains("Command Timeout"))
+            {
+                log.Warn($"SQL 超时 (Conn:{connectionTimeout}s, Cmd:{commandTimeout}s): {astrSQL.Substring(0, Math.Min(100, astrSQL.Length))}...");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error($"ExecSQL error: {ex.Message}");
                 return false;
             }
+        }
 
+        //运行SQL，用于增加，删除，编辑
+        static public bool ExecSQL(string astrSQL)
+        {
+            // 调用重载版本，使用合理的默认超时值
+            return ExecSQL(astrSQL, commandTimeout: 30, connectionTimeout: 10);
+        }
+
+        public static object ExecuteScalar(string sql, int commandTimeout = 30, uint connectionTimeout = 10)
+        {
+            // 动态构建带超时的连接字符串
+            var csb = new MySqlConnectionStringBuilder(connectionStr)
+            {
+                ConnectionTimeout = connectionTimeout
+            };
+
+            try
+            {
+                using (var conn = new MySqlConnection(csb.ConnectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(sql, conn))
+                    {
+                        cmd.CommandTimeout = commandTimeout;
+                        return cmd.ExecuteScalar(); // 可能返回 null 或 DBNull.Value
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"ExecuteScalar Error: {ex.Message}, SQL: {sql}");
+                return null;
+            }
+        }
+
+        public static object ExecuteScalar(string sql)
+        {
+            // 调用重载版本，使用默认超时值
+            return ExecuteScalar(sql, commandTimeout: 30, connectionTimeout: 10);
         }
 
         //获取最后一个记录的ID
@@ -1461,6 +1512,7 @@ namespace EMS
                 {
                     "config", new List<Column>
                     {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "SysID", Type = "varchar(255)", IsNullable = false, Key = "PRIMARY KEY" },
                         new Column { Name = "Open104", Type = "int", IsNullable = true, Key = "" , Comment = "是否开启104服务 0关1开" },
                         new Column { Name = "NetTick", Type = "int", IsNullable = true, Key = "" , Comment = "判断超时的时间间隔" },
@@ -1496,9 +1548,10 @@ namespace EMS
                         new Column { Name = "PcsLimit", Type = "int", IsNullable = true, Key = "" , Comment = "PCS功率限定" }
                     }
                 },
-/*                {
+                {
                     "ComponentSettings", new List<Column>
                     {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         //空调
                         new Column { Name = "SetHotTemp", Type = "double", IsNullable = true, Key = "" },
                         new Column { Name = "SetCoolTemp", Type = "double", IsNullable = true, Key = "" },
@@ -1532,7 +1585,7 @@ namespace EMS
                         new Column { Name = "DHSetHumidityStop", Type = "double", IsNullable = true, Key = "" }
                     }
                 },
-                {
+ /*               {
                     "electrovalence", new List<Column>
                     {
                         new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
@@ -1800,6 +1853,7 @@ namespace EMS
                 {
                     "CloudLimits", new List<Column>
                     {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "MaxGridKW", Type = "int", IsNullable = true, Key = "", Comment = "目标电网功率上限" },
                         new Column { Name = "MinGridKW", Type = "int", IsNullable = true, Key = "", Comment = "目标电网功率下限" },
                         new Column { Name = "MaxSOC", Type = "int", IsNullable = true, Key = "", Comment = "最高SOC" },
@@ -2037,6 +2091,7 @@ namespace EMS
                 {
                     "VariCharge", new List<Column>
                     {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "UBmsPcsState", Type = "int", IsNullable = true, Key = "" , Comment = "充电限制"},
                         new Column { Name = "OBmsPcsState", Type = "int", IsNullable = true, Key = "" , Comment = "放电限制"},
                     }
@@ -2045,6 +2100,7 @@ namespace EMS
                 {
                     "HistoricalData", new List<Column>
                     {
+                        new Column { Name = "id", Type = "int", IsNullable = false, Key = "PRIMARY KEY AUTO_INCREMENT" },
                         new Column { Name = "E1PUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "总上个月当前正向有功最大需量"},
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},

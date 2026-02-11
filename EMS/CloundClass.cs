@@ -45,9 +45,9 @@ namespace EMS
         public string BalaTableTopic;
         public string BalaTacticTopic;
         public string HeartbeatTopic;
-        public string UploadTopic;
+        //public string UploadTopic;
         public string OtaTopic;
-        public string checkPemTopic;
+        //public string checkPemTopic;
 
         //新版本topic
         public string PriceTopic_new;
@@ -500,9 +500,9 @@ namespace EMS
                 BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
                 BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
                 HeartbeatTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/Heartbeat";
-                UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
+                //UploadTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/uploadData/";
                 OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
-                checkPemTopic = "pem";
+                //checkPemTopic = "pem";
 
                 
                 //新版topic
@@ -555,16 +555,16 @@ namespace EMS
 
                     // === 创建新客户端 ===
                     mqttClient = new MqttClient(
-                        EMQX_BROKER_IP,
-                        EMQX_BROKER_PORT,
+                        frmSet.config.MqttBrokerIp,
+                        frmSet.config.MqttBrokerPort,
                         true, // secure
                         null, null,
                         MqttSslProtocols.TLSv1_2
                     );
 
                     mqttClient.Connect(EMQX_CLIENT_ID,
-                                                "aiot",// user,
-                                                "Lab123123123",//pwd,
+                                                frmSet.config.MqttBrokerUser,// user,
+                                                frmSet.config.MqttBrokerPassword,//pwd,
                                                 true, // cleanSession
                                                 60); // keepAlivePeriod 
 
@@ -633,9 +633,9 @@ namespace EMS
             ListenTopic(AIOTTableTopic + "request");
             ListenTopic(BalaTableTopic + "request");
             ListenTopic(HeartbeatTopic);
-            ListenTopic(UploadTopic + "request");
+            //ListenTopic(UploadTopic + "request");
             ListenTopic(OtaTopic + "request");
-            ListenTopic(checkPemTopic);
+            //ListenTopic(checkPemTopic);
 
             //订阅新topic
             ListenTopic(PriceTopic_new + "request");
@@ -859,13 +859,13 @@ namespace EMS
 
                 JObject jsonObject = JObject.Parse(message);
 
-                if (jsonObject["iot_code"] != null)
+/*                if (jsonObject["iot_code"] != null)
                 {
                     if (topic == checkPemTopic && jsonObject["iot_code"].ToString() ==  frmMain.Selffrm.AllEquipment.Profit2Cloud.iot_code)
                     {
                         CheckPemArri(message);
                     }
-                }
+                }*/
                 
                 string strID = "";
                 if (jsonObject["id"] != null)
@@ -1026,7 +1026,7 @@ namespace EMS
                 {
                     GetHeartbeat(message);
                 }
-                else if (topic == UploadTopic  + "request")
+/*                else if (topic == UploadTopic  + "request")
                 {
                     Result = DataRetransmission(message);
                     log.Info("接收UploadTopic，获取锁_lockMqtt");
@@ -1057,7 +1057,7 @@ namespace EMS
                             }
                         }
                     }
-                }
+                }*/
                 else if (topic == OtaTopic  + "request")
                 {
                     log.Info("接收到升级指令");
@@ -1426,11 +1426,11 @@ namespace EMS
         //
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public void CheckPemArri(string astrData)
+/*        public void CheckPemArri(string astrData)
         {
             frmMain.Selffrm.AllEquipment.WaitRecPem = 0;
             log.Error("确认收益报文：" + astrData);
-        }
+        }*/
 
 
         private async void ExecOtaFormCloud(string version)
