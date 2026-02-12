@@ -11679,7 +11679,7 @@ namespace EMS
         /// 放public定时器内存储电表2的当前值
         /// </summary>
         /// <param name="CalculateNowPower"></param>
-        public bool CalculateNowPower()
+/*        public bool CalculateNowPower()
         {
 
             if (Elemeter2 == null)
@@ -11708,7 +11708,7 @@ namespace EMS
                 frmSet.historyDatas.DaliyE2OKWH_8 = (int)(Elemeter2.OUkwh[8] - frmSet.peElestic.SE2OKWH[8]); //当前表值--当天开始的值
             }
             return true;
-        }
+        }*/
 
         public bool Power_CRC()
         {
@@ -11717,26 +11717,33 @@ namespace EMS
                 if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
                 {
                     if (Elemeter2.PUkwh[0] < frmSet.peElestic.SE2PKWH[0] || Elemeter2.OUkwh[0] < frmSet.peElestic.SE2OKWH[0])  //判断总正总负电能是否小于上次电能
-                    {                   
-                        frmSet.peElestic.SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
-                        frmSet.peElestic.SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
-                        frmSet.peElestic.SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
-                        frmSet.peElestic.SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
-                        frmSet.peElestic.SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
-                        frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
-                        frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
-                        frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
-                        frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
-                        frmSet.peElestic.SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
-                        frmSet.peElestic.SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
-                        frmSet.peElestic.SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
-                        frmSet.peElestic.SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
-                        frmSet.peElestic.SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
-                        frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
-                        frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
-                        frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
-                        frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
-                        log.Error("出现电表更换，SE2PKWH[0]： " +  frmSet.peElestic.SE2PKWH[0] + "| Elemeter2.PUkwh[0]:" +  Elemeter2.PUkwh[0] +"| DaliyE2PKWH_Z:"+ frmSet.historyDatas.DaliyE2PKWH_Z);
+                    {
+                        log.Error("出现换表");
+                        for (int i = 0; i < 9; ++i) {
+                            frmSet.peElestic.SE2PKWH[i] = Elemeter2.PUkwh[i];
+                            frmSet.peElestic.SE2OKWH[i] = Elemeter2.OUkwh[i];
+                        }
+
+                        frmSet.Set_PeElesticData(DateTime.Now.ToString("yyyy-MM-dd"));
+                        /*                        frmSet.peElestic.SE2PKWH[0] = Elemeter2.PUkwh[0] - frmSet.historyDatas.DaliyE2PKWH_Z;
+                                                frmSet.peElestic.SE2PKWH[1] = Elemeter2.PUkwh[1] - frmSet.historyDatas.DaliyE2PKWH_J;
+                                                frmSet.peElestic.SE2PKWH[2] = Elemeter2.PUkwh[2] - frmSet.historyDatas.DaliyE2PKWH_F;
+                                                frmSet.peElestic.SE2PKWH[3] = Elemeter2.PUkwh[3] - frmSet.historyDatas.DaliyE2PKWH_P;
+                                                frmSet.peElestic.SE2PKWH[4] = Elemeter2.PUkwh[4] - frmSet.historyDatas.DaliyE2PKWH_G;
+                                                frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
+                                                frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
+                                                frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
+                                                frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
+                                                frmSet.peElestic.SE2OKWH[0] = Elemeter2.OUkwh[0] - frmSet.historyDatas.DaliyE2OKWH_Z;
+                                                frmSet.peElestic.SE2OKWH[1] = Elemeter2.OUkwh[1] - frmSet.historyDatas.DaliyE2OKWH_J;
+                                                frmSet.peElestic.SE2OKWH[2] = Elemeter2.OUkwh[2] - frmSet.historyDatas.DaliyE2OKWH_F;
+                                                frmSet.peElestic.SE2OKWH[3] = Elemeter2.OUkwh[3] - frmSet.historyDatas.DaliyE2OKWH_P;
+                                                frmSet.peElestic.SE2OKWH[4] = Elemeter2.OUkwh[4] - frmSet.historyDatas.DaliyE2OKWH_G;
+                                                frmSet.peElestic.SE2PKWH[5] = Elemeter2.PUkwh[5] - frmSet.historyDatas.DaliyE2PKWH_5;
+                                                frmSet.peElestic.SE2PKWH[6] = Elemeter2.PUkwh[6] - frmSet.historyDatas.DaliyE2PKWH_6;
+                                                frmSet.peElestic.SE2PKWH[7] = Elemeter2.PUkwh[7] - frmSet.historyDatas.DaliyE2PKWH_7;
+                                                frmSet.peElestic.SE2PKWH[8] = Elemeter2.PUkwh[8] - frmSet.historyDatas.DaliyE2PKWH_8;
+                                                log.Error("出现电表更换，SE2PKWH[0]： " +  frmSet.peElestic.SE2PKWH[0] + "| Elemeter2.PUkwh[0]:" +  Elemeter2.PUkwh[0] +"| DaliyE2PKWH_Z:"+ frmSet.historyDatas.DaliyE2PKWH_Z);*/
                     }
                 }
                 return true;

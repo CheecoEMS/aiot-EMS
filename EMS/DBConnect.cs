@@ -2105,7 +2105,7 @@ namespace EMS
                         new Column { Name = "ClientPUMdemandMaxOld", Type = "int", IsNullable = true, Key = "" , Comment = "客户上个月当前正向有功最大器量"},
                         new Column { Name = "ClientPUMdemandMax", Type = "int", IsNullable = true, Key = "" , Comment = "客户当前正向有功最大器量"},
                         new Column { Name = "ErrorState2", Type = "int", IsNullable = true, Key = "" , Comment = "记录三级告警标志位" },
-                        new Column { Name = "DaliyE2PKWH_Z", Type = "int", IsNullable = true, Key = "" , Comment = "今日总充电量" },
+/*                        new Column { Name = "DaliyE2PKWH_Z", Type = "int", IsNullable = true, Key = "" , Comment = "今日总充电量" },
                         new Column { Name = "DaliyE2PKWH_J", Type = "int", IsNullable = true, Key = "" , Comment = "今日尖充电量" },
                         new Column { Name = "DaliyE2PKWH_F", Type = "int", IsNullable = true, Key = "" , Comment = "今日峰充电量" },
                         new Column { Name = "DaliyE2PKWH_P", Type = "int", IsNullable = true, Key = "" , Comment = "今日平充电量" },
@@ -2122,7 +2122,7 @@ namespace EMS
                         new Column { Name = "DaliyE2OKWH_5", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
                         new Column { Name = "DaliyE2OKWH_6", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
                         new Column { Name = "DaliyE2OKWH_7", Type = "int", IsNullable = true, Key = "" , Comment = "今日平放电量" },
-                        new Column { Name = "DaliyE2OKWH_8", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },
+                        new Column { Name = "DaliyE2OKWH_8", Type = "int", IsNullable = true, Key = "" , Comment = "今日谷放电量" },*/
                         new Column { Name = "RebootCount", Type = "int", IsNullable = true, Key = "" , Comment = "今日剩余重启次数"},
                         new Column { Name = "YDstatus", Type = "int", IsNullable = true, Key = "" , Comment = "远动标志位" }
                     }

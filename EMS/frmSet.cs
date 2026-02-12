@@ -432,57 +432,57 @@ namespace EMS
             return result;
         }
 
-/*        public static bool Insert_PeElesticData(string tempDate)
-        {
-            // 假设 PeElestic 表有一个自增的主键或其他唯一标识符，这里不显式插入
-            string astrSQL = "INSERT INTO PeElestic (rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, " +
-                             "SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, SAuxiliaryKWH4, " +
-                             "SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8) " +
-                             "VALUES ('" + tempDate + "', '" + frmSet.peElestic.SE2PKWH[0].ToString() + "', '" + frmSet.peElestic.SE2OKWH[0].ToString() + "', '" +
-                             frmSet.peElestic.SAuxiliaryKWH[0].ToString() + "', '" + frmSet.peElestic.SE2PKWH[1].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[1].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[1].ToString() + "', '" +
-                             frmSet.peElestic.SE2PKWH[2].ToString() + "', '" + frmSet.peElestic.SE2OKWH[2].ToString() + "', '" +
-                             frmSet.peElestic.SAuxiliaryKWH[2].ToString() + "', '" + frmSet.peElestic.SE2PKWH[3].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[3].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[3].ToString() + "', '" +
-                             frmSet.peElestic.SE2PKWH[4].ToString() + "', '" + frmSet.peElestic.SE2OKWH[4].ToString() + "', '" +
-                             frmSet.peElestic.SAuxiliaryKWH[4].ToString() + "', '" + frmSet.peElestic.SE2PKWH[5].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[5].ToString() + "', '" + frmSet.peElestic.SE2PKWH[6].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[6].ToString() + "', '" + frmSet.peElestic.SE2PKWH[7].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[7].ToString() + "', '" + frmSet.peElestic.SE2PKWH[8].ToString() + "', '" +
-                             frmSet.peElestic.SE2OKWH[8].ToString() + "')";
-
-            bool result = false;
-
-            try
-            {
-                if (DBConnection.ExecSQL(astrSQL))
+        /*        public static bool Insert_PeElesticData(string tempDate)
                 {
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 处理异常情况
-                result = false;
-                log.Error(ex.Message);
-            }
-            return result;
-        }*/
+                    // 假设 PeElestic 表有一个自增的主键或其他唯一标识符，这里不显式插入
+                    string astrSQL = "INSERT INTO PeElestic (rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, " +
+                                     "SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, SAuxiliaryKWH4, " +
+                                     "SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8) " +
+                                     "VALUES ('" + tempDate + "', '" + frmSet.peElestic.SE2PKWH[0].ToString() + "', '" + frmSet.peElestic.SE2OKWH[0].ToString() + "', '" +
+                                     frmSet.peElestic.SAuxiliaryKWH[0].ToString() + "', '" + frmSet.peElestic.SE2PKWH[1].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[1].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[1].ToString() + "', '" +
+                                     frmSet.peElestic.SE2PKWH[2].ToString() + "', '" + frmSet.peElestic.SE2OKWH[2].ToString() + "', '" +
+                                     frmSet.peElestic.SAuxiliaryKWH[2].ToString() + "', '" + frmSet.peElestic.SE2PKWH[3].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[3].ToString() + "', '" + frmSet.peElestic.SAuxiliaryKWH[3].ToString() + "', '" +
+                                     frmSet.peElestic.SE2PKWH[4].ToString() + "', '" + frmSet.peElestic.SE2OKWH[4].ToString() + "', '" +
+                                     frmSet.peElestic.SAuxiliaryKWH[4].ToString() + "', '" + frmSet.peElestic.SE2PKWH[5].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[5].ToString() + "', '" + frmSet.peElestic.SE2PKWH[6].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[6].ToString() + "', '" + frmSet.peElestic.SE2PKWH[7].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[7].ToString() + "', '" + frmSet.peElestic.SE2PKWH[8].ToString() + "', '" +
+                                     frmSet.peElestic.SE2OKWH[8].ToString() + "')";
+
+                    bool result = false;
+
+                    try
+                    {
+                        if (DBConnection.ExecSQL(astrSQL))
+                        {
+                            result = true;
+                        }
+                        else
+                        {
+                            // 处理执行失败的逻辑
+                            result = false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理异常情况
+                        result = false;
+                        log.Error(ex.Message);
+                    }
+                    return result;
+                }*/
 
         /*********************************************
          * 
          *          HistoryData
          * 
          ********************************************/
+
         public static bool LoadHistoryDataFromMySQL()
         {
-            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
-                            + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
+            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
 
             try
             {
@@ -499,28 +499,10 @@ namespace EMS
                                 historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
                                 historyDatas.ClientPUMdemandMax    = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
                                 historyDatas.ErrorState2           = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
-                                historyDatas.DaliyE2PKWH_Z = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
-                                historyDatas.DaliyE2PKWH_J = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                                historyDatas.DaliyE2PKWH_F = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
-                                historyDatas.DaliyE2PKWH_P = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
-                                historyDatas.DaliyE2PKWH_G = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
-                                historyDatas.DaliyE2PKWH_5 = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                                historyDatas.DaliyE2PKWH_6 = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                                historyDatas.DaliyE2PKWH_7 = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
-                                historyDatas.DaliyE2PKWH_8 = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
-                                historyDatas.DaliyE2OKWH_Z = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
-                                historyDatas.DaliyE2OKWH_J = rd.IsDBNull(14) ? 0 : rd.GetInt32(14);
-                                historyDatas.DaliyE2OKWH_F = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
-                                historyDatas.DaliyE2OKWH_P = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
-                                historyDatas.DaliyE2OKWH_G = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
-                                historyDatas.DaliyE2OKWH_5 = rd.IsDBNull(18) ? 0 : rd.GetInt32(18);
-                                historyDatas.DaliyE2OKWH_6 = rd.IsDBNull(19) ? 0 : rd.GetInt32(19);
-                                historyDatas.DaliyE2OKWH_7 = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
-                                historyDatas.DaliyE2OKWH_8 = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
-                                historyDatas.RebootCount = rd.IsDBNull(22) ? 5 : rd.GetInt32(22);
-                                historyDatas.YDstatus = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
+                                historyDatas.RebootCount = rd.IsDBNull(4) ? 5 : rd.GetInt32(4);
+                                historyDatas.YDstatus = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
 
-                                return  true;
+                                return true;
                             }
                         }
                     }
@@ -548,24 +530,6 @@ namespace EMS
                 + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
                 + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
                 + "', ErrorState2 ='" + frmSet.historyDatas.ErrorState2.ToString()
-                + "', DaliyE2PKWH_Z ='" + frmSet.historyDatas.DaliyE2PKWH_Z.ToString()
-                + "', DaliyE2PKWH_J ='" + frmSet.historyDatas.DaliyE2PKWH_J.ToString()
-                + "', DaliyE2PKWH_F ='" + frmSet.historyDatas.DaliyE2PKWH_F.ToString()
-                + "', DaliyE2PKWH_P ='" + frmSet.historyDatas.DaliyE2PKWH_P.ToString()
-                + "', DaliyE2PKWH_G ='" + frmSet.historyDatas.DaliyE2PKWH_G.ToString()
-                + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
-                + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
-                + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
-                + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
-                + "', DaliyE2OKWH_Z ='" + frmSet.historyDatas.DaliyE2OKWH_Z.ToString()
-                + "', DaliyE2OKWH_J ='" + frmSet.historyDatas.DaliyE2OKWH_J.ToString()
-                + "', DaliyE2OKWH_F ='" + frmSet.historyDatas.DaliyE2OKWH_F.ToString()
-                + "', DaliyE2OKWH_P ='" + frmSet.historyDatas.DaliyE2OKWH_P.ToString()
-                + "', DaliyE2OKWH_G ='" + frmSet.historyDatas.DaliyE2OKWH_G.ToString()
-                + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
-                + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
-                + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
-                + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
                 + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
                  + "', YDstatus ='" + frmSet.historyDatas.YDstatus.ToString()
                 + "' WHERE id = " + HistoricalDataId + ";";
@@ -593,6 +557,121 @@ namespace EMS
             }
             return result;
         }
+
+        /*        public static bool LoadHistoryDataFromMySQL()
+                {
+                    string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2 ,DaliyE2PKWH_Z, DaliyE2PKWH_J, DaliyE2PKWH_F, DaliyE2PKWH_P, DaliyE2PKWH_G, DaliyE2PKWH_5, DaliyE2PKWH_6, DaliyE2PKWH_7, DaliyE2PKWH_8, "
+                                    + " DaliyE2OKWH_Z, DaliyE2OKWH_J, DaliyE2OKWH_F, DaliyE2OKWH_P, DaliyE2OKWH_G, DaliyE2OKWH_5, DaliyE2OKWH_6, DaliyE2OKWH_7, DaliyE2OKWH_8, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
+
+                    try
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows && rd.Read())
+                                    {
+                                        historyDatas.E1PUMdemandMaxOld     = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                        historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                        historyDatas.ClientPUMdemandMax    = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
+                                        historyDatas.ErrorState2           = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                        historyDatas.DaliyE2PKWH_Z = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                        historyDatas.DaliyE2PKWH_J = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                                        historyDatas.DaliyE2PKWH_F = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                        historyDatas.DaliyE2PKWH_P = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                        historyDatas.DaliyE2PKWH_G = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                                        historyDatas.DaliyE2PKWH_5 = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                        historyDatas.DaliyE2PKWH_6 = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                                        historyDatas.DaliyE2PKWH_7 = rd.IsDBNull(11) ? 0 : rd.GetInt32(11);
+                                        historyDatas.DaliyE2PKWH_8 = rd.IsDBNull(12) ? 0 : rd.GetInt32(12);
+                                        historyDatas.DaliyE2OKWH_Z = rd.IsDBNull(13) ? 0 : rd.GetInt32(13);
+                                        historyDatas.DaliyE2OKWH_J = rd.IsDBNull(14) ? 0 : rd.GetInt32(14);
+                                        historyDatas.DaliyE2OKWH_F = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
+                                        historyDatas.DaliyE2OKWH_P = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
+                                        historyDatas.DaliyE2OKWH_G = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
+                                        historyDatas.DaliyE2OKWH_5 = rd.IsDBNull(18) ? 0 : rd.GetInt32(18);
+                                        historyDatas.DaliyE2OKWH_6 = rd.IsDBNull(19) ? 0 : rd.GetInt32(19);
+                                        historyDatas.DaliyE2OKWH_7 = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
+                                        historyDatas.DaliyE2OKWH_8 = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
+                                        historyDatas.RebootCount = rd.IsDBNull(22) ? 5 : rd.GetInt32(22);
+                                        historyDatas.YDstatus = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
+
+                                        return  true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+
+                    log.Error("HistoryData加载失败");
+                    return false;
+                }
+
+                public static bool Set_HistoryData()
+                {
+                    string astrSQL = "update  HistoricalData  SET "
+                        + " E1PUMdemandMaxOld ='" + frmSet.historyDatas.E1PUMdemandMaxOld.ToString()
+                        + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
+                        + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
+                        + "', ErrorState2 ='" + frmSet.historyDatas.ErrorState2.ToString()
+                        + "', DaliyE2PKWH_Z ='" + frmSet.historyDatas.DaliyE2PKWH_Z.ToString()
+                        + "', DaliyE2PKWH_J ='" + frmSet.historyDatas.DaliyE2PKWH_J.ToString()
+                        + "', DaliyE2PKWH_F ='" + frmSet.historyDatas.DaliyE2PKWH_F.ToString()
+                        + "', DaliyE2PKWH_P ='" + frmSet.historyDatas.DaliyE2PKWH_P.ToString()
+                        + "', DaliyE2PKWH_G ='" + frmSet.historyDatas.DaliyE2PKWH_G.ToString()
+                        + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
+                        + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
+                        + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
+                        + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
+                        + "', DaliyE2OKWH_Z ='" + frmSet.historyDatas.DaliyE2OKWH_Z.ToString()
+                        + "', DaliyE2OKWH_J ='" + frmSet.historyDatas.DaliyE2OKWH_J.ToString()
+                        + "', DaliyE2OKWH_F ='" + frmSet.historyDatas.DaliyE2OKWH_F.ToString()
+                        + "', DaliyE2OKWH_P ='" + frmSet.historyDatas.DaliyE2OKWH_P.ToString()
+                        + "', DaliyE2OKWH_G ='" + frmSet.historyDatas.DaliyE2OKWH_G.ToString()
+                        + "', DaliyE2PKWH_5 ='" + frmSet.historyDatas.DaliyE2PKWH_5.ToString()
+                        + "', DaliyE2PKWH_6 ='" + frmSet.historyDatas.DaliyE2PKWH_6.ToString()
+                        + "', DaliyE2PKWH_7 ='" + frmSet.historyDatas.DaliyE2PKWH_7.ToString()
+                        + "', DaliyE2PKWH_8 ='" + frmSet.historyDatas.DaliyE2PKWH_8.ToString()
+                        + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
+                         + "', YDstatus ='" + frmSet.historyDatas.YDstatus.ToString()
+                        + "' WHERE id = " + HistoricalDataId + ";";
+
+                    bool result = false;
+
+                    try
+                    {
+                        if (DBConnection.ExecSQL(astrSQL))
+                        {
+
+                            result = true;
+                        }
+                        else
+                        {
+                            // 处理执行失败的逻辑
+                            result = false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理异常情况
+                        result = false;
+                        log.Error("Set_HistoryData: " + ex.Message);
+                    }
+                    return result;
+                }*/
 
 
         /*********************************************
@@ -2611,7 +2690,7 @@ namespace EMS
             public volatile int ClientPUMdemandMaxOld;
             public volatile int ClientPUMdemandMax;
             public volatile int ErrorState2;
-            public volatile int DaliyE2PKWH_Z;
+/*            public volatile int DaliyE2PKWH_Z;
             public volatile int DaliyE2PKWH_J;
             public volatile int DaliyE2PKWH_F;
             public volatile int DaliyE2PKWH_P;
@@ -2628,7 +2707,7 @@ namespace EMS
             public volatile int DaliyE2OKWH_5;
             public volatile int DaliyE2OKWH_6;
             public volatile int DaliyE2OKWH_7;
-            public volatile int DaliyE2OKWH_8;
+            public volatile int DaliyE2OKWH_8;*/
             public volatile int RebootCount;
             public volatile int YDstatus;
         }

@@ -744,11 +744,11 @@ namespace EMS
                     //if (!AllEquipment.InitE2Power()) return false;
                     AllEquipment.InitE2Power();
 
-                    return true;
+                    //return true;
                 }
             }
 
-            return false;
+            return true;
         }
 
         private bool InitializeCommunication()
@@ -1097,7 +1097,7 @@ namespace EMS
                 try
                 {
                     // 周期计算今日充放电量
-                    frmMain.Selffrm.AllEquipment.CalculateNowPower();
+                    //frmMain.Selffrm.AllEquipment.CalculateNowPower();
 
                     //上电启动后必须完成1次电表校准
                     if (!frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess)
@@ -1276,8 +1276,8 @@ namespace EMS
                 }
 
                 // 等待 2分钟再进行下一次心跳
-                //Thread.Sleep(120000);
-                Thread.Sleep(1000);
+                Thread.Sleep(120000);
+                //Thread.Sleep(1000);
             }
         }
 
