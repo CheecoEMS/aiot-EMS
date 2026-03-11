@@ -154,6 +154,9 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.11.2.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>packages\Mono.Cecil.0.11.2\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
+    <Reference Include="MQTTnet, Version=4.1.4.563, Culture=neutral, PublicKeyToken=fdb7629f2e364a63, processorArchitecture=MSIL">
+      <HintPath>packages\MQTTnet.4.1.4.563\lib\net461\MQTTnet.dll</HintPath>
+    </Reference>
     <Reference Include="MQTTnet.Extensions.ManagedClient, Version=4.1.4.563, Culture=neutral, PublicKeyToken=fdb7629f2e364a63, processorArchitecture=MSIL">
       <HintPath>packages\MQTTnet.Extensions.ManagedClient.4.1.4.563\lib\net461\MQTTnet.Extensions.ManagedClient.dll</HintPath>
     </Reference>
@@ -355,6 +358,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BalaTacticsListClass.cs" />
+    <Compile Include="CloudService.cs" />
+    <Compile Include="MqttManager.cs" />
     <Compile Include="pid.cs" />
     <Compile Include="CloundClass.cs" />
     <Compile Include="DBConnect.cs" />
@@ -485,6 +490,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunTimeInf.cs" />
+    <Compile Include="SafeProcessRunner.cs" />
     <Compile Include="SGCIM.cs" />
     <Compile Include="SysIO.cs" />
     <Compile Include="TacticsClass.cs" />

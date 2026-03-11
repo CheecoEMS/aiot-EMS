@@ -1,4 +1,4 @@
-﻿using log4net;
+using log4net;
 using MySql.Data.MySqlClient;
 using System;
 using System.Drawing;
@@ -19,6 +19,8 @@ using Squirrel;
 using System.Reflection;
 using System.Web.UI;
 using Org.BouncyCastle.Utilities.Collections;
+using static System.Windows.Forms.AxHost;
+using System.Data;
 
 namespace EMS
 {
@@ -195,9 +197,9 @@ namespace EMS
                         log.Error("无法重启应用程序: " + ex.Message);
                     }
 
-                    // 退出当前进程  
+                    // 退出当前进程
                     Environment.Exit(0);
-                
+
             }
             catch (Exception ex)
             {
@@ -239,7 +241,7 @@ namespace EMS
                         log.Error("无法重启应用程序: " + ex.Message);
                     }
 
-                    // 退出当前进程  
+                    // 退出当前进程
                     Environment.Exit(0);
                 }
             }
@@ -253,10 +255,90 @@ namespace EMS
 
         /***********************************************************************************************************************/
 
+        #region 辅助方法
+        private static double GetDoubleValueFromReader(MySqlDataReader reader, string columnName, double defaultValue)
+        {
+            try
+            {
+                var value = reader[columnName];
+                if (value == DBNull.Value)
+                    return defaultValue;
+                return Convert.ToDouble(value);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static int GetIntValueFromReader(MySqlDataReader reader, string columnName, int defaultValue)
+        {
+            try
+            {
+                var value = reader[columnName];
+                if (value == DBNull.Value)
+                    return defaultValue;
+                return Convert.ToInt32(value);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static DateTime GetDateTimeValueFromReader(MySqlDataReader reader, string columnName, DateTime defaultValue)
+        {
+            try
+            {
+                var value = reader[columnName];
+                if (value == DBNull.Value)
+                    return defaultValue;
+                return Convert.ToDateTime(value);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// 安全获取字符串值，自动处理 DBNull 和 空白字符串
+        /// </summary>
+        private static string GetStringValueFromReader(MySqlDataReader reader, string columnName, string defaultValue)
+        {
+            try
+            {
+                var value = reader[columnName];
+
+                // 处理 DBNull
+                if (value == DBNull.Value || value == null)
+                {
+                    return defaultValue;
+                }
+
+                string strValue = value.ToString();
+
+                // 处理空字符串或纯空格
+                if (string.IsNullOrWhiteSpace(strValue))
+                {
+                    return defaultValue;
+                }
+
+                return strValue;
+            }
+            catch (Exception ex)
+            {
+                // 记录特定字段的转换错误，但不中断整个流程
+                log.Warn($"字段 {columnName} 读取失败，使用默认值 '{defaultValue}'. 错误: {ex.Message}");
+                return defaultValue;
+            }
+        }
+        #endregion
+
         /*********************************************
-         * 
+         *
          *          peElestic
-         * 
+         *
          ********************************************/
         public static bool CheckPeElestic()
         {
@@ -292,136 +374,93 @@ namespace EMS
 
         public static bool LoadPeElesticFromMySQL()
         {
-            bool result = false;
-            // 使用预初始化的PeElesticId确保只查询特定记录
-            string astrSQL = "SELECT rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, "
-                           + "SAuxiliaryKWH4, SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8 FROM PeElestic WHERE id = " + PeElesticId + ";";
+            string sql = "SELECT rDate, SE2PKWH0, SE2OKWH0, SAuxiliaryKWH0, SE2PKWH1, SE2OKWH1, SAuxiliaryKWH1, SE2PKWH2, SE2OKWH2, SAuxiliaryKWH2, SE2PKWH3, SE2OKWH3, SAuxiliaryKWH3, SE2PKWH4, SE2OKWH4, "
+                       + "SAuxiliaryKWH4, SE2PKWH5, SE2OKWH5, SE2PKWH6, SE2OKWH6, SE2PKWH7, SE2OKWH7, SE2PKWH8, SE2OKWH8 FROM PeElestic WHERE id = @id";
 
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                var parameters = new Dictionary<string, object> { { "@id", PeElesticId } };
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                        if (peElestic != null)
                         {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                if (peElestic != null)
-                                {
-                                    peElestic.rDate = rd.IsDBNull(0) ? DateTime.MinValue : rd.GetDateTime(0);
-                                    peElestic.SE2PKWH[0] = rd.IsDBNull(1) ? 0 : rd.GetDouble(1);
-                                    peElestic.SE2OKWH[0] = rd.IsDBNull(2) ? 0 : rd.GetDouble(2);
-                                    peElestic.SAuxiliaryKWH[0] = rd.IsDBNull(3) ? 0 : rd.GetDouble(3);
-                                    peElestic.SE2PKWH[1] = rd.IsDBNull(4) ? 0 : rd.GetDouble(4);
-                                    peElestic.SE2OKWH[1] = rd.IsDBNull(5) ? 0 : rd.GetDouble(5);
-                                    peElestic.SAuxiliaryKWH[1] = rd.IsDBNull(6) ? 0 : rd.GetDouble(6);
-                                    peElestic.SE2PKWH[2] = rd.IsDBNull(7) ? 0 : rd.GetDouble(7);
-                                    peElestic.SE2OKWH[2] = rd.IsDBNull(8) ? 0 : rd.GetDouble(8);
-                                    peElestic.SAuxiliaryKWH[2] = rd.IsDBNull(9) ? 0 : rd.GetDouble(9);
-                                    peElestic.SE2PKWH[3] = rd.IsDBNull(10) ? 0 : rd.GetDouble(10);
-                                    peElestic.SE2OKWH[3] = rd.IsDBNull(11) ? 0 : rd.GetDouble(11);
-                                    peElestic.SAuxiliaryKWH[3] = rd.IsDBNull(12) ? 0 : rd.GetDouble(12);
-                                    peElestic.SE2PKWH[4] = rd.IsDBNull(13) ? 0 : rd.GetDouble(13);
-                                    peElestic.SE2OKWH[4] = rd.IsDBNull(14) ? 0 : rd.GetDouble(14);
-                                    peElestic.SAuxiliaryKWH[4] = rd.IsDBNull(15) ? 5 : rd.GetDouble(15);
-                                    peElestic.SE2PKWH[5] = rd.IsDBNull(16) ? 0 : rd.GetDouble(16);
-                                    peElestic.SE2OKWH[5] = rd.IsDBNull(17) ? 0 : rd.GetDouble(17);
-                                    peElestic.SE2PKWH[6] = rd.IsDBNull(18) ? 0 : rd.GetDouble(18);
-                                    peElestic.SE2OKWH[6] = rd.IsDBNull(19) ? 0 : rd.GetDouble(19);
-                                    peElestic.SE2PKWH[7] = rd.IsDBNull(20) ? 0 : rd.GetDouble(20);
-                                    peElestic.SE2OKWH[7] = rd.IsDBNull(21) ? 0 : rd.GetDouble(21);
-                                    peElestic.SE2PKWH[8] = rd.IsDBNull(22) ? 0 : rd.GetDouble(22);
-                                    peElestic.SE2OKWH[8] = rd.IsDBNull(23) ? 0 : rd.GetDouble(23);
-                                }
-                                result = true;
-                            }
-
-
-/*                            else
-                            {
-                                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
-                                    for (int i = 0; i < 9; i++)//总\尖\峰\平\谷
-                                    {
-                                        frmSet.peElestic.SE2PKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[i];
-                                        frmSet.peElestic.SE2OKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[i];
-                                    }
-                                }
-
-                                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                                {
-                                    frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
-                                    for (int i = 0; i < 5; ++i)
-                                    {
-                                        frmSet.peElestic.SAuxiliaryKWH[i] = frmMain.Selffrm.AllEquipment.Elemeter3.Akwh[i];
-                                    }
-                                }
-                                frmSet.Insert_PeElesticData();
-                            }*/
+                            peElestic.rDate = GetDateTimeValueFromReader(reader, "rDate", DateTime.MinValue);
+                            peElestic.SE2PKWH[0] = GetDoubleValueFromReader(reader, "SE2PKWH0", 0);
+                            peElestic.SE2OKWH[0] = GetDoubleValueFromReader(reader, "SE2OKWH0", 0);
+                            peElestic.SAuxiliaryKWH[0] = GetDoubleValueFromReader(reader, "SAuxiliaryKWH0", 0);
+                            peElestic.SE2PKWH[1] = GetDoubleValueFromReader(reader, "SE2PKWH1", 0);
+                            peElestic.SE2OKWH[1] = GetDoubleValueFromReader(reader, "SE2OKWH1", 0);
+                            peElestic.SAuxiliaryKWH[1] = GetDoubleValueFromReader(reader, "SAuxiliaryKWH1", 0);
+                            peElestic.SE2PKWH[2] = GetDoubleValueFromReader(reader, "SE2PKWH2", 0);
+                            peElestic.SE2OKWH[2] = GetDoubleValueFromReader(reader, "SE2OKWH2", 0);
+                            peElestic.SAuxiliaryKWH[2] = GetDoubleValueFromReader(reader, "SAuxiliaryKWH2", 0);
+                            peElestic.SE2PKWH[3] = GetDoubleValueFromReader(reader, "SE2PKWH3", 0);
+                            peElestic.SE2OKWH[3] = GetDoubleValueFromReader(reader, "SE2OKWH3", 0);
+                            peElestic.SAuxiliaryKWH[3] = GetDoubleValueFromReader(reader, "SAuxiliaryKWH3", 0);
+                            peElestic.SE2PKWH[4] = GetDoubleValueFromReader(reader, "SE2PKWH4", 0);
+                            peElestic.SE2OKWH[4] = GetDoubleValueFromReader(reader, "SE2OKWH4", 0);
+                            peElestic.SAuxiliaryKWH[4] = GetDoubleValueFromReader(reader, "SAuxiliaryKWH4", 0);
+                            peElestic.SE2PKWH[5] = GetDoubleValueFromReader(reader, "SE2PKWH5", 0);
+                            peElestic.SE2OKWH[5] = GetDoubleValueFromReader(reader, "SE2OKWH5", 0);
+                            peElestic.SE2PKWH[6] = GetDoubleValueFromReader(reader, "SE2PKWH6", 0);
+                            peElestic.SE2OKWH[6] = GetDoubleValueFromReader(reader, "SE2OKWH6", 0);
+                            peElestic.SE2PKWH[7] = GetDoubleValueFromReader(reader, "SE2PKWH7", 0);
+                            peElestic.SE2OKWH[7] = GetDoubleValueFromReader(reader, "SE2OKWH7", 0);
+                            peElestic.SE2PKWH[8] = GetDoubleValueFromReader(reader, "SE2PKWH8", 0);
+                            peElestic.SE2OKWH[8] = GetDoubleValueFromReader(reader, "SE2OKWH8", 0);
                         }
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
-                result = false;
+
+                log.Warn($"未找到 PeElestic 配置，ID: {PeElesticId}");
+                return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
-                result = false;
+                log.Error($"LoadPeElesticFromMySQL 失败: {ex.Message}", ex);
+                return false;
             }
-            return result;
         }
 
         public static bool Set_PeElesticData(string tempDate)
         {
-            // 使用主键id确保只更新唯一记录，防止更新所有记录
-            string astrSQL = "update  PeElestic  SET "
-                + " rDate  ='" + tempDate
-                + "', SE2PKWH0  ='" + frmSet.peElestic.SE2PKWH[0].ToString()
-                + "', SE2OKWH0  ='" + frmSet.peElestic.SE2OKWH[0].ToString()
-                + "', SAuxiliaryKWH0  ='" + frmSet.peElestic.SAuxiliaryKWH[0].ToString()
-                + "', SE2PKWH1 ='" + frmSet.peElestic.SE2PKWH[1].ToString()
-                + "', SE2OKWH1 ='" + frmSet.peElestic.SE2OKWH[1].ToString()
-                + "', SAuxiliaryKWH1 ='" + frmSet.peElestic.SAuxiliaryKWH[1].ToString()
-                + "', SE2PKWH2 ='" + frmSet.peElestic.SE2PKWH[2].ToString()
-                + "', SE2OKWH2 ='" + frmSet.peElestic.SE2OKWH[2].ToString()
-                + "', SAuxiliaryKWH2 ='" + frmSet.peElestic.SAuxiliaryKWH[2].ToString()
-                + "', SE2PKWH3 ='" + frmSet.peElestic.SE2PKWH[3].ToString()
-                + "', SE2OKWH3 ='" + frmSet.peElestic.SE2OKWH[3].ToString()
-                + "', SAuxiliaryKWH3 ='" + frmSet.peElestic.SAuxiliaryKWH[3].ToString()
-                + "', SE2PKWH4 ='" + frmSet.peElestic.SE2PKWH[4].ToString()
-                + "', SE2OKWH4 ='" + frmSet.peElestic.SE2OKWH[4].ToString()
-                + "', SAuxiliaryKWH4 ='" + frmSet.peElestic.SAuxiliaryKWH[4].ToString()
-                + "', SE2PKWH5 ='" + frmSet.peElestic.SE2PKWH[5].ToString()
-                + "', SE2OKWH5 ='" + frmSet.peElestic.SE2OKWH[5].ToString()
-                + "', SE2PKWH6 ='" + frmSet.peElestic.SE2PKWH[6].ToString()
-                + "', SE2OKWH6 ='" + frmSet.peElestic.SE2OKWH[6].ToString()
-                + "', SE2PKWH7 ='" + frmSet.peElestic.SE2PKWH[7].ToString()
-                + "', SE2OKWH7 ='" + frmSet.peElestic.SE2OKWH[7].ToString()
-                + "', SE2PKWH8 ='" + frmSet.peElestic.SE2PKWH[8].ToString()
-                + "', SE2OKWH8 ='" + frmSet.peElestic.SE2OKWH[8].ToString()
-                + "' WHERE id = " + PeElesticId + ";";
-
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
+                string sql =
+                    "UPDATE PeElestic SET " +
+                    "rDate=@rDate, " +
+                    "SE2PKWH0=@SE2PKWH0, SE2OKWH0=@SE2OKWH0, SAuxiliaryKWH0=@SAuxiliaryKWH0, " +
+                    "SE2PKWH1=@SE2PKWH1, SE2OKWH1=@SE2OKWH1, SAuxiliaryKWH1=@SAuxiliaryKWH1, " +
+                    "SE2PKWH2=@SE2PKWH2, SE2OKWH2=@SE2OKWH2, SAuxiliaryKWH2=@SAuxiliaryKWH2, " +
+                    "SE2PKWH3=@SE2PKWH3, SE2OKWH3=@SE2OKWH3, SAuxiliaryKWH3=@SAuxiliaryKWH3, " +
+                    "SE2PKWH4=@SE2PKWH4, SE2OKWH4=@SE2OKWH4, SAuxiliaryKWH4=@SAuxiliaryKWH4, " +
+                    "SE2PKWH5=@SE2PKWH5, SE2OKWH5=@SE2OKWH5, " +
+                    "SE2PKWH6=@SE2PKWH6, SE2OKWH6=@SE2OKWH6, " +
+                    "SE2PKWH7=@SE2PKWH7, SE2OKWH7=@SE2OKWH7, " +
+                    "SE2PKWH8=@SE2PKWH8, SE2OKWH8=@SE2OKWH8 " +
+                    "WHERE id=@id;";
 
-                    result = true;
-                }
-                else
+                var parameters = new Dictionary<string, object>
                 {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                    { "@rDate", tempDate ?? string.Empty },
+                    { "@SE2PKWH0", peElestic.SE2PKWH[0] }, { "@SE2OKWH0", peElestic.SE2OKWH[0] }, { "@SAuxiliaryKWH0", peElestic.SAuxiliaryKWH[0] },
+                    { "@SE2PKWH1", peElestic.SE2PKWH[1] }, { "@SE2OKWH1", peElestic.SE2OKWH[1] }, { "@SAuxiliaryKWH1", peElestic.SAuxiliaryKWH[1] },
+                    { "@SE2PKWH2", peElestic.SE2PKWH[2] }, { "@SE2OKWH2", peElestic.SE2OKWH[2] }, { "@SAuxiliaryKWH2", peElestic.SAuxiliaryKWH[2] },
+                    { "@SE2PKWH3", peElestic.SE2PKWH[3] }, { "@SE2OKWH3", peElestic.SE2OKWH[3] }, { "@SAuxiliaryKWH3", peElestic.SAuxiliaryKWH[3] },
+                    { "@SE2PKWH4", peElestic.SE2PKWH[4] }, { "@SE2OKWH4", peElestic.SE2OKWH[4] }, { "@SAuxiliaryKWH4", peElestic.SAuxiliaryKWH[4] },
+                    { "@SE2PKWH5", peElestic.SE2PKWH[5] }, { "@SE2OKWH5", peElestic.SE2OKWH[5] },
+                    { "@SE2PKWH6", peElestic.SE2PKWH[6] }, { "@SE2OKWH6", peElestic.SE2OKWH[6] },
+                    { "@SE2PKWH7", peElestic.SE2PKWH[7] }, { "@SE2OKWH7", peElestic.SE2OKWH[7] },
+                    { "@SE2PKWH8", peElestic.SE2PKWH[8] }, { "@SE2OKWH8", peElestic.SE2OKWH[8] },
+                    { "@id", PeElesticId }
+                };
+
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -455,7 +494,7 @@ namespace EMS
 
                     try
                     {
-                        if (DBConnection.ExecSQL(astrSQL))
+                        if (DBConnection.ExecSQLWithParams(astrSQL, null) >= 0)
                         {
                             result = true;
                         }
@@ -475,79 +514,116 @@ namespace EMS
                 }*/
 
         /*********************************************
-         * 
+         *
          *          HistoryData
-         * 
+         *
          ********************************************/
 
+        #region 加载HistoryData
         public static bool LoadHistoryDataFromMySQL()
         {
-            string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
+            string sql = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2, RebootCount, YDstatus FROM HistoricalData WHERE id = @id";
 
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                var parameters = new Dictionary<string, object> { { "@id", HistoricalDataId } };
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                historyDatas.E1PUMdemandMaxOld     = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
-                                historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                                historyDatas.ClientPUMdemandMax    = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
-                                historyDatas.ErrorState2           = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
-                                historyDatas.RebootCount = rd.IsDBNull(4) ? 5 : rd.GetInt32(4);
-                                historyDatas.YDstatus = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                        historyDatas.E1PUMdemandMaxOld = GetIntValueFromReader(reader, "E1PUMdemandMaxOld", 0);
+                        historyDatas.ClientPUMdemandMaxOld = GetIntValueFromReader(reader, "ClientPUMdemandMaxOld", 0);
+                        historyDatas.ClientPUMdemandMax = GetIntValueFromReader(reader, "ClientPUMdemandMax", 0);
+                        historyDatas.ErrorState2 = GetIntValueFromReader(reader, "ErrorState2", 0);
+                        historyDatas.RebootCount = GetIntValueFromReader(reader, "RebootCount", 5);
+                        historyDatas.YDstatus = GetIntValueFromReader(reader, "YDstatus", 0);
 
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
+
+                log.Warn($"未找到 HistoricalData 配置，ID: {HistoricalDataId}");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error($"LoadHistoryDataFromMySQL 失败: {ex.Message}", ex);
                 return false;
             }
-
-            log.Error("HistoryData加载失败");
-            return false;
         }
+        #endregion
+
+        /* public static bool LoadHistoryDataFromMySQL()
+         {
+             string astrSQL = "SELECT E1PUMdemandMaxOld, ClientPUMdemandMaxOld, ClientPUMdemandMax, ErrorState2, RebootCount, YDstatus FROM HistoricalData WHERE id = " + HistoricalDataId + ";";
+
+             try
+             {
+                 using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                 {
+                     connection.Open();
+                     using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                     {
+                         using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                         {
+                             if (rd != null && rd.HasRows && rd.Read())
+                             {
+                                 historyDatas.E1PUMdemandMaxOld     = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                 historyDatas.ClientPUMdemandMaxOld = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                 historyDatas.ClientPUMdemandMax    = rd.IsDBNull(2) ? 0 : rd.GetInt32(2);
+                                 historyDatas.ErrorState2           = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                 historyDatas.RebootCount = rd.IsDBNull(4) ? 5 : rd.GetInt32(4);
+                                 historyDatas.YDstatus = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+
+                                 return true;
+                             }
+                         }
+                     }
+                 }
+             }
+             catch (MySqlException ex)
+             {
+                 log.Error(ex.Message);
+                 return false;
+             }
+             catch (Exception ex)
+             {
+                 log.Error(ex.Message);
+                 return false;
+             }
+
+             log.Error("HistoryData加载失败");
+             return false;
+         }*/
 
         public static bool Set_HistoryData()
         {
-            string astrSQL = "update  HistoricalData  SET "
-                + " E1PUMdemandMaxOld ='" + frmSet.historyDatas.E1PUMdemandMaxOld.ToString()
-                + "', ClientPUMdemandMaxOld ='" + frmSet.historyDatas.ClientPUMdemandMaxOld.ToString()
-                + "', ClientPUMdemandMax ='" + frmSet.historyDatas.ClientPUMdemandMax.ToString()
-                + "', ErrorState2 ='" + frmSet.historyDatas.ErrorState2.ToString()
-                + "', RebootCount ='" + frmSet.historyDatas.RebootCount.ToString()
-                 + "', YDstatus ='" + frmSet.historyDatas.YDstatus.ToString()
-                + "' WHERE id = " + HistoricalDataId + ";";
-
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
+                string sql =
+                    "UPDATE HistoricalData SET " +
+                    "E1PUMdemandMaxOld=@E1PUMdemandMaxOld, " +
+                    "ClientPUMdemandMaxOld=@ClientPUMdemandMaxOld, " +
+                    "ClientPUMdemandMax=@ClientPUMdemandMax, " +
+                    "ErrorState2=@ErrorState2, " +
+                    "RebootCount=@RebootCount, " +
+                    "YDstatus=@YDstatus " +
+                    "WHERE id=@id;";
 
-                    result = true;
-                }
-                else
+                var parameters = new Dictionary<string, object>
                 {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                    { "@E1PUMdemandMaxOld", historyDatas.E1PUMdemandMaxOld },
+                    { "@ClientPUMdemandMaxOld", historyDatas.ClientPUMdemandMaxOld },
+                    { "@ClientPUMdemandMax", historyDatas.ClientPUMdemandMax },
+                    { "@ErrorState2", historyDatas.ErrorState2 },
+                    { "@RebootCount", historyDatas.RebootCount },
+                    { "@YDstatus", historyDatas.YDstatus },
+                    { "@id", HistoricalDataId }
+                };
+
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -653,7 +729,7 @@ namespace EMS
 
                     try
                     {
-                        if (DBConnection.ExecSQL(astrSQL))
+                        if (DBConnection.ExecSQLWithParams(astrSQL, null) >= 0)
                         {
 
                             result = true;
@@ -673,71 +749,130 @@ namespace EMS
                     return result;
                 }*/
 
-
         /*********************************************
-         * 
-         *          CloudLimits
-         * 
+         *
+         *          Cloudlimits
+         *
          ********************************************/
+
+        #region 加载CloudLimits
         public static bool LoadCloudLimitsFromMySQL()
         {
-            string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
-                + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount, CellV_Gap, OpenBala FROM CloudLimits WHERE id = " + CloudLimitsId + ";";
+            string sql = @"
+                SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC, WarnMaxGridKW, WarnMinGridKW,
+                       PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale,
+                       AllUkvaWindowSize, PumTime, BmsDerateRatio, FrigOpenLower, FrigOffLower,
+                       FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm,
+                       SignalDelayCount, CellV_Gap, OpenBala
+                FROM CloudLimits
+                WHERE id = @id";
 
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                var parameters = new Dictionary<string, object> { { "@id", CloudLimitsId } };
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                cloudLimits.MaxGridKW = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
-                                cloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                                cloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
-                                cloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
-                                cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
-                                cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                                cloudLimits.PcsKva = rd.IsDBNull(6) ? 10 : rd.GetInt32(6);
-                                cloudLimits.Pre_Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
-                                cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
-                                cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                                cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 4 : rd.GetInt32(10);
-                                cloudLimits.PumTime = rd.IsDBNull(11) ? 5 : rd.GetInt32(11);
-                                cloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 50 : rd.GetInt32(12);
-                                cloudLimits.FrigOpenLower = rd.IsDBNull(13) ? 30 : rd.GetInt32(13);
-                                cloudLimits.FrigOffLower = rd.IsDBNull(14) ? 10 : rd.GetInt32(14);
-                                cloudLimits.FrigOffUpper = rd.IsDBNull(15) ? 25 : rd.GetInt32(15);
-                                cloudLimits.BoxHTemperAlarm =  rd.IsDBNull(16) ? 40 : rd.GetInt32(16);
-                                cloudLimits.BoxLTemperAlarm = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
-                                cloudLimits.SignalDelayAlarm = rd.IsDBNull(18) ? 80 : rd.GetInt32(18);
-                                cloudLimits.SignalDelayCount = rd.IsDBNull(19) ? 10 : rd.GetInt32(19);
-                                cloudLimits.CellV_Gap = rd.IsDBNull(20) ? 30 : rd.GetInt32(20);
-                                cloudLimits.OpenBala = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
+                        cloudLimits.MaxGridKW = GetIntValueFromReader(reader, "MaxGridKW", 0);
+                        cloudLimits.MinGridKW = GetIntValueFromReader(reader, "MinGridKW", 0);
+                        cloudLimits.MaxSOC = GetIntValueFromReader(reader, "MaxSOC", 100);
+                        cloudLimits.MinSOC = GetIntValueFromReader(reader, "MinSOC", 0);
+                        cloudLimits.WarnMaxGridKW = GetIntValueFromReader(reader, "WarnMaxGridKW", 0);
+                        cloudLimits.WarnMinGridKW = GetIntValueFromReader(reader, "WarnMinGridKW", 0);
+                        cloudLimits.PcsKva = GetIntValueFromReader(reader, "PcsKva", 10);
+                        cloudLimits.Pre_Client_PUMdemand_Max = GetIntValueFromReader(reader, "Pre_Client_PUMdemand_Max", 0);
+                        cloudLimits.EnableActiveReduce = GetIntValueFromReader(reader, "EnableActiveReduce", 0);
+                        cloudLimits.PumScale = GetIntValueFromReader(reader, "PumScale", 0);
+                        cloudLimits.AllUkvaWindowSize = GetIntValueFromReader(reader, "AllUkvaWindowSize", 4);
+                        cloudLimits.PumTime = GetIntValueFromReader(reader, "PumTime", 5);
+                        cloudLimits.BmsDerateRatio = GetIntValueFromReader(reader, "BmsDerateRatio", 50);
+                        cloudLimits.FrigOpenLower = GetIntValueFromReader(reader, "FrigOpenLower", 30);
+                        cloudLimits.FrigOffLower = GetIntValueFromReader(reader, "FrigOffLower", 10);
+                        cloudLimits.FrigOffUpper = GetIntValueFromReader(reader, "FrigOffUpper", 25);
+                        cloudLimits.BoxHTemperAlarm = GetIntValueFromReader(reader, "BoxHTemperAlarm", 40);
+                        cloudLimits.BoxLTemperAlarm = GetIntValueFromReader(reader, "BoxLTemperAlarm", 0);
+                        cloudLimits.SignalDelayAlarm = GetIntValueFromReader(reader, "SignalDelayAlarm", 80);
+                        cloudLimits.SignalDelayCount = GetIntValueFromReader(reader, "SignalDelayCount", 10);
+                        cloudLimits.CellV_Gap = GetIntValueFromReader(reader, "CellV_Gap", 30);
+                        cloudLimits.OpenBala = GetIntValueFromReader(reader, "OpenBala", 0);
 
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
+
+                log.Warn($"未找到 CloudLimits 配置，ID: {CloudLimitsId}");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                // 记录完整堆栈，不仅仅是 Message
+                log.Error($"LoadCloudLimitsFromMySQL 失败: {ex.Message}", ex);
                 return false;
             }
-
-            log.Error("CloudLimits加载失败");
-            return false;
         }
+        #endregion
+
+
+        /*        public static bool LoadCloudLimitsFromMySQL()
+                {
+                    string astrSQL = "SELECT MaxGridKW, MinGridKW, MaxSOC, MinSOC,  WarnMaxGridKW, WarnMinGridKW, PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale, AllUkvaWindowSize, PumTime, "
+                        + "BmsDerateRatio, FrigOpenLower, FrigOffLower, FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm, SignalDelayCount, CellV_Gap, OpenBala FROM CloudLimits WHERE id = " + CloudLimitsId + ";";
+
+                    try
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows && rd.Read())
+                                    {
+                                        cloudLimits.MaxGridKW = rd.IsDBNull(0) ? 0 : rd.GetInt32(0);
+                                        cloudLimits.MinGridKW = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                        cloudLimits.MaxSOC = rd.IsDBNull(2) ? 100 : rd.GetInt32(2);
+                                        cloudLimits.MinSOC = rd.IsDBNull(3) ? 0 : rd.GetInt32(3);
+                                        cloudLimits.WarnMaxGridKW = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                        cloudLimits.WarnMinGridKW = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+                                        cloudLimits.PcsKva = rd.IsDBNull(6) ? 10 : rd.GetInt32(6);
+                                        cloudLimits.Pre_Client_PUMdemand_Max = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                        cloudLimits.EnableActiveReduce = rd.IsDBNull(8) ? 0 : rd.GetInt32(8);
+                                        cloudLimits.PumScale = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                        cloudLimits.AllUkvaWindowSize = rd.IsDBNull(10) ? 4 : rd.GetInt32(10);
+                                        cloudLimits.PumTime = rd.IsDBNull(11) ? 5 : rd.GetInt32(11);
+                                        cloudLimits.BmsDerateRatio = rd.IsDBNull(12) ? 50 : rd.GetInt32(12);
+                                        cloudLimits.FrigOpenLower = rd.IsDBNull(13) ? 30 : rd.GetInt32(13);
+                                        cloudLimits.FrigOffLower = rd.IsDBNull(14) ? 10 : rd.GetInt32(14);
+                                        cloudLimits.FrigOffUpper = rd.IsDBNull(15) ? 25 : rd.GetInt32(15);
+                                        cloudLimits.BoxHTemperAlarm =  rd.IsDBNull(16) ? 40 : rd.GetInt32(16);
+                                        cloudLimits.BoxLTemperAlarm = rd.IsDBNull(17) ? 0 : rd.GetInt32(17);
+                                        cloudLimits.SignalDelayAlarm = rd.IsDBNull(18) ? 80 : rd.GetInt32(18);
+                                        cloudLimits.SignalDelayCount = rd.IsDBNull(19) ? 10 : rd.GetInt32(19);
+                                        cloudLimits.CellV_Gap = rd.IsDBNull(20) ? 30 : rd.GetInt32(20);
+                                        cloudLimits.OpenBala = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
+
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+
+                    log.Error("CloudLimits加载失败");
+                    return false;
+                }*/
 
 
         public static bool Set_Cloudlimits_OnlyChange()
@@ -749,77 +884,89 @@ namespace EMS
                 return true;
             }
 
-            // 构建只包含修改字段的SQL语句
+            // 构建只包含修改字段的SQL语句和参数
             List<string> updateClauses = new List<string>();
+            var parameters = new Dictionary<string, object>();
+
             foreach (var field in modifiedFields)
             {
                 switch (field)
                 {
                     case "MaxGridKW":
-                        updateClauses.Add($"MaxGridKW = '{frmSet.cloudLimits.MaxGridKW}'");
+                        updateClauses.Add("MaxGridKW = @MaxGridKW");
+                        parameters.Add("@MaxGridKW", frmSet.cloudLimits.MaxGridKW);
                         break;
                     case "MinGridKW":
-                        updateClauses.Add($"MinGridKW = '{frmSet.cloudLimits.MinGridKW}'");
+                        updateClauses.Add("MinGridKW = @MinGridKW");
+                        parameters.Add("@MinGridKW", frmSet.cloudLimits.MinGridKW);
                         break;
                     case "MaxSOC":
-                        updateClauses.Add($"MaxSOC = '{frmSet.cloudLimits.MaxSOC}'");
+                        updateClauses.Add("MaxSOC = @MaxSOC");
+                        parameters.Add("@MaxSOC", frmSet.cloudLimits.MaxSOC);
                         break;
                     case "MinSOC":
-                        updateClauses.Add($"MinSOC = '{frmSet.cloudLimits.MinSOC}'");
+                        updateClauses.Add("MinSOC = @MinSOC");
+                        parameters.Add("@MinSOC", frmSet.cloudLimits.MinSOC);
                         break;
                     case "WarnMaxGridKW":
-                        updateClauses.Add($"WarnMaxGridKW = '{frmSet.cloudLimits.WarnMaxGridKW}'");
+                        updateClauses.Add("WarnMaxGridKW = @WarnMaxGridKW");
+                        parameters.Add("@WarnMaxGridKW", frmSet.cloudLimits.WarnMaxGridKW);
                         break;
                     case "WarnMinGridKW":
-                        updateClauses.Add($"WarnMinGridKW = '{frmSet.cloudLimits.WarnMinGridKW}'");
+                        updateClauses.Add("WarnMinGridKW = @WarnMinGridKW");
+                        parameters.Add("@WarnMinGridKW", frmSet.cloudLimits.WarnMinGridKW);
                         break;
                     case "PcsKva":
-                        updateClauses.Add($"PcsKva = '{frmSet.cloudLimits.PcsKva}'");
+                        updateClauses.Add("PcsKva = @PcsKva");
+                        parameters.Add("@PcsKva", frmSet.cloudLimits.PcsKva);
                         break;
                     case "Pre_Client_PUMdemand_Max":
-                        updateClauses.Add($"Pre_Client_PUMdemand_Max = '{frmSet.cloudLimits.Pre_Client_PUMdemand_Max}'");
+                        updateClauses.Add("Pre_Client_PUMdemand_Max = @Pre_Client_PUMdemand_Max");
+                        parameters.Add("@Pre_Client_PUMdemand_Max", frmSet.cloudLimits.Pre_Client_PUMdemand_Max);
                         break;
                     case "EnableActiveReduce":
-                        updateClauses.Add($"EnableActiveReduce = '{frmSet.cloudLimits.EnableActiveReduce}'");
+                        updateClauses.Add("EnableActiveReduce = @EnableActiveReduce");
+                        parameters.Add("@EnableActiveReduce", frmSet.cloudLimits.EnableActiveReduce);
                         break;
                     case "PumScale":
-                        updateClauses.Add($"PumScale = '{frmSet.cloudLimits.PumScale}'");
+                        updateClauses.Add("PumScale = @PumScale");
+                        parameters.Add("@PumScale", frmSet.cloudLimits.PumScale);
                         break;
                     case "AllUkvaWindowSize":
-                        updateClauses.Add($"AllUkvaWindowSize = '{frmSet.cloudLimits.AllUkvaWindowSize}'");
+                        updateClauses.Add("AllUkvaWindowSize = @AllUkvaWindowSize");
+                        parameters.Add("@AllUkvaWindowSize", frmSet.cloudLimits.AllUkvaWindowSize);
                         break;
                     case "BmsDerateRatio":
-                        updateClauses.Add($"BmsDerateRatio = '{frmSet.cloudLimits.BmsDerateRatio}'");
+                        updateClauses.Add("BmsDerateRatio = @BmsDerateRatio");
+                        parameters.Add("@BmsDerateRatio", frmSet.cloudLimits.BmsDerateRatio);
                         break;
                     case "FrigOpenLower":
-                        updateClauses.Add($"FrigOpenLower = '{frmSet.cloudLimits.FrigOpenLower}'");
+                        updateClauses.Add("FrigOpenLower = @FrigOpenLower");
+                        parameters.Add("@FrigOpenLower", frmSet.cloudLimits.FrigOpenLower);
                         break;
                     case "FrigOffLower":
-                        updateClauses.Add($"FrigOffLower = '{frmSet.cloudLimits.FrigOffLower}'");
+                        updateClauses.Add("FrigOffLower = @FrigOffLower");
+                        parameters.Add("@FrigOffLower", frmSet.cloudLimits.FrigOffLower);
                         break;
                     case "FrigOffUpper":
-                        updateClauses.Add($"FrigOffUpper = '{frmSet.cloudLimits.FrigOffUpper}'");
+                        updateClauses.Add("FrigOffUpper = @FrigOffUpper");
+                        parameters.Add("@FrigOffUpper", frmSet.cloudLimits.FrigOffUpper);
                         break;
                     case "CellV_Gap":
-                        updateClauses.Add($"CellV_Gap = '{frmSet.cloudLimits.CellV_Gap}'");
+                        updateClauses.Add("CellV_Gap = @CellV_Gap");
+                        parameters.Add("@CellV_Gap", frmSet.cloudLimits.CellV_Gap);
                         break;
                 }
             }
 
-            string astrSQL = $"update cloudlimits SET {string.Join(", ", updateClauses)} WHERE id = {CloudLimitsId};";
+            parameters.Add("@id", CloudLimitsId);
+            string sql = $"UPDATE cloudlimits SET {string.Join(", ", updateClauses)} WHERE id = @id";
 
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-                    result = true;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -831,45 +978,47 @@ namespace EMS
 
         public static bool Set_Cloudlimits()
         {
-            string astrSQL = "update  cloudlimits  SET "
-                + " MaxGridKW ='" + frmSet.cloudLimits.MaxGridKW.ToString()
-                + "', MinGridKW ='" + frmSet.cloudLimits.MinGridKW.ToString()
-                + "',MaxSOC ='" + frmSet.cloudLimits.MaxSOC.ToString()
-                + "',MinSOC ='" + frmSet.cloudLimits.MinSOC.ToString()
-                + "', WarnMaxGridKW = '" + frmSet.cloudLimits.WarnMaxGridKW.ToString()
-                + "', WarnMinGridKW = '" + frmSet.cloudLimits.WarnMinGridKW.ToString()
-                + "', PcsKva = '" + frmSet.cloudLimits.PcsKva.ToString()
-                + "', Pre_Client_PUMdemand_Max = '" + frmSet.cloudLimits.Pre_Client_PUMdemand_Max.ToString()
-                + "', EnableActiveReduce = '" + frmSet.cloudLimits.EnableActiveReduce.ToString()
-                + "', PumScale = '" + frmSet.cloudLimits.PumScale.ToString()
-                + "', AllUkvaWindowSize = '" + frmSet.cloudLimits.AllUkvaWindowSize.ToString()
-                + "', PumTime = '" + frmSet.cloudLimits.PumTime.ToString()
-                + "', BmsDerateRatio = '" + frmSet.cloudLimits.BmsDerateRatio.ToString()
-                + "', FrigOpenLower = '" + frmSet.cloudLimits.FrigOpenLower.ToString()
-                + "', FrigOffLower = '" + frmSet.cloudLimits.FrigOffLower.ToString()
-                + "', FrigOffUpper = '" + frmSet.cloudLimits.FrigOffUpper.ToString()
-                + "', BoxHTemperAlarm = '" + frmSet.cloudLimits.BoxHTemperAlarm.ToString()
-                + "', BoxLTemperAlarm = '" + frmSet.cloudLimits.BoxLTemperAlarm.ToString()
-                + "', SignalDelayAlarm = '" + frmSet.cloudLimits.SignalDelayAlarm.ToString()
-                + "', SignalDelayCount = '" + frmSet.cloudLimits.SignalDelayCount.ToString()
-                + "', CellV_Gap = '" + frmSet.cloudLimits.CellV_Gap.ToString()
-                + "', OpenBala = '" + frmSet.cloudLimits.OpenBala.ToString()
-                + "' WHERE id = " + CloudLimitsId + ";";
+            string sql = "UPDATE cloudlimits SET MaxGridKW = @MaxGridKW, MinGridKW = @MinGridKW, MaxSOC = @MaxSOC, MinSOC = @MinSOC, "
+                + "WarnMaxGridKW = @WarnMaxGridKW, WarnMinGridKW = @WarnMinGridKW, PcsKva = @PcsKva, "
+                + "Pre_Client_PUMdemand_Max = @Pre_Client_PUMdemand_Max, EnableActiveReduce = @EnableActiveReduce, "
+                + "PumScale = @PumScale, AllUkvaWindowSize = @AllUkvaWindowSize, PumTime = @PumTime, "
+                + "BmsDerateRatio = @BmsDerateRatio, FrigOpenLower = @FrigOpenLower, FrigOffLower = @FrigOffLower, "
+                + "FrigOffUpper = @FrigOffUpper, BoxHTemperAlarm = @BoxHTemperAlarm, BoxLTemperAlarm = @BoxLTemperAlarm, "
+                + "SignalDelayAlarm = @SignalDelayAlarm, SignalDelayCount = @SignalDelayCount, "
+                + "CellV_Gap = @CellV_Gap, OpenBala = @OpenBala WHERE id = @id";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@MaxGridKW", frmSet.cloudLimits.MaxGridKW },
+                { "@MinGridKW", frmSet.cloudLimits.MinGridKW },
+                { "@MaxSOC", frmSet.cloudLimits.MaxSOC },
+                { "@MinSOC", frmSet.cloudLimits.MinSOC },
+                { "@WarnMaxGridKW", frmSet.cloudLimits.WarnMaxGridKW },
+                { "@WarnMinGridKW", frmSet.cloudLimits.WarnMinGridKW },
+                { "@PcsKva", frmSet.cloudLimits.PcsKva },
+                { "@Pre_Client_PUMdemand_Max", frmSet.cloudLimits.Pre_Client_PUMdemand_Max },
+                { "@EnableActiveReduce", frmSet.cloudLimits.EnableActiveReduce },
+                { "@PumScale", frmSet.cloudLimits.PumScale },
+                { "@AllUkvaWindowSize", frmSet.cloudLimits.AllUkvaWindowSize },
+                { "@PumTime", frmSet.cloudLimits.PumTime },
+                { "@BmsDerateRatio", frmSet.cloudLimits.BmsDerateRatio },
+                { "@FrigOpenLower", frmSet.cloudLimits.FrigOpenLower },
+                { "@FrigOffLower", frmSet.cloudLimits.FrigOffLower },
+                { "@FrigOffUpper", frmSet.cloudLimits.FrigOffUpper },
+                { "@BoxHTemperAlarm", frmSet.cloudLimits.BoxHTemperAlarm },
+                { "@BoxLTemperAlarm", frmSet.cloudLimits.BoxLTemperAlarm },
+                { "@SignalDelayAlarm", frmSet.cloudLimits.SignalDelayAlarm },
+                { "@SignalDelayCount", frmSet.cloudLimits.SignalDelayCount },
+                { "@CellV_Gap", frmSet.cloudLimits.CellV_Gap },
+                { "@OpenBala", frmSet.cloudLimits.OpenBala },
+                { "@id", CloudLimitsId }
+            };
 
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -881,141 +1030,260 @@ namespace EMS
         }
 
         /*********************************************
-        * 
+        *
         *          config
-        * 
+        *
         ********************************************/
 
+        #region 加载Config
         public static bool LoadConfigFromMySQL()
         {
-            string astrSQL = "SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime,"
-                                + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
-                                + "AutoRun, SysMode, PCSGridModel, DebugComName,"
-                                + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
-                                + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit, MqttBrokerIp,"
-                                + "MqttBrokerPort, MqttBrokerUser, MqttBrokerPassword FROM config WHERE SysID = '" + ConfigId + "'; ";
+            string sql = @"SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime,
+                          CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,
+                          AutoRun, SysMode, PCSGridModel, DebugComName, DebugRate, SysCount,
+                          UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, EMSstatus,
+                          GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit,
+                          MqttBrokerIp, MqttBrokerPort, MqttBrokerUser, MqttBrokerPassword
+                   FROM config WHERE SysID = @sysId";
+
             try
             {
+                var parameters = new Dictionary<string, object> { { "@sysId", ConfigId } };
 
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                config.SysID = rd.IsDBNull(0) ? "j0001" : rd.GetString(0);
-                                config.Open104 = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
-                                config.NetTick = rd.IsDBNull(2) ? 10 : rd.GetInt32(2);
-                                config.SysName = rd.IsDBNull(3) ? "浙江驰库" : rd.GetString(3);
-                                config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
-                                config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
-                                config.SysAddr = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
-                                config.SysInstTime = rd.IsDBNull(7) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : rd.GetString(7);
-                                config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
-                                config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
-                                config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
-                                config.IsMaster = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
-                                config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
-                                config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
-                                config.AutoRun = rd.IsDBNull(14) ? 1 : rd.GetInt32(14);
-                                config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
-                                config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
-                                config.DebugComName = rd.IsDBNull(17) ? "com7" : rd.GetString(17);
-                                config.DebugRate = rd.IsDBNull(18) ? 38400 : rd.GetInt32(18);
-                                config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
-                                config.UseYunTactics = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
-                                config.UseBalaTactics = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
-                                config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
-                                config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
-                                config.PCSForceRun = rd.IsDBNull(24) ? 0 : rd.GetInt32(24);
-                                config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
-                                config.GPIOSelect = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
-                                config.MasterIp = rd.IsDBNull(27) ? "192.168.186.9" : rd.GetString(27);
-                                config.ConnectStatus = rd.IsDBNull(28) ? "485" : rd.GetString(28);
-                                config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
-                                config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
-                                config.BMStype = rd.IsDBNull(31) ? 1 : rd.GetInt32(31);
-                                config.PcsLimit = rd.IsDBNull(32) ? 110 : rd.GetInt32(32);
-                                config.MqttBrokerIp = rd.IsDBNull(33) ? "mqtt.eaiot.cloud" : rd.GetString(33);
-                                config.MqttBrokerPort = rd.IsDBNull(34) ? 8883 : rd.GetInt32(34);
-                                config.MqttBrokerUser = rd.IsDBNull(35) ? "aiot" : rd.GetString(35);
-                                config.MqttBrokerPassword = rd.IsDBNull(36) ? "Lab123123123" : rd.GetString(36);
+                        config.SysID = GetStringValueFromReader(reader, "SysID", "j00000000000001F");
+                        config.SysName = GetStringValueFromReader(reader, "SysName", "浙江驰库");
+                        config.SysAddr = GetStringValueFromReader(reader, "SysAddr", "浙江");
+                        config.SysInstTime = GetStringValueFromReader(reader, "SysInstTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        config.DebugComName = GetStringValueFromReader(reader, "DebugComName", "Com7");
+                        config.MasterIp = GetStringValueFromReader(reader, "MasterIp", "192.168.186.9");
+                        config.ConnectStatus = GetStringValueFromReader(reader, "ConnectStatus", "485");
+                        config.MqttBrokerIp = GetStringValueFromReader(reader, "MqttBrokerIp", "mqtt.eaiot.cloud");
+                        config.MqttBrokerUser = GetStringValueFromReader(reader, "MqttBrokerUser", "aiot");
+                        config.MqttBrokerPassword = GetStringValueFromReader(reader, "MqttBrokerPassword", "Lab123123123");
+                        config.Open104 = GetIntValueFromReader(reader, "Open104", 0);
+                        config.NetTick = GetIntValueFromReader(reader, "NetTick", 10);
+                        config.SysPower = GetIntValueFromReader(reader, "SysPower", 0);
+                        config.SysSelfPower = GetIntValueFromReader(reader, "SysSelfPower", 0);
+                        config.CellCount = GetIntValueFromReader(reader, "CellCount", 240);
+                        config.SysInterval = GetIntValueFromReader(reader, "SysInterval", 0);
+                        config.YunInterval = GetIntValueFromReader(reader, "YunInterval", 0);
+                        config.IsMaster = GetIntValueFromReader(reader, "IsMaster", 1);
+                        config.Master485Addr = GetIntValueFromReader(reader, "Master485Addr", 1);
+                        config.i485Addr = GetIntValueFromReader(reader, "i485Addr", 1);
+                        config.AutoRun = GetIntValueFromReader(reader, "AutoRun", 1);
+                        config.SysMode = GetIntValueFromReader(reader, "SysMode", 0);
+                        config.PCSGridModel = GetIntValueFromReader(reader, "PCSGridModel", 0);
+                        config.DebugRate = GetIntValueFromReader(reader, "DebugRate", 38400);
+                        config.SysCount = GetIntValueFromReader(reader, "SysCount", 1);
+                        config.UseYunTactics = GetIntValueFromReader(reader, "UseYunTactics", 0);
+                        config.UseBalaTactics = GetIntValueFromReader(reader, "UseBalaTactics", 0);
+                        config.iPCSfactory = GetIntValueFromReader(reader, "iPCSfactory", 1);
+                        config.BMSVerb = GetIntValueFromReader(reader, "BMSVerb", 0);
+                        config.PCSForceRun = GetIntValueFromReader(reader, "PCSForceRun", 0);
+                        config.EMSstatus = GetIntValueFromReader(reader, "EMSstatus", 0);
+                        config.GPIOSelect = GetIntValueFromReader(reader, "GPIOSelect", 0);
+                        config.CellVNum = GetIntValueFromReader(reader, "CellVNum", 240);
+                        config.CellTNum = GetIntValueFromReader(reader, "CellTNum", 168);
+                        config.BMStype = GetIntValueFromReader(reader, "BMStype", 1);
+                        config.PcsLimit = GetIntValueFromReader(reader, "PcsLimit", 110);
+                        config.MqttBrokerPort = GetIntValueFromReader(reader, "MqttBrokerPort", 8883);
 
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
+
+                log.Warn($"未找到 Config 配置，SysID: {ConfigId}");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error($"LoadConfigFromMySQL 失败: {ex.Message}", ex);
                 return false;
             }
-
-            log.Error("config加载失败");
-            return false;
         }
+        #endregion
+
+        /*        public static bool LoadConfigFromMySQL()
+                {
+                    string astrSQL = "SELECT SysID, Open104, NetTick, SysName, SysPower, SysSelfPower, SysAddr, SysInstTime,"
+                                        + "CellCount, SysInterval, YunInterval, IsMaster, Master485Addr, i485Addr,"
+                                        + "AutoRun, SysMode, PCSGridModel, DebugComName,"
+                                        + "DebugRate, SysCount, UseYunTactics, UseBalaTactics, iPCSfactory, BMSVerb, PCSForceRun, "
+                                        + "EMSstatus, GPIOSelect, MasterIp, ConnectStatus, CellVNum, CellTNum, BMStype, PcsLimit, MqttBrokerIp,"
+                                        + "MqttBrokerPort, MqttBrokerUser, MqttBrokerPassword FROM config WHERE SysID = '" + ConfigId + "'; ";
+                    try
+                    {
+
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows && rd.Read())
+                                    {
+                                        string sysIDRaw = rd.IsDBNull(0) ? "j00000000000001F" : rd.GetString(0);
+                                        config.SysID = string.IsNullOrWhiteSpace(sysIDRaw)
+                                            ? "j00000000000001F"
+                                            : sysIDRaw;
+
+                                        config.Open104 = rd.IsDBNull(1) ? 0 : rd.GetInt32(1);
+                                        config.NetTick = rd.IsDBNull(2) ? 10 : rd.GetInt32(2);
+
+                                        string sysNameRaw = rd.IsDBNull(3) ? "浙江驰库" : rd.GetString(3);
+                                        config.SysName = string.IsNullOrWhiteSpace(sysNameRaw)
+                                            ? "浙江驰库"
+                                            : sysNameRaw;
+
+                                        config.SysPower = rd.IsDBNull(4) ? 0 : rd.GetInt32(4);
+                                        config.SysSelfPower = rd.IsDBNull(5) ? 0 : rd.GetInt32(5);
+
+                                        string sysAddrRaw = rd.IsDBNull(6) ? "浙江" : rd.GetString(6);
+                                        config.SysAddr = string.IsNullOrWhiteSpace(sysAddrRaw)
+                                            ? "浙江"
+                                            : sysAddrRaw;
+
+                                        config.SysInstTime = rd.IsDBNull(7) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : rd.GetString(7);
+                                        config.CellCount = rd.IsDBNull(8) ? 240 : rd.GetInt32(8);
+                                        config.SysInterval = rd.IsDBNull(9) ? 0 : rd.GetInt32(9);
+                                        config.YunInterval = rd.IsDBNull(10) ? 0 : rd.GetInt32(10);
+                                        config.IsMaster = rd.IsDBNull(11) ? 1 : rd.GetInt32(11);
+                                        config.Master485Addr = rd.IsDBNull(12) ? 1 : rd.GetInt32(12);
+                                        config.i485Addr = rd.IsDBNull(13) ? 1 : rd.GetInt32(13);
+                                        config.AutoRun = rd.IsDBNull(14) ? 1 : rd.GetInt32(14);
+                                        config.SysMode = rd.IsDBNull(15) ? 0 : rd.GetInt32(15);
+                                        config.PCSGridModel = rd.IsDBNull(16) ? 0 : rd.GetInt32(16);
+
+                                        string debugComNameRaw = rd.IsDBNull(17) ? "Com7" : rd.GetString(17);
+                                        config.DebugComName = string.IsNullOrWhiteSpace(debugComNameRaw)
+                                            ? "Com7"
+                                            : debugComNameRaw;
+
+                                        config.DebugRate = rd.IsDBNull(18) ? 38400 : rd.GetInt32(18);
+                                        config.SysCount = rd.IsDBNull(19) ? 1 : rd.GetInt32(19);
+                                        config.UseYunTactics = rd.IsDBNull(20) ? 0 : rd.GetInt32(20);
+                                        config.UseBalaTactics = rd.IsDBNull(21) ? 0 : rd.GetInt32(21);
+                                        config.iPCSfactory = rd.IsDBNull(22) ? 1 : rd.GetInt32(22);
+                                        config.BMSVerb = rd.IsDBNull(23) ? 0 : rd.GetInt32(23);
+                                        config.PCSForceRun = rd.IsDBNull(24) ? 0 : rd.GetInt32(24);
+                                        config.EMSstatus = rd.IsDBNull(25) ? 0 : rd.GetInt32(25);
+                                        config.GPIOSelect = rd.IsDBNull(26) ? 0 : rd.GetInt32(26);
+
+                                        string masterIpRaw = rd.IsDBNull(27) ? "192.168.186.9" : rd.GetString(27);
+                                        config.MasterIp = string.IsNullOrWhiteSpace(masterIpRaw)
+                                            ? "192.168.186.9"
+                                            : masterIpRaw;
+
+                                        string connectStatusRaw = rd.IsDBNull(28) ? "485" : rd.GetString(28);
+                                        config.ConnectStatus = string.IsNullOrWhiteSpace(connectStatusRaw)
+                                            ? "485"
+                                            : connectStatusRaw;
+
+                                        config.CellVNum = rd.IsDBNull(29) ? 240 : rd.GetInt32(29);
+                                        config.CellTNum = rd.IsDBNull(30) ? 168 : rd.GetInt32(30);
+                                        config.BMStype = rd.IsDBNull(31) ? 1 : rd.GetInt32(31);
+                                        config.PcsLimit = rd.IsDBNull(32) ? 110 : rd.GetInt32(32);
+
+                                        string brokerIpRaw = rd.IsDBNull(33) ? "mqtt.eaiot.cloud" : rd.GetString(33);
+                                        config.MqttBrokerIp = string.IsNullOrWhiteSpace(brokerIpRaw)
+                                            ? "mqtt.eaiot.cloud"
+                                            : brokerIpRaw;
+
+                                        config.MqttBrokerPort = rd.IsDBNull(34) ? 8883 : rd.GetInt32(34);
+
+                                        string brokerUserRaw = rd.IsDBNull(35) ? "aiot" : rd.GetString(35);
+                                        config.MqttBrokerUser = string.IsNullOrWhiteSpace(brokerUserRaw)
+                                            ? "aiot"
+                                            : brokerUserRaw;
+
+                                        string brokerPasswordRaw = rd.IsDBNull(36) ? "Lab123123123" : rd.GetString(36);
+                                        config.MqttBrokerPassword = string.IsNullOrWhiteSpace(brokerPasswordRaw)
+                                            ? "Lab123123123"
+                                            : brokerPasswordRaw;
+
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+
+                    log.Error("config加载失败");
+                    return false;
+                }*/
 
         public static bool Set_Config()
         {
-            string astrSQL = "UPDATE config SET "
-                        + "SysID = '" + frmSet.config.SysID
-                        + "', Open104 = '" + frmSet.config.Open104.ToString()
-                        + "', NetTick = '" + frmSet.config.NetTick.ToString()
-                        + "', SysName = '" + frmSet.config.SysName
-                        + "', SysPower = '" + frmSet.config.SysPower.ToString()
-                        + "', SysSelfPower = '" + frmSet.config.SysSelfPower.ToString()
-                        + "', SysAddr = '" + frmSet.config.SysAddr
-                        + "', SysInstTime = '" + frmSet.config.SysInstTime
-                        + "', CellCount = '" + frmSet.config.CellCount.ToString()
-                        + "', SysInterval = '" + frmSet.config.SysInterval.ToString()
-                        + "', YunInterval = '" + frmSet.config.YunInterval.ToString()
-                        + "', IsMaster = '" + frmSet.config.IsMaster.ToString()
-                        + "', Master485Addr = '" + frmSet.config.Master485Addr.ToString()
-                        + "', i485Addr = '" + frmSet.config.i485Addr.ToString()
-                        + "', AutoRun = '" + frmSet.config.AutoRun.ToString()
-                        + "', SysMode = '" + frmSet.config.SysMode.ToString()
-                        + "', PCSGridModel = '" + frmSet.config.PCSGridModel.ToString()
-                        + "', DebugComName = '" + frmSet.config.DebugComName
-                        + "', DebugRate = '" + frmSet.config.DebugRate.ToString()
-                        + "', SysCount = '" + frmSet.config.SysCount.ToString()
-                        + "', iPCSfactory = '" + frmSet.config.iPCSfactory.ToString()
-                        + "', BMSVerb = '" + frmSet.config.BMSVerb.ToString()
-                        + "', PCSForceRun = '" + frmSet.config.PCSForceRun.ToString()
-                        + "', GPIOSelect = '" + frmSet.config.GPIOSelect.ToString()
-                        + "', MasterIp = '" + frmSet.config.MasterIp
-                        + "', ConnectStatus = '" + frmSet.config.ConnectStatus
-                        + "', EMSstatus = '" + frmSet.config.EMSstatus.ToString()
-                        + "', UseYunTactics = '" + frmSet.config.UseYunTactics.ToString()
-                        + "', UseBalaTactics = '" + frmSet.config.UseBalaTactics.ToString()
-                        + "', CellVNum = '" + frmSet.config.CellVNum.ToString()
-                        + "', CellTNum = '" + frmSet.config.CellTNum.ToString()
-                        + "', BMStype = '" + frmSet.config.BMStype.ToString()
-                        + "', PcsLimit = '" + frmSet.config.PcsLimit.ToString()
-                        + "' WHERE SysID = '" + ConfigId + "';";
+            string sql = "UPDATE config SET SysID = @SysID, Open104 = @Open104, NetTick = @NetTick, SysName = @SysName, "
+                        + "SysPower = @SysPower, SysSelfPower = @SysSelfPower, SysAddr = @SysAddr, SysInstTime = @SysInstTime, "
+                        + "CellCount = @CellCount, SysInterval = @SysInterval, YunInterval = @YunInterval, "
+                        + "IsMaster = @IsMaster, Master485Addr = @Master485Addr, i485Addr = @i485Addr, "
+                        + "AutoRun = @AutoRun, SysMode = @SysMode, PCSGridModel = @PCSGridModel, "
+                        + "DebugComName = @DebugComName, DebugRate = @DebugRate, SysCount = @SysCount, "
+                        + "iPCSfactory = @iPCSfactory, BMSVerb = @BMSVerb, PCSForceRun = @PCSForceRun, "
+                        + "GPIOSelect = @GPIOSelect, MasterIp = @MasterIp, ConnectStatus = @ConnectStatus, "
+                        + "EMSstatus = @EMSstatus, UseYunTactics = @UseYunTactics, UseBalaTactics = @UseBalaTactics, "
+                        + "CellVNum = @CellVNum, CellTNum = @CellTNum, BMStype = @BMStype, PcsLimit = @PcsLimit "
+                        + "WHERE SysID = @ConfigId";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@SysID", frmSet.config.SysID },
+                { "@Open104", frmSet.config.Open104 },
+                { "@NetTick", frmSet.config.NetTick },
+                { "@SysName", frmSet.config.SysName },
+                { "@SysPower", frmSet.config.SysPower },
+                { "@SysSelfPower", frmSet.config.SysSelfPower },
+                { "@SysAddr", frmSet.config.SysAddr },
+                { "@SysInstTime", frmSet.config.SysInstTime },
+                { "@CellCount", frmSet.config.CellCount },
+                { "@SysInterval", frmSet.config.SysInterval },
+                { "@YunInterval", frmSet.config.YunInterval },
+                { "@IsMaster", frmSet.config.IsMaster },
+                { "@Master485Addr", frmSet.config.Master485Addr },
+                { "@i485Addr", frmSet.config.i485Addr },
+                { "@AutoRun", frmSet.config.AutoRun },
+                { "@SysMode", frmSet.config.SysMode },
+                { "@PCSGridModel", frmSet.config.PCSGridModel },
+                { "@DebugComName", frmSet.config.DebugComName },
+                { "@DebugRate", frmSet.config.DebugRate },
+                { "@SysCount", frmSet.config.SysCount },
+                { "@iPCSfactory", frmSet.config.iPCSfactory },
+                { "@BMSVerb", frmSet.config.BMSVerb },
+                { "@PCSForceRun", frmSet.config.PCSForceRun },
+                { "@GPIOSelect", frmSet.config.GPIOSelect },
+                { "@MasterIp", frmSet.config.MasterIp },
+                { "@ConnectStatus", frmSet.config.ConnectStatus },
+                { "@EMSstatus", frmSet.config.EMSstatus },
+                { "@UseYunTactics", frmSet.config.UseYunTactics },
+                { "@UseBalaTactics", frmSet.config.UseBalaTactics },
+                { "@CellVNum", frmSet.config.CellVNum },
+                { "@CellTNum", frmSet.config.CellTNum },
+                { "@BMStype", frmSet.config.BMStype },
+                { "@PcsLimit", frmSet.config.PcsLimit },
+                { "@ConfigId", ConfigId }
+            };
 
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -1028,70 +1296,93 @@ namespace EMS
 
 
         /*********************************************
-        * 
+        *
         *          VariCharge
-        * 
+        *
         ********************************************/
-
+        #region 加载VariCharge
         public static bool LoadVariChargeFromMySQL()
         {
-            string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge WHERE id = " + VariChargeId + ";";
+            string sql = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge WHERE id = @id";
 
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                var parameters = new Dictionary<string, object> { { "@id", VariChargeId } };
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                variCharge.UBmsPcsState = rd.IsDBNull(0) ? 50 : rd.GetInt32(0);
-                                variCharge.OBmsPcsState = rd.IsDBNull(1) ? 50 : rd.GetInt32(1);
-                                return true;
-                            }
-                        }
+                        variCharge.UBmsPcsState = GetIntValueFromReader(reader, "UBmsPcsState", 50);
+                        variCharge.OBmsPcsState = GetIntValueFromReader(reader, "OBmsPcsState", 50);
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {
-                log.Error(ex.Message);
+
+                log.Warn($"未找到 VariCharge 配置，ID: {VariChargeId}");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error($"LoadVariChargeFromMySQL 失败: {ex.Message}", ex);
                 return false;
             }
-
-            log.Error("VariCharge加载失败");
-            return false;
         }
+        #endregion
+
+        /*        public static bool LoadVariChargeFromMySQL()
+                {
+                    string astrSQL = "SELECT UBmsPcsState, OBmsPcsState FROM VariCharge WHERE id = " + VariChargeId + ";";
+
+                    try
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows && rd.Read())
+                                    {
+                                        variCharge.UBmsPcsState = rd.IsDBNull(0) ? 50 : rd.GetInt32(0);
+                                        variCharge.OBmsPcsState = rd.IsDBNull(1) ? 50 : rd.GetInt32(1);
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+
+                    log.Error("VariCharge加载失败");
+                    return false;
+                }*/
 
         public static bool Set_VariCharge()
         {
-            string astrSQL = "update  VariCharge  SET "
-                + " UBmsPcsState ='" + frmSet.variCharge.UBmsPcsState.ToString()
-                + "', OBmsPcsState ='" + frmSet.variCharge.OBmsPcsState.ToString()
-                + "' WHERE id = " + VariChargeId + ";";
+            string sql = "UPDATE VariCharge SET UBmsPcsState = @UBmsPcsState, OBmsPcsState = @OBmsPcsState WHERE id = @id";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@UBmsPcsState", frmSet.variCharge.UBmsPcsState },
+                { "@OBmsPcsState", frmSet.variCharge.OBmsPcsState },
+                { "@id", VariChargeId }
+            };
 
             bool result = false;
 
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -1100,132 +1391,198 @@ namespace EMS
                 result = false;
             }
             return result;
-
         }
 
         /*********************************************
-        * 
+        *
         *          Component
-        * 
+        *
         ********************************************/
 
+        #region 加载LoadComponentSettings
         public static bool LoadComponentSettingsFromMySQL()
         {
-            string astrSQL = @"
-                    SELECT SetHotTemp, SetCoolTemp, CoolTempReturn, HotTempReturn, SetHumidity, HumiReturn, 
-                           TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi, 
-                           FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump, 
-                           LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
-                    FROM ComponentSettings WHERE id = " + ComponentSettingsId + ";";
+            string sql = @"
+                SELECT SetHotTemp, SetCoolTemp, CoolTempReturn, HotTempReturn, SetHumidity, HumiReturn,
+                       TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi,
+                       FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump,
+                       LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
+                FROM ComponentSettings WHERE id = @id";
 
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                var parameters = new Dictionary<string, object> { { "@id", ComponentSettingsId } };
+                using (var reader = DBConnection.QueryDataReader(sql, parameters))
                 {
-                    connection.Open();
-                    using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                    if (reader != null && reader.Read())
                     {
-                        using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                        {
-                            if (rd != null && rd.HasRows && rd.Read())
-                            {
-                                componentSettings.SetHotTemp = rd.IsDBNull(0) ? 1 : rd.GetDouble(0);
-                                componentSettings.SetCoolTemp = rd.IsDBNull(1) ? 1 : rd.GetDouble(1);
-                                componentSettings.CoolTempReturn = rd.IsDBNull(2) ? 1 : rd.GetDouble(2);
-                                componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
-                                componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
-                                componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
-                                componentSettings.TCRunWithSys = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
-                                componentSettings.TCAuto = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
-                                componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
-                                componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
-                                componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
-                                componentSettings.TCMaxHumi = rd.IsDBNull(11) ? 1 : rd.GetDouble(11);
-                                componentSettings.TCMinHumi = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
-                                componentSettings.FenMaxTemp = rd.IsDBNull(13) ? 1 : rd.GetDouble(13);
-                                componentSettings.FenMinTemp = rd.IsDBNull(14) ? 1 : rd.GetDouble(14);
-                                componentSettings.FenMode = rd.IsDBNull(15) ? 1 : rd.GetInt32(15);
-                                componentSettings.LCModel = rd.IsDBNull(16) ? 1 : rd.GetInt32(16);
-                                componentSettings.LCTemperSelect = rd.IsDBNull(17) ? 1 : rd.GetInt32(17);
-                                componentSettings.LCWaterPump = rd.IsDBNull(18) ? 1 : rd.GetInt32(18);
-                                componentSettings.LCSetHotTemp = rd.IsDBNull(19) ? 1 : rd.GetDouble(19);
-                                componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
-                                componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
-                                componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
-                                componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetInt32(23);
-                                componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetInt32(24);
-                                componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
-                                componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetInt32(26);
-                                componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetInt32(27);
+                        componentSettings.SetHotTemp = GetDoubleValueFromReader(reader, "SetHotTemp", 0);
+                        componentSettings.SetCoolTemp = GetDoubleValueFromReader(reader, "SetCoolTemp", 280);
+                        componentSettings.CoolTempReturn = GetDoubleValueFromReader(reader, "CoolTempReturn", 20);
+                        componentSettings.HotTempReturn = GetDoubleValueFromReader(reader, "HotTempReturn", 20);
+                        componentSettings.SetHumidity = GetDoubleValueFromReader(reader, "SetHumidity", 200);
+                        componentSettings.HumiReturn = GetDoubleValueFromReader(reader, "HumiReturn", 100);
+                        componentSettings.TCRunWithSys = GetIntValueFromReader(reader, "TCRunWithSys", 0);
+                        componentSettings.TCAuto = GetIntValueFromReader(reader, "TCAuto", 0);
+                        componentSettings.TCMode = GetIntValueFromReader(reader, "TCMode", 0);
+                        componentSettings.TCMaxTemp = GetDoubleValueFromReader(reader, "TCMaxTemp", 450);
+                        componentSettings.TCMinTemp = GetDoubleValueFromReader(reader, "TCMinTemp", 0);
+                        componentSettings.TCMaxHumi = GetDoubleValueFromReader(reader, "TCMaxHumi", 950);
+                        componentSettings.TCMinHumi = GetDoubleValueFromReader(reader, "TCMinHumi", 10);
+                        componentSettings.FenMaxTemp = GetDoubleValueFromReader(reader, "FenMaxTemp", 200);
+                        componentSettings.FenMinTemp = GetDoubleValueFromReader(reader, "FenMinTemp", 160);
+                        componentSettings.FenMode = GetIntValueFromReader(reader, "FenMode", 1);
+                        componentSettings.LCModel = GetIntValueFromReader(reader, "LCModel", 1);
+                        componentSettings.LCTemperSelect = GetIntValueFromReader(reader, "LCTemperSelect", 1);
+                        componentSettings.LCWaterPump = GetIntValueFromReader(reader, "LCWaterPump", 1);
+                        componentSettings.LCSetHotTemp = GetDoubleValueFromReader(reader, "LCSetHotTemp", 50);
+                        componentSettings.LCSetCoolTemp = GetDoubleValueFromReader(reader, "LCSetCoolTemp", 50);
+                        componentSettings.LCHotTempReturn = GetDoubleValueFromReader(reader, "LCHotTempReturn", 10);
+                        componentSettings.LCCoolTempReturn = GetDoubleValueFromReader(reader, "LCCoolTempReturn", 10);
+                        componentSettings.DHSetRunStatus = GetIntValueFromReader(reader, "DHSetRunStatus", 1);
+                        componentSettings.DHSetTempBoot = GetIntValueFromReader(reader, "DHSetTempBoot", 1);
+                        componentSettings.DHSetTempStop = GetIntValueFromReader(reader, "DHSetTempStop", 1);
+                        componentSettings.DHSetHumidityBoot = GetIntValueFromReader(reader, "DHSetHumidityBoot", 20);
+                        componentSettings.DHSetHumidityStop = GetIntValueFromReader(reader, "DHSetHumidityStop", 20);
 
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
-            }
-            catch (MySqlException ex)
-            {               
-                log.Error(ex.Message);
+
+                log.Warn($"未找到 ComponentSettings 配置，ID: {ComponentSettingsId}");
                 return false;
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error($"LoadComponentSettingsFromMySQL 失败: {ex.Message}", ex);
                 return false;
             }
-
-            log.Error("Component加载失败");
-            return false;
         }
+        #endregion
+
+
+        /*        public static bool LoadComponentSettingsFromMySQL()
+                {
+                    string astrSQL = @"
+                            SELECT SetHotTemp, SetCoolTemp, CoolTempReturn, HotTempReturn, SetHumidity, HumiReturn,
+                                   TCRunWithSys, TCAuto, TCMode, TCMaxTemp, TCMinTemp, TCMaxHumi, TCMinHumi,
+                                   FenMaxTemp, FenMinTemp, FenMode, LCModel, LCTemperSelect, LCWaterPump,
+                                   LCSetHotTemp, LCSetCoolTemp, LCHotTempReturn, LCCoolTempReturn , DHSetRunStatus, DHSetTempBoot, DHSetTempStop, DHSetHumidityBoot, DHSetHumidityStop
+                            FROM ComponentSettings WHERE id = " + ComponentSettingsId + ";";
+
+                    try
+                    {
+                        using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
+                        {
+                            connection.Open();
+                            using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
+                            {
+                                using (MySqlDataReader rd = sqlCmd.ExecuteReader())
+                                {
+                                    if (rd != null && rd.HasRows && rd.Read())
+                                    {
+                                        componentSettings.SetHotTemp = rd.IsDBNull(0) ? 1 : rd.GetDouble(0);
+                                        componentSettings.SetCoolTemp = rd.IsDBNull(1) ? 1 : rd.GetDouble(1);
+                                        componentSettings.CoolTempReturn = rd.IsDBNull(2) ? 1 : rd.GetDouble(2);
+                                        componentSettings.HotTempReturn = rd.IsDBNull(3) ? 1 : rd.GetDouble(3);
+                                        componentSettings.SetHumidity = rd.IsDBNull(4) ? 1 : rd.GetDouble(4);
+                                        componentSettings.HumiReturn = rd.IsDBNull(5) ? 1 : rd.GetDouble(5);
+                                        componentSettings.TCRunWithSys = rd.IsDBNull(6) ? 0 : rd.GetInt32(6);
+                                        componentSettings.TCAuto = rd.IsDBNull(7) ? 0 : rd.GetInt32(7);
+                                        componentSettings.TCMode = rd.IsDBNull(8) ? 1 : rd.GetInt32(8);
+                                        componentSettings.TCMaxTemp = rd.IsDBNull(9) ? 1 : rd.GetDouble(9);
+                                        componentSettings.TCMinTemp = rd.IsDBNull(10) ? 1 : rd.GetDouble(10);
+                                        componentSettings.TCMaxHumi = rd.IsDBNull(11) ? 1 : rd.GetDouble(11);
+                                        componentSettings.TCMinHumi = rd.IsDBNull(12) ? 1 : rd.GetDouble(12);
+                                        componentSettings.FenMaxTemp = rd.IsDBNull(13) ? 1 : rd.GetDouble(13);
+                                        componentSettings.FenMinTemp = rd.IsDBNull(14) ? 1 : rd.GetDouble(14);
+                                        componentSettings.FenMode = rd.IsDBNull(15) ? 1 : rd.GetInt32(15);
+                                        componentSettings.LCModel = rd.IsDBNull(16) ? 1 : rd.GetInt32(16);
+                                        componentSettings.LCTemperSelect = rd.IsDBNull(17) ? 1 : rd.GetInt32(17);
+                                        componentSettings.LCWaterPump = rd.IsDBNull(18) ? 1 : rd.GetInt32(18);
+                                        componentSettings.LCSetHotTemp = rd.IsDBNull(19) ? 1 : rd.GetDouble(19);
+                                        componentSettings.LCSetCoolTemp = rd.IsDBNull(20) ? 1 : rd.GetDouble(20);
+                                        componentSettings.LCHotTempReturn = rd.IsDBNull(21) ? 1 : rd.GetDouble(21);
+                                        componentSettings.LCCoolTempReturn = rd.IsDBNull(22) ? 1 : rd.GetDouble(22);
+                                        componentSettings.DHSetRunStatus = rd.IsDBNull(23) ? 1 : rd.GetInt32(23);
+                                        componentSettings.DHSetTempBoot = rd.IsDBNull(24) ? 1 : rd.GetInt32(24);
+                                        componentSettings.DHSetTempStop = rd.IsDBNull(25) ? 1 : rd.GetInt32(25);
+                                        componentSettings.DHSetHumidityBoot = rd.IsDBNull(26) ? 1 : rd.GetInt32(26);
+                                        componentSettings.DHSetHumidityStop = rd.IsDBNull(27) ? 1 : rd.GetInt32(27);
+
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (MySqlException ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                        return false;
+                    }
+
+                    log.Error("Component加载失败");
+                    return false;
+                }*/
 
 
         public static bool Set_ComponentSettings()
         {
-            string astrSQL = "UPDATE ComponentSettings SET "
-                + "SetHotTemp = '" + componentSettings.SetHotTemp.ToString() + "', "
-                + "SetCoolTemp = '" + componentSettings.SetCoolTemp.ToString() + "', "
-                + "CoolTempReturn = '" + componentSettings.CoolTempReturn.ToString() + "', "
-                + "HotTempReturn = '" + componentSettings.HotTempReturn.ToString() + "', "
-                + "SetHumidity = '" + componentSettings.SetHumidity.ToString() + "', "
-                + "HumiReturn = '" + componentSettings.HumiReturn.ToString() + "', "
-                + "TCRunWithSys = '" + componentSettings.TCRunWithSys.ToString() + "', "
-                + "TCAuto = '" + componentSettings.TCAuto.ToString() + "', "
-                + "TCMode = '" + componentSettings.TCMode.ToString() + "', "
-                + "TCMaxTemp = '" + componentSettings.TCMaxTemp.ToString() + "', "
-                + "TCMinTemp = '" + componentSettings.TCMinTemp.ToString() + "', "
-                + "TCMaxHumi = '" + componentSettings.TCMaxHumi.ToString() + "', "
-                + "TCMinHumi = '" + componentSettings.TCMinHumi.ToString() + "', "
-                + "FenMaxTemp = '" + componentSettings.FenMaxTemp.ToString() + "', "
-                + "FenMinTemp = '" + componentSettings.FenMinTemp.ToString() + "', "
-                + "FenMode = '" + componentSettings.FenMode.ToString() + "', "
-                + "LCModel = '" + componentSettings.LCModel.ToString() + "', "
-                + "LCTemperSelect = '" + componentSettings.LCTemperSelect.ToString() + "', "
-                + "LCWaterPump = '" + componentSettings.LCWaterPump.ToString() + "', "
-                + "LCSetHotTemp = '" + componentSettings.LCSetHotTemp.ToString() + "', "
-                + "LCSetCoolTemp = '" + componentSettings.LCSetCoolTemp.ToString() + "', "
-                + "LCHotTempReturn = '" + componentSettings.LCHotTempReturn.ToString() + "', "
-                + "LCCoolTempReturn = '" + componentSettings.LCCoolTempReturn.ToString() + "', "
-                + "DHSetRunStatus = '" + componentSettings.DHSetRunStatus.ToString() + "', "
-                + "DHSetTempBoot = '" + componentSettings.DHSetTempBoot.ToString() + "', "
-                + "DHSetTempStop = '" + componentSettings.DHSetTempStop.ToString() + "', "
-                + "DHSetHumidityBoot = '" + componentSettings.DHSetHumidityBoot.ToString() + "', "
-                + "DHSetHumidityStop = '" + componentSettings.DHSetHumidityStop.ToString()
-                + "' WHERE id = " + ComponentSettingsId + ";";
+            string sql = "UPDATE ComponentSettings SET SetHotTemp = @SetHotTemp, SetCoolTemp = @SetCoolTemp, "
+                + "CoolTempReturn = @CoolTempReturn, HotTempReturn = @HotTempReturn, "
+                + "SetHumidity = @SetHumidity, HumiReturn = @HumiReturn, "
+                + "TCRunWithSys = @TCRunWithSys, TCAuto = @TCAuto, TCMode = @TCMode, "
+                + "TCMaxTemp = @TCMaxTemp, TCMinTemp = @TCMinTemp, TCMaxHumi = @TCMaxHumi, TCMinHumi = @TCMinHumi, "
+                + "FenMaxTemp = @FenMaxTemp, FenMinTemp = @FenMinTemp, FenMode = @FenMode, "
+                + "LCModel = @LCModel, LCTemperSelect = @LCTemperSelect, LCWaterPump = @LCWaterPump, "
+                + "LCSetHotTemp = @LCSetHotTemp, LCSetCoolTemp = @LCSetCoolTemp, "
+                + "LCHotTempReturn = @LCHotTempReturn, LCCoolTempReturn = @LCCoolTempReturn, "
+                + "DHSetRunStatus = @DHSetRunStatus, DHSetTempBoot = @DHSetTempBoot, DHSetTempStop = @DHSetTempStop, "
+                + "DHSetHumidityBoot = @DHSetHumidityBoot, DHSetHumidityStop = @DHSetHumidityStop WHERE id = @id";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@SetHotTemp", componentSettings.SetHotTemp },
+                { "@SetCoolTemp", componentSettings.SetCoolTemp },
+                { "@CoolTempReturn", componentSettings.CoolTempReturn },
+                { "@HotTempReturn", componentSettings.HotTempReturn },
+                { "@SetHumidity", componentSettings.SetHumidity },
+                { "@HumiReturn", componentSettings.HumiReturn },
+                { "@TCRunWithSys", componentSettings.TCRunWithSys },
+                { "@TCAuto", componentSettings.TCAuto },
+                { "@TCMode", componentSettings.TCMode },
+                { "@TCMaxTemp", componentSettings.TCMaxTemp },
+                { "@TCMinTemp", componentSettings.TCMinTemp },
+                { "@TCMaxHumi", componentSettings.TCMaxHumi },
+                { "@TCMinHumi", componentSettings.TCMinHumi },
+                { "@FenMaxTemp", componentSettings.FenMaxTemp },
+                { "@FenMinTemp", componentSettings.FenMinTemp },
+                { "@FenMode", componentSettings.FenMode },
+                { "@LCModel", componentSettings.LCModel },
+                { "@LCTemperSelect", componentSettings.LCTemperSelect },
+                { "@LCWaterPump", componentSettings.LCWaterPump },
+                { "@LCSetHotTemp", componentSettings.LCSetHotTemp },
+                { "@LCSetCoolTemp", componentSettings.LCSetCoolTemp },
+                { "@LCHotTempReturn", componentSettings.LCHotTempReturn },
+                { "@LCCoolTempReturn", componentSettings.LCCoolTempReturn },
+                { "@DHSetRunStatus", componentSettings.DHSetRunStatus },
+                { "@DHSetTempBoot", componentSettings.DHSetTempBoot },
+                { "@DHSetTempStop", componentSettings.DHSetTempStop },
+                { "@DHSetHumidityBoot", componentSettings.DHSetHumidityBoot },
+                { "@DHSetHumidityStop", componentSettings.DHSetHumidityStop },
+                { "@id", ComponentSettingsId }
+            };
 
             bool result = false;
             try
             {
-                if (DBConnection.ExecSQL(astrSQL))
-                {
-
-                    result = true;
-                }
-                else
-                {
-                    // 处理执行失败的逻辑
-                    result = false;
-                }
+                result = DBConnection.ExecSQLWithParams(sql, parameters) >= 0;
             }
             catch (Exception ex)
             {
@@ -1234,7 +1591,6 @@ namespace EMS
                 result = false;
             }
             return result;
-
         }
 
         /**************************************************************************************************************************************/
@@ -1264,13 +1620,13 @@ namespace EMS
         };
 
         public static UInt32[] GPOIAddr2 ={
-            0xFED0E178,//0 消防            
+            0xFED0E178,//0 消防
             0xFED0E278,//1 急停
             0xFED0E1C8,//2 门禁
             0xFED0E1B8,//3 消防反馈2
             0xFED0E168,//4 市电反馈
             0xFED0E158,//5 UPS反馈：3:正常 2：故障
-            0xFED0E188,//6 
+            0xFED0E188,//6
             0xFED0E198,//7
             //
             0xFED0E388,// 8
@@ -1445,7 +1801,7 @@ namespace EMS
                 // if (hDriver == IntPtr.Zero)
                 //     bResult= false;
 
-                GetPhysLong(Driver, GPOIAddr[aIndex], out uiBack);//读取 //读取一个byte的值 
+                GetPhysLong(Driver, GPOIAddr[aIndex], out uiBack);//读取 //读取一个byte的值
             }
             catch
             { }
@@ -1470,7 +1826,7 @@ namespace EMS
             {
                 return false;
             }
-            SetPhysLong(Driver, GPOIAddr[aIndex], aOn);//设置一个byte的值 
+            SetPhysLong(Driver, GPOIAddr[aIndex], aOn);//设置一个byte的值
             ShutdownWinIo(Driver);//关闭
             return bResult;
         }
@@ -1660,7 +2016,7 @@ namespace EMS
                 tneISYear.SetIntValue(dtIS.Year);
                 tneISMonth.SetIntValue(dtIS.Month);
                 tneISDay.SetIntValue(dtIS.Day);
-                //rtbMemo.Text = strMemo; 
+                //rtbMemo.Text = strMemo;
                 tneSysInterval.SetIntValue(config.SysInterval);
                 tneUnInterval.SetIntValue(config.YunInterval);
                 ttbSystemID.SetstrText(config.SysID);
@@ -1764,7 +2120,7 @@ namespace EMS
             config.SysInstTime = tneISYear.Value.ToString() + "-" + tneISMonth.Value.ToString() + "-" + tneISDay.Value.ToString();
             //strMemo= rtbMemo.Text;
             config.CellCount = (int)tneCellCount.Value;
-            // 
+            //
             config.SysInterval = (int)tneSysInterval.Value;
             config.YunInterval = (int)tneUnInterval.Value;
             config.SysID = ttbSystemID.strText;
@@ -1898,7 +2254,7 @@ namespace EMS
                     }
                     break;
                 case 1://策略模式
-                    frmMain.Selffrm.AllEquipment.eState = 1;//记策略模式   
+                    frmMain.Selffrm.AllEquipment.eState = 1;//记策略模式
                     frmMain.TacticsList.TacticsOn = false;
                     frmMain.TacticsList.LoadFromMySQL(0);
                     frmMain.TacticsList.ActiveIndex = -1;
@@ -1928,7 +2284,7 @@ namespace EMS
             lock (frmMain.Selffrm.AllEquipment)
             {
                 frmMain.TacticsList.TacticsOn = false;
-                frmMain.Selffrm.AllEquipment.eState = 0;//记录手动开启 
+                frmMain.Selffrm.AllEquipment.eState = 0;//记录手动开启
                 frmMain.TacticsList.ActiveIndex = -2;
                 //关闭PCS充电放电
                 frmMain.Selffrm.AllEquipment.HostStart = false;
@@ -1962,7 +2318,7 @@ namespace EMS
             //,"delete from chargeinform rTime<'"+astrData+"'"
             };
             foreach (string astrSQl in strSQL)
-                DBConnection.ExecSQL(astrSQl);
+                DBConnection.ExecSQLWithParams(astrSQl, null);
         }*/
 
         static public bool DeleOldData(string astrData)
@@ -1996,7 +2352,7 @@ namespace EMS
 
             foreach (string sql in strSQL)
             {
-                if (!DBConnection.ExecSQL(sql))
+                if (DBConnection.ExecSQLWithParams(sql, null) < 0)
                 {
                     log.Error($"DeleOldData 失败于 SQL: {sql.Substring(0, Math.Min(80, sql.Length))}...");
                     return false; // 任一失败即整体失败
@@ -2014,7 +2370,9 @@ namespace EMS
             if (MessageBox.Show("确定要删除当前数据吗", "询问信息", MessageBoxButtons.OKCancel) != DialogResult.OK)
                 return;
 
-            DBConnection.ExecSQL("delete from " + aTableName + " where " + aDataName + "='" + aData + "'");
+            string sql = $"delete from {aTableName} where {aDataName} = @val";
+            var parameters = new Dictionary<string, object> { { "@val", aData ?? string.Empty } };
+            DBConnection.ExecSQLWithParams(sql, parameters);
             aDataGrid.Rows.RemoveAt(aDataGrid.SelectedRows[0].Index);
             dbgEquipment.Update();
         }
@@ -2192,14 +2550,18 @@ namespace EMS
             tpLog.Parent = null;
             tpLC.Parent = null;
             // DBConnection.SetDBGrid(dbgEquipment);
-            // DBConnection.ShowData2DBGrid(dbgEquipment, "select * from equipment"); 
+            // DBConnection.ShowData2DBGrid(dbgEquipment, "select * from equipment");
         }
 
         private void btnE_Click(object sender, EventArgs e)
         {
-
+            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             DBConnection.SetDBGrid(oneForm.dbgElectrovalence);
-            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
+            //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select id,section,eName,startTime from electrovalence order by section,startTime");
+            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence,
+                "select id,section,eName,startTime from electrovalence " +
+                "where rTime = '" + strDate + "' " +  // 添加时间约束条件
+                "order by startTime");       // 按时间优先排序
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2225,8 +2587,33 @@ namespace EMS
         {
 
             DBConnection.SetDBGrid(oneForm.dbgTactics);
-            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+            /*            string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                        DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");*/
+            // strDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+            try {
+                string sql = "SELECT * FROM tactics WHERE rTime = @Date ORDER BY startTime";
+
+                var parameters = new Dictionary<string, object>
+                {
+                    { "@Date", DateTime.Today }
+                };
+
+                var dataTable = DBConnection.QueryDataTableWithParams(sql, parameters);
+                if (dataTable != null)
+                {
+                    oneForm.dbgTactics.DataSource = dataTable;
+                }
+                else
+                {
+                    log.Error("查询数据失败");
+                    oneForm.dbgTactics.DataSource = null;
+                }
+            }catch(Exception ex) {
+                log.Error("btnShedule_Click:" +ex.ToString());
+                oneForm.dbgTactics.DataSource = null;
+            }
+
 
             btnBaseInf.BackColor = Color.Transparent;
             btnEqipments.BackColor = Color.Transparent;
@@ -2524,7 +2911,7 @@ namespace EMS
             };
             foreach (string astrSQl in strSQL)
             {
-                DBConnection.ExecSQL(astrSQl);
+                DBConnection.ExecSQLWithParams(astrSQl, null);
                 Thread.Sleep(100);
             }
         }
@@ -2561,8 +2948,12 @@ namespace EMS
         private void btnUpdata_Click(object sender, EventArgs e)
         {
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            frmMain.TacticsList.LoadJFPGFromSQL();
-            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
+            frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
+            //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
+            DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence,
+                "select id,section,eName,startTime from electrovalence " +
+                "where rTime = '" + strDate + "' " +  // 添加时间约束条件
+                "order by startTime");       // 按时间优先排序
         }
 
         //控制模式->空调设置->应用
@@ -2648,7 +3039,7 @@ namespace EMS
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
         }
 
-       
+
 
         /************************* DB Class *********************************/
         public class PeElesticClass
@@ -2743,9 +3134,9 @@ namespace EMS
             public int MaxGridKW { get; set; }
             public int MinGridKW { get; set; }
             public int MaxSOC { get; set; }
-            public int MinSOC { get; set; } 
+            public int MinSOC { get; set; }
             public int WarnMaxGridKW { get; set; }
-            public int WarnMinGridKW { get; set; } 
+            public int WarnMinGridKW { get; set; }
             public int PcsKva { get; set; }
             public int Pre_Client_PUMdemand_Max { get; set; }
             public int EnableActiveReduce { get; set; }
@@ -2802,7 +3193,7 @@ namespace EMS
             public int UseBalaTactics { get; set; } // bool
             public int iPCSfactory { get; set; } // int
             public int BMSVerb { get; set; } // int   1：协能
-            public int PCSForceRun { get; set; } // bool           
+            public int PCSForceRun { get; set; } // bool
             public int EMSstatus { get; set; } // bool
             public int GPIOSelect { get; set; }
             public string MasterIp { get; set; }
@@ -2810,7 +3201,7 @@ namespace EMS
 
             public int CellVNum { get; set; }
             public int CellTNum { get; set; } //168, 160
-            public int BMStype { get; set; } 
+            public int BMStype { get; set; }
             public int PcsLimit { get; set; }
 
             public string MqttBrokerIp { get; set; }
@@ -2859,9 +3250,9 @@ namespace EMS
 
 
         /***********************************
-         * 
+         *
          *  UI  BMS
-         * 
+         *
          * *******************************/
 
         private void btnBMSRead_Click(object sender, EventArgs e)
@@ -3122,9 +3513,9 @@ namespace EMS
         {
             // 首先检查表中记录数量，确保只有一条数据
             string sqlCount = $"SELECT COUNT(*) FROM {tableName}";
-            object countResult = DBConnection.ExecuteScalar(sqlCount);
+            object countResult = DBConnection.QuerySingleValue(sqlCount);
             int recordCount = Convert.ToInt32(countResult ?? 0);
-            
+
             if (recordCount == 0)
             {
                 // 表为空，记录日志并抛出异常，不自动插入默认数据
@@ -3137,16 +3528,16 @@ namespace EMS
                 log.Error($"数据异常：表 {tableName} 中存在 {recordCount} 条记录，单例表只能包含一条记录");
                 throw new InvalidOperationException($"表 {tableName} 违反单例约束：包含 {recordCount} 条记录，应只有一条");
             }
-            
+
             // 确认只有一条记录，获取其ID
             string sqlGetId = $"SELECT id FROM {tableName} LIMIT 1";
-            object result = DBConnection.ExecuteScalar(sqlGetId);
-            
-            if (result != null && result != DBNull.Value)
+            object result = DBConnection.QuerySingleValue(sqlGetId);
+
+            if (result != null)
             {
                 return Convert.ToInt32(result);
             }
-            
+
             // 理论上不应该到达这里，但为了安全起见
             log.Error($"数据异常：表 {tableName} 查询ID失败");
             throw new InvalidOperationException($"表 {tableName} ID查询失败");
@@ -3158,7 +3549,7 @@ namespace EMS
         private static void InitializeConfig()
         {
             string sqlCheck = "SELECT COUNT(*) FROM Config;";
-            object countObj = DBConnection.ExecuteScalar(sqlCheck);
+            object countObj = DBConnection.QuerySingleValue(sqlCheck);
             int count = Convert.ToInt32(countObj ?? 0);
 
             if (count == 0)
@@ -3175,7 +3566,7 @@ namespace EMS
             }
 
             // 读取 SysID 作为 ConfigId
-            object sysIdObj = DBConnection.ExecuteScalar("SELECT SysID FROM Config LIMIT 1;");
+            object sysIdObj = DBConnection.QuerySingleValue("SELECT SysID FROM Config LIMIT 1;");
             ConfigId = sysIdObj?.ToString() ?? "j0001";
         }
     }

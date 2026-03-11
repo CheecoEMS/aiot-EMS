@@ -1,4 +1,6 @@
-﻿using System;
+﻿using log4net;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -7,6 +9,7 @@ namespace EMS
     public partial class frmoneUser : Form
     {
         static private frmoneUser oneForm;
+        private static ILog log = LogManager.GetLogger("frmoneUser");
         bool IsEdit = false;
         string DataID;
         int iSelectIndex;
@@ -121,29 +124,70 @@ namespace EMS
                 return;
             if (oneForm.IsEdit)
             {
-                DBConnection.ExecSQL("update  users  SET "
-                    + "UName= '" + oneForm.tbUserName.Text
-                    + "',UPassword='" + oneForm.tbPassword.Text
-                    + "',UPower='" + oneForm.tcbPower.SelectItemIndex.ToString()
-                    + "',AddTime='" + DateTime.Now.ToString("yyyy-M-d H:m:s")
-                     + "' where id='" + DataID + "'");
+                // DBConnection.ExecSQL("update  users  SET "
+                //     + "UName= '" + oneForm.tbUserName.Text
+                //     + "',UPassword='" + oneForm.tbPassword.Text
+                //     + "',UPower='" + oneForm.tcbPower.SelectItemIndex.ToString()
+                //     + "',AddTime='" + DateTime.Now.ToString("yyyy-M-d H:m:s")
+                //      + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from users");
+                // DBConnection.ShowData2DBGrid(aDBGrid, "select * from users");
+
+                try
+                {
+                    string updateSQL = "UPDATE users SET UName = @UName, UPassword = @UPassword, UPower = @UPower, AddTime = @AddTime WHERE id = @id";
+
+                    var updateParameters = new Dictionary<string, object>
+                    {
+                        { "@UName", oneForm.tbUserName.Text },
+                        { "@UPassword", oneForm.tbPassword.Text },
+                        { "@UPower", oneForm.tcbPower.SelectItemIndex },
+                        { "@AddTime", DateTime.Now.ToString("yyyy-M-d H:m:s") },
+                        { "@id", DataID }
+                    };
+
+                    DBConnection.ExecSQLWithParams(updateSQL, updateParameters);
+
+                    string selectSQL = "SELECT * FROM users";
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, null);
+                    aDBGrid.DataSource = dataTable;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"更新或查询用户数据失败: {ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
+
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 this.DialogResult = DialogResult.OK;
             }
             else
             {
-                DBConnection.ExecSQL("insert into users (UName,UPassword,UPower,AddTime) "
-                      + "values ('" + oneForm.tbUserName.Text + "','"
-                      + oneForm.tbPassword.Text + "','"
-                      + oneForm.tcbPower.SelectItemIndex.ToString() + "','"
-                      + DateTime.Now.ToString("yyyy-M-d H:m:s") + "')");
+                try
+                {
+                    string insertSQL = "INSERT INTO users (UName, UPassword, UPower, AddTime) VALUES (@UName, @UPassword, @UPower, @AddTime)";
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from users");
-                aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
+                    var insertParameters = new Dictionary<string, object>
+                    {
+                        { "@UName", oneForm.tbUserName.Text },
+                        { "@UPassword", oneForm.tbPassword.Text },
+                        { "@UPower", oneForm.tcbPower.SelectItemIndex },
+                        { "@AddTime", DateTime.Now.ToString("yyyy-M-d H:m:s") }
+                    };
 
+                    DBConnection.ExecSQLWithParams(insertSQL, insertParameters);
+
+                    string selectSQL = "SELECT * FROM users";
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, null);
+                    aDBGrid.DataSource = dataTable;
+                    aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"插入或查询用户数据失败：{ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
             }
             this.Hide();
         }
@@ -171,8 +215,8 @@ namespace EMS
         {
             PictureBox tempPBTN = (PictureBox)sender;
             Graphics g = tempPBTN.CreateGraphics();
-            Pen RectPen = new Pen(Color.GreenYellow, 2);//画笔颜色 
-            g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框  
+            Pen RectPen = new Pen(Color.GreenYellow, 2);//画笔颜色
+            g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框
         }
 
         private void pbtnClean_MouseUp(object sender, MouseEventArgs e)
@@ -180,7 +224,7 @@ namespace EMS
             PictureBox tempPBTN = (PictureBox)sender;
             Graphics g = tempPBTN.CreateGraphics();
             Pen RectPen = new Pen(Color.Black, 2);//画笔颜色
-            g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框  
+            g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框
 
         }
 

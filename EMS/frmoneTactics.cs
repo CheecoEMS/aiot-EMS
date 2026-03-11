@@ -1,4 +1,6 @@
-﻿using System;
+﻿using log4net;
+using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace EMS
@@ -6,6 +8,7 @@ namespace EMS
     public partial class frmoneTactics : Form
     {
         static public frmoneTactics oneForm = null;
+        private static ILog log = LogManager.GetLogger("frmoneTactics");
 
         public frmoneTactics()
         {
@@ -39,23 +42,55 @@ namespace EMS
             oneForm.ShowData(aDBGrid);
             if (oneForm.ShowDialog() == DialogResult.OK)
             {//,,,,,,
-                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                DBConnection.ExecSQL("update  tactics  SET "
-                     + " tType='" + oneForm.tcbtType.strText
-                     + "',PCSType='" + oneForm.tcbPCSType.strText
-                     + "', waValue='" + oneForm.tnedwaValue.Value.ToString()
-                     + "', startTime= '"
-                           + oneForm.tneStartH.Value.ToString("D2") + ":"
-                           + oneForm.tneStartm.Value.ToString("D2") + ":"
-                           + oneForm.tneStartS.Value.ToString("D2")
-                       //oneForm.dtpStartTime.Value.ToString("H:m:s")
-                       + "', endTime= '"
-                      + oneForm.tneEndH.Value.ToString("D2") + ":"
-                    + oneForm.tneEndm.Value.ToString("D2") + ":"
-                    + oneForm.tneEndS.Value.ToString("D2")
-                     + "' where id='" + DataID + "'");
+                //string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                // DBConnection.ExecSQL("update  tactics  SET "
+                //      + " tType='" + oneForm.tcbtType.strText
+                //      + "',PCSType='" + oneForm.tcbPCSType.strText
+                //      + "', waValue='" + oneForm.tnedwaValue.Value.ToString()
+                //      + "', startTime= '"
+                //            + oneForm.tneStartH.Value.ToString("D2") + ":"
+                //            + oneForm.tneStartm.Value.ToString("D2") + ":"
+                //            + oneForm.tneStartS.Value.ToString("D2")
+                //        //oneForm.dtpStartTime.Value.ToString("H:m:s")
+                //        + "', endTime= '"
+                //       + oneForm.tneEndH.Value.ToString("D2") + ":"
+                //     + oneForm.tneEndm.Value.ToString("D2") + ":"
+                //     + oneForm.tneEndS.Value.ToString("D2")
+                //      + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+                // DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+                
+                try
+                {
+                    string updateSQL = "UPDATE tactics SET tType = @tType, PCSType = @PCSType, waValue = @waValue, " +
+                        "startTime = @startTime, endTime = @endTime WHERE id = @id";
+                    
+                    string startTime = $"{oneForm.tneStartH.Value:D2}:{oneForm.tneStartm.Value:D2}:{oneForm.tneStartS.Value:D2}";
+                    string endTime = $"{oneForm.tneEndH.Value:D2}:{oneForm.tneEndm.Value:D2}:{oneForm.tneEndS.Value:D2}";
+                    
+                    var updateParameters = new Dictionary<string, object>
+                    {
+                        { "@tType", oneForm.tcbtType.strText },
+                        { "@PCSType", oneForm.tcbPCSType.strText },
+                        { "@waValue", oneForm.tnedwaValue.Value },
+                        { "@startTime", startTime },
+                        { "@endTime", endTime },
+                        { "@id", DataID }
+                    };
+                    
+                    DBConnection.ExecSQLWithParams(updateSQL, updateParameters);
+
+                    string selectSQL = "SELECT * FROM tactics WHERE rTime = @date ORDER BY starttime";
+                    var selectParameters = new Dictionary<string, object> { { "@date", DateTime.Today } };
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, selectParameters);
+                    aDBGrid.DataSource = dataTable;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"更新或查询策略数据失败: {ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
+                
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();
@@ -69,21 +104,53 @@ namespace EMS
             oneForm.CleanForm();
             if (oneForm.ShowDialog() == DialogResult.OK)
             {
-                string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                DBConnection.ExecSQL("insert into tactics (startTime,endTime,tType,PCSType,waValue,rTime) "
-                    + "values ('"
-                    + oneForm.tneStartH.Value.ToString("D2") + ":"
-                    + oneForm.tneStartm.Value.ToString("D2") + ":"
-                    + oneForm.tneStartS.Value.ToString("D2") + "','"
-                    + oneForm.tneEndH.Value.ToString("D2") + ":"
-                    + oneForm.tneEndm.Value.ToString("D2") + ":"
-                    + oneForm.tneEndS.Value.ToString("D2") + "','"
-                    + oneForm.tcbtType.strText + "','"
-                    + oneForm.tcbPCSType.strText + "','"
-                    + oneForm.tnedwaValue.Value.ToString() + "','"
-                    + strDate  + "') ");
+                // string strDate = DateTime.Now.ToString("yyyy-MM-dd");
+                // DBConnection.ExecSQL("insert into tactics (startTime,endTime,tType,PCSType,waValue,rTime) "
+                //     + "values ('"
+                //     + oneForm.tneStartH.Value.ToString("D2") + ":"
+                //     + oneForm.tneStartm.Value.ToString("D2") + ":"
+                //     + oneForm.tneStartS.Value.ToString("D2") + "','"
+                //     + oneForm.tneEndH.Value.ToString("D2") + ":"
+                //     + oneForm.tneEndm.Value.ToString("D2") + ":"
+                //     + oneForm.tneEndS.Value.ToString("D2") + "','"
+                //     + oneForm.tcbtType.strText + "','"
+                //     + oneForm.tcbPCSType.strText + "','"
+                //     + oneForm.tnedwaValue.Value.ToString() + "','"
+                //     + strDate  + "') ");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+                // DBConnection.ShowData2DBGrid(aDBGrid, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
+                
+                try
+                {
+                    string insertSQL = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                        "VALUES (@startTime, @endTime, @tType, @PCSType, @waValue, @rTime)";
+                    
+                    string startTime = $"{oneForm.tneStartH.Value:D2}:{oneForm.tneStartm.Value:D2}:{oneForm.tneStartS.Value:D2}";
+                    string endTime = $"{oneForm.tneEndH.Value:D2}:{oneForm.tneEndm.Value:D2}:{oneForm.tneEndS.Value:D2}";
+                    
+                    var insertParameters = new Dictionary<string, object>
+                    {
+                        { "@startTime", startTime },
+                        { "@endTime", endTime },
+                        { "@tType", oneForm.tcbtType.strText },
+                        { "@PCSType", oneForm.tcbPCSType.strText },
+                        { "@waValue", oneForm.tnedwaValue.Value },
+                        { "@rTime", DateTime.Today }
+                    };
+                    
+                    DBConnection.ExecSQLWithParams(insertSQL, insertParameters);
+
+                    string selectSQL = "SELECT * FROM tactics WHERE rTime = @date ORDER BY starttime";
+                    var selectParameters = new Dictionary<string, object> { { "@date", DateTime.Today } };
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, selectParameters);
+                    aDBGrid.DataSource = dataTable;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"插入或查询策略数据失败: {ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
+                
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }

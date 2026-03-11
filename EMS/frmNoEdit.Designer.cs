@@ -35,6 +35,7 @@ namespace EMS
             this.btnCanncel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.plData = new System.Windows.Forms.Panel();
+            this.pictureBox27 = new System.Windows.Forms.PictureBox();
             this.labCap = new System.Windows.Forms.Label();
             this.pbClean = new System.Windows.Forms.PictureBox();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -57,6 +58,7 @@ namespace EMS
             this.pictureBox26 = new System.Windows.Forms.PictureBox();
             this.panel1.SuspendLayout();
             this.plData.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox27)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbClean)).BeginInit();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbAdd)).BeginInit();
@@ -144,6 +146,7 @@ namespace EMS
             // plData
             // 
             this.plData.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(55)))), ((int)(((byte)(64)))));
+            this.plData.Controls.Add(this.pictureBox27);
             this.plData.Controls.Add(this.labCap);
             this.plData.Controls.Add(this.pbClean);
             this.plData.Controls.Add(this.panel2);
@@ -169,6 +172,19 @@ namespace EMS
             this.plData.Name = "plData";
             this.plData.Size = new System.Drawing.Size(976, 665);
             this.plData.TabIndex = 54;
+            // 
+            // pictureBox27
+            // 
+            this.pictureBox27.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox27.Image")));
+            this.pictureBox27.Location = new System.Drawing.Point(241, 524);
+            this.pictureBox27.Name = "pictureBox27";
+            this.pictureBox27.Size = new System.Drawing.Size(90, 90);
+            this.pictureBox27.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox27.TabIndex = 36;
+            this.pictureBox27.TabStop = false;
+            this.pictureBox27.Tag = "-";
+            this.pictureBox27.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pbMax_MouseDown);
+            this.pictureBox27.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxMinus_MouseUp);
             // 
             // labCap
             // 
@@ -428,7 +444,6 @@ namespace EMS
             this.pictureBox26.TabIndex = 35;
             this.pictureBox26.TabStop = false;
             this.pictureBox26.Tag = "1";
-            this.pictureBox26.Click += new System.EventHandler(this.pictureBox26_Click);
             this.pictureBox26.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pbMax_MouseDown);
             this.pictureBox26.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox26_MouseUp);
             // 
@@ -449,6 +464,7 @@ namespace EMS
             this.panel1.ResumeLayout(false);
             this.plData.ResumeLayout(false);
             this.plData.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox27)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbClean)).EndInit();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
@@ -499,5 +515,6 @@ namespace EMS
         private System.Windows.Forms.PictureBox pictureBox25;
         private System.Windows.Forms.PictureBox pictureBox26;
         private System.Windows.Forms.Label labCap;
+        private System.Windows.Forms.PictureBox pictureBox27;
     }
 }

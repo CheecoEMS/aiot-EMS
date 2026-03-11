@@ -10,6 +10,7 @@ namespace EMS
     {
         static public frmState oneForm = null;
         private static ILog log = LogManager.GetLogger("frmState");
+
         public int DataIndex = 0;
         public int BoxIndex = 0;
         public frmState()

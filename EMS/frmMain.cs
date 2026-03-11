@@ -187,7 +187,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：20250820_ems_1.0.9"  );
+                log.Error("初始化EMS版本：EMS1.1.1"  );
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -307,6 +307,189 @@ namespace EMS
             }
         }
 
+        #region 串口网口消息解析函数
+        static public byte[] Back3Data(int aAddr, short iLen)
+        {
+            byte[] returnMsg = null;
+            ushort aMsg;
+            int index = 3;
+            returnMsg = ModbusBase.BuildMSG3sTitle((byte)frmSet.config.i485Addr, 3, (ushort)iLen);
+            for (int i = aAddr; i <= aAddr+iLen; ++i)
+            {
+                aMsg = 0;
+                switch (i)
+                {
+                    case 0x5000://设备序列号
+                        //aMsg = frmSet.SysID;
+                        break;
+                    case 0x5001://功率，正数为放电，负数为充电
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.PCSKVA;
+                        break;
+                    case 0x5002://日充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2PKWH[0];
+                        break;
+                    case 0x5003://日放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.E2OKWH[0];
+                        break;
+                    case 0x5004://月充电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5005://月放电量kWh
+                        aMsg = 0;
+                        break;
+                    case 0x5006://总充电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.PUkwh[0];
+                        break;
+                    case 0x5007://总放电量kWh
+                        aMsg = (ushort)frmMain.Selffrm.AllEquipment.Elemeter2.OUkwh[0];
+                        break;
+                    case 0x5008://总容量（%）
+                        aMsg = 200;
+                        break;
+                    case 0x5009://soc上限
+                        aMsg = 100;
+                        break;
+                    case 0x5010://soc下限
+                        aMsg = 5;
+                        break;
+                    case 0x5011://最大功率充电时长（分钟）
+                        aMsg = 90;
+                        break;
+                    case 0x5012://最大功率放电时长（分钟)
+                        aMsg = 90;
+                        break;
+                    case 0x5013://健康度（%）
+                        aMsg = 100;
+                        break;
+                    case 0x5014://状态1：在线，0：离线
+                        aMsg = 0;
+                        break;
+                    case 0x5015://充放电状态0：待机，1：充电，2：放电
+                        if (frmMain.Selffrm.AllEquipment.PCSKVA == 0)
+                        {
+                            aMsg = 0;
+                        }
+                        else
+                        {
+                            if (frmMain.Selffrm.AllEquipment.wTypeActive == "充电")
+                            {
+                                aMsg = 1;
+                            }
+                            else if (frmMain.Selffrm.AllEquipment.wTypeActive == "放电")
+                            {
+                                aMsg = 2;
+                            }
+                        }
+                        break;
+                    case 0x5016://BMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5017://PCS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5018://EMS告警信息
+                        aMsg = 0;
+                        break;
+                    case 0x5019:
+                        break;
+                }
+                //组装报文
+                ModbusBase.AddMSG3(aMsg, ref returnMsg, ref index);
+            }
+            ModbusBase.AddCRC(ref returnMsg);
+            return returnMsg;
+
+        }
+
+        //连控数据中读取数据-----3读取
+        static public byte[] Back3Data(int aAddr)
+        {
+            switch (aAddr)
+            {
+                case 0x6001://计划功率
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
+                case 0x6002://实际功率
+                    double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)value);
+                case 0x6003://充放电 
+                    if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
+                    else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
+                    else//待机
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 2);
+                case 0x6004: //PCSType 恒压横流恒功率、AC恒压
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)Array.IndexOf(PCSClass.PCSTypes, frmMain.Selffrm.AllEquipment.PCSTypeActive));
+                case 0x6005: //EMS运行状态 ： 0正常，1故障，2停机
+                    return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)frmMain.Selffrm.AllEquipment.runState);
+                case 0x6006: //BMS是否告警
+                    if (frmMain.Selffrm.AllEquipment.BMS.Error[1] + frmMain.Selffrm.AllEquipment.BMS.Error[2] + frmMain.Selffrm.AllEquipment.BMS.Error[3] > 0)
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
+                    else
+                        return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
+            }
+            return null;
+        }
+
+        //连控数据中设置寄存器---执行6
+        static public void Active6Data(int aAddr, int data)
+        {
+
+            switch (aAddr)
+            {
+                case 0x6000://开关pcs                  
+                    if (data != 0)
+                    {
+                        frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(true);
+                        lock (frmMain.Selffrm.AllEquipment)
+                            frmMain.Selffrm.AllEquipment.HostStart = true;
+                    }
+                    else
+                    {
+                        lock (frmMain.Selffrm.AllEquipment)
+                        {
+                            frmMain.Selffrm.AllEquipment.HostStart = false;
+                            frmMain.Selffrm.AllEquipment.PCSScheduleKVA = 0;
+                        }
+                    }
+                    break;
+                case 0x6001://计划功率 
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
+                    }
+                    break;
+                case 0x6002://实际功率 
+                    //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        frmMain.Selffrm.AllEquipment.HostStart = true;
+                        frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
+                        frmMain.Selffrm.AllEquipment.NetControl = true;
+                    }
+                    break;
+                case 0x6003://充放电
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        if (data == 0)
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
+                        else
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
+                    }
+                    break;
+                case 0x6004://恒压横流恒功率、AC恒压
+                    lock (frmMain.Selffrm.AllEquipment)
+                    {
+                        if (data>=0 && data < PCSClass.PCSTypes.Length)
+                        {
+                            frmMain.Selffrm.AllEquipment.PCSTypeActive = PCSClass.PCSTypes[data];
+                        }
+                    }
+                    break;
+            }
+        }
+        #endregion
+
         //tcp
         private void OnReceiveModbusTcpClientCMD(byte[] aByteData)
         {
@@ -339,17 +522,17 @@ namespace EMS
                     AllEquipment.NetConnect = true;
                     if (iLen == 1)
                     {
-                        frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr));
+                        frmMain.Selffrm.ModbusTcpClient.SendMSG(Back3Data(iAddr));
                     }
                     else
                     {
-                        frmMain.Selffrm.ModbusTcpClient.SendMSG(CloudClass.Back3Data(iAddr, iLen));
+                        frmMain.Selffrm.ModbusTcpClient.SendMSG(Back3Data(iAddr, iLen));
                         //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(CloudClass.Back3Data(iAddr, iLen));
                     }
                     break;
                 case 0x06://设置
                     AllEquipment.NetConnect = true;
-                    CloudClass.Active6Data(iAddr, (int)iData);
+                    Active6Data(iAddr, (int)iData);
                     //frmMain.Selffrm.ModbusTcpClient.clientSocket.Send(aByteData);
                     frmMain.Selffrm.ModbusTcpClient.SendMSG(aByteData);
                     break;
@@ -512,15 +695,15 @@ namespace EMS
             switch (CMDID)
             {
                 case 0x03://读取 
-                    if (CloudClass.Back3Data(iAddr) != null)
+                    if (Back3Data(iAddr) != null)
                     {
                         ////modbus返回:使用缓冲区中的数据将指定数量的字节写入串行端口。
-                        frmMain.Selffrm.ems.m485.sp.Write(CloudClass.Back3Data(iAddr), 0, 7);
+                        frmMain.Selffrm.ems.m485.sp.Write(Back3Data(iAddr), 0, 7);
                     }
                     break;
                 case 0x06://设置                     
                     frmMain.Selffrm.ems.m485.sp.Write(aByteData, 0, aByteData.Length);
-                    CloudClass.Active6Data(iAddr, (int)iData);
+                    Active6Data(iAddr, (int)iData);
                     break;
                 default:
                     break;
@@ -948,21 +1131,41 @@ namespace EMS
                 AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
 
                 // 初始化云服务
-                AllEquipment.Report2Cloud = new CloudClass
+/*                AllEquipment.Report2Cloud = new CloudClass
                 {
                     Parent = AllEquipment
-                };
-                AllEquipment.Report2Cloud.IniClound();
+                };*/
+                
+                //AllEquipment.Report2Cloud.IniClound();
+                
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
-                frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
-                frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
-                if (!AllEquipment.Report2Cloud.mqttConnect())
+                //frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
+                //frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
+
+/*                if (!AllEquipment.Report2Cloud.mqttConnect())
                 {
                     log.Error("MQTT连接失败");
-                }
+                }*/
 
                 // 初始化策略
                 TacticsList.Parent = AllEquipment;
+
+                //新增mqttManager
+                var mqtt = new MqttManager
+                {
+                    BrokerIp = frmSet.config.MqttBrokerIp,
+                    BrokerPort = frmSet.config.MqttBrokerPort,
+                    Username = frmSet.config.MqttBrokerUser,
+                    Password = frmSet.config.MqttBrokerPassword,
+                    ClientId = frmSet.config.SysID
+                };
+
+                AllEquipment.cloudService = new CloudService(mqtt)
+                {
+                    Parent = AllEquipment
+                };
+                AllEquipment.cloudService.Start();
+
 
                 return true;
             }
@@ -1001,8 +1204,8 @@ namespace EMS
         {
             if (!IniralizeFrmMain_Timer()) return false;
             if (!InitFrmMainClass_Threads()) return false;
-            if(!AllEquipment.Report2Cloud.InitCloudClass_Timer()) return false;
-            if (!AllEquipment.Report2Cloud.InitCloudClass_Threads()) return false;
+            //if(!AllEquipment.Report2Cloud.InitCloudClass_Timer()) return false;
+            //if (!AllEquipment.Report2Cloud.InitCloudClass_Threads()) return false;
             if(!AllEquipment.AutoReadData()) return false;
 
             return true;
@@ -1058,7 +1261,8 @@ namespace EMS
 
                 if (TacticsList != null)
                 {
-                    if(!TacticsList.AutoCheckTactics()) return false;
+                    if (!TacticsList.AutoCheckTactics()) return false;
+                    if (!TacticsList.AutoCheckJFPG()) return false;
                 }
 
                 return true;
@@ -1110,7 +1314,7 @@ namespace EMS
 
                     /************************* 日切换执行 *************************************/
                     if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess) {
-                        if (frmMain.TacticsList.LoadJFPGFromSQL()){
+                        if (frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff()){
                             frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
                         }
                     }
@@ -1874,11 +2078,6 @@ namespace EMS
             TacticsList.AddOneStep(ctMain, DateTime.Now, -1 * AllEquipment.Elemeter2.AllUkva, AllEquipment.Elemeter2.Gridkva, AllEquipment.Elemeter2.Subkw);
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            TacticsList.LoadHistay(ctMain);
-        }
-
         private void label2_Click(object sender, EventArgs e)
         {
             //this.AllEquipment.Elemeter3.Save2DataSource(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -1908,30 +2107,6 @@ namespace EMS
         {
             BeFoused = false;
             frmControl.ShowForm();
-        }
-
-        private void TmNetLink_Tick(object sender, EventArgs e)
-        {
-            //ping mqttfx 检查是否网络正常
-            /*            Ping ping = new Ping();
-                        PingReply reply;
-                        try
-                        {
-                            reply = ping.Send("www.baidu.com");
-                        }
-                        catch (Exception)
-                        {
-                            if (frmMain.Selffrm.AllEquipment.HostStart == false)
-                            {
-                                SysIO.Reboot();
-                            }
-                        };*/
-
-            if ((AllEquipment.Report2Cloud.mqttClient == null)||(!AllEquipment.Report2Cloud.mqttClient.IsConnected))
-            {
-                //AllEquipment.Report2Cloud.CreateClient();
-                SysIO.Reboot();
-            }
         }
     }
 

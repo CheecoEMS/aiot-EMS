@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 
@@ -19,14 +19,19 @@ namespace EMS
         public string memo;
         public int InsertWaring()
         {
-            DBConnection.ExecSQL("INSERT INTO warning (WaringID, rTime, wClass,WarningID, Warning,wLevels,memo)" +
-                " VALUES('" + rID + "', '"
-                + rDate.ToString("yyyy-M-d H:m:s") + "', '"
-                + wClass + "', '"
-                + WarningID.ToString() + "', '"
-                + Warning + "', '"
-                + wLevels.ToString() + "','"
-                + memo + "'); ");
+            string sql = "INSERT INTO warning (WaringID, rTime, wClass, WarningID, Warning, wLevels, memo) " +
+                         "VALUES(@WaringID, @rTime, @wClass, @WarningID, @Warning, @wLevels, @memo);";
+            var parameters = new Dictionary<string, object>
+            {
+                { "@WaringID", rID },
+                { "@rTime", rDate },
+                { "@wClass", wClass ?? string.Empty },
+                { "@WarningID", WarningID },
+                { "@Warning", Warning ?? string.Empty },
+                { "@wLevels", wLevels },
+                { "@memo", memo ?? string.Empty }
+            };
+            DBConnection.ExecSQLWithParams(sql, parameters);
             return DBConnection.GetLastID("select MAX(id) AS max_id from warning ");
         }
     }
@@ -66,28 +71,36 @@ namespace EMS
             {
                 // oneWarning.UserID = "";
                 //oneWarning.CheckTime=null;
-                DBConnection.ExecSQL(" UPDATE warning SET  "
-                    // + "CheckTime = null,"
-                    + "  UserID=''  where id='" + aID.ToString() + "'");
+                string sql = "UPDATE warning SET UserID = '' WHERE id = @id";
+                var parameters = new Dictionary<string, object> { { "@id", aID } };
+                DBConnection.ExecSQLWithParams(sql, parameters);
             }
             else
             {
                 DateTime tempTime = DateTime.Now;
                 //oneWarning.UserID = aUserID;
                 //oneWarning.CheckTime = tempTime;
-                DBConnection.ExecSQL(" UPDATE warning SET "
-                    + "CheckTime = '" + tempTime.ToString("yyyy-M-d H:m:s")
-                    + "', UserID='" + aUserID + "' where id='"
-                    + aID.ToString() + "'");
+                string sql = "UPDATE warning SET CheckTime = @checkTime, UserID = @userId WHERE id = @id";
+                var parameters = new Dictionary<string, object>
+                {
+                    { "@checkTime", tempTime },
+                    { "@userId", aUserID ?? string.Empty },
+                    { "@id", aID }
+                };
+                DBConnection.ExecSQLWithParams(sql, parameters);
             }
         }
 
         //增加确认 CheckTime UserID ResetTime
         public void Recovery(int aID)
         {
-            DBConnection.ExecSQL(" UPDATE warning SET ("
-                + "ResetTime = '" + DateTime.Now.ToString("yyyy-M-d H:m:s")
-                + "') where id='" + aID.ToString() + "'");
+            string sql = "UPDATE warning SET ResetTime = @resetTime WHERE id = @id";
+            var parameters = new Dictionary<string, object>
+            {
+                { "@resetTime", DateTime.Now },
+                { "@id", aID }
+            };
+            DBConnection.ExecSQLWithParams(sql, parameters);
         }
 
 

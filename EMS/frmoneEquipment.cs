@@ -1,4 +1,6 @@
-﻿using System;
+﻿using log4net;
+using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace EMS
@@ -6,6 +8,8 @@ namespace EMS
     public partial class frmoneEquipment : Form
     {
         static public frmoneEquipment oneForm = null;
+        private static ILog log = LogManager.GetLogger("frmoneEquipment");
+
         //private string DataID = ""; 
         public frmoneEquipment()
         {
@@ -33,23 +37,58 @@ namespace EMS
                     tempTCPType = "client";
 
 
-                DBConnection.ExecSQL("insert into equipment(eID,eName,eType,eModel,comType,comName,comRate,comBits,TCPType,serverIP,SerPort,LocPort,pc) "
-                    + "values ('" + oneForm.tcbSysID.strText + "','"
-                    + oneForm.tbeName.Text + "','"
-                    + oneForm.tcbType.strText + "','"
-                    + oneForm.ceModel.Text + "','"
-                    + tempComType + "','"
-                    + oneForm.tcb485Port.strText + "','"
-                    + oneForm.tcbBaudRate.strText + "','"
-                    + oneForm.tcbDatabits.strText + "','"
-                    + tempTCPType + "','"
-                    + oneForm.tbServerIP.Text + "','"
-                    + oneForm.tneServerPort.Value.ToString() + "','"
-                    + oneForm.tneLocalPort.Value.ToString() + "','"
-                     + oneForm.tnePC.Value.ToString()
-                    + "')");
+                // DBConnection.ExecSQL("insert into equipment(eID,eName,eType,eModel,comType,comName,comRate,comBits,TCPType,serverIP,SerPort,LocPort,pc) "
+                //     + "values ('" + oneForm.tcbSysID.strText + "','"
+                //     + oneForm.tbeName.Text + "','"
+                //     + oneForm.tcbType.strText + "','"
+                //     + oneForm.ceModel.Text + "','"
+                //     + tempComType + "','"
+                //     + oneForm.tcb485Port.strText + "','"
+                //     + oneForm.tcbBaudRate.strText + "','"
+                //     + oneForm.tcbDatabits.strText + "','"
+                //     + tempTCPType + "','"
+                //     + oneForm.tbServerIP.Text + "','"
+                //     + oneForm.tneServerPort.Value.ToString() + "','"
+                //     + oneForm.tneLocalPort.Value.ToString() + "','"
+                //      + oneForm.tnePC.Value.ToString()
+                //     + "')");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+                // DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+
+                try
+                {
+                    string insertSQL = "INSERT INTO equipment(eID, eName, eType, eModel, comType, comName, comRate, comBits, TCPType, serverIP, SerPort, LocPort, pc) " +
+                        "VALUES (@eID, @eName, @eType, @eModel, @comType, @comName, @comRate, @comBits, @TCPType, @serverIP, @SerPort, @LocPort, @pc)";
+                    
+                    var insertParameters = new Dictionary<string, object>
+                    {
+                        { "@eID", oneForm.tcbSysID.strText },
+                        { "@eName", oneForm.tbeName.Text },
+                        { "@eType", oneForm.tcbType.strText },
+                        { "@eModel", oneForm.ceModel.Text },
+                        { "@comType", tempComType },
+                        { "@comName", oneForm.tcb485Port.strText },
+                        { "@comRate", oneForm.tcbBaudRate.strText },
+                        { "@comBits", oneForm.tcbDatabits.strText },
+                        { "@TCPType", tempTCPType },
+                        { "@serverIP", oneForm.tbServerIP.Text },
+                        { "@SerPort", oneForm.tneServerPort.Value },
+                        { "@LocPort", oneForm.tneLocalPort.Value },
+                        { "@pc", oneForm.tnePC.Value }
+                    };
+                    
+                    DBConnection.ExecSQLWithParams(insertSQL, insertParameters);
+
+                    string selectSQL = "SELECT * FROM equipment";
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, null);
+                    aDBGrid.DataSource = dataTable;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"插入或查询设备数据失败: {ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
+
                 aDBGrid.Rows[aDBGrid.Rows.Count - 1].Selected = true;
                 CloseForm();
             }
@@ -76,23 +115,61 @@ namespace EMS
                     tempTCPType = "client";
 
 
-                DBConnection.ExecSQL("update  equipment  SET  "
-                    + " eID= '" + oneForm.tcbSysID.strText
-                    + "', eName='" + oneForm.tbeName.Text
-                    + "',eType='" + oneForm.tcbType.strText
-                    + "',eModel='" + oneForm.ceModel.Text
-                    + "',comType='" + tempComType
-                    + "',comName='" + oneForm.tcb485Port.strText
-                    + "',comRate='" + oneForm.tcbBaudRate.strText
-                    + "',comBits='" + oneForm.tcbDatabits.strText
-                    + "',TCPType='" + tempTCPType
-                    + "',serverIP='" + oneForm.tbServerIP.Text
-                    + "',SerPort='" + oneForm.tneServerPort.Value.ToString()
-                    + "',LocPort='" + oneForm.tneLocalPort.Value.ToString()
-                    + "',pc='" + oneForm.tnePC.Value.ToString()
-                    + "' where id='" + DataID + "'");
+                // DBConnection.ExecSQL("update  equipment  SET  "
+                //     + " eID= '" + oneForm.tcbSysID.strText
+                //     + "', eName='" + oneForm.tbeName.Text
+                //     + "',eType='" + oneForm.tcbType.strText
+                //     + "',eModel='" + oneForm.ceModel.Text
+                //     + "',comType='" + tempComType
+                //     + "',comName='" + oneForm.tcb485Port.strText
+                //     + "',comRate='" + oneForm.tcbBaudRate.strText
+                //     + "',comBits='" + oneForm.tcbDatabits.strText
+                //     + "',TCPType='" + tempTCPType
+                //     + "',serverIP='" + oneForm.tbServerIP.Text
+                //     + "',SerPort='" + oneForm.tneServerPort.Value.ToString()
+                //     + "',LocPort='" + oneForm.tneLocalPort.Value.ToString()
+                //     + "',pc='" + oneForm.tnePC.Value.ToString()
+                //     + "' where id='" + DataID + "'");
 
-                DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+                // DBConnection.ShowData2DBGrid(aDBGrid, "select * from equipment");
+
+                try
+                {
+                    string updateSQL = "UPDATE equipment SET eID = @eID, eName = @eName, eType = @eType, eModel = @eModel, " +
+                        "comType = @comType, comName = @comName, comRate = @comRate, comBits = @comBits, " +
+                        "TCPType = @TCPType, serverIP = @serverIP, SerPort = @SerPort, LocPort = @LocPort, pc = @pc " +
+                        "WHERE id = @id";
+                    
+                    var updateParameters = new Dictionary<string, object>
+                    {
+                        { "@eID", oneForm.tcbSysID.strText },
+                        { "@eName", oneForm.tbeName.Text },
+                        { "@eType", oneForm.tcbType.strText },
+                        { "@eModel", oneForm.ceModel.Text },
+                        { "@comType", tempComType },
+                        { "@comName", oneForm.tcb485Port.strText },
+                        { "@comRate", oneForm.tcbBaudRate.strText },
+                        { "@comBits", oneForm.tcbDatabits.strText },
+                        { "@TCPType", tempTCPType },
+                        { "@serverIP", oneForm.tbServerIP.Text },
+                        { "@SerPort", oneForm.tneServerPort.Value },
+                        { "@LocPort", oneForm.tneLocalPort.Value },
+                        { "@pc", oneForm.tnePC.Value },
+                        { "@id", DataID }
+                    };
+                    
+                    DBConnection.ExecSQLWithParams(updateSQL, updateParameters);
+
+                    string selectSQL = "SELECT * FROM equipment";
+                    var dataTable = DBConnection.QueryDataTableWithParams(selectSQL, null);
+                    aDBGrid.DataSource = dataTable;
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"更新或查询设备数据失败: {ex.Message}", ex);
+                    aDBGrid.DataSource = null;
+                }
+
                 //aDBGrid.Rows[0].Selected = false;
                 aDBGrid.Rows[iSelectIndex].Selected = true;
                 CloseForm();

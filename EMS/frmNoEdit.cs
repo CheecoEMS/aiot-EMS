@@ -122,48 +122,145 @@ namespace EMS
             g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框  
         }
 
+        // 新增处理负号的函数
+        private void pictureBoxMinus_MouseUp(object sender, MouseEventArgs e)
+        {
+            PictureBox tempPBTN = (PictureBox)sender;
+            using (Graphics g = tempPBTN.CreateGraphics())
+            using (Pen RectPen = new Pen(Color.FromArgb(42, 55, 64), 2))
+            {
+                g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);
+            }
+
+            // 逻辑：只有在当前为空、为0、或已经是负号时，才设置为 "-"
+            if (string.IsNullOrEmpty(labValue.Text) || labValue.Text == "0" || labValue.Text == "-")
+            {
+                labValue.Text = "-";
+                bEdited = true;   // 关键：必须设为 true，这样下一个数字才会进入 else 分支
+                iNowData = 0;     // 关键：内部数值归零，等待下一个数字组合
+            }
+            else
+            {
+                // 如果已经有数字，则取反
+                if (int.TryParse(labValue.Text, out int val))
+                {
+                    iNowData = -val;
+                    labValue.Text = iNowData.ToString();
+                    bEdited = true;
+                }
+            }
+        }
+
         private void pictureBox26_MouseUp(object sender, MouseEventArgs e)
         {
             PictureBox tempPBTN = (PictureBox)sender;
-            Graphics g = tempPBTN.CreateGraphics();
-            Pen RectPen = new Pen(Color.FromArgb(42, 55, 64), 2);//画笔颜色
-            g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框  
-            int iCap;
-
-            //if (!bIsPassword)
+            // 建议 using 语句自动释放资源，防止内存泄漏
+            using (Graphics g = tempPBTN.CreateGraphics())
+            using (Pen RectPen = new Pen(Color.FromArgb(42, 55, 64), 2))
             {
-                PictureBox temBtn = (PictureBox)sender;
-                if (!bEdited)
+                g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);
+            }
+
+            int iCap;
+            PictureBox temBtn = (PictureBox)sender;
+
+            // 确保 Tag 是字符串且不为空
+            if (temBtn.Tag == null) return;
+
+            if (!bEdited)
+            {
+                // 第一次输入
+                try
                 {
                     iCap = Convert.ToInt16(temBtn.Tag);
                 }
+                catch
+                {
+                    return; // 如果转换失败（比如误触了非数字键），直接返回
+                }
+            }
+            else
+            {
+                // 继续输入
+                if (labValue.Text == "-")
+                {
+                    // 【修复点】这里不能用 (int) 强转，必须用 Convert.ToInt16
+                    // 因为 Tag 是 string 类型 ("1", "2"...)
+                    int digit = Convert.ToInt16(temBtn.Tag);
+
+                    if (digit != 0)
+                        iCap = -1 * digit;
+                    else
+                    {
+                        // 如果用户点击的是 - 然后点 0，通常处理为 0 或者 -0 (视需求)
+                        // 这里暂时返回，或者你可以设 iCap = 0;
+                        return;
+                    }
+                }
+                else if (iNowData >= 0)
+                {
+                    iCap = iNowData * 10 + Convert.ToInt16(temBtn.Tag);
+                }
                 else
                 {
-                    if (labValue.Text == "-")
-                    {
-                        if ((int)temBtn.Tag != 0)
-                            iCap = -1 * Convert.ToInt16(temBtn.Tag);
-                        else
-                            return;
-                    }
-                    else if (iNowData >= 0)
-                        iCap = iNowData * 10 + Convert.ToInt16(temBtn.Tag);
-                    else
-                        iCap = iNowData * 10 - Convert.ToInt16(temBtn.Tag);
+                    iCap = iNowData * 10 - Convert.ToInt16(temBtn.Tag);
                 }
-
-                //if (((iCap >= iMinData) && (iCap <= iMaxData))||(iMaxData==iMinData)) 
-                if ((iMaxData != iMinData) && (iCap > iMaxData))
-                    iCap = iMaxData;
-                if ((iMaxData == iMinData) && (iCap > 99999999))
-                    iCap = 99999999;
-                // if ((iMaxData == iMinData) || ((temValue <= iMaxData) && (temValue >= iMinData)))
-                //     iNowData = temValue;                 
-                bEdited = true;
-                iNowData = iCap;
-                labValue.Text = iNowData.ToString();
             }
+
+            // 边界检查
+            if ((iMaxData != iMinData) && (iCap > iMaxData))
+                iCap = iMaxData;
+
+            if ((iMaxData == iMinData) && (iCap > 99999999))
+                iCap = 99999999;
+
+            bEdited = true;
+            iNowData = iCap;
+            labValue.Text = iNowData.ToString();
         }
+
+        /*        private void pictureBox26_MouseUp(object sender, MouseEventArgs e)
+                {
+                    PictureBox tempPBTN = (PictureBox)sender;
+                    Graphics g = tempPBTN.CreateGraphics();
+                    Pen RectPen = new Pen(Color.FromArgb(42, 55, 64), 2);//画笔颜色
+                    g.DrawRectangle(RectPen, 0, 0, tempPBTN.Width - 1, tempPBTN.Height - 1);// 黑色框  
+                    int iCap;
+
+                    //if (!bIsPassword)
+                    {
+                        PictureBox temBtn = (PictureBox)sender;
+                        if (!bEdited)
+                        {
+                            iCap = Convert.ToInt16(temBtn.Tag);
+                        }
+                        else
+                        {
+                            if (labValue.Text == "-")
+                            {
+                                if ((int)temBtn.Tag != 0)
+                                    iCap = -1 * Convert.ToInt16(temBtn.Tag);
+                                else
+                                    return;
+                            }
+                            else if (iNowData >= 0)
+                                iCap = iNowData * 10 + Convert.ToInt16(temBtn.Tag);
+                            else
+                                iCap = iNowData * 10 - Convert.ToInt16(temBtn.Tag);
+                        }
+
+                        //if (((iCap >= iMinData) && (iCap <= iMaxData))||(iMaxData==iMinData)) 
+                        if ((iMaxData != iMinData) && (iCap > iMaxData))
+                            iCap = iMaxData;
+                        if ((iMaxData == iMinData) && (iCap > 99999999))
+                            iCap = 99999999;
+                        // if ((iMaxData == iMinData) || ((temValue <= iMaxData) && (temValue >= iMinData)))
+                        //     iNowData = temValue;                 
+                        bEdited = true;
+                        iNowData = iCap;
+                        labValue.Text = iNowData.ToString();
+                    }
+                }*/
 
         private void pbDef_Click(object sender, EventArgs e)
         {
@@ -250,9 +347,5 @@ namespace EMS
             BLACK_BRUSH.Dispose();
         }
 
-        private void pictureBox26_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

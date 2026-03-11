@@ -41,7 +41,7 @@ namespace Modbus
         }
         #endregion
 
-        //Ö§³ÖÍ¬485ÉÏ¶à¸öÉè±¸£¬²éÕÒÍ¬485µØÖ·Ê¹ÓÃÇé¿ö
+        //æ”¯æŒåŒ485ä¸Šå¤šä¸ªè®¾å¤‡ï¼ŒæŸ¥æ‰¾åŒ485åœ°å€ä½¿ç”¨æƒ…å†µ
         private SerialPort Checksp(string portName)
         {
             if (sp != null)
@@ -72,7 +72,7 @@ namespace Modbus
         }
 
         /// <summary>
-        /// ´ò¿ª´®¿Ú
+        /// æ‰“å¼€ä¸²å£
         /// </summary>
         /// <param name="portName"></param>
         /// <param name="baudRate"></param>
@@ -80,7 +80,7 @@ namespace Modbus
         /// <param name="parity"></param>
         /// <param name="stopBits"></param>
         /// <returns></returns>
-        #region //Open / Close Procedures      
+        #region //Open / Close Procedures
         public bool OpenEMS(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
         {
             //Ensure port isn't already opened:
@@ -103,7 +103,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    log.Error("OpenEMSÊ§°Ü£º" + ex.ToString());
+                    log.Error("OpenEMSå¤±è´¥ï¼š" + ex.ToString());
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -138,7 +138,7 @@ namespace Modbus
                 }
                 catch (Exception ex)
                 {
-                    log.Error("´ò¿ª´®¿ÚÊ§°Ü£º" + ex.ToString() + "| ´®¿Ú£º" + portName);
+                    log.Error("æ‰“å¼€ä¸²å£å¤±è´¥ï¼š" + ex.ToString() + "| ä¸²å£ï¼š" + portName);
                     return false;
                 }
                 modbusStatus = portName + " opened successfully";
@@ -152,7 +152,7 @@ namespace Modbus
         }
 
         /// <summary>
-        /// ¹Ø±Õ´®¿Ú
+        /// å…³é—­ä¸²å£
         /// </summary>
         /// <returns></returns>
         public bool Close()
@@ -182,7 +182,7 @@ namespace Modbus
 
 
         /// <summary>
-        /// ¶ÁÈ¡·µ»ØÊı¾İ
+        /// è¯»å–è¿”å›æ•°æ®
         /// </summary>
         /// <param name="response"></param>
         #region //Get Response
@@ -202,17 +202,17 @@ namespace Modbus
                 //sp.Read(response, 0, response.Length);
                 bResult = true;
             }
-            catch (TimeoutException) // ²¶»ñ¶ÁÈ¡³¬Ê±Òì³£
+            catch (TimeoutException) // æ•è·è¯»å–è¶…æ—¶å¼‚å¸¸
             {
-                throw new TimeoutException("GetResponse TimeoutException"); // Å×³öÒì³££¬ÓÉÍâ²¿²¶»ñ
+                throw new TimeoutException("GetResponse TimeoutException"); // æŠ›å‡ºå¼‚å¸¸ï¼Œç”±å¤–éƒ¨æ•è·
             }
-            catch (ObjectDisposedException) // ²¶»ñ¶ÔÏóÊÍ·ÅÒì³£
+            catch (ObjectDisposedException) // æ•è·å¯¹è±¡é‡Šæ”¾å¼‚å¸¸
             {
-                throw new ObjectDisposedException("GetResponse ObjectDisposedException"); // Å×³öÒì³££¬ÓÉÍâ²¿²¶»ñ
+                throw new ObjectDisposedException("GetResponse ObjectDisposedException"); // æŠ›å‡ºå¼‚å¸¸ï¼Œç”±å¤–éƒ¨æ•è·
             }
-            catch (Exception ex) // ²¶»ñÆäËûÒì³£
+            catch (Exception ex) // æ•è·å…¶ä»–å¼‚å¸¸
             {
-                throw new Exception("GetResponse Exception: " + ex.Message); // Å×³öÒì³££¬ÓÉÍâ²¿²¶»ñ
+                throw new Exception("GetResponse Exception: " + ex.Message); // æŠ›å‡ºå¼‚å¸¸ï¼Œç”±å¤–éƒ¨æ•è·
             }
             return bResult;
         }
@@ -223,9 +223,9 @@ namespace Modbus
         {
             bool bResult = false;
 
-            if (sp == null || !sp.IsOpen) // ¼ì²é´®¿ÚÊÇ·ñÒÑ´ò¿ª
+            if (sp == null || !sp.IsOpen) // æ£€æŸ¥ä¸²å£æ˜¯å¦å·²æ‰“å¼€
             {
-                log.Error("´®¿Ú¶ÔÏóÎ´´ò¿ª»òÒÑ±»ÊÍ·Å");
+                log.Error("ä¸²å£å¯¹è±¡æœªæ‰“å¼€æˆ–å·²è¢«é‡Šæ”¾");
                 return false;
             }
 
@@ -233,14 +233,14 @@ namespace Modbus
             {
                 try
                 {
-                    // Çå¿Õ»º³åÇø£¬·ÀÖ¹ÉÏÒ»´ÎµÄÊı¾İ¸ÉÈÅ±¾´Î²Ù×÷
+                    // æ¸…ç©ºç¼“å†²åŒºï¼Œé˜²æ­¢ä¸Šä¸€æ¬¡çš„æ•°æ®å¹²æ‰°æœ¬æ¬¡æ“ä½œ
                     sp.DiscardOutBuffer();
                     sp.DiscardInBuffer();
 
-                    // ·¢ËÍÇëÇóÊı¾İ
+                    // å‘é€è¯·æ±‚æ•°æ®
                     sp.Write(aMessage, 0, aMessage.Length);
 
-                    // ³¢ÊÔ¶ÁÈ¡ÏìÓ¦Êı¾İ
+                    // å°è¯•è¯»å–å“åº”æ•°æ®
                     if (GetResponse(ref aResponse))
                     {
                         bResult = true;
@@ -251,21 +251,21 @@ namespace Modbus
                         bResult = false;
                     }
 
-                    // Ôö¼ÓÑÓÊ±£¬·ÀÖ¹Æµ·±Í¨ĞÅ
+                    // å¢åŠ å»¶æ—¶ï¼Œé˜²æ­¢é¢‘ç¹é€šä¿¡
                     System.Threading.Thread.Sleep(100);
                 }
-                catch (TimeoutException ex) // ²¶»ñ GetResponse Å×³öµÄ³¬Ê±Òì³£
+                catch (TimeoutException ex) // æ•è· GetResponse æŠ›å‡ºçš„è¶…æ—¶å¼‚å¸¸
                 {
                     //log.Error($"GetComFreeData TimeoutException: {ex.Message}");
                     bResult = false;
                 }
-                catch (ObjectDisposedException ex) // ²¶»ñ GetResponse Å×³öµÄ¶ÔÏóÊÍ·ÅÒì³£
+                catch (ObjectDisposedException ex) // æ•è· GetResponse æŠ›å‡ºçš„å¯¹è±¡é‡Šæ”¾å¼‚å¸¸
                 {
                     log.Error($"GetComFreeData ObjectDisposedException: {ex.Message}");
                     bResult = false;
-                    break; // Èç¹û´®¿Ú¶ÔÏó±»ÊÍ·Å£¬ÔòÎŞĞèÖØÊÔ£¬Ö±½ÓÍË³ö
+                    break; // å¦‚æœä¸²å£å¯¹è±¡è¢«é‡Šæ”¾ï¼Œåˆ™æ— éœ€é‡è¯•ï¼Œç›´æ¥é€€å‡º
                 }
-                catch (Exception ex) // ²¶»ñËùÓĞÆäËûÒì³£
+                catch (Exception ex) // æ•è·æ‰€æœ‰å…¶ä»–å¼‚å¸¸
                 {
                     log.Error($"GetComFreeData Exception: {ex.Message}");
                     bResult = false;
@@ -295,7 +295,7 @@ namespace Modbus
                 return bResult;
             else
             {
-                // DBConnection.RecordLOG("Í¨Ñ¶Òì³£", "·´Ó¦³¬Ê±", "ÎŞ·¨ÅĞ¶Ï¾ßÌåÉè±¸");
+                // DBConnection.RecordLOG("é€šè®¯å¼‚å¸¸", "ååº”è¶…æ—¶", "æ— æ³•åˆ¤æ–­å…·ä½“è®¾å¤‡");
                 return bResult;
             }
 
@@ -303,7 +303,7 @@ namespace Modbus
 
 
         /// <summary>
-        /// 1\2¶ÁÈ¡Êı¾İbit
+        /// 1\2è¯»å–æ•°æ®bit
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="CommandType"></param>
@@ -311,7 +311,7 @@ namespace Modbus
         /// <param name="aRegLength"></param>
         /// <param name="aResponse"></param>
         /// <returns></returns>
-        #region //read 1 read 1 byte 
+        #region //read 1 read 1 byte
         private bool Read1Response(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, ref byte[] aResponse)
         {
             if ((sp == null) || (!sp.IsOpen))
@@ -319,17 +319,17 @@ namespace Modbus
                 modbusStatus = "Serial port not open";
                 return false;
             }
-            //[11][01][00][13][00][25][CRCµÍ][CRC¸ß]
+            //[11][01][00][13][00][25][CRCä½][CRCé«˜]
             //Function 1/2 request is always 8 bytes:     // byte[] message = new byte[8];//8
             //Build outgoing modbus message:
             byte[] message = ModbusBase.BuildMSG3(aAddress, CommandType, aRegStart, aRegLength);
 
 
             //Function 3 response buffer:
-            //[11][01][05][CD][6B][B2][0E][1B] [CRC¸ß] [CRCµÍ]
+            //[11][01][05][CD][6B][B2][0E][1B] [CRCé«˜] [CRCä½]
             byte[] response = new byte[5 + (int)Math.Ceiling(aRegLength / 8.0)];
 
-            //Send modbus message to Serial Port:                
+            //Send modbus message to Serial Port:
             if (!GetComDada(message, ref response))
                 return false;
             //Evaluate message:
@@ -357,12 +357,12 @@ namespace Modbus
                 return false;
             }
 
-            //[11][03][00][6B][00][03] [CRC¸ß][CRCµÍ]
+            //[11][03][00][6B][00][03] [CRCé«˜][CRCä½]
             //Function 3 request is always 8 bytes:
             // byte[] message = new byte[8];//8
             //Function 3 response buffer:
-            byte[] response = new byte[5 + 2 * aRegLength]; //5: µØÖ·+¹¦ÄÜÂë+×Ö½ÚÊı+crc
-            //Back 3 //[11][03][06][02][2B][00][00][00][64] [CRC¸ß] [CRCµÍ]
+            byte[] response = new byte[5 + 2 * aRegLength]; //5: åœ°å€+åŠŸèƒ½ç +å­—èŠ‚æ•°+crc
+            //Back 3 //[11][03][06][02][2B][00][00][00][64] [CRCé«˜] [CRCä½]
             //Build outgoing modbus message:
             byte[] message = ModbusBase.BuildMSG3(aAddress, CommandType, aRegStart, aRegLength);
 
@@ -395,13 +395,13 @@ namespace Modbus
                 return false;
             }
 
-            //[11][05][00][13][FF][00][CRCµÍ][CRC¸ß]
+            //[11][05][00][13][FF][00][CRCä½][CRCé«˜]
             //Function 5 request is always 8 bytes:     // byte[] message = new byte[8];//8
             //Build outgoing modbus message:
             byte[] message = ModbusBase.BuildMSG5(aAddress, CommandType, aRegAddr, aData);
 
             //Function 5 response buffer:
-            //[11][05][00][13][FF][00][CRCµÍ][CRC¸ß]
+            //[11][05][00][13][FF][00][CRCä½][CRCé«˜]
             byte[] response = new byte[8];
 
             //Send modbus message to Serial Port
@@ -424,7 +424,7 @@ namespace Modbus
         #endregion
 
         /// <summary>
-        /// 6Ğ´Ò»¸ö¼Ä´æÆ÷
+        /// 6å†™ä¸€ä¸ªå¯„å­˜å™¨
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="CommandType"></param>
@@ -440,16 +440,16 @@ namespace Modbus
                 modbusStatus = "Serial port not open";
                 return false;
             }
-            //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
-            //Function 6 request is always 8 bytes:     // byte[] message = new byte[8]; 
+            //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
+            //Function 6 request is always 8 bytes:     // byte[] message = new byte[8];
             //Build outgoing modbus message:
-            //Éè±¸ÏìÓ¦£ºÈç¹û³É¹¦°Ñ¼ÆËã»ú·¢ËÍµÄÃüÁîÔ­Ñù·µ»Ø£¬·ñÔò²»ÏìÓ¦¡£
+            //è®¾å¤‡å“åº”ï¼šå¦‚æœæˆåŠŸæŠŠè®¡ç®—æœºå‘é€çš„å‘½ä»¤åŸæ ·è¿”å›ï¼Œå¦åˆ™ä¸å“åº”ã€‚
             byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
             //Function 6 response buffer:
-            //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
+            //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
             byte[] response = new byte[8];
 
-            //Send modbus message to Serial Port: 
+            //Send modbus message to Serial Port:
             if (!GetComDada(message, ref response, bLocksp))
                 return false;
             //Evaluate message:
@@ -470,7 +470,7 @@ namespace Modbus
         //
         #region //write 6 write 1 short(for read 3 ) data
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="CommandType"></param>
@@ -493,24 +493,24 @@ namespace Modbus
 
             //Clear in/out buffers:
 
-            //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
-            //Function 6 request is always 8 bytes:     // byte[] message = new byte[8]; 
+            //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
+            //Function 6 request is always 8 bytes:     // byte[] message = new byte[8];
             //Build outgoing modbus message:
-            //Éè±¸ÏìÓ¦£ºÈç¹û³É¹¦°Ñ¼ÆËã»ú·¢ËÍµÄÃüÁîÔ­Ñù·µ»Ø£¬·ñÔò²»ÏìÓ¦¡£
+            //è®¾å¤‡å“åº”ï¼šå¦‚æœæˆåŠŸæŠŠè®¡ç®—æœºå‘é€çš„å‘½ä»¤åŸæ ·è¿”å›ï¼Œå¦åˆ™ä¸å“åº”ã€‚
             byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
 
-            //ÑéÖ¤ÏûÏ¢
+            //éªŒè¯æ¶ˆæ¯
             /*            string hexString = BitConverter.ToString(message);
-                        log.Info("·¢ËÍRead6ResponseÏûÏ¢£º" + hexString);*/
+                        log.Info("å‘é€Read6Responseæ¶ˆæ¯ï¼š" + hexString);*/
             //Function 6 response buffer:
-            //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
+            //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
             byte[] response = new byte[8];
 
             //Send modbus message to Serial Port:
             if (!GetComDada(message, ref response))
                 return false;
 
-            //log.Info("½ÓÊÕ·µ»Ø±¨ÎÄ£º" + response);
+            //log.Info("æ¥æ”¶è¿”å›æŠ¥æ–‡ï¼š" + response);
             //Evaluate message:
             if (ModbusBase.CheckResponse(response))
             {
@@ -526,7 +526,7 @@ namespace Modbus
         }
         #endregion
 
-        #region Function ¶ÁÈ¡Êı¾İ£¬·µ»ØÊı¾İ×ª»»Îª16½øÖÆ- Read Registers 
+        #region Function è¯»å–æ•°æ®ï¼Œè¿”å›æ•°æ®è½¬æ¢ä¸º16è¿›åˆ¶- Read Registers
         public bool SendstrMSG(byte aAddress, byte bComType, ushort aRegStart, ushort aRegLebgth, ref string strBack)//short[] values
         {
             byte[] response = null;
@@ -535,7 +535,7 @@ namespace Modbus
                 modbusStatus = "CRC error";
                 return false;
             }
-            //·µ»ØÊı¾İ×ª»»
+            //è¿”å›æ•°æ®è½¬æ¢
             strBack = "";
             for (int i = 0; i < response.Length; i++)
             {
@@ -546,11 +546,11 @@ namespace Modbus
         }
         #endregion
 
-        //#region Function ¶ÁÈ¡Êı¾İ£¬·µ»ØÊı¾İ×ª»»Îª16½øÖÆ- Read Registers
+        //#region Function è¯»å–æ•°æ®ï¼Œè¿”å›æ•°æ®è½¬æ¢ä¸º16è¿›åˆ¶- Read Registers
         ////
         //public bool SendstrMSG(byte aAddress, byte bComType, ushort aRegStart, ushort aRegLebgth, ref string strBack)//short[] values
         //{
-        //    byte[] response = null; 
+        //    byte[] response = null;
         //    strBack = "";
         //    if (Read3Response(aAddress, bComType, aRegStart, aRegLebgth, ref response))
         //    {
@@ -558,7 +558,7 @@ namespace Modbus
 
         //        return false;
         //    }
-        //    //·µ»ØÊı¾İ×ª»» 
+        //    //è¿”å›æ•°æ®è½¬æ¢
         //    for (int i = 0; i < response.Length; i++)
         //    {
         //        strBack += response[i].ToString("x2");
@@ -568,9 +568,9 @@ namespace Modbus
         //}
         //#endregion
 
-        #region Function sendMSG ,func3 
+        #region Function sendMSG ,func3
         /// <summary>
-        /// ·µ»ØµÄÊı¾İ
+        /// è¿”å›çš„æ•°æ®
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="CommandType"></param>
@@ -586,12 +586,12 @@ namespace Modbus
                 modbusStatus = "CRC error";
                 return false;
             }
-            //·µ»ØÊı¾İ×ª»»
+            //è¿”å›æ•°æ®è½¬æ¢
             values = new ushort[aRegLength];
             //Return requested register values:
-            for (int i = 0; i < (response.Length - 5) / 2; i++) //5 £ºÉè±¸µØÖ·1×Ö½Ú+¹¦ÄÜÂë1×Ö½Ú+×Ö½ÚÊı1×Ö½Ú+CRC2×Ö½Ú = 5×Ö½Ú , /2 :2¸ö×Ö½Ú×÷Îª1¸öushortÀàĞÍµÄvlaue
+            for (int i = 0; i < (response.Length - 5) / 2; i++) //5 ï¼šè®¾å¤‡åœ°å€1å­—èŠ‚+åŠŸèƒ½ç 1å­—èŠ‚+å­—èŠ‚æ•°1å­—èŠ‚+CRC2å­—èŠ‚ = 5å­—èŠ‚ , /2 :2ä¸ªå­—èŠ‚ä½œä¸º1ä¸ªushortç±»å‹çš„vlaue
             {
-                values[i] = response[2 * i + 3];//modbus response´ÓµÚ4¸ö×Ö½Ú¿ªÊ¼ÊÇ¼Ä´æÆ÷Öµ
+                values[i] = response[2 * i + 3];//modbus responseä»ç¬¬4ä¸ªå­—èŠ‚å¼€å§‹æ˜¯å¯„å­˜å™¨å€¼
                 values[i] <<= 8;
                 values[i] += response[2 * i + 4];
             }
@@ -600,9 +600,9 @@ namespace Modbus
         }
         #endregion
 
-        #region Function sendMSG ,func3 
+        #region Function sendMSG ,func3
         /// <summary>
-        /// ·µ»ØÊı×éÀàĞÍÎª×Ö½ÚĞÍ
+        /// è¿”å›æ•°ç»„ç±»å‹ä¸ºå­—èŠ‚å‹
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="CommandType"></param>
@@ -618,7 +618,7 @@ namespace Modbus
                 modbusStatus = "CRC error";
                 return false;
             }
-            //·µ»ØÊı¾İ×ª»»
+            //è¿”å›æ•°æ®è½¬æ¢
             values = new byte[aRegLength];
             int DataLen = response[2];
             //Return requested register values:
@@ -630,15 +630,15 @@ namespace Modbus
 
 
         /// <summary>
-        /// modbus»ñÈ¡Êı¾İushortÖµ
+        /// modbusè·å–æ•°æ®ushortå€¼
         /// </summary>
-        /// <param name="aID">Éè±¸ID</param>
-        /// <param name="CommandType">ÃüÁîÀàĞÍ£¬Èç03</param>
-        /// <param name="aRegStart">¿ªÊ¼µØÖ·</param>
-        /// <param name="aRegLength">³¤¶È£¬1ÊÇÒ»¸öshort£¬ÆäËûÎŞĞ§</param>
-        /// <param name="aResult">·µ»ØµÄÊı¾İ£¬short</param>  
-        /// <returns>·µ»ØÖµÎªtrue±íÊ¾»ñÈ¡Öµ1;·´Ö®Îªfasle</returns>     
-        /// 
+        /// <param name="aID">è®¾å¤‡ID</param>
+        /// <param name="CommandType">å‘½ä»¤ç±»å‹ï¼Œå¦‚03</param>
+        /// <param name="aRegStart">å¼€å§‹åœ°å€</param>
+        /// <param name="aRegLength">é•¿åº¦ï¼Œ1æ˜¯ä¸€ä¸ªshortï¼Œå…¶ä»–æ— æ•ˆ</param>
+        /// <param name="aResult">è¿”å›çš„æ•°æ®ï¼Œshort</param>
+        /// <returns>è¿”å›å€¼ä¸ºtrueè¡¨ç¤ºè·å–å€¼1;åä¹‹ä¸ºfasle</returns>
+        ///
         public bool GetUShort(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort aResult)
         {
             ushort[] ResultData = null;//=new byte[100];
@@ -665,7 +665,7 @@ namespace Modbus
                 return false;
         }
 
-        //»ñÈ¡Ò»¸öÎŞ·ûºÅ¸¡µã
+        //è·å–ä¸€ä¸ªæ— ç¬¦å·æµ®ç‚¹
         public bool GetUFloat(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength, ref double aResult,
                        double Coefficient, bool aSmallEnd)
         {
@@ -690,7 +690,7 @@ namespace Modbus
                 return false;
         }
 
-        //»ñÈ¡Ò»¸öÓĞ¸¡µã
+        //è·å–ä¸€ä¸ªæœ‰æµ®ç‚¹
         public bool GetFloat(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength, ref double aResult,
                        double Coefficient, bool aSmallEnd)
         {
@@ -715,14 +715,14 @@ namespace Modbus
         }
 
         /// <summary>
-        /// modbus»ñÈ¡Êı¾İlongÖµ
+        /// modbusè·å–æ•°æ®longå€¼
         /// </summary>
-        /// <param name="aID">Éè±¸ID</param>
-        /// <param name="CommandType">ÃüÁîÀàĞÍ£¬Èç03</param>
-        /// <param name="aRegStart">¿ªÊ¼µØÖ·</param>
-        /// <param name="aRegLength">³¤¶È£¬1ÊÇÒ»¸öshort£¬2Îªint32</param>
-        /// <param name="aResult">·µ»ØµÄÊı¾İ£¬short</param>  
-        /// <returns>·µ»ØÖµÎªtrue±íÊ¾»ñÈ¡Öµ1;·´Ö®Îªfasle</returns>     
+        /// <param name="aID">è®¾å¤‡ID</param>
+        /// <param name="CommandType">å‘½ä»¤ç±»å‹ï¼Œå¦‚03</param>
+        /// <param name="aRegStart">å¼€å§‹åœ°å€</param>
+        /// <param name="aRegLength">é•¿åº¦ï¼Œ1æ˜¯ä¸€ä¸ªshortï¼Œ2ä¸ºint32</param>
+        /// <param name="aResult">è¿”å›çš„æ•°æ®ï¼Œshort</param>
+        /// <returns>è¿”å›å€¼ä¸ºtrueè¡¨ç¤ºè·å–å€¼1;åä¹‹ä¸ºfasle</returns>
         public bool Get1Int32(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength,
             ref Int32 aResult, bool aSmallEnd)
         {
@@ -752,7 +752,7 @@ namespace Modbus
                 if (ResultData.Length > 1)
                 {
                     if (aSmallEnd)
-                        aResult = Convert.ToUInt32("0x" + ResultData[1].ToString("x4") + ResultData[0].ToString("x4"), 16);//ToString("X4"):10½øÖÆ×ª16½øÖÆÊ±½øĞĞÄ¬ÈÏ²¹0À´´Õ¹»Î»Êı,  X£º´ú±í16½øÖÆ  4£º´ú±íÃ¿´ÎµÄÊı¾İÎ»Êı£¬µ±Î»Êı²»×ãÊ±×Ô¶¯²¹0:ÎªÁËshortÊı¾İÆ´½ÓFloatÊ±¹Ì¶¨4Î»Êı¾İÎ»
+                        aResult = Convert.ToUInt32("0x" + ResultData[1].ToString("x4") + ResultData[0].ToString("x4"), 16);//ToString("X4"):10è¿›åˆ¶è½¬16è¿›åˆ¶æ—¶è¿›è¡Œé»˜è®¤è¡¥0æ¥å‡‘å¤Ÿä½æ•°,  Xï¼šä»£è¡¨16è¿›åˆ¶  4ï¼šä»£è¡¨æ¯æ¬¡çš„æ•°æ®ä½æ•°ï¼Œå½“ä½æ•°ä¸è¶³æ—¶è‡ªåŠ¨è¡¥0:ä¸ºäº†shortæ•°æ®æ‹¼æ¥Floatæ—¶å›ºå®š4ä½æ•°æ®ä½
                     else
                         aResult = Convert.ToUInt32("0x" + ResultData[0].ToString("x4") + ResultData[1].ToString("x4"), 16);
                 }
@@ -765,14 +765,14 @@ namespace Modbus
         }
 
         /// <summary>
-        /// modbus»ñÈ¡Êı¾İstringÖµ
+        /// modbusè·å–æ•°æ®stringå€¼
         /// </summary>
-        /// <param name="aID">Éè±¸ID</param>
-        /// <param name="CommandType">ÃüÁîÀàĞÍ£¬Èç03</param>
-        /// <param name="aRegStart">¿ªÊ¼µØÖ·</param>
-        /// <param name="aRegLength">³¤¶È</param>
-        /// <param name="aResult">·µ»ØµÄÊı¾İ£¬string</param>  
-        /// <returns>·µ»ØÖµÎªtrue±íÊ¾»ñÈ¡Öµ1;·´Ö®Îªfasle</returns>     
+        /// <param name="aID">è®¾å¤‡ID</param>
+        /// <param name="CommandType">å‘½ä»¤ç±»å‹ï¼Œå¦‚03</param>
+        /// <param name="aRegStart">å¼€å§‹åœ°å€</param>
+        /// <param name="aRegLength">é•¿åº¦</param>
+        /// <param name="aResult">è¿”å›çš„æ•°æ®ï¼Œstring</param>
+        /// <returns>è¿”å›å€¼ä¸ºtrueè¡¨ç¤ºè·å–å€¼1;åä¹‹ä¸ºfasle</returns>
         public bool GetString(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength, ref string aResult, bool aIxX2 = true)
         {
             ushort[] ResultData = null;//=new byte[100];
@@ -794,14 +794,14 @@ namespace Modbus
         }
 
         /// <summary>
-        /// modbus»ñÈ¡Êı¾İbyteÊı×é
+        /// modbusè·å–æ•°æ®byteæ•°ç»„
         /// </summary>
-        /// <param name="aID">Éè±¸ID</param>
-        /// <param name="CommandType">ÃüÁîÀàĞÍ£¬Èç01</param>
-        /// <param name="aRegStart">¿ªÊ¼µØÖ·</param>
-        /// <param name="aRegLength">³¤¶È</param>
-        /// <param name="aResult">·µ»ØµÄÊı¾İ£¬byteÊı×é</param>  
-        /// <returns>·µ»ØÖµÎªtrue±íÊ¾»ñÈ¡Öµ1;·´Ö®Îªfasle</returns>     
+        /// <param name="aID">è®¾å¤‡ID</param>
+        /// <param name="CommandType">å‘½ä»¤ç±»å‹ï¼Œå¦‚01</param>
+        /// <param name="aRegStart">å¼€å§‹åœ°å€</param>
+        /// <param name="aRegLength">é•¿åº¦</param>
+        /// <param name="aResult">è¿”å›çš„æ•°æ®ï¼Œbyteæ•°ç»„</param>
+        /// <returns>è¿”å›å€¼ä¸ºtrueè¡¨ç¤ºè·å–å€¼1;åä¹‹ä¸ºfasle</returns>
         public bool GetBytes(byte aID, byte CommandType, ushort aRegStart, ushort aRegLength, ref byte[] aResult)
         {
             ushort[] ResultData = null;//=new byte[100];
@@ -823,8 +823,8 @@ namespace Modbus
 
 
         //1\2
-        //·¢ËÍ[11][01][00][13][00][25][CRCµÍ][CRC¸ß]
-        //»Ø¸´[11][01][05][CD][6B][B2][0E][1B] [CRC¸ß] [CRCµÍ]          
+        //å‘é€[11][01][00][13][00][25][CRCä½][CRCé«˜]
+        //å›å¤[11][01][05][CD][6B][B2][0E][1B] [CRCé«˜] [CRCä½]
         #region Function send1MSG ,func1\2
         public bool Send1MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength,
             ref byte[] values)
@@ -835,7 +835,7 @@ namespace Modbus
                 modbusStatus = "W1 error";
                 return false;
             }
-            //·µ»ØÊı¾İ×ª»»
+            //è¿”å›æ•°æ®è½¬æ¢
             int BackDataLen = response[2];
             values = new byte[BackDataLen];
             //Return requested register values:
@@ -845,8 +845,8 @@ namespace Modbus
         }
         #endregion
 
-        //5ÉèÖÃ[11][05][00][AC][FF][00][CRC¸ß][CRCµÍ]
-        #region Function send5 
+        //5è®¾ç½®[11][05][00][AC][FF][00][CRCé«˜][CRCä½]
+        #region Function send5
         public bool Send5MSG(byte aAddress, byte CommandType, ushort aRegStart, bool aData, bool bLocksp)//, ref byte[] values)
         {
             byte[] response = null;
@@ -855,7 +855,7 @@ namespace Modbus
                 modbusStatus = "w5 error";
                 return false;
             }
-            //·µ»ØÊı¾İ×ª»»£¬³É¹¦ÔªÊı¾İ·µ»Ø£¬Ê§°Ü½«²»·´»Ú
+            //è¿”å›æ•°æ®è½¬æ¢ï¼ŒæˆåŠŸå…ƒæ•°æ®è¿”å›ï¼Œå¤±è´¥å°†ä¸åæ‚”
             int BackDataLen = response[2];
             //values = new byte[BackDataLen];
             //Return requested register values:
@@ -865,8 +865,8 @@ namespace Modbus
         }
         #endregion
 
-        //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
-        #region Function send6MSG 
+        //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
+        #region Function send6MSG
         public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aData, bool bLocksp)//, ref byte[] values)
         {
             int count = 3;
@@ -886,8 +886,8 @@ namespace Modbus
                 }
                 count--;
             }
-            //[11][05][00][AC][FF][00][CRC¸ß][CRCµÍ]
-            //·µ»ØÊı¾İ×ª»»£¬³É¹¦ÔªÊı¾İ·µ»Ø£¬Ê§°Ü½«²»·´»Ú
+            //[11][05][00][AC][FF][00][CRCé«˜][CRCä½]
+            //è¿”å›æ•°æ®è½¬æ¢ï¼ŒæˆåŠŸå…ƒæ•°æ®è¿”å›ï¼Œå¤±è´¥å°†ä¸åæ‚”
             int BackDataLen = response[2];
             //values = new byte[BackDataLen];
             //Return requested register values:
@@ -899,8 +899,8 @@ namespace Modbus
         }
         #endregion
 
-        //[11][06][00][01][00][03] [CRC¸ß] [CRCµÍ]
-        #region Function send6MSG 
+        //[11][06][00][01][00][03] [CRCé«˜] [CRCä½]
+        #region Function send6MSG
         public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, byte[] aData, bool bLocksp)//, ref byte[] values)
         {
             byte[] response = null;
@@ -909,8 +909,8 @@ namespace Modbus
                 modbusStatus = "w6 error";
                 return false;
             }
-            //[11][05][00][AC][FF][00][CRC¸ß][CRCµÍ]
-            //·µ»ØÊı¾İ×ª»»£¬³É¹¦ÔªÊı¾İ·µ»Ø£¬Ê§°Ü½«²»·´»Ú
+            //[11][05][00][AC][FF][00][CRCé«˜][CRCä½]
+            //è¿”å›æ•°æ®è½¬æ¢ï¼ŒæˆåŠŸå…ƒæ•°æ®è¿”å›ï¼Œå¤±è´¥å°†ä¸åæ‚”
             int BackDataLen = response[2];
             //values = new byte[BackDataLen];
             //Return requested register values:

@@ -320,6 +320,7 @@ namespace EMS
             { 
                 case 0:
                     //string portName = "COM11"; 
+                    //frmMain.Selffrm.AllEquipment.GetIccid();
 
                     // 创建EC20通信器实例
                     using (var ec20 = new EC20Communicator())
@@ -342,20 +343,22 @@ namespace EMS
                     }
                     break;
                 case 1:
-                    var manager = new MobileBroadbandManager();
+                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                    frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+                    /*                    var manager = new MobileBroadbandManager();
 
-                    // 执行重启操作
-                    bool isSuccess = manager.DisableNet();
+                                        // 执行重启操作
+                                        bool isSuccess = manager.DisableNet();
 
-                    // 根据结果进行处理
-                    if (isSuccess)
-                    {
-                       log.Error("移动宽带关闭成功！");
-                    }
-                    else
-                    {
-                        log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
-                    }
+                                        // 根据结果进行处理
+                                        if (isSuccess)
+                                        {
+                                           log.Error("移动宽带关闭成功！");
+                                        }
+                                        else
+                                        {
+                                            log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
+                                        }*/
                     break;
                 case 2:
 
