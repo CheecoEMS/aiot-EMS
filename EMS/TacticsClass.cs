@@ -549,9 +549,9 @@ namespace EMS
             {
                 Thread_CheckJFPG = new Thread(CheckJFPG);
                 Thread_CheckJFPG.IsBackground = true;
+                Thread_CheckJFPG.Name = "AutoCheckJFPG";
                 Thread_CheckJFPG.Priority = ThreadPriority.Highest;
                 Thread_CheckJFPG.Start();
-                Thread_CheckJFPG.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -1443,9 +1443,9 @@ namespace EMS
             {
                 Thread_CheckTactics = new Thread(CheckTactics);
                 Thread_CheckTactics.IsBackground = true;
+                Thread_CheckTactics.Name = "AutoCheckTactics";
                 Thread_CheckTactics.Priority = ThreadPriority.Highest;
                 Thread_CheckTactics.Start();
-                Thread_CheckTactics.Name = "";
                 return true;
             }
             catch (Exception ex)

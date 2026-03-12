@@ -9030,9 +9030,9 @@ namespace EMS
                 // 创建并启动 Heartbeat 线程
                 Thread_TestSignalStrength = new Thread(GetSignalStrengthCallback);
                 Thread_TestSignalStrength.IsBackground = true;
+                Thread_TestSignalStrength.Name = "AutoGetSignalStrength";
                 Thread_TestSignalStrength.Priority = ThreadPriority.Normal;
                 Thread_TestSignalStrength.Start();
-                Thread_TestSignalStrength.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9070,9 +9070,9 @@ namespace EMS
                 // 创建并启动 Heartbeat 线程
                 Thread_TestSignalStrength = new Thread(TestSignalStrengthCallback);
                 Thread_TestSignalStrength.IsBackground = true;
+                Thread_TestSignalStrength.Name = "AutoTestSignalStrength";
                 Thread_TestSignalStrength.Priority = ThreadPriority.Normal;
                 Thread_TestSignalStrength.Start();
-                Thread_TestSignalStrength.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9109,9 +9109,9 @@ namespace EMS
                 // 创建并启动 Heartbeat 线程
                 Thread_TemperControl = new Thread(TemperControlCallback);
                 Thread_TemperControl.IsBackground = true;
+                Thread_TemperControl.Name = "AutoTemperControl";
                 Thread_TemperControl.Priority = ThreadPriority.Normal;
                 Thread_TemperControl.Start();
-                Thread_TemperControl.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9185,9 +9185,9 @@ namespace EMS
                 // 创建并启动 Heartbeat 线程
                 Thread_LiquidCold_HeartBeat = new Thread(LiquidCold_HeartBeatCallback);
                 Thread_LiquidCold_HeartBeat.IsBackground = true;
+                Thread_LiquidCold_HeartBeat.Name = "AutoLiquidCold_HeartBeat";
                 Thread_LiquidCold_HeartBeat.Priority = ThreadPriority.Highest;
                 Thread_LiquidCold_HeartBeat.Start();
-                Thread_LiquidCold_HeartBeat.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9224,9 +9224,9 @@ namespace EMS
                 // 创建并启动 Heartbeat 线程
                 Thread_Led_Control = new Thread(Led_ControlCallback);
                 Thread_Led_Control.IsBackground = true;
+                Thread_Led_Control.Name = "Led_ControlCallback";
                 Thread_Led_Control.Priority = ThreadPriority.Normal;
                 Thread_Led_Control.Start();
-                Thread_Led_Control.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9294,9 +9294,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_Read_Serial = new Thread(Read_Serial);
                 Thread_Read_Serial.IsBackground = true;
+                Thread_Read_Serial.Name = "Auto_Read_Serial";
                 Thread_Read_Serial.Priority = ThreadPriority.Highest;
                 Thread_Read_Serial.Start();
-                Thread_Read_Serial.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9358,9 +9358,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ControlEMSTCP = new Thread(ControlEMSTCP);
                 Thread_ControlEMSTCP.IsBackground = true;
+                Thread_ControlEMSTCP.Name = "AutoControlEMSTCP";
                 Thread_ControlEMSTCP.Priority = ThreadPriority.Highest;
                 Thread_ControlEMSTCP.Start();
-                Thread_ControlEMSTCP.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9407,9 +9407,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ControlEMS = new Thread(ControlEMS);
                 Thread_ControlEMS.IsBackground = true;
+                Thread_ControlEMS.Name = "AutoControlEMS";
                 Thread_ControlEMS.Priority = ThreadPriority.Highest;
                 Thread_ControlEMS.Start();
-                Thread_ControlEMS.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9486,9 +9486,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadPointGrid = new Thread(ReadPointGrid);
                 Thread_ReadPointGrid.IsBackground = true;
+                Thread_ReadPointGrid.Name = "AutoReadPointGrid";
                 Thread_ReadPointGrid.Priority = ThreadPriority.Highest;
                 Thread_ReadPointGrid.Start();
-                Thread_ReadPointGrid.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9551,9 +9551,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadPointPower = new Thread(ReadPointPower);
                 Thread_ReadPointPower.IsBackground = true;
+                Thread_ReadPointPower.Name = "AutoReadPointPower";
                 Thread_ReadPointPower.Priority = ThreadPriority.Highest;
                 Thread_ReadPointPower.Start();
-                Thread_ReadPointPower.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9604,9 +9604,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadDataE1 = new Thread(ReadDataE1);
                 Thread_ReadDataE1.IsBackground = true;
+                Thread_ReadDataE1.Name = "AutoReadE1";
                 Thread_ReadDataE1.Priority = ThreadPriority.Normal;
                 Thread_ReadDataE1.Start();
-                Thread_ReadDataE1.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -9634,9 +9634,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadDataCom1 = new Thread(ReadCom1Data);
                 Thread_ReadDataCom1.IsBackground = true;
+                Thread_ReadDataCom1.Name = "AutoReadDataCom1";
                 Thread_ReadDataCom1.Priority = ThreadPriority.Highest;
                 Thread_ReadDataCom1.Start();
-                Thread_ReadDataCom1.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -10635,9 +10635,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadCOM2Data = new Thread(ReadCOM2Data);
                 Thread_ReadCOM2Data.IsBackground = true;
+                Thread_ReadCOM2Data.Name = "AutoReadDataCom2";
                 Thread_ReadCOM2Data.Priority = ThreadPriority.Normal;
                 Thread_ReadCOM2Data.Start();
-                Thread_ReadCOM2Data.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -10783,9 +10783,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadEquipmentDataBMS = new Thread(ReadEquipmentDataBMS);
                 Thread_ReadEquipmentDataBMS.IsBackground = true;
+                Thread_ReadEquipmentDataBMS.Name = "AutoReadDataCom3";
                 Thread_ReadEquipmentDataBMS.Priority = ThreadPriority.Highest;
                 Thread_ReadEquipmentDataBMS.Start();
-                Thread_ReadEquipmentDataBMS.Name = "";
                 return true;
             }
             catch (Exception ex)
@@ -10882,9 +10882,9 @@ namespace EMS
                 //实例化等待连接的线程
                 Thread_ReadEquipmentDataPCS = new Thread(ReadEquipmentDataPCS);
                 Thread_ReadEquipmentDataPCS.IsBackground = true;
+                Thread_ReadEquipmentDataPCS.Name = "AutoReadDataCom4";
                 Thread_ReadEquipmentDataPCS.Priority = ThreadPriority.Normal;
                 Thread_ReadEquipmentDataPCS.Start();
-                Thread_ReadEquipmentDataPCS.Name = "";
                 return true;
             }
             catch (Exception ex)

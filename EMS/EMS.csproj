@@ -359,6 +359,7 @@
   <ItemGroup>
     <Compile Include="BalaTacticsListClass.cs" />
     <Compile Include="CloudService.cs" />
+    <Compile Include="modbus.cs" />
     <Compile Include="MqttManager.cs" />
     <Compile Include="pid.cs" />
     <Compile Include="CloundClass.cs" />
