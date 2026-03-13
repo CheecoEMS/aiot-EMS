@@ -1,4 +1,4 @@
-﻿#define DEBUG 
+﻿#define DEBUG
 
 using IEC104;
 using Modbus;
@@ -17,7 +17,7 @@ using System.IO;
 using log4net.Util;
 using System.IO.Ports;
 
-//351200 
+//351200
 
 namespace EMS
 {
@@ -38,18 +38,18 @@ namespace EMS
 
 
         ///主从串口通信参数
-        private delegate void OnReceiveCMDDelegate(int DataSourceType, byte[] aByteData);//建立事件委托  
+        private delegate void OnReceiveCMDDelegate(int DataSourceType, byte[] aByteData);//建立事件委托
         private event OnReceiveCMDDelegate OnReceiveCMDEvent;
         /////策略相关
         //时段电价
         //static public ElectrovalenceListClass ElectrovalenceList = new ElectrovalenceListClass();
-        //充放电策略时段 
+        //充放电策略时段
         static public TacticsListClass TacticsList = new TacticsListClass();
         //均衡策略时段
         static public BalaTacticsListClass BalaTacticsList = new BalaTacticsListClass();
 
         //故障事件
-        static public WarmingListClass WarmingList = new WarmingListClass();  //局部静态对象   
+        static public WarmingListClass WarmingList = new WarmingListClass();  //局部静态对象
 
         //debug
         public delegate void Displaydelegate(byte[] InputBuf);
@@ -69,7 +69,7 @@ namespace EMS
         public TCPClientClass TCPCloud = new TCPClientClass();
         public TCPServerClass TCPserver = new TCPServerClass();
         public CIEC104Slave Slave104 = new CIEC104Slave();
-        //test 
+        //test
 
         //private delegate void TCPserver.OnReceiveDataEventDelegate(int DataSourceType, byte[] aByteData);//建立事件委
 
@@ -120,7 +120,7 @@ namespace EMS
         {
             const int maxRetries = 5;
             const int retryDelayMs = 2000; // 5秒延迟
-            
+
             for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
                 try
@@ -133,7 +133,7 @@ namespace EMS
                         }
                         return true;
                     }
-                    
+
                     if (attempt < maxRetries)
                     {
                         log.Warn($"数据库表 {tableName} 加载失败（第 {attempt} 次），{retryDelayMs}ms 后重试...");
@@ -153,7 +153,7 @@ namespace EMS
                     }
                 }
             }
-            
+
             log.Error($"数据库表 {tableName} 加载失败，已达到最大重试次数 ({maxRetries})");
             return false;
         }
@@ -303,7 +303,7 @@ namespace EMS
             catch (Exception ex)
             {
                 log.Error($"frmMain构造函数失败: {ex.Message}");
-                return false;            
+                return false;
             }
         }
 
@@ -411,8 +411,8 @@ namespace EMS
                 case 0x6002://实际功率
                     double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
                     return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)value);
-                case 0x6003://充放电 
-                    if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电            
+                case 0x6003://充放电
+                    if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电
                         return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 0);
                     else if (frmMain.Selffrm.AllEquipment.PCSKVA > 0.5)//放电
                         return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, 1);
@@ -437,7 +437,7 @@ namespace EMS
 
             switch (aAddr)
             {
-                case 0x6000://开关pcs                  
+                case 0x6000://开关pcs
                     if (data != 0)
                     {
                         frmMain.Selffrm.AllEquipment.PCSList[0].ExcSetPCSPower(true);
@@ -453,13 +453,13 @@ namespace EMS
                         }
                     }
                     break;
-                case 0x6001://计划功率 
+                case 0x6001://计划功率
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
                     }
                     break;
-                case 0x6002://实际功率 
+                case 0x6002://实际功率
                     //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
@@ -501,8 +501,8 @@ namespace EMS
             short iAddr = 0;
             short iLen = 0;
             long iData = 0;
-            ////判断是否为传到的命令 
-            //检查是否是为命令  //检查crc 
+            ////判断是否为传到的命令
+            //检查是否是为命令  //检查crc
 
             if (!ModbusBase.CheckResponse(aByteData))
                 return;
@@ -518,7 +518,7 @@ namespace EMS
             short[] data = { 00 };
             switch (CMDID)
             {
-                case 0x03://读取 
+                case 0x03://读取
                     AllEquipment.NetConnect = true;
                     if (iLen == 1)
                     {
@@ -563,7 +563,7 @@ namespace EMS
                                         message = ModbusBase.BuildCloundMSG(1, 0x26, 01, sData01);
                                         TCPCloud.SendMSG(message);
                                         frmSet.YunInterval = iLen;
-                                        //设置云的读取间隔，判断两次无数据就会重新连接云（2B） 
+                                        //设置云的读取间隔，判断两次无数据就会重新连接云（2B）
                                         TCPCloud.ReconnectTime = frmSet.YunInterval;//AllEquipment.AskInterval;
                                         frmSet.SaveSet2File();//保存数据 */
                     break;
@@ -601,17 +601,17 @@ namespace EMS
 
 
         private long GetCMDFunctionID(byte[] aByteData, ref int aID, ref int aCommID, ref short aAddr, ref short aDataLen)
-        {  //012700010001a5cd  
+        {  //012700010001a5cd
             int iResult = 0;
             try
             {
                 if (aByteData.Length > 0)
                 {
                     //设备ID
-                    aID = (int)aByteData[0]; //还原第1字节（低位） 
+                    aID = (int)aByteData[0]; //还原第1字节（低位）
                     //取得ComandID
                     aCommID = (int)aByteData[1]; //还原第1字节（低位）
-                    //取得Addr 
+                    //取得Addr
                     aAddr = (short)(aByteData[2] << 8); //还原第2字节
                     aAddr += (short)aByteData[3]; //还原第1字节（低位）
                     //若为写的话就是寄存器值
@@ -676,8 +676,8 @@ namespace EMS
             short iAddr = 0;
             short iLen = 0;
             long iData = 0;
-            ////判断是否为传到的命令 
-            //检查是否是为命令  //检查crc 
+            ////判断是否为传到的命令
+            //检查是否是为命令  //检查crc
 
             if (!ModbusBase.CheckResponse(aByteData))
                 return;
@@ -694,15 +694,15 @@ namespace EMS
             short[] sData01 = { 00, 00 };
             switch (CMDID)
             {
-                case 0x03://读取 
+                case 0x03://读取
                     if (Back3Data(iAddr) != null)
                     {
                         ////modbus返回:使用缓冲区中的数据将指定数量的字节写入串行端口。
-                        frmMain.Selffrm.ems.m485.sp.Write(Back3Data(iAddr), 0, 7);
+                        frmMain.Selffrm.ems.m485.WriteRaw(Back3Data(iAddr), 0, 7);
                     }
                     break;
-                case 0x06://设置                     
-                    frmMain.Selffrm.ems.m485.sp.Write(aByteData, 0, aByteData.Length);
+                case 0x06://设置
+                    frmMain.Selffrm.ems.m485.WriteRaw(aByteData, 0, aByteData.Length);
                     Active6Data(iAddr, (int)iData);
                     break;
                 default:
@@ -763,7 +763,7 @@ namespace EMS
                 log.Error("LoadForm - InitializeTimersAndThreads失败");
                 return false;
             }
-            
+
             return true;
         }
 
@@ -879,7 +879,7 @@ namespace EMS
             }
 
             //连接硬件：4G通讯模块
-            
+
 
             return true;
         }
@@ -1033,7 +1033,7 @@ namespace EMS
             try
             {
                 //打开主机串口
-                ems.m485 = new modbus485();
+                ems.m485 = new modbus();
                 ems.m485.OpenEMS(
                     frmSet.config.DebugComName,
                     38400,
@@ -1099,7 +1099,7 @@ namespace EMS
             {
                 ems.ID = frmSet.config.i485Addr;
                 ems.Parent = AllEquipment;
-                ems.m485 = new modbus485();
+                ems.m485 = new modbus();
                 return ems.m485.OpenEMS(
                     frmSet.config.DebugComName,
                     38400,
@@ -1125,7 +1125,7 @@ namespace EMS
                 if (strID.Length >= 7)
                 {
                     strID = strID.Substring(strID.Length - 7, 7);
-                }        
+                }
                 AllEquipment.iot_code = "ems" + strID;
                 AllEquipment.Fire.iot_code = "fire" + strID;
                 AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
@@ -1135,9 +1135,9 @@ namespace EMS
                 {
                     Parent = AllEquipment
                 };*/
-                
+
                 //AllEquipment.Report2Cloud.IniClound();
-                
+
                 string strSysPath = Convert.ToString(System.AppDomain.CurrentDomain.BaseDirectory);
                 //frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
                 //frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
@@ -1319,13 +1319,13 @@ namespace EMS
                         }
                     }
 
-                    if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess) { 
+                    if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess) {
                         if (frmSet.Set_HistoryData()){
                             frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = true;
                         }
                     }
 
-                    if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess) { 
+                    if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess) {
                         if (frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"))){
                             frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = true;
                         }
@@ -1435,7 +1435,7 @@ namespace EMS
                                 else {
                                     log.Error("监测到4G通信正常，使用情况0来装载策略");
                                     frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
-                                }                               
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -1503,7 +1503,7 @@ namespace EMS
                 DeviceData_Timer.Dispose();
                 DeviceData_Timer = null;
             }
-            
+
         }
 
         public bool IniralizeFrmMain_Timer()
@@ -1627,7 +1627,7 @@ namespace EMS
 
         private bool InitializeUI_timer()
         {
-            // 每5秒修正 UI 
+            // 每5秒修正 UI
             try
             {
                 UI_timer = new System.Threading.Timer(UI_timerCallback, null, 0, 5000);
@@ -1835,7 +1835,7 @@ namespace EMS
                             frmMain.ShowDebugMSG("网络连接异常！");
 
                         frmFlash.AddPostion(10);
-                        //-------打开监视操作进程或者time，在无人操作时候进入休眠并关闭屏幕和注销用户 
+                        //-------打开监视操作进程或者time，在无人操作时候进入休眠并关闭屏幕和注销用户
                         frmFlash.AddPostion(10);
                         //初始化窗体，提高将来的速度
                         frmSet.INIForm();
@@ -1847,7 +1847,7 @@ namespace EMS
                         frmState.INIForm();
                         frmFlash.AddPostion(10);
                         frmLogin.INIForm();
-                        ////////////////////////////////////// 
+                        //////////////////////////////////////
                         Thread.Sleep(500);
                         frmFlash.AddPostion(10);
                         //AllEquipment.Report2Cloud.mqttConnect();
@@ -1945,14 +1945,14 @@ namespace EMS
         {
             try
             {
-                //Thread.Sleep(100);  //（毫秒）等待一定时间，确保数据的完整性 int len        
+                //Thread.Sleep(100);  //（毫秒）等待一定时间，确保数据的完整性 int len
                 //int len = spDebug.BytesToRead;
 
                 //if (len != 0)
                 //{
                 //    byte[] buff = new byte[len];
                 //    spDebug.Read(buff, 0, len);
-                //    //receive = Encoding.Default.GetString(buff);//数据接收内容 
+                //    //receive = Encoding.Default.GetString(buff);//数据接收内容
                 //    //this.Invoke(spDebugData, buff);
                 //}
             }
@@ -2014,7 +2014,7 @@ namespace EMS
             //string aTime = "";
             // AllEquipment.Elemeter2.GetSysData(63, ref aTime);
             //button2.Text = aTime;
-            // AllEquipment.Elemeter2.SetTime(new byte[] { 05, 01, 18, 29, 1, 23 }); 
+            // AllEquipment.Elemeter2.SetTime(new byte[] { 05, 01, 18, 29, 1, 23 });
             //AllEquipment.Elemeter2.SetTime(new byte[] { 5, 07, 12, 17, 1, 23 });
             //AllEquipment.Elemeter2.SetTime(new byte[] { 5, 07, 12, 17, 1, 23 });
             //AllEquipment.Elemeter2.SetTime(new byte[] { 1, 23 });
@@ -2065,12 +2065,12 @@ namespace EMS
             //    if (AllEquipment.Elemeter3 != null)
             //        AllEquipment.Elemeter3.SetTime(aTime2);
             //}
-            //byte[] aTime = { (byte)dtTemp.Second, (byte)dtTemp.Minute, (byte)dtTemp.Hour, (byte)dtTemp.Day,  
+            //byte[] aTime = { (byte)dtTemp.Second, (byte)dtTemp.Minute, (byte)dtTemp.Hour, (byte)dtTemp.Day,
             //(byte)dtTemp.Month, (byte)(dtTemp.Year-2000) };
             //    if (AllEquipment.Elemeter1 != null)
             //        AllEquipment.Elemeter1.SetTime(aTime);
             //    if (AllEquipment.Elemeter2 != null)
-            //AllEquipment.Elemeter2.SetTime  (aTime); 
+            //AllEquipment.Elemeter2.SetTime  (aTime);
         }
 
         private void button1_Click_3(object sender, EventArgs e)

@@ -178,7 +178,7 @@ namespace EMS
         public string comName = "Com1";//com口默认为1
 
 
-        public modbus485 m485; //每个部件关联一个硬件com口的485通信SP
+        public modbus m485; //每个部件关联一个硬件com口的485通信SP（线程安全版本）
         //public modbusTCPServer mTCPServer;
         //public modbusTCPClient mTCPClient;
         //public modbusUDP mUDP;
@@ -804,7 +804,7 @@ namespace EMS
         }
 
         //设置一个Short数据
-        public bool SetSysData(int aDataIndex, ushort aData, bool bLocksp)
+        public bool SetSysData(int aDataIndex, ushort aData)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -814,10 +814,10 @@ namespace EMS
                     switch (tempComand.ComType)
                     {
                         case 5:
-                            bResult = m485.Send5MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData != 0, bLocksp);
+                            bResult = m485.Send5MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData != 0);
                             break;
                         case 6:
-                            bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData, bLocksp);
+                            bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData);
                             break;
                     }
                     break;
@@ -830,7 +830,7 @@ namespace EMS
         }
 
         //设置一个Short数据
-        public bool SetSysData(int aDataIndex, short aData, bool bLocksp)
+        public bool SetSysData(int aDataIndex, short aData)
         {
             bool bResult = false;
             ModbusCommand tempComand = ComList[aDataIndex];
@@ -839,12 +839,12 @@ namespace EMS
             {
                 case 0:
                     if (tempComand.ComType == 5)
-                        bResult = m485.Send5MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData > 0, bLocksp);
+                        bResult = m485.Send5MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, aData > 0);
                     else if (tempComand.ComType == 6)
-                        bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, (ushort)aData, bLocksp);
+                        bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr, (ushort)aData);
                     else
                         bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                          (ushort)tempComand.DataLongth, Datas, bLocksp);
+                          (ushort)tempComand.DataLongth, Datas);
                     break;
                 case 1:
                     break;
@@ -873,15 +873,15 @@ namespace EMS
                     {
                         case 5:
                             bResult = m485.Send5MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                   (aData > 0), bLocksp);
+                                   (aData > 0));
                             break;
                         case 6:
                             bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                  (ushort)aData, bLocksp);
+                                  (ushort)aData);
                             break;
                         case 16:
                             bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                 (ushort)tempComand.DataLongth, Datas, bLocksp);
+                                 (ushort)tempComand.DataLongth, Datas);
                             break;
                     }
                     break;
@@ -906,7 +906,7 @@ namespace EMS
             {
                 case 0:
                     bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                 (ushort)tempComand.DataLongth, Datas, bLockcp);
+                                 (ushort)tempComand.DataLongth, Datas);
                     break;
                 case 1:
                     break;
@@ -930,7 +930,7 @@ namespace EMS
             {
                 case 0:
                     bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                 (ushort)tempComand.DataLongth, Datas, bLocksp);
+                                 (ushort)tempComand.DataLongth, Datas);
                     break;
                 case 1:
                     break;
@@ -956,10 +956,10 @@ namespace EMS
                     //else
                     if (tempComand.ComType == 6)
                         bResult = m485.Send6MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                 aData, bLocksp);
+                                 aData);
                     else
                         bResult = m485.Send16MSG((byte)eID, (byte)tempComand.ComType, (ushort)tempComand.DataAddr,
-                                 (ushort)tempComand.DataLongth, aData, bLocksp);
+                                 (ushort)tempComand.DataLongth, aData);
 
                     break;
                 case 1:
@@ -1161,21 +1161,20 @@ namespace EMS
         {
             try
             {
-                lock (this.m485.sp)
+
+                SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, false);//设置温度启动值（硬件不支持）
+                SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, false);//设置温度停止值（硬件不支持）
+                SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, false);//设置湿度启动值
+                SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, false);//设置湿度停止值
+                if ((short)frmSet.componentSettings.DHSetRunStatus == 0)
                 {
-                    SetSysData(7, (short)frmSet.componentSettings.DHSetTempBoot, false);//设置温度启动值（硬件不支持）
-                    SetSysData(8, (short)frmSet.componentSettings.DHSetTempStop, false);//设置温度停止值（硬件不支持）
-                    SetSysData(9, (short)frmSet.componentSettings.DHSetHumidityBoot, false);//设置湿度启动值
-                    SetSysData(10, (short)frmSet.componentSettings.DHSetHumidityStop, false);//设置湿度停止值
-                    if ((short)frmSet.componentSettings.DHSetRunStatus == 0)
-                    {
-                        SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);//开启手动模式
-                    }
-                    else
-                    {
-                        SetSysData(11, 0X00FF, false);//开启自动模式
-                    }
+                    SetSysData(11, (short)frmSet.componentSettings.DHSetRunStatus, false);//开启手动模式
                 }
+                else
+                {
+                    SetSysData(11, 0X00FF, false);//开启自动模式
+                }
+
                 return true;
             }
             catch
@@ -2121,16 +2120,15 @@ namespace EMS
         {
             try
             {
-                lock (this.m485.sp)
-                {
-                    SetSysData(1, frmSet.componentSettings.LCModel, false);//模式选择
-                    SetSysData(2, frmSet.componentSettings.LCTemperSelect, false);//控制温度选择
-                    SetSysData(3, (short)frmSet.componentSettings.LCSetCoolTemp, false);//水温制冷点
-                    SetSysData(4, (short)frmSet.componentSettings.LCSetHotTemp, false);//水温制热点
-                    SetSysData(5, (short)frmSet.componentSettings.LCCoolTempReturn, false);//制冷回差
-                    SetSysData(6, (short)frmSet.componentSettings.LCHotTempReturn, false);//制热回差
-                    SetSysData(7, frmSet.componentSettings.LCWaterPump, false);//水泵档位选择
-                }
+
+                SetSysData(1, frmSet.componentSettings.LCModel, false);//模式选择
+                SetSysData(2, frmSet.componentSettings.LCTemperSelect, false);//控制温度选择
+                SetSysData(3, (short)frmSet.componentSettings.LCSetCoolTemp, false);//水温制冷点
+                SetSysData(4, (short)frmSet.componentSettings.LCSetHotTemp, false);//水温制热点
+                SetSysData(5, (short)frmSet.componentSettings.LCCoolTempReturn, false);//制冷回差
+                SetSysData(6, (short)frmSet.componentSettings.LCHotTempReturn, false);//制热回差
+                SetSysData(7, frmSet.componentSettings.LCWaterPump, false);//水泵档位选择
+
                 return true;
             }
             catch (Exception ex)
@@ -2883,11 +2881,10 @@ namespace EMS
         //设置电压变比 PT008DH，电流变比 CT008EH
         public void SetPTandCT(short aPT, short aCT)
         {
-            lock (m485.sp)
-            {
-                SetSysData(53, aPT, false);
-                SetSysData(54, aCT, false);
-            }
+
+            SetSysData(53, aPT, false);
+            SetSysData(54, aCT, false);
+
         }
 
         public void timing(int index)
@@ -2923,12 +2920,11 @@ namespace EMS
         //设置波峰评估的时间段
         public void SetJFTG(byte[] a4Zoon, byte[] aBFTGs1, byte[] aBFTGs2)
         {
-            lock (this.m485.sp)
-            {
+
                 SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 SetSysBytes(61, aBFTGs1, false);//42字节的1尖峰平谷设计
                 SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
-            }
+
         }
 
         //获取电网功率
@@ -3201,8 +3197,7 @@ namespace EMS
 
             if (m485 ==null)
                 return false;
-            lock (m485.sp)
-            {
+
                 //SetSysBytes(59, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 //SetSysBytes(60, aBFTGs, false);//42字节的1尖峰平谷设计
 
@@ -3215,7 +3210,7 @@ namespace EMS
                     log.Error("四费率储能表配置费率成功");
                     res = true;
                 }
-            }
+
 
             return res;
         }
@@ -3231,11 +3226,10 @@ namespace EMS
                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     0, 0 };//14*3=42    14个时段 ： 号 时 分
 
-            lock (m485.sp)
-            {
+
                 SetSysBytes(60, tempJFPG, false);//42字节的1尖峰平谷设计
                                                   // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计
-            }
+
         }
 
         public bool SetJFTG_8(byte[] a4Zoon, byte[] aBFTGs)
@@ -3243,8 +3237,7 @@ namespace EMS
             bool res = false;
             if (m485 ==null)
                 return false;
-            lock (m485.sp)
-            {
+
                 //SetSysBytes(122, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 if (SetSysBytes(122, a4Zoon, false)) {
                     log.Error("八费率储能表时区设置成功");
@@ -3258,7 +3251,7 @@ namespace EMS
                     log.Error("八费率储能表费率设置成功");
                     res = true;
                 }
-            }
+
 
             return res;
         }
@@ -3276,8 +3269,7 @@ namespace EMS
                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     0, 0 };//14*3=42    14个时段 ： 号 时 分
 
-            lock (m485.sp)
-            {
+
                 /*                SetSysBytes(123, tempJFPG, false);//42字节的1尖峰平谷设计
                                                                   // SetSysBytes(62, aBFTGs2, false);//42字节的2尖峰平谷设计*/
                 if (SetSysBytes(123, tempJFPG, false))
@@ -3285,7 +3277,7 @@ namespace EMS
                     log.Error("八费率储能表费率清零成功");
                     res = true;
                 }
-            }
+
 
             return res;
         }
@@ -3821,8 +3813,7 @@ namespace EMS
         public bool SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
         {
             bool res = false;
-            lock (m485.sp)
-            {
+
                 //SetSysBytes(41, a4Zoon, false);//12字节的一年四区间的尖峰平谷设计
                 //SetSysBytes(43, aBFTGs, false);//42字节的一年四区间的尖峰平谷设计
                 if (SetSysBytes(41, a4Zoon, false)) {
@@ -3834,7 +3825,7 @@ namespace EMS
                     log.Error("四费率辅助表费率设置成功");
                     res = true;
                 }
-            }
+
 
             return res;
         }
@@ -4158,8 +4149,7 @@ namespace EMS
             //设置PCS为待机状态
 
             bool res;
-            lock (m485.sp)
-            {
+
                 //SetSysData(84, frmSet.PCSGridModel, false);//0并网,1离网
                 //SetSysData(82, 0xFF00,false);//1远程、0本地
                 if (aPowerOn)
@@ -4169,7 +4159,7 @@ namespace EMS
                                                   //SetSysData(79, 0xff00);//qiao急停
                                                   //获取BMS返回状态
                                                   //修正状态
-            }
+
 
             return res;
         }
@@ -4238,8 +4228,7 @@ namespace EMS
                 int iPower;
                 int iPCSTypes = Array.IndexOf(PCSTypes, aPCSType);
 
-                lock (m485.sp)
-                {
+
                     if (aData * Parent.waValueActive == 0)//qiao
                         SetSysData(47, 0, false);
                     if (frmSet.config.PCSForceRun == 0)
@@ -4287,7 +4276,7 @@ namespace EMS
                             ExcSetPCSPower1(true);
                             break;
                     }
-                }
+
                 bResult = true;
             }
             catch (Exception ex)
@@ -4326,8 +4315,7 @@ namespace EMS
                     if ((aData > 0) && (Parent.BMS.MaxDischargeA == 0))//BMS最大放电电流为0，不能放
                         aData = 0;
                 }
-                lock (m485.sp)
-                {
+
                     switch (iPCSTypes)
                     {
                         case 0://待机
@@ -4359,7 +4347,7 @@ namespace EMS
                             SetSysData(41, 6, false); //设置PCS的为//0待机1恒流2、恒压、3恒功率
                             break;
                     }
-                }
+
                 bResult = true;
             }
             catch (Exception ex)
@@ -5441,7 +5429,7 @@ namespace EMS
                 for (int i = 0; i < 25; i++)
                 {
                     BalaSwitch[i] = 0;
-                    SetSysData(i + 60, BalaSwitch[i], false);
+                    SetSysData(i + 60, BalaSwitch[i]);
                 }
                 //更新均衡运行标志位
                 GetBalaInfo();
@@ -6502,8 +6490,7 @@ namespace EMS
         {
             try
             {
-                lock (this.m485.sp)
-                {
+
                     //11.23添加740,741 外风机工作模式，风机最高温度， 风机最低温度
                     /*                   SetSysData(35,(short)frmSet.FenMode,false);
                                        SetSysData(36, (short)frmSet.FenMaxTemp, false);
@@ -6529,7 +6516,7 @@ namespace EMS
                         else
                             SetSysData(24, 1, false);//来电运行 禁止
                     }
-                }
+
 
                 //if (frmSet.TCAuto)
                 //    SetSysData(27, 0xff00);//178 手动 / 自动
@@ -6832,9 +6819,9 @@ namespace EMS
         {
             //打开PCS
             if (aOn)
-               m485.Send6MSG((byte)ID, 6, 0x6000, (ushort)1, true);
+               m485.Send6MSG((byte)ID, 6, 0x6000, (ushort)1);
             else
-               m485.Send6MSG((byte)ID, 6, 0x6000, 0, true);
+               m485.Send6MSG((byte)ID, 6, 0x6000, 0);
         }
 
 
@@ -6845,19 +6832,19 @@ namespace EMS
             string[] wTpyes = { "充电", "放电" };
             int itemp = Array.IndexOf(wTpyes, aWorkType);
 
-            if (m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp, true))
+            if (m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp))
             {
                 bPrepared = true;
             }
 
             itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-            if (m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp, true))
+            if (m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp))
             {
                 bPrepared = true;
             }
 
             double dtemp = (Parent.PCSScheduleKVA * aPCSValueRate);
-            if (m485.Send6MSG((byte)ID, 6, 0x6002, (ushort)dtemp, true))
+            if (m485.Send6MSG((byte)ID, 6, 0x6002, (ushort)dtemp))
             {
                 bPrepared = true;
             }
@@ -6867,7 +6854,7 @@ namespace EMS
 
         public void SetPCSScheduleKVA(double aPCSScheduleKVA)
         {
-            if (m485.Send6MSG((byte)ID, 6, 0x6001, (ushort)aPCSScheduleKVA, true))
+            if (m485.Send6MSG((byte)ID, 6, 0x6001, (ushort)aPCSScheduleKVA))
             {
                 Prepared = true;
                 ShedulePCSKVA = aPCSScheduleKVA;
@@ -8778,7 +8765,7 @@ namespace EMS
                                     switch (oneEquipment.comType)
                                     {
                                         case 0:
-                                            oneEquipment.m485 = new modbus485();
+                                            oneEquipment.m485 = new modbus();
                                             oneEquipment.m485.ParentEquipment = this;
                                             oneEquipment.m485.Open(oneEquipment.comName, oneEquipment.comRate, oneEquipment.comBits,
                                                                    System.IO.Ports.Parity.None, System.IO.Ports.StopBits.One);//打开串口
@@ -9263,13 +9250,16 @@ namespace EMS
             {
                 try
                 {
-                    if (frmMain.Selffrm.ems.m485.sp != null)
+                    if (frmMain.Selffrm.ems.m485.IsOpen)
                     {
-                        while (frmMain.Selffrm.ems.m485.sp.BytesToRead > 0)
+                        while (frmMain.Selffrm.ems.m485.BytesToRead > 0)
                         {
-                            int info = frmMain.Selffrm.ems.m485.sp.ReadByte();
-                            receivedData.Add((byte)info);
-                            GetMsg = true;
+                            int info = frmMain.Selffrm.ems.m485.ReadByte();
+                            if (info >= 0)
+                            {
+                                receivedData.Add((byte)info);
+                                GetMsg = true;
+                            }
                         }
                         if (GetMsg)
                         {
@@ -10684,7 +10674,7 @@ namespace EMS
                         }
                     }
                 }
-                
+
                 if (Elemeter3 != null) {
                     Elemeter3.GetSetDataFromEqipment();
                 }

@@ -1,8 +1,10 @@
 ﻿using EMS;
+using Google.Protobuf.WellKnownTypes;
 using log4net;
 using Modbus;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO.Ports;
 using System.Threading;
 
@@ -46,7 +48,6 @@ namespace EMS
         private SerialPortWrapper spw;
         private SerialPort sp => spw?.Port;
 
-        public string modbusStatus;
         public AllEquipmentClass ParentEquipment;
 
         private static readonly ILog log = LogManager.GetLogger("modbus485");
@@ -87,7 +88,6 @@ namespace EMS
                     }
                 }
 
-                modbusStatus = portName + " opened";
                 return true;
             }
             catch (Exception ex)
@@ -168,61 +168,291 @@ namespace EMS
 
         #endregion
 
-        #region ===== Modbus Core =====
+        #region ===== Retry Helper (统一重试策略) =====
 
-        private bool Read1Response(byte addr, byte cmd, ushort start, ushort len, ref byte[] resp)
+        private bool ExecuteWithRetry(
+            Func<bool> action,
+            int maxRetry = 3,
+            int initialDelayMs = 50,
+            int maxDelayMs = 1000)
         {
-            byte[] req = ModbusBase.BuildMSG3(addr, cmd, start, len);
-            resp = new byte[5 + (int)Math.Ceiling(len / 8.0)];
+            try
+            {
 
-            return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
-        }
+                int delay = initialDelayMs;
 
-        private bool Read3Response(byte addr, byte cmd, ushort start, ushort len, ref byte[] resp)
-        {
-            byte[] req = ModbusBase.BuildMSG3(addr, cmd, start, len);
-            resp = new byte[5 + len * 2];
+                for (int attempt = 1; attempt <= maxRetry; attempt++)
+                {
+                    if (action())
+                        return true;
 
-            return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
-        }
+                    if (attempt < maxRetry)
+                    {
+                        Thread.Sleep(delay);
+                        delay = Math.Min(delay * 2, maxDelayMs);
+                    }
+                }
 
-        private bool Read5Response(byte addr, byte cmd, ushort reg, bool data, ref byte[] resp)
-        {
-            byte[] req = ModbusBase.BuildMSG5(addr, cmd, reg, data);
-            resp = new byte[8];
-
-            return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
-        }
-
-        private bool Read6Response(byte addr, byte cmd, ushort reg, ushort data, ref byte[] resp)
-        {
-            byte[] req = ModbusBase.BuildMSG6(addr, cmd, reg, data);
-            resp = new byte[8];
-
-            return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+                return false;
+            }
+            catch (Exception ex) {
+                log.Error("ExecuteWithRetry: " + ex);
+                return false;
+            }
         }
 
         #endregion
 
-        #region ===== Public API (与你原来一致) =====
+        #region ===== Public Raw IO (线程安全的原始读写) =====
 
-        public bool Send3MSG(byte addr, byte cmd, ushort start, ushort len, ref ushort[] values)
+        /// <summary>
+        /// 检查串口是否已打开
+        /// </summary>
+        public bool IsOpen
         {
-            byte[] resp = null;
-            if (!Read3Response(addr, cmd, start, len, ref resp))
-                return false;
-
-            values = new ushort[len];
-            for (int i = 0; i < len; i++)
-                values[i] = (ushort)((resp[3 + i * 2] << 8) | resp[4 + i * 2]);
-
-            return true;
+            get
+            {
+                return spw != null && sp != null && sp.IsOpen;
+            }
         }
 
-        public bool Send1MSG(byte addr, byte cmd, ushort start, ushort len, ref byte[] values)
+        /// <summary>
+        /// 获取可读取的字节数
+        /// </summary>
+        public int BytesToRead
+        {
+            get
+            {
+                if (spw == null || sp == null || !sp.IsOpen)
+                    return 0;
+
+                lock (spw.SyncRoot)
+                {
+                    try
+                    {
+                        return sp.BytesToRead;
+                    }
+                    catch
+                    {
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 直接写入原始数据到串口（线程安全）
+        /// </summary>
+        /// <param name="data">要写入的数据</param>
+        /// <param name="offset">起始偏移</param>
+        /// <param name="count">写入字节数</param>
+        /// <returns>是否成功</returns>
+        public bool WriteRaw(byte[] data, int offset, int count)
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return false;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    sp.Write(data, offset, count);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    log.Error("WriteRaw异常: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 读取串口中所有可用的字节（线程安全）
+        /// </summary>
+        /// <returns>读取到的字节数组，如果失败返回 null</returns>
+        public byte[] ReadAvailableBytes()
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return null;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    int bytesToRead = sp.BytesToRead;
+                    if (bytesToRead <= 0)
+                        return new byte[0];
+
+                    byte[] buffer = new byte[bytesToRead];
+                    int bytesRead = sp.Read(buffer, 0, bytesToRead);
+
+                    if (bytesRead < bytesToRead)
+                    {
+                        byte[] result = new byte[bytesRead];
+                        Array.Copy(buffer, result, bytesRead);
+                        return result;
+                    }
+                    return buffer;
+                }
+                catch (Exception ex)
+                {
+                    log.Error("ReadAvailableBytes异常: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 读取单个字节（线程安全）
+        /// </summary>
+        /// <returns>读取到的字节，如果失败返回 -1</returns>
+        public int ReadByte()
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return -1;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    if (sp.BytesToRead > 0)
+                        return sp.ReadByte();
+                    return -1;
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
+
+        #endregion
+
+        #region ===== Modbus Core =====
+
+        private bool Read1Response(byte addr, byte cmd, ushort start, ushort len, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG3(addr, cmd, start, len);
+                resp = new byte[5 + (int)Math.Ceiling(len / 8.0)];
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex) {
+                log.Error("Read1Response: " + ex);
+                return false;
+            }
+        }
+
+        private bool Read3Response(byte addr, byte cmd, ushort start, ushort len, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG3(addr, cmd, start, len);
+                resp = new byte[5 + len * 2];
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read3Response: " + ex);
+                return false;
+            }
+        }
+
+        private bool Read5Response(byte addr, byte cmd, ushort reg, bool data, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG5(addr, cmd, reg, data);
+                resp = new byte[8];
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read5Response: " + ex);
+                return false;
+            }
+        }
+
+        private bool Read6Response(byte addr, byte cmd, ushort reg, ushort data, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG6(addr, cmd, reg, data);
+                resp = new byte[8];
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read6Response: " + ex);
+                return false;
+            }
+        }
+
+        private bool Read6Response(byte aAddress, byte CommandType, ushort aRegAddr, byte[] aData, ref byte[] aResponse)
+        {
+            try
+            {
+                byte[] message = ModbusBase.BuildMSG6(aAddress, CommandType, aRegAddr, aData);
+                aResponse = new byte[8];
+
+                return SendAndReceive(message, aResponse) && ModbusBase.CheckResponse(aResponse);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read6Response: " + ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 功能码16：写多个寄存器 Core 实现
+        /// </summary>
+        private bool Read16Response( byte addr, byte cmd, ushort start, ushort len, byte[] values, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG16(addr, cmd, start, len, values);
+                resp = new byte[8]; // 功能码16响应固定8字节
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read6Response: " + ex);
+                return false;
+            }
+        }
+
+        private bool Read16Response( byte addr, byte cmd, ushort start, ushort len, short[] values, ref byte[] resp)
+        {
+            try
+            {
+                byte[] req = ModbusBase.BuildMSG16(addr, cmd, start, len, values);
+                resp = new byte[8];
+
+                return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Read6Response: " + ex);
+                return false;
+            }
+        }
+        #endregion
+
+
+
+        #region ===== Public Modbus API (带重试) =====
+        public bool Send1MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, ref byte[] values)
         {
             byte[] resp = null;
-            if (!Read1Response(addr, cmd, start, len, ref resp))
+            if (!Read1Response(aAddress, CommandType, aRegStart, aRegLength, ref resp))
                 return false;
 
             int dataLen = resp[2];
@@ -231,28 +461,93 @@ namespace EMS
             return true;
         }
 
+        /// <summary>
+        /// 返回数组类型为ushort型
+        /// </summary>
+        public bool Send3MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, ref ushort[] values)
+        {
+            byte[] resp = null;
+            if (!Read3Response(aAddress, CommandType, aRegStart, aRegLength, ref resp))
+                return false;
+
+            values = new ushort[aRegLength];
+            for (int i = 0; i < aRegLength; i++)
+                values[i] = (ushort)((resp[3 + i * 2] << 8) | resp[4 + i * 2]);
+
+            return true;
+        }
+
+        /// <summary>
+        /// 返回数组类型为字节型
+        /// </summary>
+        public bool Send3MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, ref byte[] values)
+        {
+            byte[] resp = null;
+            if (!Read3Response(aAddress, CommandType, aRegStart, aRegLength, ref resp))
+            {
+                return false;
+            }
+            //返回数据转换
+            values = new byte[aRegLength];
+            int DataLen = resp[2];
+            //Return requested register values:
+            Array.Copy(resp, 3, values, 0, DataLen);
+            return true;
+        }
+
         public bool Send5MSG(byte addr, byte cmd, ushort reg, bool data)
         {
             byte[] resp = null;
-            return Read5Response(addr, cmd, reg, data, ref resp);
+            return ExecuteWithRetry(
+                () => Read5Response(addr, cmd, reg, data, ref resp)
+            );
         }
 
-        public bool Send6MSG(byte addr, byte cmd, ushort reg, ushort data)
+        public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort value)
         {
             byte[] resp = null;
-            return Read6Response(addr, cmd, reg, data, ref resp);
+            return ExecuteWithRetry(
+                () => Read6Response(aAddress, CommandType, aRegStart, value, ref resp)
+            );
         }
 
-        public bool Send16MSG(byte addr, byte cmd, ushort start, ushort len, short[] values)
+        /// <summary>
+        /// 发送功能码6消息（写单个寄存器 - byte[]）
+        /// </summary>
+        public bool Send6MSG(byte aAddress, byte CommandType, ushort aRegStart, byte[] aData)
         {
-            byte[] req = ModbusBase.BuildMSG16(addr, cmd, start, len, values);
-            byte[] resp = new byte[8];
+            byte[] resp = null;
+            return ExecuteWithRetry(
+                () => Read6Response(aAddress, CommandType, aRegStart, aData, ref resp)
+            );
+        }
 
-            return SendAndReceive(req, resp) && ModbusBase.CheckResponse(resp);
+        /// <summary>
+        /// 发送功能码16消息（写多个寄存器 - short[]）
+        /// </summary>
+        public bool Send16MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, short[] values)
+        {
+            byte[] resp = null;
+            return ExecuteWithRetry(
+                () => Read16Response(aAddress, CommandType, aRegStart, aRegLength, values, ref resp)
+            );
+        }
+
+        /// <summary>
+        /// 发送功能码16消息（写多个寄存器 - byte[]）
+        /// </summary>
+        public bool Send16MSG(byte aAddress, byte CommandType, ushort aRegStart, ushort aRegLength, byte[] values)
+        {
+            byte[] resp = null;
+            return ExecuteWithRetry(
+                () => Read16Response(aAddress, CommandType, aRegStart, aRegLength, values, ref resp)
+            );
         }
 
         #endregion
 
+
+        #region ===== Modbus Send Core =====
         /// <summary>
         /// modbus获取数据ushort值
         /// </summary>
@@ -444,6 +739,78 @@ namespace EMS
             else
                 return false;
         }
+        #endregion
+
+        #region ===== 4G Module Methods =====
+
+        /// <summary>
+        /// 发送4G数据（线程安全）
+        /// </summary>
+        private void Get4GData(byte[] aMessage)
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    sp.DiscardOutBuffer();
+                    sp.DiscardInBuffer();
+                    sp.Write(aMessage, 0, aMessage.Length);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Get4GData异常: " + ex.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重启4G模块
+        /// </summary>
+        public void Restart4G()
+        {
+            byte[] message = new byte[14] { 0x41, 0x54, 0x2B, 0x43, 0x46, 0x55, 0x4E, 0x3D, 0x31, 0x2C, 0x31, 0x0D, 0x0D, 0x0A };
+            Get4GData(message);
+        }
+
+        #endregion
+
+        #region ===== OpenEMS (兼容旧接口) =====
+
+        /// <summary>
+        /// 打开串口（兼容旧接口）
+        /// </summary>
+        public bool OpenEMS(string portName, int baudRate, int databits, Parity parity, StopBits stopBits)
+        {
+            return Open(portName, baudRate, databits, parity, stopBits);
+        }
+
+        #endregion
+
+        #region ===== SendstrMSG =====
+
+        /// <summary>
+        /// 发送消息并返回16进制字符串
+        /// </summary>
+        public bool SendstrMSG(byte aAddress, byte bComType, ushort aRegStart, ushort aRegLength, ref string strBack)
+        {
+            byte[] response = null;
+            if (!Read3Response(aAddress, bComType, aRegStart, aRegLength, ref response))
+            {
+                return false;
+            }
+            //返回数据转换
+            strBack = "";
+            for (int i = 0; i < response.Length; i++)
+            {
+                strBack += response[i].ToString("x2");
+            }
+            return true;
+        }
+
+        #endregion
 
     }
 }
