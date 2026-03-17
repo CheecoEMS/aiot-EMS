@@ -36,6 +36,9 @@ namespace EMS
         ///储能柜对象
         public EMSEquipment ems = new EMSEquipment();
 
+        ///Modbus从站
+        private ModbusSlave _modbusSlave;
+
 
         ///主从串口通信参数
         private delegate void OnReceiveCMDDelegate(int DataSourceType, byte[] aByteData);//建立事件委托
@@ -187,7 +190,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：EMS1.1.1"  );
+                log.Error("初始化EMS版本：EMS1.1.1");
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -212,7 +215,7 @@ namespace EMS
                 frmFlash.AddPostion(10);
 
                 // 初始化各个窗体
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormControl, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormControl, () =>
                 {
                     frmControl.INIForm();
                 }))
@@ -221,7 +224,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormUser, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormUser, () =>
                 {
                     frmoneUser.INIForm();
                 }))
@@ -230,7 +233,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormKeyBoard, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormKeyBoard, () =>
                 {
                     frmKeyBoard.INIForm();
                 }))
@@ -239,7 +242,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormSet, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormSet, () =>
                 {
                     frmSet.INIForm();
                 }))
@@ -248,7 +251,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormState, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormState, () =>
                 {
                     frmState.INIForm();
                 }))
@@ -257,7 +260,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLogin, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLogin, () =>
                 {
                     frmLogin.INIForm();
                 }))
@@ -266,7 +269,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormAbout, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormAbout, () =>
                 {
                     frmAbout.INIForm();
                 }))
@@ -275,7 +278,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLine, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.FormLine, () =>
                 {
                     frmLine.INIForm();
                 }))
@@ -287,7 +290,7 @@ namespace EMS
                 frmFlash.AddPostion(10);
 
                 // 加载主要功能
-                if(!InitializationManager.InitializeComponent(InitializationManager.InitStep.LoadForm, () =>
+                if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.LoadForm, () =>
                 {
                     return LoadForm();
                 }))
@@ -785,7 +788,7 @@ namespace EMS
 
             //检查数据库结构是否一致
             //if(!DBConnection.CheckTables()) return false;
-            if(!frmSet.InitializeSingletonTableIds()) return false;
+            if (!frmSet.InitializeSingletonTableIds()) return false;
 
             // 加载数据库配置（必填）
             if (!RetryLoadDatabase(() => frmSet.LoadCloudLimitsFromMySQL(), "CloudLimits")) return false;
@@ -965,8 +968,8 @@ namespace EMS
                 TacticsList.TacticsOn = false; //关闭策略
 
                 //初始化设置
-                lock(AllEquipment)
-                 {
+                lock (AllEquipment)
+                {
                     AllEquipment.PCSScheduleKVA = 0;
                     AllEquipment.HostStart = true;
                     AllEquipment.SlaveStart = true;
@@ -987,7 +990,7 @@ namespace EMS
             if (!TCPserver.TCPServerIni(2404)) return false;
 
             //监听客户端连接
-            if(!TCPserver.StartMonitor2404()) return false;
+            if (!TCPserver.StartMonitor2404()) return false;
 
             return true;
         }
@@ -1018,7 +1021,7 @@ namespace EMS
                     return false;
                 }
 
-                if(!ModbusTcpServer.StartMonitor502()) return false;
+                if (!ModbusTcpServer.StartMonitor502()) return false;
                 return true;
             }
             catch (Exception ex)
@@ -1100,12 +1103,30 @@ namespace EMS
                 ems.ID = frmSet.config.i485Addr;
                 ems.Parent = AllEquipment;
                 ems.m485 = new modbus();
+
                 return ems.m485.OpenEMS(
                     frmSet.config.DebugComName,
                     38400,
                     8,
                     System.IO.Ports.Parity.None,
                     System.IO.Ports.StopBits.One);
+
+                /*                bool opened = ems.m485.OpenEMS(
+                                    frmSet.config.DebugComName,
+                                    38400,
+                                    8,
+                                    System.IO.Ports.Parity.None,
+                                    System.IO.Ports.StopBits.One);
+
+                                if (opened)
+                                {
+                                    // 创建并启动 Modbus 从站
+                                    var emsService = new EmsServiceAdapter(ems);
+                                    _modbusSlave = new ModbusSlave(ems.m485, (byte)frmSet.config.i485Addr, emsService);
+                                    _modbusSlave.Start();
+                                }
+
+                                return opened;*/
             }
             catch (Exception ex)
             {
@@ -1131,10 +1152,10 @@ namespace EMS
                 AllEquipment.Profit2Cloud.iot_code = "ems" + strID;
 
                 // 初始化云服务
-/*                AllEquipment.Report2Cloud = new CloudClass
-                {
-                    Parent = AllEquipment
-                };*/
+                /*                AllEquipment.Report2Cloud = new CloudClass
+                                {
+                                    Parent = AllEquipment
+                                };*/
 
                 //AllEquipment.Report2Cloud.IniClound();
 
@@ -1142,10 +1163,10 @@ namespace EMS
                 //frmMain.Selffrm.AllEquipment.Report2Cloud.strUpPath = strSysPath + "UpData";
                 //frmMain.Selffrm.AllEquipment.Report2Cloud.strDownPath = strSysPath + "DownData";
 
-/*                if (!AllEquipment.Report2Cloud.mqttConnect())
-                {
-                    log.Error("MQTT连接失败");
-                }*/
+                /*                if (!AllEquipment.Report2Cloud.mqttConnect())
+                                {
+                                    log.Error("MQTT连接失败");
+                                }*/
 
                 // 初始化策略
                 TacticsList.Parent = AllEquipment;
@@ -1206,7 +1227,7 @@ namespace EMS
             if (!InitFrmMainClass_Threads()) return false;
             //if(!AllEquipment.Report2Cloud.InitCloudClass_Timer()) return false;
             //if (!AllEquipment.Report2Cloud.InitCloudClass_Threads()) return false;
-            if(!AllEquipment.AutoReadData()) return false;
+            if (!AllEquipment.AutoReadData()) return false;
 
             return true;
         }
@@ -1256,7 +1277,7 @@ namespace EMS
 
                 if (BalaTacticsList != null)
                 {
-                    if(!BalaTacticsList.AutoCheckBalaTactics()) return false;
+                    if (!BalaTacticsList.AutoCheckBalaTactics()) return false;
                 }
 
                 if (TacticsList != null)
@@ -1300,45 +1321,67 @@ namespace EMS
             {
                 try
                 {
-                    // 周期计算今日充放电量
-                    //frmMain.Selffrm.AllEquipment.CalculateNowPower();
-
                     //上电启动后必须完成1次电表校准
                     if (!frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess)
                     {
-                        if (frmMain.Selffrm.AllEquipment.MeterCalibration()) {
+                        if (frmMain.Selffrm.AllEquipment.MeterCalibration())
+                        {
                             frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = true;
                         }
 
                     }
 
                     /************************* 日切换执行 *************************************/
-                    if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess) {
-                        if (frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff()){
+                    if (!frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess)
+                    {
+                        if (frmMain.BalaTacticsList.LoadFromMySQL())
+                        {
+                            frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess = true;
+                        }
+                    }
+
+                    if (!frmMain.Selffrm.AllEquipment.LoadTacticsSuccess)
+                    {
+                        if (frmMain.TacticsList.LoadMasterDailyTactics())
+                        {
+                            frmMain.Selffrm.AllEquipment.LoadTacticsSuccess = true;
+                        }
+                    }
+
+
+                    if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess)
+                    {
+                        if (frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff())
+                        {
                             frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
                         }
                     }
 
-                    if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess) {
-                        if (frmSet.Set_HistoryData()){
+                    if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess)
+                    {
+                        if (frmSet.Set_HistoryData())
+                        {
                             frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = true;
                         }
                     }
 
-                    if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess) {
-                        if (frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"))){
+                    if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess)
+                    {
+                        if (frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd")))
+                        {
                             frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = true;
                         }
                     }
 
-                    if (!frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess) {
-                        if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"))) {
+                    if (!frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess)
+                    {
+                        if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd")))
+                        {
                             frmSet.peElestic.rDate = DateTime.Now;
                             frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = true;
                         }
                     }
 
-                    //log.Error("frmMain.Selffrm.AllEquipment.SignalAlarmActive:" + frmMain.Selffrm.AllEquipment.SignalAlarmActive);
                     // 检查月份是否更新
                     if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
                     {
@@ -1374,93 +1417,199 @@ namespace EMS
                         // 记录收益
                         frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = false;
 
-                        /*                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
-                                                {
-                                                    string strdate = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
-                                                    if (!DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'")) //防止重复插入
-                                                    {
-                                                        // 保存当天收益到数据库
-                                                        //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
-                                                        //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
-
-                                                        frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                                        log.Error("保存当天收益到数据库");
-
-                                                        // 当日收益发送到云
-                                                        frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                                        frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
-                                                        //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
-                                                        frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                                        log.Error("当日收益发送到云");
-
-                                                        // 更新日期
-                                                        //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
-                                                        frmSet.peElestic.rDate = DateTime.Now;
-
-                                                        // 将当天的储能表和辅表的电能数据保存到INI
-                                                        //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
-
-                                                        // 将当天的储能表和辅表的电能数据保存到SQL
-                                                        frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
-                                                        log.Error("将当天的储能表和辅表的电能数据保存到SQL");
-                                                    }
-                                                    else
-                                                    {
-                                                        // 更新日期
-                                                        frmSet.peElestic.rDate = DateTime.Now;
-                                                        log.Error("重新更新日期");
-                                                    }
-                                                }*/
-
-
-                        /*                        frmMain.Selffrm.AllEquipment.MeterCalibration();
-
-                                                frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段*/
-
                         // 校准电表日期
                         frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = false;
                         frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
 
+                        // 加载充放策略
+                        frmMain.Selffrm.AllEquipment.LoadTacticsSuccess = false;
 
-                        // 每晚00:00更新策略
-                        if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
-                        {
-                            try
-                            {
-                                if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
-                                {
-                                    log.Error("监测到4G通信异常，使用情况1来装载策略");
-                                    frmMain.TacticsList.LoadFromMySQL(1);//重新装载策略
-                                }
-                                else {
-                                    log.Error("监测到4G通信正常，使用情况0来装载策略");
-                                    frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                log.Error("定时器刷新数据库失败: " + ex.Message);
-                            }
-                        }
+                        // 加载均衡策略
+                        frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess = false;
+                    }
+           
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Public_TimerCallback encountered an error: " + ex.Message);
+                }
 
-                        // 更新均衡策略
+                // 等待 2分钟再进行下一次心跳
+                Thread.Sleep(120000);
+                //Thread.Sleep(1000);
+            }
+        }
+
+
+
+
+        /*        private void PublicThreadCallback()
+                {
+                    while (true)
+                    {
                         try
                         {
-                            frmMain.BalaTacticsList.LoadFromMySQL();
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("00:00更新均衡策略失败: " + ex.Message);
-                        }
+                            // 周期计算今日充放电量
+                            //frmMain.Selffrm.AllEquipment.CalculateNowPower();
 
-                        // 检查网络是否正常: 可能出现储能表通讯不正常且4G不通导致反复重启得问题
-/*                        if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                            //上电启动后必须完成1次电表校准
+                            if (!frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess)
+                            {
+                                if (frmMain.Selffrm.AllEquipment.MeterCalibration()) {
+                                    frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = true;
+                                }
+
+                            }
+
+                            *//************************* 日切换执行 *************************************//*
+                            if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess) {
+                                if (frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff()){
+                                    frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
+                                }
+                            }
+
+                            if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess) {
+                                if (frmSet.Set_HistoryData()){
+                                    frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = true;
+                                }
+                            }
+
+                            if (!frmMain.Selffrm.AllEquipment.DeleOldDataSuccess) {
+                                if (frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"))){
+                                    frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = true;
+                                }
+                            }
+
+                            if (!frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess) {
+                                if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"))) {
+                                    frmSet.peElestic.rDate = DateTime.Now;
+                                    frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = true;
+                                }
+                            }
+
+                            //log.Error("frmMain.Selffrm.AllEquipment.SignalAlarmActive:" + frmMain.Selffrm.AllEquipment.SignalAlarmActive);
+                            // 检查月份是否更新
+                            if (frmMain.Selffrm.AllEquipment.mDate != DateTime.Now.ToString("yyyy-MM"))
+                            {
+                                frmSet.historyDatas.ClientPUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max;
+                                frmSet.historyDatas.E1PUMdemandMaxOld = (int)frmMain.Selffrm.AllEquipment.E1_PUMdemand_Max;
+                                frmSet.historyDatas.ClientPUMdemandMax = 0;
+                                frmMain.Selffrm.AllEquipment.Client_PUMdemand_Max = 0;
+                                frmMain.Selffrm.AllEquipment.mDate = DateTime.Now.ToString("yyyy-MM");
+                            }
+
+                            // 检查日期是否更新
+                            //if (frmMain.Selffrm.AllEquipment.rDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                            if (frmMain.Selffrm.AllEquipment.currentDate != DateTime.Now.ToString("yyyy-MM-dd"))
+                            {
+                                log.Error("日期更迭：" + "记录时间: " + frmMain.Selffrm.AllEquipment.currentDate + "当前时间： " + DateTime.Now.ToString("yyyy-MM-dd"));
+
+                                // 更新日期
+                                frmMain.Selffrm.AllEquipment.currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                                // 重置EMS重启次数
+                                if (frmSet.historyDatas != null && frmSet.historyDatas.RebootCount != 5)
+                                {
+                                    frmSet.historyDatas.RebootCount = 5;
+                                }
+
+                                //每日同步今日充放电量
+                                frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess = false;
+
+                                // 删除180天前的数据
+                                //frmSet.DeleOldData(DateTime.Now.AddDays(-180).ToString("yyyy-MM-dd"));
+                                frmMain.Selffrm.AllEquipment.DeleOldDataSuccess = false;
+
+                                // 记录收益
+                                frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = false;
+
+                                *//*                        if (frmMain.Selffrm.AllEquipment.Elemeter2 != null && frmMain.Selffrm.AllEquipment.Elemeter2.Prepared)
+                                                        {
+                                                            string strdate = frmSet.peElestic.rDate.ToString("yyyy-MM-dd");
+                                                            if (!DBConnection.CheckRec("select *  FROM profit where rTime = '" + strdate + "'")) //防止重复插入
+                                                            {
+                                                                // 保存当天收益到数据库
+                                                                //frmMain.Selffrm.AllEquipment.SaveDataInoneDay(frmMain.Selffrm.AllEquipment.rDate);
+                                                                //frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmMain.Selffrm.AllEquipment.rDate);
+
+                                                                frmMain.Selffrm.AllEquipment.SaveDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                                log.Error("保存当天收益到数据库");
+
+                                                                // 当日收益发送到云
+                                                                frmMain.Selffrm.AllEquipment.CalculateProfit(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                                frmMain.Selffrm.AllEquipment.WaitRecPem = 1;//等待确认消息送达
+                                                                //frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmMain.Selffrm.AllEquipment.rDate);
+                                                                frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                                log.Error("当日收益发送到云");
+
+                                                                // 更新日期
+                                                                //frmMain.Selffrm.AllEquipment.rDate = DateTime.Now.ToString("yyyy-MM-dd");
+                                                                frmSet.peElestic.rDate = DateTime.Now;
+
+                                                                // 将当天的储能表和辅表的电能数据保存到INI
+                                                                //frmMain.Selffrm.AllEquipment.WriteDataInoneDayINI(frmMain.Selffrm.AllEquipment.rDate);
+
+                                                                // 将当天的储能表和辅表的电能数据保存到SQL
+                                                                frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd"));
+                                                                log.Error("将当天的储能表和辅表的电能数据保存到SQL");
+                                                            }
+                                                            else
+                                                            {
+                                                                // 更新日期
+                                                                frmSet.peElestic.rDate = DateTime.Now;
+                                                                log.Error("重新更新日期");
+                                                            }
+                                                        }*/
+
+
+        /*                        frmMain.Selffrm.AllEquipment.MeterCalibration();
+
+                                frmMain.TacticsList.LoadJFPGFromSQL();//更新电表时段*//*
+
+        // 校准电表日期
+        frmMain.Selffrm.AllEquipment.MeterCalibrationSuccess = false;
+        frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
+
+
+        // 每晚00:00更新策略
+        if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
+        {
+            try
+            {
+                if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                {
+                    log.Error("监测到4G通信异常，使用情况1来装载策略");
+                    frmMain.TacticsList.LoadFromMySQL(1);//重新装载策略
+                }
+                else {
+                    log.Error("监测到4G通信正常，使用情况0来装载策略");
+                    frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("定时器刷新数据库失败: " + ex.Message);
+            }
+        }
+
+        // 更新均衡策略
+        try
+        {
+            frmMain.BalaTacticsList.LoadFromMySQL();
+        }
+        catch (Exception ex)
+        {
+            log.Error("00:00更新均衡策略失败: " + ex.Message);
+        }
+
+        // 检查网络是否正常: 可能出现储能表通讯不正常且4G不通导致反复重启得问题
+*//*                        if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
                         {
                             log.Error("检查网络不正常");
                             Program.RestartDevice();
-                        }*/
+                        }*//*
                     }
-/*                    else
+*//*                    else
                     {
                         //昨日收益重传
                         if (frmMain.Selffrm.AllEquipment.WaitRecPem == 1)
@@ -1470,7 +1619,7 @@ namespace EMS
                             string previousDayString = previousDay.ToString("yyyy-MM-dd");
                             frmMain.Selffrm.AllEquipment.Report2Cloud.SaveProfit2Cloud(previousDayString);
                         }
-                    }*/
+                    }*//*
 
 
                 }
@@ -1483,7 +1632,7 @@ namespace EMS
                 Thread.Sleep(120000);
                 //Thread.Sleep(1000);
             }
-        }
+        }*/
 
         /*****************************************************************************************/
 
@@ -1771,6 +1920,9 @@ namespace EMS
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SysThreathStoped = true;
+
+            // 停止 Modbus 从站
+            _modbusSlave?.Stop();
         }
 
         /// <summary>

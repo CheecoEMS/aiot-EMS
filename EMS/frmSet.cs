@@ -2323,18 +2323,20 @@ namespace EMS
 
         static public bool DeleOldData(string astrData)
         {
-            // 防御性检查：确保日期格式合法（可选）
-            if (string.IsNullOrWhiteSpace(astrData))
+            try
             {
-                log.Error("DeleOldData: 传入的日期为空");
-                return false;
-            }
 
-            string[] strSQL = {
+                // 防御性检查：确保日期格式合法（可选）
+                if (string.IsNullOrWhiteSpace(astrData))
+                {
+                    log.Error("DeleOldData: 传入的日期为空");
+                    return false;
+                }
+
+                string[] strSQL = {
                 "DELETE FROM cellstemp WHERE rTime < '" + astrData + "'",
                 "DELETE FROM battery WHERE rTime < '" + astrData + "'",
                 "DELETE FROM cellsv WHERE rTime < '" + astrData + "'",
-                "DELETE FROM electrovalence WHERE rTime < '" + astrData + "'",
                 "DELETE FROM elemeter1 WHERE rTime < '" + astrData + "'",
                 "DELETE FROM elemeter2 WHERE rTime < '" + astrData + "'",
                 "DELETE FROM elemeter3 WHERE rTime < '" + astrData + "'",
@@ -2344,23 +2346,27 @@ namespace EMS
                 "DELETE FROM pcs WHERE rTime < '" + astrData + "'",
                 "DELETE FROM pncontroler WHERE rTime < '" + astrData + "'",
                 "DELETE FROM profit WHERE rTime < '" + astrData + "'",
-                "DELETE FROM tactics WHERE rTime < '" + astrData + "'",
                 "DELETE FROM tempcontrol WHERE rTime < '" + astrData + "'",
                 "DELETE FROM warning WHERE rTime < '" + astrData + "'",
                 "DELETE FROM liquidcool WHERE rTime < '" + astrData + "'"
             };
 
-            foreach (string sql in strSQL)
-            {
-                if (DBConnection.ExecSQLWithParams(sql, null) < 0)
+                foreach (string sql in strSQL)
                 {
-                    log.Error($"DeleOldData 失败于 SQL: {sql.Substring(0, Math.Min(80, sql.Length))}...");
-                    return false; // 任一失败即整体失败
+                    if (DBConnection.ExecSQLWithParams(sql, null) < 0)
+                    {
+                        log.Error($"DeleOldData 失败于 SQL: {sql.Substring(0, Math.Min(80, sql.Length))}...");
+                        return false; // 任一失败即整体失败
+                    }
                 }
-            }
 
-            log.Info($"DeleOldData 成功清理 {astrData} 之前的数据");
-            return true;
+                log.Info($"DeleOldData 成功清理 {astrData} 之前的数据");
+                return true;
+            }
+            catch (Exception ex) {
+                log.Error("DeleOldData: " + ex);
+                return false;
+            }
         }
 
         private void DelData(string aTableName, string aDataName, string aData, DataGridView aDataGrid)

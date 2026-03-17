@@ -18,6 +18,9 @@ namespace EMS
         {
             public SerialPort Port;
             public readonly object SyncRoot = new object();
+
+            // RTU 帧时间控制（端口级）
+            public DateTime LastFrameEnd = DateTime.MinValue;
         }
 
         private static readonly Dictionary<string, SerialPortWrapper> PortPool =
@@ -120,7 +123,76 @@ namespace EMS
 
         #endregion
 
+        #region ===== 端口级帧间隔等待 =====
+        private int GetT35DelayMs()
+        {
+            if (sp == null) return 5;
+
+            int bitsPerChar =
+                1 + // start
+                sp.DataBits +
+                (sp.Parity == Parity.None ? 0 : 1) +
+                (sp.StopBits == StopBits.One ? 1 : 2);
+
+            double tChar = (double)bitsPerChar / sp.BaudRate;
+            double t35 = tChar * 3.5;
+
+            //  最小 1ms，防止 Thread.Sleep(0)
+            return Math.Max(100, (int)Math.Ceiling(t35 * 1000));
+        }
+
+        private void WaitFrameGap(int extraDelayMs = 0)
+        {
+            int t35 = GetT35DelayMs();
+            int needDelay = Math.Max(t35, extraDelayMs);
+
+            if (spw.LastFrameEnd == DateTime.MinValue)
+                return;
+
+            double elapsed = (DateTime.Now - spw.LastFrameEnd).TotalMilliseconds;
+            int wait = needDelay - (int)elapsed;
+
+            if (wait > 0)
+                Thread.Sleep(wait);
+        }
+
+        #endregion
+
         #region ===== Low Level IO (绝对线程安全) =====
+        /// <summary>
+        /// 安全清空串口接收缓冲区（不使用 Discard）
+        /// 只读，不中止 I/O
+        /// </summary>
+        private void SoftClearInputBuffer(int maxBytes = 1024)
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    int toRead = sp.BytesToRead;
+                    if (toRead <= 0)
+                        return;
+
+                    // 防止异常设备疯狂发数据
+                    toRead = Math.Min(toRead, maxBytes);
+
+                    byte[] trash = new byte[toRead];
+                    sp.Read(trash, 0, toRead);
+                }
+                catch (TimeoutException)
+                {
+                    // 忽略
+                }
+                catch (Exception ex)
+                {
+                    log.Warn("SoftClearInputBuffer异常: " + ex.Message);
+                }
+            }
+        }
+
 
         private bool ReadResponse(byte[] buffer)
         {
@@ -151,12 +223,30 @@ namespace EMS
             {
                 try
                 {
+                    // 等待 RTU 帧间隔
+                    WaitFrameGap();
+
+
+                    // Cause: 单线程中的异步会导致后续读取的IO操作中断
                     sp.DiscardInBuffer();
                     sp.DiscardOutBuffer();
 
+                    //SoftClearInputBuffer(); // ✅ 安全清空
+
                     sp.Write(request, 0, request.Length);
 
-                    return ReadResponse(response);
+                    //return ReadResponse(response);
+
+                    // 等待物理发送完成（USB-串口非常重要）
+                    sp.BaseStream.Flush();
+
+                    bool res = ReadResponse(response);
+
+                    // 记录帧结束时间（端口级）
+                    spw.LastFrameEnd = DateTime.Now;
+
+                    return res;
+
                 }
                 catch (Exception ex)
                 {
@@ -361,6 +451,38 @@ namespace EMS
                 return false;
             }
         }
+
+        /*        private bool Read3Response(byte addr, byte cmd, ushort start, ushort len, ref byte[] resp)
+                {
+                    try
+                    {
+                        byte[] req = ModbusBase.BuildMSG3(addr, cmd, start, len);
+                        resp = new byte[5 + len * 2];
+
+                        bool success = SendAndReceive(req, resp);
+
+                        if (!success)
+                        {
+                            log.Error($"Read3Response failed - Device Address: {addr}, COM Command: {cmd}, Start Address: {start}, Length: {len}, Error: No response received");
+                            return false;
+                        }
+
+                        bool checkResult = ModbusBase.CheckResponse(resp);
+                        if (!checkResult)
+                        {
+                            // 将响应数据转换为十六进制字符串以便调试
+                            string hexResponse = BitConverter.ToString(resp);
+                            log.Error($"Read3Response CRC check failed - Device Address: {addr}, COM Command: {cmd}, Start Address: {start}, Length: {len}, Response: {hexResponse}");
+                        }
+
+                        return checkResult;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Read3Response exception - Device Address: {addr}, COM Command: {cmd}, Start Address: {start}, Length: {len}, Exception: " + ex);
+                        return false;
+                    }
+                }*/
 
         private bool Read5Response(byte addr, byte cmd, ushort reg, bool data, ref byte[] resp)
         {
@@ -757,6 +879,8 @@ namespace EMS
                 {
                     sp.DiscardOutBuffer();
                     sp.DiscardInBuffer();
+
+                    //SoftClearInputBuffer();
                     sp.Write(aMessage, 0, aMessage.Length);
                 }
                 catch (Exception ex)
@@ -808,6 +932,56 @@ namespace EMS
                 strBack += response[i].ToString("x2");
             }
             return true;
+        }
+
+        #endregion
+
+
+        #region ===== RTU Slave Low-Level API =====
+
+        /// <summary>
+        /// 从站：阻塞读取 1 个字节（线程安全）
+        /// </summary>
+        public int SlaveReadByte()
+        {
+            if (spw == null || sp == null || !sp.IsOpen)
+                return -1;
+
+            lock (spw.SyncRoot)
+            {
+                try
+                {
+                    return sp.ReadByte(); // ✅ 阻塞
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从站：当前可读取字节数
+        /// </summary>
+        public int SlaveBytesToRead
+        {
+            get
+            {
+                if (spw == null || sp == null || !sp.IsOpen)
+                    return 0;
+
+                lock (spw.SyncRoot)
+                {
+                    try
+                    {
+                        return sp.BytesToRead;
+                    }
+                    catch
+                    {
+                        return 0;
+                    }
+                }
+            }
         }
 
         #endregion

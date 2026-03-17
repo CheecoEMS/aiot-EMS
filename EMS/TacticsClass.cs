@@ -453,7 +453,7 @@ namespace EMS
                             e2.timing(73);
                         }
 
-                        log.Error("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
+                        //log.Error("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
                     }
 
                 }
@@ -474,7 +474,7 @@ namespace EMS
                             e3.timing(47);
                         }
 
-                        log.Error("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
+                        //log.Error("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
                     }
                 }
 
@@ -704,6 +704,38 @@ namespace EMS
                       return false;
                   }
               }*/
+
+
+        public bool LoadMasterDailyTactics()
+        {
+            bool res = false;
+            if (frmMain.TacticsList != null && frmSet.config.IsMaster == 1)
+            {
+                try
+                {
+                    if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                    {
+                        log.Error("监测到4G通信异常，使用情况1来装载策略");
+                        res = frmMain.TacticsList.LoadFromMySQL(1);//重新装载策略
+                    }
+                    else
+                    {
+                        log.Error("监测到4G通信正常，使用情况0来装载策略");
+                        res = frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
+                    }
+
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    log.Error("定时器刷新数据库失败: " + ex.Message);
+                    return false;
+                }
+            }
+            else {
+                return true;
+            }
+        }
 
 
         #region 联网下清洗数据库中的策略

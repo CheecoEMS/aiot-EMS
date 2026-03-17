@@ -5013,7 +5013,7 @@ namespace EMS
 
                 if (Get3strData(29, ref strTemp, ref strData)) {
                     Error[2] = Convert.ToUInt16(strData);
-                    SysTempFlt = Error[2];
+                    SysHwFlt = Error[2];
                 }
 
                 if (Get3strData(30, ref strTemp, ref strData)) {
@@ -5840,6 +5840,26 @@ namespace EMS
 
             }
         }
+
+        /*        private void UpdateCellTemp_168(double[] aCellTemps, int aStart, string aData)
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        for (int j = 0; j < 14; j++)
+                        {
+                            if (DataParser.TryReadInt16Scaled(ref aData, 0.1, out double temp))
+                            {
+                                aCellTemps[aStart + i * 20 + j] = Math.Round(temp, 1);
+                            }
+                            else
+                            {
+                                // 失败兜底（按你业务来）
+                                aCellTemps[aStart + i * 20 + j] = double.NaN;
+                            }
+                        }
+                    }
+                }*/
+
 
         private void UpdatePTemp_168(double[] aCellTemps, string aData)
         {
@@ -7689,10 +7709,11 @@ namespace EMS
 
         public bool MeterCalibrationSuccess = false;
         public bool LoadJFPGSuccess = false;
+        public bool LoadTacticsSuccess = false;
         public bool SetHistoryDataSuccess = true;
         public bool DeleOldDataSuccess = true;
         public bool WriteDataInoneDaySuccess = true;
-
+        public bool LoadBalaTacticsSuccess = false;
 
 
 
@@ -9024,7 +9045,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                log.Error("Error starting PublicThread: " + ex.Message);
+                log.Error("Error starting AutoGetSignalStrength: " + ex.Message);
                 return false;
             }
         }
@@ -9064,7 +9085,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                log.Error("Error starting PublicThread: " + ex.Message);
+                log.Error("Error starting AutoTestSignalStrength: " + ex.Message);
                 return false;
             }
         }
@@ -9103,7 +9124,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                log.Error("Error starting PublicThread: " + ex.Message);
+                log.Error("Error starting AutoTemperControl: " + ex.Message);
                 return false;
             }
         }
@@ -9179,7 +9200,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                log.Error("Error starting PublicThread: " + ex.Message);
+                log.Error("Error starting AutoLiquidCold_HeartBeat: " + ex.Message);
                 return false;
             }
         }
@@ -9218,7 +9239,7 @@ namespace EMS
             }
             catch (Exception ex)
             {
-                log.Error("Error starting PublicThread: " + ex.Message);
+                log.Error("Error starting AutoLed_Control: " + ex.Message);
                 return false;
             }
         }

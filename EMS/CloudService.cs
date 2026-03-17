@@ -11,6 +11,8 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace EMS
 {
@@ -73,6 +75,8 @@ namespace EMS
         private FileQueue _fileQueue;
 
         #endregion
+
+        private long _faultSeq = 0;
 
         #region ===== ctor =====
 
@@ -1162,10 +1166,22 @@ namespace EMS
         #endregion
 
         #region ===== 将故障数据整理存入文件 =====
-        public void SaveFault2Cloud()
+/*        public void SaveFault2Cloud()
         {
             string strTime = DateTime.Now.ToString("yyyyMMddHHmmss"); ;
             ConvertToJsonQueue(Parent.Fault2Cloud, $"0fau{strTime}.json");
+        }*/
+
+        public void SaveFault2Cloud()
+        {
+            var now = DateTime.Now;
+            var ts = now.ToString("yyyyMMddHHmmssfff"); // 毫秒
+            var seq = Interlocked.Increment(ref _faultSeq) & 0xFFFF;
+
+            ConvertToJsonQueue(
+                Parent.Fault2Cloud,
+                $"0fau{ts}_{seq}.json"
+            );
         }
         #endregion
 
@@ -1183,7 +1199,6 @@ namespace EMS
     {
         public readonly string ReadyPath;
         public readonly string SendingPath;
-        public readonly string FailedPath; // 仅保留目录，不再使用
         public readonly string TmpPath;
         public readonly string LogPath;
 
@@ -1197,48 +1212,79 @@ namespace EMS
         private readonly object _lock = new object();
         private readonly object _logLock = new object();
 
-        // key = yyyyMMdd|filename（字符串排序 = 时间排序）
+        /*
+         * key = <timestamp>|<bucket>|<filename>
+         * 排序只看 timestamp（字符串排序 = 时间排序）
+         */
         private readonly SortedSet<string> _readyIndex =
             new SortedSet<string>(StringComparer.Ordinal);
 
         private long _readyBytes;
+
+        private static readonly ILog log = LogManager.GetLogger("FileQueue");
 
         // =========================================================
         // ctor
         // =========================================================
         public FileQueue(string basePath)
         {
-            ReadyPath   = Path.Combine(basePath, "ready");
-            SendingPath = Path.Combine(basePath, "sending");
-            TmpPath     = Path.Combine(basePath, "tmp");
-            LogPath     = Path.Combine(basePath, "log");
+            try
+            {
+                ReadyPath   = Path.Combine(basePath, "ready");
+                SendingPath = Path.Combine(basePath, "sending");
+                TmpPath     = Path.Combine(basePath, "tmp");
+                LogPath     = Path.Combine(basePath, "log");
 
-            Directory.CreateDirectory(ReadyPath);
-            Directory.CreateDirectory(SendingPath);
-            Directory.CreateDirectory(TmpPath);
-            Directory.CreateDirectory(LogPath);
+                Directory.CreateDirectory(ReadyPath);
+                Directory.CreateDirectory(SendingPath);
+                Directory.CreateDirectory(TmpPath);
+                Directory.CreateDirectory(LogPath);
 
-            RecoverSendingFiles();
-            BuildIndexOnce();
+                CleanupTmpOnStartup();
+                RecoverSendingFiles();
+                BuildIndexOnce();
+            }
+            catch (Exception ex) {
+                log.Error("Init FileQueue: " + ex);
+            }
         }
 
         // =========================================================
-        // 启动时一次性索引（允许）
+        // 启动清理 tmp（孤儿文件）
+        // =========================================================
+        private void CleanupTmpOnStartup()
+        {
+            foreach (var f in Directory.EnumerateFiles(TmpPath, "*.tmp"))
+            {
+                TryDelete(f);
+            }
+        }
+
+        // =========================================================
+        // 启动索引
         // =========================================================
         private void BuildIndexOnce()
         {
-            foreach (var dir in Directory.EnumerateDirectories(ReadyPath))
+            try
             {
-                var bucket = Path.GetFileName(dir);
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.json"))
+                foreach (var dir in Directory.EnumerateDirectories(ReadyPath))
                 {
-                    var name = Path.GetFileName(file);
-                    var len = new FileInfo(file).Length;
+                    var bucket = Path.GetFileName(dir);
 
-                    _readyIndex.Add(bucket + "|" + name);
-                    _readyBytes += len;
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.json"))
+                    {
+                        var name = Path.GetFileName(file);
+                        var len = new FileInfo(file).Length;
+
+                        var ts = ExtractTimestamp(name);
+
+                        _readyIndex.Add($"{ts}|{bucket}|{name}");
+                        _readyBytes += len;
+                    }
                 }
+            }
+            catch (Exception ex) {
+                log.Error("BuildIndexOnce: " + ex);
             }
         }
 
@@ -1253,23 +1299,40 @@ namespace EMS
                 var readyBucket = Path.Combine(ReadyPath, bucket);
                 Directory.CreateDirectory(readyBucket);
 
-                var tmp = Path.Combine(TmpPath, fileName + ".tmp");
+                var tmp = Path.Combine(
+                    TmpPath,
+                    $"{fileName}.{Guid.NewGuid():N}.tmp"
+                );
+
                 var ready = Path.Combine(readyBucket, fileName);
 
-                File.WriteAllText(tmp, json);
-                File.Move(tmp, ready);
+                try
+                {
+                    File.WriteAllText(tmp, json, Encoding.UTF8);
 
-                var len = new FileInfo(ready).Length;
+                    if (File.Exists(ready))
+                        throw new IOException($"Ready file exists: {ready}");
 
-                _readyIndex.Add(bucket + "|" + fileName);
-                _readyBytes += len;
+                    File.Move(tmp, ready);
 
-                EnforceReadyQuota();
+                    var len = new FileInfo(ready).Length;
+                    var ts = ExtractTimestamp(fileName);
+
+                    _readyIndex.Add($"{ts}|{bucket}|{fileName}");
+                    _readyBytes += len;
+
+                    EnforceReadyQuota();
+                }
+                catch (Exception ex)
+                {
+                    WriteEnqueueError(tmp, ready, ex);
+                    TryDelete(tmp);
+                }
             }
         }
 
         // =========================================================
-        // Ready → Sending（最新优先）
+        // Ready → Sending（时间最新优先）
         // =========================================================
         public string[] DequeueReadyBatch(int batchSize)
         {
@@ -1279,8 +1342,16 @@ namespace EMS
 
                 while (result.Count < batchSize && _readyIndex.Count > 0)
                 {
-                    var key = _readyIndex.Max;
+                    var key = _readyIndex.Max; // 时间戳最大的
                     var (bucket, file) = SplitKey(key);
+
+                    // 验证 SplitKey 结果
+                    if (bucket == null || file == null)
+                    {
+                        log.Warn($"DequeueReadyBatch: 跳过无效 key={key}");
+                        _readyIndex.Remove(key);
+                        continue;
+                    }
 
                     var src = Path.Combine(ReadyPath, bucket, file);
                     var dstBucket = Path.Combine(SendingPath, bucket);
@@ -1298,10 +1369,10 @@ namespace EMS
 
                         result.Add(dst);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // 异常文件直接丢弃索引，避免死循环
                         _readyIndex.Remove(key);
+                        WriteRollingLog(src, ex);
                     }
                 }
 
@@ -1310,46 +1381,24 @@ namespace EMS
         }
 
         // =========================================================
-        // 发送成功 → 删除
+        // 发送成功
         // =========================================================
         public void MarkSuccess(string sendingFile)
         {
-            try
-            {
-                if (File.Exists(sendingFile))
-                    File.Delete(sendingFile);
-            }
-            catch
-            {
-                // 成功路径不做补救
-            }
+            TryDelete(sendingFile);
         }
 
         // =========================================================
-        // 发送失败 → 写 rolling.log → 删除
+        // 发送失败
         // =========================================================
         public void MarkFailed(string sendingFile, Exception ex = null)
         {
-            try
-            {
-                WriteRollingLog(sendingFile, ex);
-            }
-            finally
-            {
-                try
-                {
-                    if (File.Exists(sendingFile))
-                        File.Delete(sendingFile);
-                }
-                catch
-                {
-                    // 丢弃即可
-                }
-            }
+            WriteRollingLog(sendingFile, ex);
+            TryDelete(sendingFile);
         }
 
         // =========================================================
-        // Ready 配额（最旧先删）
+        // Ready 配额（最旧时间先删）
         // =========================================================
         private void EnforceReadyQuota()
         {
@@ -1361,7 +1410,7 @@ namespace EMS
 
         private void DeleteOldestReady()
         {
-            var key = _readyIndex.Min;
+            var key = _readyIndex.Min; // 时间戳最小
             var (bucket, file) = SplitKey(key);
             var path = Path.Combine(ReadyPath, bucket, file);
 
@@ -1377,32 +1426,52 @@ namespace EMS
         }
 
         // =========================================================
-        // rolling.log（线程安全 + 自动滚动）
+        // rolling.log
         // =========================================================
         private void WriteRollingLog(string file, Exception ex)
         {
             lock (_logLock)
             {
-                var logFile = Path.Combine(LogPath, "send_fail.log");
-
-                RotateLogIfNeeded(logFile);
-
-                var sb = new StringBuilder();
-                sb.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}]");
-                sb.AppendLine($"File={file}");
-
-                if (ex != null)
+                try
                 {
+                    var logFile = Path.Combine(LogPath, "send_fail.log");
+                    RotateLogIfNeeded(logFile);
+
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}]");
+                    sb.AppendLine($"File={file}");
+                    sb.AppendLine($"Error={ex?.GetType().Name}: {ex?.Message}");
+                    sb.AppendLine();
+
+                    File.AppendAllText(logFile, sb.ToString(), Encoding.UTF8);
+                }
+                catch (Exception e) {
+                    log.Error("WriteRollingLog: " + e);
+                }
+            }
+        }
+
+        private void WriteEnqueueError(string tmp, string ready, Exception ex)
+        {
+            lock (_logLock)
+            {
+                try
+                {
+                    var logFile = Path.Combine(LogPath, "enqueue_error.log");
+
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}]");
+                    sb.AppendLine($"Tmp={tmp}");
+                    sb.AppendLine($"Ready={ready}");
                     sb.AppendLine($"Error={ex.GetType().Name}: {ex.Message}");
+                    sb.AppendLine();
+
+                    File.AppendAllText(logFile, sb.ToString(), Encoding.UTF8);
                 }
-                else
+                catch (Exception e)
                 {
-                    sb.AppendLine("Error=Unknown");
+                    log.Error("WriteEnqueueError: " + e);
                 }
-
-                sb.AppendLine();
-
-                File.AppendAllText(logFile, sb.ToString(), Encoding.UTF8);
             }
         }
 
@@ -1411,17 +1480,13 @@ namespace EMS
             if (File.Exists(logFile) && new FileInfo(logFile).Length < MaxLogBytes)
                 return;
 
-            // send_fail.log.2 ← send_fail.log.1 ← send_fail.log
             for (int i = MaxLogFiles - 1; i >= 1; i--)
             {
                 var src = $"{logFile}.{i}";
                 var dst = $"{logFile}.{i + 1}";
 
-                if (File.Exists(dst))
-                    File.Delete(dst);
-
-                if (File.Exists(src))
-                    File.Move(src, dst);
+                if (File.Exists(dst)) File.Delete(dst);
+                if (File.Exists(src)) File.Move(src, dst);
             }
 
             if (File.Exists(logFile))
@@ -1441,8 +1506,7 @@ namespace EMS
 
                 foreach (var file in Directory.EnumerateFiles(dir, "*.json"))
                 {
-                    var name = Path.GetFileName(file);
-                    File.Move(file, Path.Combine(readyBucket, name));
+                    File.Move(file, Path.Combine(readyBucket, Path.GetFileName(file)));
                 }
             }
         }
@@ -1450,209 +1514,52 @@ namespace EMS
         // =========================================================
         // utils
         // =========================================================
+
+        // 从文件名中提取时间戳（忽略前缀/后缀）
+        private static string ExtractTimestamp(string fileName)
+        {
+            var digits = new string(fileName.Where(char.IsDigit).ToArray());
+
+            // FAU：yyyyMMddHHmmssfff（17 位）
+            if (digits.Length >= 17)
+                return digits.Substring(0, 17);
+
+            // 其他：yyyyMMddHHmmss（14 位）
+            if (digits.Length >= 14)
+                return digits.Substring(0, 14);
+
+            throw new FormatException($"Invalid timestamp in filename: {fileName}");
+        }
+
+        private static void TryDelete(string file)
+        {
+            try
+            {
+                if (File.Exists(file))
+                    File.Delete(file);
+            }
+            catch (Exception ex) {
+                log.Error("TryDelete: " + ex);
+            }
+        }
+
         private static (string bucket, string file) SplitKey(string key)
         {
-            var i = key.IndexOf('|');
-            return (key.Substring(0, i), key.Substring(i + 1));
+            try
+            {
+                // key = ts|bucket|file
+                var i1 = key.IndexOf('|');
+                var i2 = key.IndexOf('|', i1 + 1);
+
+                var bucket = key.Substring(i1 + 1, i2 - i1 - 1);
+                var file = key.Substring(i2 + 1);
+
+                return (bucket, file);
+            }
+            catch (Exception ex) {
+                log.Error("SplitKey异常: " + ex);
+                return (null, null);
+            }
         }
     }
-
-    /*    public class FileQueue
-        {
-            public readonly string BasePath;
-            public readonly string ReadyPath;
-            public readonly string SendingPath;
-            public readonly string FailedPath;
-            public readonly string TmpPath;
-
-            public long ReadyMaxBytes = 1024L * 1024 * 1024; // 1GB
-            public long FailMaxBytes = 1024L * 1024 * 1024; // 1GB
-
-            private static readonly ILog log = LogManager.GetLogger("FileQueue");
-
-            private readonly object _lock = new object();
-
-            public FileQueue(string basePath)
-            {
-                BasePath    = basePath;
-                ReadyPath   = Path.Combine(basePath, "ready");
-                SendingPath = Path.Combine(basePath, "sending");
-                FailedPath  = Path.Combine(basePath, "failed");
-                TmpPath     = Path.Combine(basePath, "tmp");
-
-                Directory.CreateDirectory(ReadyPath);
-                Directory.CreateDirectory(SendingPath);
-                Directory.CreateDirectory(FailedPath);
-                Directory.CreateDirectory(TmpPath);
-
-                RecoverSendingFiles();
-            }
-
-            /// <summary>
-            /// 程序启动恢复：sending → ready
-            /// </summary>
-            private void RecoverSendingFiles()
-            {
-                lock (_lock)
-                {
-                    foreach (var file in Directory.EnumerateFiles(SendingPath, "*.json"))
-                    {
-                        var dest = Path.Combine(ReadyPath, Path.GetFileName(file));
-                        SafeMove(file, dest);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// 写入文件（原子写入）
-            /// </summary>
-            public void Enqueue(string fileName, string json)
-            {
-                lock (_lock)
-                {
-                    string tmp = Path.Combine(TmpPath, fileName + ".tmp");
-                    string ready = Path.Combine(ReadyPath, fileName);
-
-                    using (var fs = new FileStream(
-                        tmp,
-                        FileMode.Create,
-                        FileAccess.Write,
-                        FileShare.None,
-                        4096,
-                        FileOptions.WriteThrough))
-                    using (var sw = new StreamWriter(fs))
-                    {
-                        sw.Write(json);
-                        sw.Flush();
-                        fs.Flush(true);
-                    }
-
-                    SafeMove(tmp, ready);
-
-                    EnforceQuotaIfNeeded(ReadyPath, ReadyMaxBytes);
-                }
-            }
-
-            /// <summary>
-            /// 取 Ready 批次
-            /// </summary>
-            public string[] DequeueReadyBatch(int batchSize)
-            {
-                lock (_lock)
-                {
-                    var files = Directory.EnumerateFiles(ReadyPath, "*.json")
-                        .OrderByDescending(Path.GetFileName) // 文件名即时间戳
-                        .Take(batchSize)
-                        .ToList();
-
-                    var result = new List<string>(files.Count);
-
-                    foreach (var file in files)
-                    {
-                        var dest = Path.Combine(SendingPath, Path.GetFileName(file));
-                        SafeMove(file, dest);
-                        result.Add(dest);
-                    }
-
-                    return result.ToArray();
-                }
-            }
-
-            /// <summary>
-            /// 取 Failed 批次
-            /// </summary>
-            public string[] DequeueFailBatch(int batchSize)
-            {
-                lock (_lock)
-                {
-                    var files = Directory.EnumerateFiles(FailedPath, "*.json")
-                        .OrderByDescending(Path.GetFileName)
-                        .Take(batchSize)
-                        .ToList();
-
-                    var result = new List<string>(files.Count);
-
-                    foreach (var file in files)
-                    {
-                        var dest = Path.Combine(SendingPath, Path.GetFileName(file));
-                        SafeMove(file, dest);
-                        result.Add(dest);
-                    }
-
-                    return result.ToArray();
-                }
-            }
-
-            /// <summary>
-            /// 发送成功
-            /// </summary>
-            public void MarkSuccess(string sendingFile)
-            {
-                lock (_lock)
-                {
-                    SafeDelete(sendingFile);
-                }
-            }
-
-            /// <summary>
-            /// 发送失败
-            /// </summary>
-            public void MarkFailed(string sendingFile)
-            {
-                lock (_lock)
-                {
-                    var dest = Path.Combine(FailedPath, Path.GetFileName(sendingFile));
-                    SafeMove(sendingFile, dest);
-                    EnforceQuotaIfNeeded(FailedPath, FailMaxBytes);
-                }
-            }
-
-            /// <summary>
-            /// 仅在超限时才执行配额清理
-            /// </summary>
-            private void EnforceQuotaIfNeeded(string dir, long maxBytes)
-            {
-                long total = 0;
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.json"))
-                {
-                    total += new FileInfo(file).Length;
-                    if (total > maxBytes)
-                        break;
-                }
-
-                if (total <= maxBytes)
-                    return;
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.json")
-                    .OrderBy(Path.GetFileName)) // 最旧先删
-                {
-                    var len = new FileInfo(file).Length;
-                    SafeDelete(file);
-                    total -= len;
-
-                    if (total <= maxBytes)
-                        break;
-                }
-            }
-
-            #region ===== Safe IO =====
-
-            private static void SafeMove(string src, string dest)
-            {
-                if (File.Exists(dest))
-                    File.Delete(dest);
-
-                File.Move(src, dest);
-            }
-
-            private static void SafeDelete(string path)
-            {
-                if (File.Exists(path))
-                    File.Delete(path);
-            }
-
-            #endregion
-        } */
-
 }
