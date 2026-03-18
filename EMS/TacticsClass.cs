@@ -164,7 +164,7 @@ namespace EMS
 
 
         #region 从数据库加载费率设置
-        public bool LoadJFPGFromSQL()
+/*        public bool LoadJFPGFromSQL()
         {
             bool res = true;
             cleanJFPGFromMysql();
@@ -268,162 +268,491 @@ namespace EMS
                 return false;
             }
             return res;
-        }
+        }*/
 
-        /// <summary>
-        /// 只从数据库获取“今日电价策略”，并与设备当前费率对比；
-        /// 若不同才继续下发（八费率对比 zone8Rates/rates8Tier；四费率对比 zone4Rates/rates4Tier）。
-        /// </summary>
-        public bool LoadTodayJFPGFromSQL_CompareAndSendIfDiff()
+        public bool LoadJFPGFromSQL()
         {
             bool res = true;
             cleanJFPGFromMysql();
 
-            // 只取今日，并保证按起始时间排序，避免顺序不一致导致重复下发
-            string astrSQL = "select startTime, eName from electrovalence where rTime = @rTime order by startTime asc";
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+
+            string sql =
+                "select rTime, startTime, eName " +
+                "from electrovalence " +
+                "where rTime = @today OR rTime = @tomorrow " +
+                "ORDER BY rTime, startTime";
 
             try
             {
-                var parameters = new Dictionary<string, object> { { "@rTime", DateTime.Today } };
-                var dataTable = DBConnection.QueryDataTableWithParams(astrSQL, parameters);
+                var param = new Dictionary<string, object>
+                {
+                    { "@today", today },
+                    { "@tomorrow", tomorrow }
+                };
 
-                if (dataTable == null || dataTable.Rows.Count <= 0)
+                DataTable dt = DBConnection.QueryDataTableWithParams(sql, param);
+                if (dt == null || dt.Rows.Count == 0)
+                {
+                    log.Error("LoadJFPGFromSQL_New: 今日/明日无电价策略");
                     return true;
-
-                //log.Error("存在今日电价策略");
-
-                byte[] tempJFPG_4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0 };//14*3=42    14个时段 ： 号 分 时
-
-                byte[] tempJFPG_8 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0 };//14*3=42    14个时段 ： 号 时 分
-
-                int i = 0;
-                DateTime dtTemp;
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    if (i >= 14) break;
-                    dtTemp = Convert.ToDateTime("2022-01-01 " + row["startTime"].ToString());
-
-                    byte rateNo = Convert.ToByte(row["eName"]); // 0~4
-
-                    // 八费率：号 时 分
-                    tempJFPG_8[i * 3 + 0] = rateNo;
-                    tempJFPG_8[i * 3 + 1] = (byte)dtTemp.Hour;
-                    tempJFPG_8[i * 3 + 2] = (byte)dtTemp.Minute;
-
-                    // 四费率：号 分 时（保持原逻辑）
-                    tempJFPG_4[i * 3 + 0] = rateNo;
-                    tempJFPG_4[i * 3 + 1] = (byte)dtTemp.Minute;
-                    tempJFPG_4[i * 3 + 2] = (byte)dtTemp.Hour;
-
-                    i++;
                 }
 
-                // 表参数（保持与旧逻辑一致）
-                byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };//储能表使用八费率的第一套表
-                byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };//辅助表使用四费率的第一套表
-                byte[] atable3 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//储能表使用四费率的第三套表
+                List<DataRow> todayRows = new List<DataRow>();
+                List<DataRow> tomorrowRows = new List<DataRow>();
 
-                // 校验：四费率得费率号只允许 0~4，非法则清零（避免下发非法数据）
-                for (int j = 0; j < 14; j++)
+                foreach (DataRow r in dt.Rows)
                 {
-                    if (tempJFPG_4[j * 3 + 0] > 4)
-                    {
-                        tempJFPG_4[j * 3 + 0] = 0;
-                        tempJFPG_4[j * 3 + 1] = 0;
-                        tempJFPG_4[j * 3 + 2] = 0;
-                    }
+                    DateTime d = Convert.ToDateTime(r["rTime"]);
+                    if (d.Date == today)
+                        todayRows.Add(r);
+                    else if (d.Date == tomorrow)
+                        tomorrowRows.Add(r);
                 }
 
-                // 设备2：支持8/4费率，必须对比后决定是否下发
-                if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                {
-                    var e2 = frmMain.Selffrm.AllEquipment.Elemeter2;
-                    if (e2.Version == 8)
-                    {
-                        string expectedZone8 = BytesToHexNoSpaces(atable1);
-                        string expectedRates8 = BytesToHexNoSpaces(tempJFPG_8);
+                log.Error($"LoadJFPGFromSQL_New: 今日 {todayRows.Count} 条，明日 {tomorrowRows.Count} 条");
 
-                        bool needSendElemeter2_8 =
-                            !HexStringEquals(e2.zone8Rates, expectedZone8) ||
-                            !HexStringEquals(e2.rates8Tier, expectedRates8);
-
-/*                        log.Info("expectedZone8: " + expectedZone8 + "expectedRates8: " + expectedRates8 +
-                            "zone8Rates: " + e2.zone8Rates + "rates8Tier: " + e2.rates8Tier);*/
-
-                        if (!needSendElemeter2_8)
-                        {
-                            log.Error("八费率：设备费率与今日策略一致，跳过下发");
-                        }
-                        else if (!e2.SetJFTG_8(atable1, tempJFPG_8))
-                        {
-                            res = false;
-                        }
-                    }
-                    else
-                    {
-                        string expectedZone4 = BytesToHexNoSpaces(atable3);
-                        string expectedRates4 = BytesToHexNoSpaces(tempJFPG_4);
-
-                        bool needSendElemeter2_4 =
-                            !HexStringEquals(e2.zone4Rates, expectedZone4) ||
-                            !HexStringEquals(e2.rates4Tier, expectedRates4);
-
-/*                        log.Info("expectedZone4: " + expectedZone4 + "expectedRates4: " + expectedRates4 +
-                             "zone4Rates: " + e2.zone4Rates + "rates4Tier: " + e2.rates4Tier);*/
-
-                        if (!needSendElemeter2_4)
-                        {
-                            log.Error("四费率：设备费率与今日策略一致，跳过下发");
-                        }
-                        else if (!e2.SetJFTG_4(atable3, tempJFPG_4))
-                        {
-                            res = false;
-                        }
-                    }
-                }
-
-                // 设备3：只支持四费率
-                if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                {
-                    var e3 = frmMain.Selffrm.AllEquipment.Elemeter3;
-                    string expectedZone4 = BytesToHexNoSpaces(atable2);
-                    string expectedRates4 = BytesToHexNoSpaces(tempJFPG_4);
-
-                    bool needSendElemeter3_4 =
-                        !HexStringEquals(e3.zone4Rates, expectedZone4) ||
-                        !HexStringEquals(e3.rates4Tier, expectedRates4);
-
-/*                    log.Info("expectedZone4: " + expectedZone4 + "expectedRates4: " + expectedRates4 +
-                         "zone4Rates: " + e3.zone4Rates + "rates4Tier: " + e3.rates4Tier);*/
-
-
-                    if (!needSendElemeter3_4)
-                    {
-                        log.Error("四费率：辅助费率与今日策略一致，跳过下发");
-                    }
-                    else if (!e3.SetJFTG(atable2, tempJFPG_4))
-                    {
-                        res = false;
-                    }
-
-                }
+                HandleElemeter2(today, tomorrow, todayRows, tomorrowRows, ref res);
+                HandleElemeter3(today, tomorrow, todayRows, tomorrowRows, ref res);
             }
             catch (Exception ex)
             {
-                log.Error("LoadTodayJFPGFromSQL_CompareAndSendIfDiff: " + ex.Message);
+                log.Error("LoadJFPGFromSQL_New: " + ex);
                 return false;
             }
 
             return res;
         }
+
+        private void HandleElemeter2(
+            DateTime today, DateTime tomorrow,
+            List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            ref bool res)
+        {
+            var meter = frmMain.Selffrm.AllEquipment.Elemeter2;
+            if (meter == null) return;
+
+            // ========= 八费率 =========
+            if (meter.Version == 8)
+            {
+                byte[] todayRate = BuildRateArray(todayRows, true, 8);
+                byte[] tomorrowRate = BuildRateArray(tomorrowRows, true, 8);
+
+                GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
+
+                byte[] zone = BuildZoneTable8(todayTable, today, tomorrowTable, tomorrow);
+
+                if (!meter.SetZone8Rates(zone))
+                    res = false;
+
+                if (todayTable == 1)
+                    res &= meter.SetRates4Tier_1(todayRate);
+                else
+                    res &= meter.SetRates4Tier_2(todayRate);
+
+                if (tomorrowTable == 1)
+                    res &= meter.SetRates4Tier_1(tomorrowRate);
+                else
+                    res &= meter.SetRates4Tier_2(tomorrowRate);
+            }
+            // ========= 四费率 =========
+            else
+            {
+                byte[] todayRate = BuildRateArray(todayRows, false, 4);
+                byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
+
+                GetRotateTable(today, 3, 4, out int todayTable, out int tomorrowTable);
+
+                byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+
+                if (!meter.SetZone4Rates(zone))
+                    res = false;
+
+                if (todayTable == 3)
+                    res &= meter.SetRates4Tier_3(todayRate);
+                else
+                    res &= meter.SetRates4Tier_4(todayRate);
+
+                if (tomorrowTable == 3)
+                    res &= meter.SetRates4Tier_3(tomorrowRate);
+                else
+                    res &= meter.SetRates4Tier_4(tomorrowRate);
+            }
+        }
+
+        private void HandleElemeter3(
+            DateTime today, DateTime tomorrow,
+            List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            ref bool res)
+        {
+            var meter = frmMain.Selffrm.AllEquipment.Elemeter3;
+            if (meter == null) return;
+
+            byte[] todayRate = BuildRateArray(todayRows, false, 4);
+            byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
+
+            GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
+
+            byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+
+            if (!meter.SetZone4Rates(zone))
+                res = false;
+
+            if (todayTable == 1)
+                res &= meter.SetRates4Tier_1(todayRate);
+            else
+                res &= meter.SetRates4Tier_2(todayRate);
+
+            if (tomorrowTable == 1)
+                res &= meter.SetRates4Tier_1(tomorrowRate);
+            else
+                res &= meter.SetRates4Tier_2(tomorrowRate);
+        }
+
+        private byte[] BuildRateArray(
+            List<DataRow> rows,
+            bool hourFirst,
+            int maxRateNo)
+        {
+            byte[] arr = new byte[42];
+            int i = 0;
+
+            foreach (var row in rows)
+            {
+                if (i >= 14) break;
+
+                byte rate = Convert.ToByte(row["eName"]);
+                DateTime t = Convert.ToDateTime("2022-01-01 " + row["startTime"]);
+
+                if (rate > maxRateNo)
+                {
+                    arr[i * 3] = 0;
+                    arr[i * 3 + 1] = 0;
+                    arr[i * 3 + 2] = 0;
+                }
+                else
+                {
+                    arr[i * 3] = rate;
+                    arr[i * 3 + 1] = hourFirst ? (byte)t.Hour : (byte)t.Minute;
+                    arr[i * 3 + 2] = hourFirst ? (byte)t.Minute : (byte)t.Hour;
+                }
+                i++;
+            }
+            return arr;
+        }
+
+        private void GetRotateTable(
+            DateTime today,
+            int oddTable,
+            int evenTable,
+            out int todayTable,
+            out int tomorrowTable)
+        {
+            todayTable = (today.Day % 2 == 1) ? oddTable : evenTable;
+            tomorrowTable = (todayTable == oddTable) ? evenTable : oddTable;
+        }
+
+        private byte[] BuildZoneTable8(
+            int todayTable, DateTime today,
+            int tomorrowTable, DateTime tomorrow)
+        {
+            byte[] arr = new byte[42];
+
+            arr[0] = (byte)todayTable;
+            arr[1] = (byte)today.Month;
+            arr[2] = (byte)today.Day;
+
+            arr[3] = (byte)tomorrowTable;
+            arr[4] = (byte)tomorrow.Month;
+            arr[5] = (byte)tomorrow.Day;
+
+            return arr;
+        }
+
+        private byte[] BuildZoneTable4(
+            int todayTable, DateTime today,
+            int tomorrowTable, DateTime tomorrow)
+        {
+            byte[] arr = new byte[12];
+
+            arr[0] = (byte)todayTable;
+            arr[1] = (byte)today.Day;
+            arr[2] = (byte)today.Month;
+
+            arr[3] = (byte)tomorrowTable;
+            arr[4] = (byte)tomorrow.Day;
+            arr[5] = (byte)tomorrow.Month;
+
+            return arr;
+        }
+
+        public bool LoadJFPGFromSQL_WithCompare()
+        {
+            bool res = true;
+
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+
+            string sql =
+                "select rTime, startTime, eName " +
+                "from electrovalence " +
+                "where rTime = @today OR rTime = @tomorrow " +
+                "ORDER BY rTime, startTime";
+
+            try
+            {
+                var param = new Dictionary<string, object>
+                {
+                    { "@today", today },
+                    { "@tomorrow", tomorrow }
+                };
+
+                DataTable dt = DBConnection.QueryDataTableWithParams(sql, param);
+                if (dt == null || dt.Rows.Count == 0)
+                {
+                    log.Error("LoadJFPGFromSQL_WithCompare: 今日/明日无电价策略");
+                    return true;
+                }
+
+                List<DataRow> todayRows = new List<DataRow>();
+                List<DataRow> tomorrowRows = new List<DataRow>();
+
+                foreach (DataRow r in dt.Rows)
+                {
+                    DateTime d = Convert.ToDateTime(r["rTime"]);
+                    if (d.Date == today)
+                        todayRows.Add(r);
+                    else if (d.Date == tomorrow)
+                        tomorrowRows.Add(r);
+                }
+
+                HandleElemeter2_WithCompare(today, tomorrow, todayRows, tomorrowRows, ref res);
+                HandleElemeter3_WithCompare(today, tomorrow, todayRows, tomorrowRows, ref res);
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadJFPGFromSQL_WithCompare: " + ex);
+                return false;
+            }
+
+            return res;
+        }
+
+        private void HandleElemeter2_WithCompare(
+            DateTime today, DateTime tomorrow,
+            List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            ref bool res)
+        {
+            var meter = frmMain.Selffrm.AllEquipment.Elemeter2;
+            if (meter == null) return;
+
+            string ToHex(byte[] b) =>
+                b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
+
+            // ========= 八费率 =========
+            if (meter.Version == 8)
+            {
+                byte[] todayRate = BuildRateArray(todayRows, true, 8);
+                byte[] tomorrowRate = BuildRateArray(tomorrowRows, true, 8);
+
+                GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
+                byte[] zone = BuildZoneTable8(todayTable, today, tomorrowTable, tomorrow);
+
+                string zoneHex = ToHex(zone);
+                string todayHex = ToHex(todayRate);
+                string tomorrowHex = ToHex(tomorrowRate);
+
+                // Zone8
+                if (!string.Equals(zoneHex, meter.zone8Rates, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetZone8Rates(zone))
+                        res = false;
+                    else
+                        meter.zone8Rates = zoneHex;
+                }
+
+                // 今日
+                if (todayTable == 1)
+                {
+                    if (!string.Equals(todayHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_1(todayRate))
+                            res = false;
+                        else
+                            meter.rates8Tier_1 = todayHex;
+                    }
+                }
+                else
+                {
+                    if (!string.Equals(todayHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_2(todayRate))
+                            res = false;
+                        else
+                            meter.rates8Tier_2 = todayHex;
+                    }
+                }
+
+                // 明日
+                if (tomorrowTable == 1)
+                {
+                    if (!string.Equals(tomorrowHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_1(tomorrowRate))
+                            res = false;
+                        else
+                            meter.rates8Tier_1 = tomorrowHex;
+                    }
+                }
+                else
+                {
+                    if (!string.Equals(tomorrowHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_2(tomorrowRate))
+                            res = false;
+                        else
+                            meter.rates8Tier_2 = tomorrowHex;
+                    }
+                }
+            }
+            // ========= 四费率 =========
+            else
+            {
+                byte[] todayRate = BuildRateArray(todayRows, false, 4);
+                byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
+
+                GetRotateTable(today, 3, 4, out int todayTable, out int tomorrowTable);
+                byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+
+                string zoneHex = ToHex(zone);
+                string todayHex = ToHex(todayRate);
+                string tomorrowHex = ToHex(tomorrowRate);
+
+                if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetZone4Rates(zone))
+                        res = false;
+                    else
+                        meter.zone4Rates = zoneHex;
+                }
+
+                if (todayTable == 3)
+                {
+                    if (!string.Equals(todayHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_3(todayRate))
+                            res = false;
+                        else
+                            meter.rates4Tier_3 = todayHex;
+                    }
+                }
+                else
+                {
+                    if (!string.Equals(todayHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_4(todayRate))
+                            res = false;
+                        else
+                            meter.rates4Tier_4 = todayHex;
+                    }
+                }
+
+                if (tomorrowTable == 3)
+                {
+                    if (!string.Equals(tomorrowHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_3(tomorrowRate))
+                            res = false;
+                        else
+                            meter.rates4Tier_3 = tomorrowHex;
+                    }
+                }
+                else
+                {
+                    if (!string.Equals(tomorrowHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_4(tomorrowRate))
+                            res = false;
+                        else
+                            meter.rates4Tier_4 = tomorrowHex;
+                    }
+                }
+            }
+        }
+
+        private void HandleElemeter3_WithCompare(
+            DateTime today, DateTime tomorrow,
+            List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            ref bool res)
+        {
+            var meter = frmMain.Selffrm.AllEquipment.Elemeter3;
+            if (meter == null) return;
+
+            string ToHex(byte[] b) =>
+                b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
+
+            byte[] todayRate = BuildRateArray(todayRows, false, 4);
+            byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
+
+            GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
+            byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+
+            string zoneHex = ToHex(zone);
+            string todayHex = ToHex(todayRate);
+            string tomorrowHex = ToHex(tomorrowRate);
+
+            if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!meter.SetZone4Rates(zone))
+                    res = false;
+                else
+                    meter.zone4Rates = zoneHex;
+            }
+
+            if (todayTable == 1)
+            {
+                if (!string.Equals(todayHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetRates4Tier_1(todayRate))
+                        res = false;
+                    else
+                        meter.rates4Tier_1 = todayHex;
+                }
+            }
+            else
+            {
+                if (!string.Equals(todayHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetRates4Tier_2(todayRate))
+                        res = false;
+                    else
+                        meter.rates4Tier_2 = todayHex;
+                }
+            }
+
+            if (tomorrowTable == 1)
+            {
+                if (!string.Equals(tomorrowHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetRates4Tier_1(tomorrowRate))
+                        res = false;
+                    else
+                        meter.rates4Tier_1 = tomorrowHex;
+                }
+            }
+            else
+            {
+                if (!string.Equals(tomorrowHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetRates4Tier_2(tomorrowRate))
+                        res = false;
+                    else
+                        meter.rates4Tier_2 = tomorrowHex;
+                }
+            }
+        }
+ 
         #endregion
 
         #region 电表校时
@@ -569,7 +898,8 @@ namespace EMS
                 try
                 {
                     Thread.Sleep(120000);
-                    LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
+                    //LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
+                    LoadJFPGFromSQL_WithCompare();
 
                     LoadTimeValue_CompareAndSendIfDiff();
                 }

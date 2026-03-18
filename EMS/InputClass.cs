@@ -3131,11 +3131,13 @@ namespace EMS
 
         public volatile int Version = 4; //默认是4费率
 
-        #region
+        #region 时区&时段
         public string zone8Rates { get; set; }
-        public string rates8Tier { get; set; }
+        public string rates8Tier_1 { get; set; }
+        public string rates8Tier_2 { get; set; }
         public string zone4Rates { get; set; }
-        public string rates4Tier { get; set; }
+        public string rates4Tier_3 { get; set; }
+        public string rates4Tier_4 { get; set; }
         public string sysTimeSettings { get; set; }
         #endregion
 
@@ -3144,6 +3146,121 @@ namespace EMS
         {
             strCommandFile = "biao2.txt";
         }
+
+        #region 设置四费率的费率设置和时段设置
+        // 设置四费率的时段设置
+        public bool SetZone4Rates(byte[] a4Zoon)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(59, a4Zoon, false))
+            {
+                string hexString = BitConverter.ToString(a4Zoon);
+                log.Error("四费率储能表配置时区成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+        
+        // 设置四费率的第三套费率表
+        public bool SetRates4Tier_3(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(60, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("四费率储能表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        // 设置四费率的第四套费率表
+        public bool SetRates4Tier_4(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(61, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("四费率储能表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        #endregion
+
+        #region 设置八费率的费率设置和时段设置
+        // 设置八费率的时段设置
+        public bool SetZone8Rates(byte[] a4Zoon)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(122, a4Zoon, false))
+            {
+                string hexString = BitConverter.ToString(a4Zoon);
+                log.Error("八费率储能表配置时区成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        // 设置八费率的第一套费率表
+        public bool SetRates4Tier_1(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(123, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("八费率储能表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        // 设置八费率的第二套费率表
+        public bool SetRates4Tier_2(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(130, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("八费率储能表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        #endregion
+
 
         public void timing(int index)
         {
@@ -3582,11 +3699,15 @@ namespace EMS
                 zone4Rates = strTemp;
             }
 
-            if (GetSysData(127, ref strTemp))
+            if (GetSysData(133, ref strTemp))
             {
                 bPrepared = true;
-                rates4Tier = strTemp;
+                if (Get3strData(127, ref strTemp, ref strData))
+                    rates4Tier_3 = strData;
+                if (Get3strData(128, ref strTemp, ref strData))
+                    rates4Tier_4 = strData;
             }
+
             return bPrepared;
         }
 
@@ -3710,10 +3831,14 @@ namespace EMS
                 zone8Rates = strTemp;
             }
 
-            if (GetSysData(125, ref strTemp))
+            if (GetSysData(132, ref strTemp))
             {
                 bPrepared = true;
-                rates8Tier = strTemp;
+
+                if (Get3strData(125, ref strTemp, ref strData))
+                    rates8Tier_1 = strData;
+                if (Get3strData(131, ref strTemp, ref strData))
+                    rates8Tier_2 = strData;
             }
             return bPrepared;
         }
@@ -3775,7 +3900,8 @@ namespace EMS
         public double AKva { get; set; } //视在功率
 
         public string zone4Rates { get; set; }
-        public string rates4Tier { get; set; }
+        public string rates4Tier_1 { get; set; }
+        public string rates4Tier_2 { get; set; }
         public string sysTimeSettings { get; set; }
 
         public Elemeter3Class()
@@ -3809,6 +3935,64 @@ namespace EMS
             SetSysBytes(index, atime, true);
         }
 
+        #region 设置四费率的费率设置和时段设置
+        // 设置四费率的时段设置
+        public bool SetZone4Rates(byte[] a4Zoon)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(41, a4Zoon, false))
+            {
+                string hexString = BitConverter.ToString(a4Zoon);
+                log.Error("四费率辅助表配置时区成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        // 设置四费率的第一套费率表
+        public bool SetRates4Tier_1(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(43, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("四费率辅助表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        // 设置四费率的第二套费率表
+        public bool SetRates4Tier_2(byte[] aRates)
+        {
+            bool res = false;
+
+            if (m485 ==null)
+                return false;
+
+            if (SetSysBytes(44, aRates, false))
+            {
+                string hexString = BitConverter.ToString(aRates);
+                log.Error("四费率辅助表配置费率成功: " + hexString);
+                res = true;
+            }
+
+            return res;
+        }
+
+        #endregion
+
+
         //设置波峰评估的时间段
         public bool SetJFTG(byte[] a4Zoon, byte[] aBFTGs)
         {
@@ -3841,7 +4025,9 @@ namespace EMS
                 if (Get3strData(48, ref strTemp, ref strData))
                     zone4Rates = strData;
                 if (Get3strData(49, ref strTemp, ref strData))
-                    rates4Tier = strData;
+                    rates4Tier_1 = strData;
+                if (Get3strData(52, ref strTemp, ref strData))
+                    rates4Tier_2 = strData;
             }
 
             if (GetSysData(51, ref strTemp))
@@ -3900,7 +4086,9 @@ namespace EMS
                 if (Get3strData(48, ref strTemp, ref strData))
                     zone4Rates = strData;
                 if (Get3strData(49, ref strTemp, ref strData))
-                    rates4Tier = strData;
+                    rates4Tier_1 = strData;
+                if (Get3strData(52, ref strTemp, ref strData))
+                    rates4Tier_2 = strData;
             }
 
             if (GetSysData(51, ref strTemp))

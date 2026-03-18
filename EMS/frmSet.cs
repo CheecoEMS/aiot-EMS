@@ -2954,7 +2954,10 @@ namespace EMS
         private void btnUpdata_Click(object sender, EventArgs e)
         {
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-            frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
+
+            //frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
+            frmMain.TacticsList.LoadJFPGFromSQL_WithCompare();
+
             //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
             DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence,
                 "select id,section,eName,startTime from electrovalence " +

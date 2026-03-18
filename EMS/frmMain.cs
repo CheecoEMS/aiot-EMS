@@ -1351,10 +1351,11 @@ namespace EMS
 
                     if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess)
                     {
-                        if (frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff())
+                        if (frmMain.TacticsList.LoadJFPGFromSQL())
                         {
                             frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
                         }
+
                     }
 
                     if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess)
