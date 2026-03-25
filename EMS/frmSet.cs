@@ -38,6 +38,7 @@ namespace EMS
         public volatile static ConfigClass config = new ConfigClass();
         public volatile static VariChargeClass variCharge = new VariChargeClass();
         public volatile static ComponentSettingsClass componentSettings = new ComponentSettingsClass();
+        public volatile static RateTableScheduleItem rateTableScheduleItem = new RateTableScheduleItem();
         public volatile static HistoryDataClass historyDatas = new HistoryDataClass();
         public volatile static PeElesticClass peElestic = new PeElesticClass();
 
@@ -334,6 +335,138 @@ namespace EMS
             }
         }
         #endregion
+
+        public static Dictionary<DateTime, int> LoadRateTableSchedule(string meterType)
+        {
+            var result = new Dictionary<DateTime, int>();
+
+            if (string.IsNullOrEmpty(meterType))
+                return result;
+
+            const string sql =
+                "SELECT rDate, SlotNo " +
+                "FROM RateTableSchedule " +
+                "WHERE rDate >= @today AND MeterType = @meterType";
+
+            var param = new Dictionary<string, object>
+            {
+                { "@today", DateTime.Today },
+                { "@meterType", meterType }
+            };
+
+            DataTable dt = DBConnection.QueryDataTableWithParams(sql, param);
+            if (dt == null)
+                return result;
+
+            foreach (DataRow row in dt.Rows)
+            {
+                DateTime date = Convert.ToDateTime(row["rDate"]).Date;
+                int slotNo = Convert.ToInt32(row["SlotNo"]);
+
+                // ✅ Slot 校验仍然只认 1 / 2（逻辑槽）
+                if (slotNo == 1 || slotNo == 2)
+                {
+                    result[date] = slotNo;
+                }
+            }
+
+            return result;
+        }
+
+        public static void SaveRateTableSchedule(
+            string meterType,
+            int todaySlot,
+            int tomorrowSlot)
+        {
+            if (string.IsNullOrEmpty(meterType))
+                return;
+
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+
+            // 1. 删除非今天 / 明天的数据（仅限当前 MeterType）
+            const string deleteSql =
+                "DELETE FROM RateTableSchedule " +
+                "WHERE MeterType = @meterType AND rDate NOT IN (@today, @tomorrow)";
+
+            DBConnection.ExecSQLWithParams(deleteSql, new Dictionary<string, object>
+            {
+                { "@meterType", meterType },
+                { "@today", today },
+                { "@tomorrow", tomorrow }
+            });
+
+            // 2. Upsert 今天
+            UpsertSchedule(meterType, today, todaySlot);
+
+            // 3. Upsert 明天
+            UpsertSchedule(meterType, tomorrow, tomorrowSlot);
+        }
+
+
+        private static void UpsertSchedule(
+            string meterType,
+            DateTime date,
+            int slotNo)
+        {
+            // ✅ 防御性校验
+            if (string.IsNullOrEmpty(meterType))
+                return;
+
+            // ✅ 逻辑 Slot 只允许 1 / 2
+            if (slotNo != 1 && slotNo != 2)
+                return;
+
+            const string checkSql =
+                "SELECT COUNT(*) " +
+                "FROM RateTableSchedule " +
+                "WHERE rDate = @rDate AND MeterType = @meterType";
+
+            var checkParams = new Dictionary<string, object>
+            {
+                { "@rDate", date.Date },
+                { "@meterType", meterType }
+            };
+
+            object obj = DBConnection.QuerySingleValue(checkSql, checkParams);
+            int count = 0;
+
+            if (obj != null && obj != DBNull.Value)
+            {
+                int.TryParse(obj.ToString(), out count);
+            }
+
+            if (count > 0)
+            {
+                // UPDATE
+                const string updateSql =
+                    "UPDATE RateTableSchedule " +
+                    "SET SlotNo = @SlotNo " +
+                    "WHERE rDate = @rDate AND MeterType = @meterType";
+
+                DBConnection.ExecSQLWithParams(updateSql, new Dictionary<string, object>
+                {
+                    { "@SlotNo", slotNo },
+                    { "@rDate", date.Date },
+                    { "@meterType", meterType }
+                });
+            }
+            else
+            {
+                // INSERT
+                const string insertSql =
+                    "INSERT INTO RateTableSchedule (rDate, MeterType, SlotNo) " +
+                    "VALUES (@rDate, @meterType, @SlotNo)";
+
+                DBConnection.ExecSQLWithParams(insertSql, new Dictionary<string, object>
+                {
+                    { "@rDate", date.Date },
+                    { "@meterType", meterType },
+                    { "@SlotNo", slotNo }
+                });
+            }
+        }
+
 
         /*********************************************
          *
@@ -2955,7 +3088,6 @@ namespace EMS
         {
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-            //frmMain.TacticsList.LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
             frmMain.TacticsList.LoadJFPGFromSQL_WithCompare();
 
             //DBConnection.ShowData2DBGrid(oneForm.dbgElectrovalence, "select * from electrovalence where rTime = '"+ strDate +"' order by section");
@@ -3257,6 +3389,11 @@ namespace EMS
             public int DHSetHumidityStop { get; set; }  //（除湿：湿度停止值）
         }
 
+        public class RateTableScheduleItem
+        {
+            public DateTime RDate { get; set; }
+            public int SlotNo { get; set; }   // 1 or 2
+        }
 
         /***********************************
          *

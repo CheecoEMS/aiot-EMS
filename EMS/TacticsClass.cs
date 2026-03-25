@@ -11,6 +11,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Windows.Forms.DataVisualization.Charting;
 using static Mysqlx.Expect.Open.Types;
+using static System.Collections.Specialized.BitVector32;
 
 namespace EMS
 {
@@ -121,213 +122,371 @@ namespace EMS
 
             return Result;
         }
-        #endregion
-        /*  public bool cleanJFPGFromMysql()
-          {
-              bool Result = true;
-              string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-              // 使用参数化查询防止SQL注入
-              string astrSQL = "DELETE from electrovalence where rTime < @strDate";
 
-              try
-              {
-                  using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                  {
-                      connection.Open();
-                      using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                      {
-                          // 添加参数
-                          sqlCmd.Parameters.AddWithValue("@strDate", strDate);
-
-                          // 执行删除并获取受影响的行数
-                          int affectedRows = sqlCmd.ExecuteNonQuery();
-
-                          if (affectedRows > 0)
-                          {
-                              log.Error($"清除了 {affectedRows} 条过期电价策略");
-                          }
-                          else
-                          {
-                              log.Error("没有需要清除的过期电价策略");
-                          }
-                      }
-                  }
-              }
-              catch (Exception ex)
-              {
-                  log.Error("清除过期电价策略时发生错误：" + ex.Message);
-                  Result = false;
-              }
-
-              return Result;
-          }*/
-
-
-        #region 从数据库加载费率设置
-/*        public bool LoadJFPGFromSQL()
+        public bool CleanJFPGFromMysqlKeepLatestExpiredDay()
         {
-            bool res = true;
-            cleanJFPGFromMysql();
-
-            // 使用参数化查询避免SQL注入
-            string astrSQL = "select startTime, eName from electrovalence where rTime = @rTime";
+            bool result = true;
 
             try
             {
-                // 使用DBConnect统一的参数化查询接口
-                var parameters = new Dictionary<string, object> { { "@rTime", DateTime.Today } };
-                var dataTable = DBConnection.QueryDataTableWithParams(astrSQL, parameters);
+                string findLatestExpiredSql = @"
+                    SELECT MAX(rTime)
+                    FROM electrovalence
+                    WHERE rTime < @Today";
 
-                if (dataTable != null && dataTable.Rows.Count > 0)
+                var findParams = new Dictionary<string, object>
                 {
-                    log.Error("存在今日电价策略");
-                    byte[] tempJFPG_4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0 };//14*3=42    14个时段 ： 号 分 时
+                    { "@Today", DateTime.Today }
+                };
 
-                    byte[] tempJFPG_8 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0 };//14*3=42    14个时段 ： 号 时 分
-                    int i = 0;
-                    DateTime dtTemp;
+                var latestExpiredObj = DBConnection.QuerySingleValue(findLatestExpiredSql, findParams);
+                DateTime? latestExpiredDate = null;
+                if (latestExpiredObj != null && latestExpiredObj != DBNull.Value)
+                {
+                    latestExpiredDate = Convert.ToDateTime(latestExpiredObj).Date;
+                }
 
-                    foreach (DataRow row in dataTable.Rows)
-                    {
-                        if (i >= 14) break;
+                if (!latestExpiredDate.HasValue)
+                {
+                    log.Error("没有需要清理的过期电价策略");
+                    return true;
+                }
 
-                        dtTemp = Convert.ToDateTime("2022-01-01 " + row["startTime"].ToString());   //获取起始时间 startTime
+                string deleteSql = @"
+                    DELETE FROM electrovalence
+                    WHERE rTime < @Today
+                      AND rTime < @KeepDate";
 
-                        // 设置八费率
-                        tempJFPG_8[i * 3 + 0] = Convert.ToByte(row["eName"]);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                        tempJFPG_8[i * 3 + 1] = (byte)dtTemp.Hour;
-                        tempJFPG_8[i * 3 + 2] = (byte)dtTemp.Minute;
+                var deleteParams = new Dictionary<string, object>
+                {
+                    { "@Today", DateTime.Today },
+                    { "@KeepDate", latestExpiredDate.Value }
+                };
 
-                        // 设置四费率
-                        tempJFPG_4[i * 3 + 0] = Convert.ToByte(row["eName"]); //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                        tempJFPG_4[i * 3 + 1] = (byte)dtTemp.Minute;
-                        tempJFPG_4[i * 3 + 2] = (byte)dtTemp.Hour;
+                int affectedRows = DBConnection.ExecSQLWithParams(deleteSql, deleteParams);
 
-                        i++;
-                    }
-
-                    byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };//储能表使用八费率的第一套表
-                    byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };//辅助表使用四费率的第一套表
-                    byte[] atable3 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//储能表使用四费率的第三套表
-                    //只有储能能够设置8段费率
-                    if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                    {
-                        if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
-                        {
-                            if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG_8))
-                            {
-                                res = false;
-                            }
-                        }
-                        else
-                        {
-                            // 检查并处理 tempJFPG 数组中每个时段的费率号
-                            for (int j = 0; j < 14; j++)
-                            {
-                                if (tempJFPG_4[j * 3 + 0] > 4)
-                                {
-                                    tempJFPG_4[j * 3 + 0] = 0;
-                                    tempJFPG_4[j * 3 + 1] = 0;
-                                    tempJFPG_4[j * 3 + 2] = 0;
-                                }
-                            }
-                            if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable3, tempJFPG_4))
-                            {
-                                res = false;
-                            }
-                        }
-                    }
-
-                    if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                    {
-                        // 检查并处理 tempJFPG 数组中每个时段的费率号
-                        for (int j = 0; j < 14; j++)
-                        {
-                            if (tempJFPG_4[j * 3 + 0] > 4)
-                            {
-                                tempJFPG_4[j * 3 + 0] = 0;
-                                tempJFPG_4[j * 3 + 1] = 0;
-                                tempJFPG_4[j * 3 + 2] = 0;
-                            }
-                        }
-                        frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4);
-                    }
+                if (affectedRows >= 0)
+                {
+                    log.Error($"清理过期电价策略完成，删除了 {affectedRows} 条记录，保留了最近一天过期电价 {latestExpiredDate.Value:yyyy-MM-dd} 的所有电价设置");
+                }
+                else
+                {
+                    result = false;
                 }
             }
             catch (Exception ex)
             {
-                log.Error("LoadJFPGFromSQL: " + ex.Message);
-                return false;
+                log.Error("清理过期电价策略并保留最近一天失败：" + ex.Message);
+                result = false;
             }
-            return res;
-        }*/
 
+            return result;
+        }
+        #endregion
+
+        #region 从数据库加载费率设置
         public bool LoadJFPGFromSQL()
         {
             bool res = true;
-            cleanJFPGFromMysql();
 
             DateTime today = DateTime.Today;
             DateTime tomorrow = today.AddDays(1);
 
-            string sql =
-                "select rTime, startTime, eName " +
-                "from electrovalence " +
-                "where rTime = @today OR rTime = @tomorrow " +
-                "ORDER BY rTime, startTime";
+            // 1. 读取今日 / 明日电价
+            List<DataRow> todayRows;
+            List<DataRow> tomorrowRows;
 
-            try
-            {
-                var param = new Dictionary<string, object>
-                {
-                    { "@today", today },
-                    { "@tomorrow", tomorrow }
-                };
-
-                DataTable dt = DBConnection.QueryDataTableWithParams(sql, param);
-                if (dt == null || dt.Rows.Count == 0)
-                {
-                    log.Error("LoadJFPGFromSQL_New: 今日/明日无电价策略");
-                    return true;
-                }
-
-                List<DataRow> todayRows = new List<DataRow>();
-                List<DataRow> tomorrowRows = new List<DataRow>();
-
-                foreach (DataRow r in dt.Rows)
-                {
-                    DateTime d = Convert.ToDateTime(r["rTime"]);
-                    if (d.Date == today)
-                        todayRows.Add(r);
-                    else if (d.Date == tomorrow)
-                        tomorrowRows.Add(r);
-                }
-
-                log.Error($"LoadJFPGFromSQL_New: 今日 {todayRows.Count} 条，明日 {tomorrowRows.Count} 条");
-
-                HandleElemeter2(today, tomorrow, todayRows, tomorrowRows, ref res);
-                HandleElemeter3(today, tomorrow, todayRows, tomorrowRows, ref res);
-            }
-            catch (Exception ex)
-            {
-                log.Error("LoadJFPGFromSQL_New: " + ex);
+            if (!LoadTodayTomorrowRows(today, tomorrow, out todayRows, out tomorrowRows))
                 return false;
+
+            // ========== ① 调度 Elemeter2 ==========
+            var esMeter = frmMain.Selffrm.AllEquipment.Elemeter2;
+            if (esMeter != null)
+            {
+                string meterType;
+                string todaySig, tomorrowSig;
+
+                if (esMeter.Version == 8)
+                {
+                    meterType = "ES_8";
+                    todaySig = BuildDayRateSignature(todayRows, true, 8);
+                    tomorrowSig = BuildDayRateSignature(tomorrowRows, true, 8);
+                }
+                else
+                {
+                    meterType = "ES_4";
+                    todaySig = BuildDayRateSignature(todayRows, false, 4);
+                    tomorrowSig = BuildDayRateSignature(tomorrowRows, false, 4);
+                }
+
+                var schedule = frmSet.LoadRateTableSchedule(meterType);
+
+                DecideSlots(
+                    todaySig, tomorrowSig,
+                    schedule,
+                    out int todaySlot,
+                    out int tomorrowSlot);
+
+                HandleElemeter2(
+                    today, tomorrow,
+                    todayRows, tomorrowRows,
+                    todaySlot, tomorrowSlot,
+                    ref res);
+
+                if (res)
+                    frmSet.SaveRateTableSchedule(meterType, todaySlot, tomorrowSlot);
+            }
+
+            // ========== ② 调度 Elemeter3 ==========
+            var auxMeter = frmMain.Selffrm.AllEquipment.Elemeter3;
+            if (auxMeter != null)
+            {
+                string meterType = "AUX_4";
+
+                string todaySig = BuildDayRateSignature(todayRows, false, 4);
+                string tomorrowSig = BuildDayRateSignature(tomorrowRows, false, 4);
+
+                var schedule = frmSet.LoadRateTableSchedule(meterType);
+
+                DecideSlots(
+                    todaySig, tomorrowSig,
+                    schedule,
+                    out int todaySlot,
+                    out int tomorrowSlot);
+
+                HandleElemeter3(
+                    today, tomorrow,
+                    todayRows, tomorrowRows,
+                    todaySlot, tomorrowSlot,
+                    ref res);
+
+                if (res)
+                    frmSet.SaveRateTableSchedule(meterType, todaySlot, tomorrowSlot);
             }
 
             return res;
         }
 
+        private bool LoadEffectiveTodayTomorrowRows(
+            DateTime today,
+            DateTime tomorrow,
+            out List<DataRow> todayRows,
+            out List<DataRow> tomorrowRows)
+        {
+            todayRows = new List<DataRow>();
+            tomorrowRows = new List<DataRow>();
+
+            try
+            {
+                if (!LoadTodayTomorrowRows(today, tomorrow, out todayRows, out tomorrowRows))
+                    return false;
+
+                // 今日没有，向前找最近历史完整日
+                if (todayRows == null || todayRows.Count == 0)
+                {
+                    if (!LoadNearestPreviousFullDayRows(today, out todayRows))
+                        return false;
+                }
+
+                // 明日没有，沿用“今日有效配置”
+                if ((tomorrowRows == null || tomorrowRows.Count == 0) &&
+                    todayRows != null && todayRows.Count > 0)
+                {
+                    tomorrowRows = new List<DataRow>(todayRows);
+                    log.Error($"LoadEffectiveTodayTomorrowRows: 明日无时段设置，沿用今日有效时段设置，tomorrow={tomorrow:yyyy-MM-dd}");
+                }
+
+                log.Error($"LoadEffectiveTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadEffectiveTodayTomorrowRows Exception: " + ex);
+                return false;
+            }
+        }
+
+        private bool LoadTodayTomorrowRows(
+            DateTime today,
+            DateTime tomorrow,
+            out List<DataRow> todayRows,
+            out List<DataRow> tomorrowRows)
+        {
+            todayRows = new List<DataRow>();
+            tomorrowRows = new List<DataRow>();
+
+            string sql =
+                "SELECT rTime, startTime, eName " +
+                "FROM electrovalence " +
+                "WHERE rTime = @today OR rTime = @tomorrow " +
+                "ORDER BY rTime, startTime";
+
+            var param = new Dictionary<string, object>
+            {
+                { "@today", today },
+                { "@tomorrow", tomorrow }
+            };
+
+            DataTable dt;
+            try
+            {
+                dt = DBConnection.QueryDataTableWithParams(sql, param);
+                if (dt == null)
+                {
+                    log.Error("LoadTodayTomorrowRows: 查询结果为空");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadTodayTomorrowRows Exception: " + ex);
+                return false;
+            }
+
+            foreach (DataRow r in dt.Rows)
+            {
+                DateTime d = Convert.ToDateTime(r["rTime"]).Date;
+                if (d == today)
+                    todayRows.Add(r);
+                else if (d == tomorrow)
+                    tomorrowRows.Add(r);
+            }
+
+            log.Info(
+                $"LoadTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");
+
+            return true;
+        }
+
+        private bool LoadNearestPreviousFullDayRows(
+            DateTime targetDate,
+            out List<DataRow> rows)
+        {
+            rows = new List<DataRow>();
+
+            try
+            {
+                string findDateSql =
+                    "SELECT rTime, COUNT(1) AS rowCount " +
+                    "FROM electrovalence " +
+                    "WHERE rTime < @targetDate " +
+                    "GROUP BY rTime " +
+                    "HAVING COUNT(1) > 0 " +
+                    "ORDER BY rTime DESC";
+
+                var findDateParams = new Dictionary<string, object>
+                {
+                    { "@targetDate", targetDate }
+                };
+
+                DataTable candidateTable = DBConnection.QueryDataTableWithParams(findDateSql, findDateParams);
+                if (candidateTable == null || candidateTable.Rows.Count == 0)
+                {
+                    log.Info($"LoadNearestPreviousFullDayRows: {targetDate:yyyy-MM-dd} 之前没有历史时段设置");
+                    return true;
+                }
+
+                foreach (DataRow candidate in candidateTable.Rows)
+                {
+                    DateTime historyDate = Convert.ToDateTime(candidate["rTime"]).Date;
+
+                    string loadSql =
+                        "SELECT rTime, startTime, eName " +
+                        "FROM electrovalence " +
+                        "WHERE rTime = @historyDate " +
+                        "ORDER BY startTime";
+
+                    var loadParams = new Dictionary<string, object>
+                    {
+                        { "@historyDate", historyDate }
+                    };
+
+                    DataTable dt = DBConnection.QueryDataTableWithParams(loadSql, loadParams);
+                    if (dt == null || dt.Rows.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    foreach (DataRow r in dt.Rows)
+                    {
+                        rows.Add(r);
+                    }
+
+                    log.Info($"LoadNearestPreviousFullDayRows: {targetDate:yyyy-MM-dd} 无时段设置，沿用最近历史日期 {historyDate:yyyy-MM-dd} 的 {rows.Count} 条时段设置");
+                    return true;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadNearestPreviousFullDayRows Exception: " + ex);
+                return false;
+            }
+        }
+
+        private string BuildDayRateSignature(
+            List<DataRow> rows,
+            bool hourFirst,
+            int maxRateNo)
+        {
+            byte[] arr = BuildRateArray(rows, hourFirst, maxRateNo);
+            return BitConverter.ToString(arr);
+        }
+
+        private void DecideSlots(
+            string todaySig,
+            string tomorrowSig,
+            Dictionary<DateTime, int> schedule,
+            out int todaySlot,
+            out int tomorrowSlot)
+        {
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+
+            // ========= 1. 确定 todaySlot（只读） =========
+            if (!schedule.TryGetValue(today, out todaySlot))
+            {
+                todaySlot = 1; // 默认起点
+            }
+
+            // ========= 2. 决定 tomorrowSlot =========
+
+            // 情况 A：指纹相同 → 必须同 Slot
+            if (todaySig == tomorrowSig)
+            {
+                tomorrowSlot = todaySlot;
+                return;
+            }
+
+            // 情况 B：指纹不同 → 必须不同 Slot
+            int expectedTomorrowSlot = (todaySlot == 1) ? 2 : 1;
+
+            // 如果调度表已有 tomorrow
+            if (schedule.TryGetValue(tomorrow, out int scheduledTomorrowSlot))
+            {
+                // ✅ 若符合预期，沿用
+                if (scheduledTomorrowSlot == expectedTomorrowSlot)
+                {
+                    tomorrowSlot = scheduledTomorrowSlot;
+                }
+                else
+                {
+                    // ❌ 不符合 → 修正
+                    tomorrowSlot = expectedTomorrowSlot;
+                }
+            }
+            else
+            {
+                // 没有历史记录 → 直接用预期 Slot
+                tomorrowSlot = expectedTomorrowSlot;
+            }
+        }
+
         private void HandleElemeter2(
             DateTime today, DateTime tomorrow,
             List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            int todaySlot, int tomorrowSlot,
             ref bool res)
         {
             var meter = frmMain.Selffrm.AllEquipment.Elemeter2;
@@ -339,22 +498,28 @@ namespace EMS
                 byte[] todayRate = BuildRateArray(todayRows, true, 8);
                 byte[] tomorrowRate = BuildRateArray(tomorrowRows, true, 8);
 
-                GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
-
-                byte[] zone = BuildZoneTable8(todayTable, today, tomorrowTable, tomorrow);
+                // Zone 表：直接使用 Slot
+                byte[] zone = BuildZoneTable8(
+                    todaySlot, today,
+                    tomorrowSlot, tomorrow);
 
                 if (!meter.SetZone8Rates(zone))
+                {
                     res = false;
+                    return;
+                }
 
-                if (todayTable == 1)
-                    res &= meter.SetRates4Tier_1(todayRate);
+                // 写今天
+                if (todaySlot == 1)
+                    res &= meter.SetRates8Tier_1(todayRate);
                 else
-                    res &= meter.SetRates4Tier_2(todayRate);
+                    res &= meter.SetRates8Tier_2(todayRate);
 
-                if (tomorrowTable == 1)
-                    res &= meter.SetRates4Tier_1(tomorrowRate);
+                // 写明天
+                if (tomorrowSlot == 1)
+                    res &= meter.SetRates8Tier_1(tomorrowRate);
                 else
-                    res &= meter.SetRates4Tier_2(tomorrowRate);
+                    res &= meter.SetRates8Tier_2(tomorrowRate);
             }
             // ========= 四费率 =========
             else
@@ -362,28 +527,35 @@ namespace EMS
                 byte[] todayRate = BuildRateArray(todayRows, false, 4);
                 byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
 
-                GetRotateTable(today, 3, 4, out int todayTable, out int tomorrowTable);
-
-                byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+                byte[] zone = BuildZoneTable4_ES(
+                    todaySlot, today,
+                    tomorrowSlot, tomorrow);
 
                 if (!meter.SetZone4Rates(zone))
+                {
                     res = false;
+                    return;
+                }
 
-                if (todayTable == 3)
+                // 写今天
+                if (todaySlot == 1)
                     res &= meter.SetRates4Tier_3(todayRate);
                 else
                     res &= meter.SetRates4Tier_4(todayRate);
 
-                if (tomorrowTable == 3)
+                // 写明天
+                if (tomorrowSlot == 1)
                     res &= meter.SetRates4Tier_3(tomorrowRate);
                 else
                     res &= meter.SetRates4Tier_4(tomorrowRate);
             }
         }
 
+
         private void HandleElemeter3(
             DateTime today, DateTime tomorrow,
             List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            int todaySlot, int tomorrowSlot,
             ref bool res)
         {
             var meter = frmMain.Selffrm.AllEquipment.Elemeter3;
@@ -392,19 +564,24 @@ namespace EMS
             byte[] todayRate = BuildRateArray(todayRows, false, 4);
             byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
 
-            GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
-
-            byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
+            byte[] zone = BuildZoneTable4(
+                todaySlot, today,
+                tomorrowSlot, tomorrow);
 
             if (!meter.SetZone4Rates(zone))
+            {
                 res = false;
+                return;
+            }
 
-            if (todayTable == 1)
+            // 写今天
+            if (todaySlot == 1)
                 res &= meter.SetRates4Tier_1(todayRate);
             else
                 res &= meter.SetRates4Tier_2(todayRate);
 
-            if (tomorrowTable == 1)
+            // 写明天
+            if (tomorrowSlot == 1)
                 res &= meter.SetRates4Tier_1(tomorrowRate);
             else
                 res &= meter.SetRates4Tier_2(tomorrowRate);
@@ -442,17 +619,6 @@ namespace EMS
             return arr;
         }
 
-        private void GetRotateTable(
-            DateTime today,
-            int oddTable,
-            int evenTable,
-            out int todayTable,
-            out int tomorrowTable)
-        {
-            todayTable = (today.Day % 2 == 1) ? oddTable : evenTable;
-            tomorrowTable = (todayTable == oddTable) ? evenTable : oddTable;
-        }
-
         private byte[] BuildZoneTable8(
             int todayTable, DateTime today,
             int tomorrowTable, DateTime tomorrow)
@@ -487,6 +653,42 @@ namespace EMS
             return arr;
         }
 
+        private byte[] BuildZoneTable4_ES(
+            int todayTable, DateTime today,
+            int tomorrowTable, DateTime tomorrow)
+        {
+            byte[] arr = new byte[12];
+
+            arr[0] = (byte)(todayTable == 1 ? 3 : 4);
+            arr[1] = (byte)today.Day;
+            arr[2] = (byte)today.Month;
+
+            arr[3] = (byte)(tomorrowTable == 1 ? 3 : 4);
+            arr[4] = (byte)tomorrow.Day;
+            arr[5] = (byte)tomorrow.Month;
+
+            return arr;
+        }
+
+        private byte[] BuildZoneTable4_AUX(
+            int todayTable, DateTime today,
+            int tomorrowTable, DateTime tomorrow)
+        {
+            byte[] arr = new byte[12];
+
+            arr[0] = (byte)todayTable;
+            arr[1] = (byte)today.Day;
+            arr[2] = (byte)today.Month;
+
+            arr[3] = (byte)tomorrowTable;
+            arr[4] = (byte)tomorrow.Day;
+            arr[5] = (byte)tomorrow.Month;
+
+            return arr;
+        }
+        #endregion
+
+        #region 从数据库中加载时区设置&费率设置 （修改下发）
         public bool LoadJFPGFromSQL_WithCompare()
         {
             bool res = true;
@@ -494,46 +696,84 @@ namespace EMS
             DateTime today = DateTime.Today;
             DateTime tomorrow = today.AddDays(1);
 
-            string sql =
-                "select rTime, startTime, eName " +
-                "from electrovalence " +
-                "where rTime = @today OR rTime = @tomorrow " +
-                "ORDER BY rTime, startTime";
+            List<DataRow> todayRows;
+            List<DataRow> tomorrowRows;
 
-            try
-            {
-                var param = new Dictionary<string, object>
-                {
-                    { "@today", today },
-                    { "@tomorrow", tomorrow }
-                };
+            CleanJFPGFromMysqlKeepLatestExpiredDay();
 
-                DataTable dt = DBConnection.QueryDataTableWithParams(sql, param);
-                if (dt == null || dt.Rows.Count == 0)
-                {
-                    log.Error("LoadJFPGFromSQL_WithCompare: 今日/明日无电价策略");
-                    return true;
-                }
-
-                List<DataRow> todayRows = new List<DataRow>();
-                List<DataRow> tomorrowRows = new List<DataRow>();
-
-                foreach (DataRow r in dt.Rows)
-                {
-                    DateTime d = Convert.ToDateTime(r["rTime"]);
-                    if (d.Date == today)
-                        todayRows.Add(r);
-                    else if (d.Date == tomorrow)
-                        tomorrowRows.Add(r);
-                }
-
-                HandleElemeter2_WithCompare(today, tomorrow, todayRows, tomorrowRows, ref res);
-                HandleElemeter3_WithCompare(today, tomorrow, todayRows, tomorrowRows, ref res);
-            }
-            catch (Exception ex)
-            {
-                log.Error("LoadJFPGFromSQL_WithCompare: " + ex);
+            if (!LoadEffectiveTodayTomorrowRows(today, tomorrow, out todayRows, out tomorrowRows))
                 return false;
+
+            if ((todayRows == null || todayRows.Count == 0) ||
+                (tomorrowRows == null || tomorrowRows.Count == 0))
+            {
+                // 不做任何下发：（1）不存在任何历史时段设置导致今日没有时段配置，即使有明日的时段配置也不做下发
+                //               （2）如果今日有时段配置（今日配置或历史配置）且明日没有时段设置，强校验明日时段设置默认为今日相同时段设置
+                log.Error("LoadJFPGFromSQL_NewWithCompare: 今日/明日无电价策略");
+                return true;
+            }
+
+            // Elemeter2
+            var esMeter = frmMain.Selffrm.AllEquipment.Elemeter2;
+            if (esMeter != null)
+            {
+                bool meterRes = true;
+                string meterType;
+                string todaySig, tomorrowSig;
+
+                if (esMeter.Version == 8)
+                {
+                    meterType = "ES_8";
+                    todaySig = BuildDayRateSignature(todayRows, true, 8);
+                    tomorrowSig = BuildDayRateSignature(tomorrowRows, true, 8);
+                }
+                else
+                {
+                    meterType = "ES_4";
+                    todaySig = BuildDayRateSignature(todayRows, false, 4);
+                    tomorrowSig = BuildDayRateSignature(tomorrowRows, false, 4);
+                }
+
+                var schedule = frmSet.LoadRateTableSchedule(meterType);
+
+                DecideSlots(todaySig, tomorrowSig, schedule, out int todaySlot, out int tomorrowSlot);
+
+                HandleElemeter2_WithCompare(
+                    today, tomorrow,
+                    todayRows, tomorrowRows,
+                    todaySlot, tomorrowSlot,
+                    ref meterRes);
+
+                res &= meterRes;
+
+                if (meterRes)
+                    frmSet.SaveRateTableSchedule(meterType, todaySlot, tomorrowSlot);
+            }
+
+            // Elemeter3
+            var auxMeter = frmMain.Selffrm.AllEquipment.Elemeter3;
+            if (auxMeter != null)
+            {
+                bool meterRes = true;
+                string meterType = "AUX_4";
+
+                string todaySig = BuildDayRateSignature(todayRows, false, 4);
+                string tomorrowSig = BuildDayRateSignature(tomorrowRows, false, 4);
+
+                var schedule = frmSet.LoadRateTableSchedule(meterType);
+
+                DecideSlots(todaySig, tomorrowSig, schedule, out int todaySlot, out int tomorrowSlot);
+
+                HandleElemeter3_WithCompare(
+                    today, tomorrow,
+                    todayRows, tomorrowRows,
+                    todaySlot, tomorrowSlot,
+                    ref meterRes);
+
+                res &= meterRes;
+
+                if (meterRes)
+                    frmSet.SaveRateTableSchedule(meterType, todaySlot, tomorrowSlot);
             }
 
             return res;
@@ -542,217 +782,369 @@ namespace EMS
         private void HandleElemeter2_WithCompare(
             DateTime today, DateTime tomorrow,
             List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            int todaySlot, int tomorrowSlot,
             ref bool res)
         {
-            var meter = frmMain.Selffrm.AllEquipment.Elemeter2;
-            if (meter == null) return;
-
-            string ToHex(byte[] b) =>
-                b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
-
-            // ========= 八费率 =========
-            if (meter.Version == 8)
+            try
             {
-                byte[] todayRate = BuildRateArray(todayRows, true, 8);
-                byte[] tomorrowRate = BuildRateArray(tomorrowRows, true, 8);
+                var meter = frmMain.Selffrm.AllEquipment.Elemeter2;
+                if (meter == null) return;
 
-                GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
-                byte[] zone = BuildZoneTable8(todayTable, today, tomorrowTable, tomorrow);
+                string ToHex(byte[] b) =>
+                    b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
 
-                string zoneHex = ToHex(zone);
-                string todayHex = ToHex(todayRate);
-                string tomorrowHex = ToHex(tomorrowRate);
-
-                // Zone8
-                if (!string.Equals(zoneHex, meter.zone8Rates, StringComparison.OrdinalIgnoreCase))
+                // ========= 八费率 =========
+                if (meter.Version == 8)
                 {
-                    if (!meter.SetZone8Rates(zone))
-                        res = false;
+                    byte[] todayRate = BuildRateArray(todayRows, true, 8);
+                    byte[] tomorrowRate = BuildRateArray(tomorrowRows, true, 8);
+
+                    byte[] zone = BuildZoneTable8(
+                        todaySlot, today,
+                        tomorrowSlot, tomorrow);
+
+                    string zoneHex = ToHex(zone);
+                    string todayHex = ToHex(todayRate);
+                    string tomorrowHex = ToHex(tomorrowRate);
+
+                    // 1. Zone 比较后下发
+                    if (!string.Equals(zoneHex, meter.zone8Rates, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetZone8Rates(zone))
+                        {
+                            res = false;
+                            return;
+                        }
+                        //meter.zone8Rates = zoneHex;
+                        log.Error($"Elemeter2[8]: Zone8 changed ={zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                    }
                     else
-                        meter.zone8Rates = zoneHex;
-                }
-
-                // 今日
-                if (todayTable == 1)
-                {
-                    if (!string.Equals(todayHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!meter.SetRates4Tier_1(todayRate))
-                            res = false;
+                        log.Error($"Elemeter2[8]: Zone8 unchanged = {zoneHex}, skip write.");
+                    }
+
+                    // 2. 今日费率表比较后下发
+                    if (todaySlot == 1)
+                    {
+                        if (!string.Equals(todayHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates8Tier_1(todayRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates8Tier_1 = todayHex;
+                                log.Error($"Elemeter2[8]: today rate -> Tier_1 changed = {todayHex}, write success.");
+                            }
+                        }
                         else
-                            meter.rates8Tier_1 = todayHex;
+                        {
+                            log.Error($"Elemeter2[8]: today rate -> Tier_1 unchanged = {todayHex}, skip write.");
+                        }
+                    }
+                    else
+                    {
+                        if (!string.Equals(todayHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates8Tier_2(todayRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates8Tier_2 = todayHex;
+                                log.Error($"Elemeter2[8]: today rate -> Tier_2 changed = {todayHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[8]: today rate -> Tier_2 unchanged = {todayHex}, skip write.");
+                        }
+                    }
+
+                    // 3. 明日费率表比较后下发
+                    if (tomorrowSlot == 1)
+                    {
+                        if (!string.Equals(tomorrowHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates8Tier_1(tomorrowRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates8Tier_1 = tomorrowHex;
+                                log.Error($"Elemeter2[8]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[8]: tomorrow rate -> Tier_1 unchanged = {tomorrowHex}, skip write.");
+                        }
+                    }
+                    else
+                    {
+                        if (!string.Equals(tomorrowHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates8Tier_2(tomorrowRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates8Tier_2 = tomorrowHex;
+                                log.Error($"Elemeter2[8]: tomorrow rate -> Tier_2 changed = {tomorrowHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[8]: tomorrow rate -> Tier_2 unchanged = {tomorrowHex}, skip write.");
+                        }
                     }
                 }
+                // ========= 四费率 =========
                 else
                 {
-                    if (!string.Equals(todayHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_2(todayRate))
-                            res = false;
-                        else
-                            meter.rates8Tier_2 = todayHex;
-                    }
-                }
+                    byte[] todayRate = BuildRateArray(todayRows, false, 4);
+                    byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
 
-                // 明日
-                if (tomorrowTable == 1)
-                {
-                    if (!string.Equals(tomorrowHex, meter.rates8Tier_1, StringComparison.OrdinalIgnoreCase))
+                    byte[] zone = BuildZoneTable4_ES(
+                        todaySlot, today,
+                        tomorrowSlot, tomorrow);
+
+                    string zoneHex = ToHex(zone);
+                    string todayHex = ToHex(todayRate);
+                    string tomorrowHex = ToHex(tomorrowRate);
+
+                    // 1. Zone 比较后下发
+                    if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!meter.SetRates4Tier_1(tomorrowRate))
+                        if (!meter.SetZone4Rates(zone))
+                        {
                             res = false;
+                            return;
+                        }
+                        //meter.zone4Rates = zoneHex;
+                        log.Error($"Elemeter2[4]: Zone4 changed = {zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                    }
+                    else
+                    {
+                        log.Error($"Elemeter2[4]: Zone4 unchanged = {zoneHex}, skip write.");
+                    }
+
+                    // 2. 今日费率表比较后下发
+                    if (todaySlot == 1)
+                    {
+                        if (!string.Equals(todayHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates4Tier_3(todayRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates4Tier_3 = todayHex;
+                                log.Error($"Elemeter2[4]: today rate -> Tier_1 changed = {todayHex}, write success.");
+                            }
+                        }
                         else
-                            meter.rates8Tier_1 = tomorrowHex;
+                        {
+                            log.Error($"Elemeter2[4]: today rate -> Tier_1 unchanged  = {todayHex}, skip write.");
+                        }
+                    }
+                    else
+                    {
+                        if (!string.Equals(todayHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates4Tier_4(todayRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates4Tier_4 = todayHex;
+                                log.Error($"Elemeter2[4]: today rate -> Tier_2 changed  = {todayHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[4]: today rate -> Tier_2 unchanged  = {todayHex}, skip write.");
+                        }
+                    }
+
+                    // 3. 明日费率表比较后下发
+                    if (tomorrowSlot == 1)
+                    {
+                        if (!string.Equals(tomorrowHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates4Tier_3(tomorrowRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates4Tier_3 = tomorrowHex;
+                                log.Error($"Elemeter2[4]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[4]: tomorrow rate -> Tier_1 unchanged  = {tomorrowHex}, skip write.");
+                        }
+                    }
+                    else
+                    {
+                        if (!string.Equals(tomorrowHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!meter.SetRates4Tier_4(tomorrowRate))
+                            {
+                                res = false;
+                            }
+                            else
+                            {
+                                //meter.rates4Tier_4 = tomorrowHex;
+                                log.Error($"Elemeter2[4]: tomorrow rate -> Tier_2 changed  = {tomorrowHex}, write success.");
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"Elemeter2[4]: tomorrow rate -> Tier_2 unchanged  = {tomorrowHex}, skip write.");
+                        }
                     }
                 }
-                else
-                {
-                    if (!string.Equals(tomorrowHex, meter.rates8Tier_2, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_2(tomorrowRate))
-                            res = false;
-                        else
-                            meter.rates8Tier_2 = tomorrowHex;
-                    }
-                }
-            }
-            // ========= 四费率 =========
-            else
+            } catch (Exception ex)
             {
-                byte[] todayRate = BuildRateArray(todayRows, false, 4);
-                byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
-
-                GetRotateTable(today, 3, 4, out int todayTable, out int tomorrowTable);
-                byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
-
-                string zoneHex = ToHex(zone);
-                string todayHex = ToHex(todayRate);
-                string tomorrowHex = ToHex(tomorrowRate);
-
-                if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!meter.SetZone4Rates(zone))
-                        res = false;
-                    else
-                        meter.zone4Rates = zoneHex;
-                }
-
-                if (todayTable == 3)
-                {
-                    if (!string.Equals(todayHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_3(todayRate))
-                            res = false;
-                        else
-                            meter.rates4Tier_3 = todayHex;
-                    }
-                }
-                else
-                {
-                    if (!string.Equals(todayHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_4(todayRate))
-                            res = false;
-                        else
-                            meter.rates4Tier_4 = todayHex;
-                    }
-                }
-
-                if (tomorrowTable == 3)
-                {
-                    if (!string.Equals(tomorrowHex, meter.rates4Tier_3, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_3(tomorrowRate))
-                            res = false;
-                        else
-                            meter.rates4Tier_3 = tomorrowHex;
-                    }
-                }
-                else
-                {
-                    if (!string.Equals(tomorrowHex, meter.rates4Tier_4, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!meter.SetRates4Tier_4(tomorrowRate))
-                            res = false;
-                        else
-                            meter.rates4Tier_4 = tomorrowHex;
-                    }
-                }
+                log.Error("HandleElemeter2_WithCompare: " + ex);
             }
         }
 
         private void HandleElemeter3_WithCompare(
             DateTime today, DateTime tomorrow,
             List<DataRow> todayRows, List<DataRow> tomorrowRows,
+            int todaySlot, int tomorrowSlot,
             ref bool res)
         {
-            var meter = frmMain.Selffrm.AllEquipment.Elemeter3;
-            if (meter == null) return;
-
-            string ToHex(byte[] b) =>
-                b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
-
-            byte[] todayRate = BuildRateArray(todayRows, false, 4);
-            byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
-
-            GetRotateTable(today, 1, 2, out int todayTable, out int tomorrowTable);
-            byte[] zone = BuildZoneTable4(todayTable, today, tomorrowTable, tomorrow);
-
-            string zoneHex = ToHex(zone);
-            string todayHex = ToHex(todayRate);
-            string tomorrowHex = ToHex(tomorrowRate);
-
-            if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                if (!meter.SetZone4Rates(zone))
-                    res = false;
-                else
+                var meter = frmMain.Selffrm.AllEquipment.Elemeter3;
+                if (meter == null) return;
+
+                string ToHex(byte[] b) =>
+                    b == null ? string.Empty : BitConverter.ToString(b).Replace("-", "");
+
+                byte[] todayRate = BuildRateArray(todayRows, false, 4);
+                byte[] tomorrowRate = BuildRateArray(tomorrowRows, false, 4);
+
+                byte[] zone = BuildZoneTable4(
+                    todaySlot, today,
+                    tomorrowSlot, tomorrow);
+
+                string zoneHex = ToHex(zone);
+                string todayHex = ToHex(todayRate);
+                string tomorrowHex = ToHex(tomorrowRate);
+
+                // 1. Zone 比较后下发
+                if (!string.Equals(zoneHex, meter.zone4Rates, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!meter.SetZone4Rates(zone))
+                    {
+                        res = false;
+                        return;
+                    }
                     meter.zone4Rates = zoneHex;
-            }
+                    log.Error($"Elemeter3: Zone4 changed, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                }
+                else
+                {
+                    log.Error("Elemeter3: Zone4 unchanged, skip write.");
+                }
 
-            if (todayTable == 1)
-            {
-                if (!string.Equals(todayHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                // 2. 今日费率表比较后下发
+                if (todaySlot == 1)
                 {
-                    if (!meter.SetRates4Tier_1(todayRate))
-                        res = false;
+                    if (!string.Equals(todayHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_1(todayRate))
+                        {
+                            res = false;
+                        }
+                        else
+                        {
+                            meter.rates4Tier_1 = todayHex;
+                            log.Error("Elemeter3: today rate -> Tier_1 changed, write success.");
+                        }
+                    }
                     else
-                        meter.rates4Tier_1 = todayHex;
+                    {
+                        log.Error("Elemeter3: today rate -> Tier_1 unchanged, skip write.");
+                    }
                 }
-            }
-            else
-            {
-                if (!string.Equals(todayHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    if (!meter.SetRates4Tier_2(todayRate))
-                        res = false;
+                    if (!string.Equals(todayHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_2(todayRate))
+                        {
+                            res = false;
+                        }
+                        else
+                        {
+                            meter.rates4Tier_2 = todayHex;
+                            log.Error("Elemeter3: today rate -> Tier_2 changed, write success.");
+                        }
+                    }
                     else
-                        meter.rates4Tier_2 = todayHex;
+                    {
+                        log.Error("Elemeter3: today rate -> Tier_2 unchanged, skip write.");
+                    }
                 }
-            }
 
-            if (tomorrowTable == 1)
-            {
-                if (!string.Equals(tomorrowHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                // 3. 明日费率表比较后下发
+                if (tomorrowSlot == 1)
                 {
-                    if (!meter.SetRates4Tier_1(tomorrowRate))
-                        res = false;
+                    if (!string.Equals(tomorrowHex, meter.rates4Tier_1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_1(tomorrowRate))
+                        {
+                            res = false;
+                        }
+                        else
+                        {
+                            meter.rates4Tier_1 = tomorrowHex;
+                            log.Error("Elemeter3: tomorrow rate -> Tier_1 changed, write success.");
+                        }
+                    }
                     else
-                        meter.rates4Tier_1 = tomorrowHex;
+                    {
+                        log.Error("Elemeter3: tomorrow rate -> Tier_1 unchanged, skip write.");
+                    }
+                }
+                else
+                {
+                    if (!string.Equals(tomorrowHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!meter.SetRates4Tier_2(tomorrowRate))
+                        {
+                            res = false;
+                        }
+                        else
+                        {
+                            meter.rates4Tier_2 = tomorrowHex;
+                            log.Error("Elemeter3: tomorrow rate -> Tier_2 changed, write success.");
+                        }
+                    }
+                    else
+                    {
+                        log.Error("Elemeter3: tomorrow rate -> Tier_2 unchanged, skip write.");
+                    }
                 }
             }
-            else
-            {
-                if (!string.Equals(tomorrowHex, meter.rates4Tier_2, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!meter.SetRates4Tier_2(tomorrowRate))
-                        res = false;
-                    else
-                        meter.rates4Tier_2 = tomorrowHex;
-                }
+            catch (Exception ex) {
+                log.Error("HandleElemeter3_WithCompare: " + ex);
             }
         }
- 
+
         #endregion
 
         #region 电表校时
@@ -782,7 +1174,7 @@ namespace EMS
                             e2.timing(73);
                         }
 
-                        //log.Error("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
+                        log.Error("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
                     }
 
                 }
@@ -803,7 +1195,7 @@ namespace EMS
                             e3.timing(47);
                         }
 
-                        //log.Error("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
+                        log.Error("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
                     }
                 }
 
@@ -897,11 +1289,10 @@ namespace EMS
             {
                 try
                 {
-                    Thread.Sleep(120000);
-                    //LoadTodayJFPGFromSQL_CompareAndSendIfDiff();
                     LoadJFPGFromSQL_WithCompare();
 
                     LoadTimeValue_CompareAndSendIfDiff();
+                    Thread.Sleep(120000);
                 }
                 catch (Exception ex)
                 {
@@ -910,130 +1301,6 @@ namespace EMS
             }
         }
         #endregion
-
-        /*      public bool LoadJFPGFromSQL()
-              {
-                  bool res = true;
-                  cleanJFPGFromMysql();
-                  string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                  string astrSQL = "select startTime, eName  from electrovalence where rTime = '" + strDate + "'";
-
-                  try
-                  {
-                      using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                      {
-                          connection.Open();
-                          using (MySqlCommand sqlCmd = new MySqlCommand(astrSQL, connection))
-                          {
-                              using (MySqlDataReader rd = sqlCmd.ExecuteReader())
-                              {
-                                  if (rd != null && rd.HasRows)
-                                  {
-                                      log.Error("存在今日电价策略");
-                                      byte[] tempJFPG_4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0 };//14*3=42    14个时段 ： 号 分 时
-
-                                      byte[] tempJFPG_8 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                          0, 0 };//14*3=42    14个时段 ： 号 时 分
-                                      int i = 0;
-                                      DateTime dtTemp;
-
-      *//*                                //清空费率表
-                                      if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                                      {
-                                          if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
-                                          {
-                                              frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_8();
-                                          }
-                                          else
-                                          {
-                                              frmMain.Selffrm.AllEquipment.Elemeter2.clearJFPG_4();
-                                          }
-                                      }*//*
-
-
-                                      while (rd.Read() && i < 14)
-                                      {
-                                          dtTemp = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));   //获取起始时间 startTime
-
-                                          // 设置八费率
-                                          tempJFPG_8[i * 3 + 0] = (byte)rd.GetInt32(1);  //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                                          tempJFPG_8[i * 3 + 1] = (byte)dtTemp.Hour;
-                                          tempJFPG_8[i * 3 + 2] = (byte)dtTemp.Minute;
-
-                                          // 设置四费率
-                                          tempJFPG_4[i * 3 + 0] = (byte)rd.GetInt32(1); //获取 费率号（0：无 1：尖 2：峰 3：平 4：谷） eName
-                                          tempJFPG_4[i * 3 + 1] = (byte)dtTemp.Minute;
-                                          tempJFPG_4[i * 3 + 2] = (byte)dtTemp.Hour;
-
-                                          i++;
-                                      }
-
-                                      byte[] atable1 = { 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };//储能表使用八费率的第一套表
-                                      byte[] atable2 = { 1, 1, 1, 1, 1, 3, 1, 1, 6, 1, 1, 9 };//辅助表使用四费率的第一套表
-                                      byte[] atable3 = { 3, 1, 1, 3, 1, 3, 3, 1, 6, 3, 1, 9 };//储能表使用四费率的第三套表
-                                      //只有储能能够设置8段费率
-                                      if (frmMain.Selffrm.AllEquipment.Elemeter2 != null)
-                                      {
-                                          if (frmMain.Selffrm.AllEquipment.Elemeter2.Version == 8)
-                                          {
-                                              if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_8(atable1, tempJFPG_8)) {
-                                                  res = false;
-                                              }
-                                          }
-                                          else
-                                          {
-                                              // 检查并处理 tempJFPG 数组中每个时段的费率号
-                                              for (int j = 0; j < 14; j++)
-                                              {
-                                                  if (tempJFPG_4[j * 3 + 0] > 4)
-                                                  {
-                                                      tempJFPG_4[j * 3 + 0] = 0;
-                                                      tempJFPG_4[j * 3 + 1] = 0;
-                                                      tempJFPG_4[j * 3 + 2] = 0;
-                                                  }
-                                              }
-                                              if (!frmMain.Selffrm.AllEquipment.Elemeter2.SetJFTG_4(atable3, tempJFPG_4)) {
-                                                  res = false;
-                                              }
-                                          }
-                                      }
-
-                                      if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
-                                      {
-                                          // 检查并处理 tempJFPG 数组中每个时段的费率号
-                                          for (int j = 0; j < 14; j++)
-                                          {
-                                              if (tempJFPG_4[j * 3 + 0] > 4)
-                                              {
-                                                  tempJFPG_4[j * 3 + 0] = 0;
-                                                  tempJFPG_4[j * 3 + 1] = 0;
-                                                  tempJFPG_4[j * 3 + 2] = 0;
-                                              }
-                                          }
-                                          frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4);
-      *//*                                    if (!frmMain.Selffrm.AllEquipment.Elemeter3.SetJFTG(atable2, tempJFPG_4)) {
-                                              res = false;
-                                          }*//*
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                      return res;
-                  }
-                  catch (Exception ex)
-                  {
-                      log.Error("LoadJFPGFromSQL: " + ex.Message);
-                      return false;
-                  }
-              }*/
 
 
         public bool LoadMasterDailyTactics()
@@ -1126,70 +1393,6 @@ namespace EMS
         }
         #endregion
 
-        /*  public bool CleanTacticsFromMysql()
-          {
-              bool result = false;
-              string currentDate = DateTime.Now.ToString("yyyy-MM-dd"); // 过期判断基准：当前日期零点前
-
-              try
-              {
-                  using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                  {
-                      connection.Open();
-
-                      // 1. 查询过期数据中最近的rTime（最大的rTime）
-                      string maxExpiredTimeSql = @"
-                          SELECT MAX(rTime)
-                          FROM tactics
-                          WHERE rTime < @CurrentDate";
-
-                      DateTime? maxExpiredTime = null;
-                      using (MySqlCommand maxCmd = new MySqlCommand(maxExpiredTimeSql, connection))
-                      {
-                          maxCmd.Parameters.AddWithValue("@CurrentDate", currentDate);
-                          var resultObj = maxCmd.ExecuteScalar();
-
-                          if (resultObj != DBNull.Value)
-                          {
-                              maxExpiredTime = Convert.ToDateTime(resultObj);
-                          }
-                      }
-
-                      // 2. 如果存在过期数据，删除所有早于最近时间点的过期数据
-                      if (maxExpiredTime.HasValue)
-                      {
-                          string deleteSql = @"
-                              DELETE FROM tactics
-                              WHERE rTime < @CurrentDate
-                                AND rTime < @MaxExpiredTime";
-
-                          using (MySqlCommand deleteCmd = new MySqlCommand(deleteSql, connection))
-                          {
-                              deleteCmd.Parameters.AddWithValue("@CurrentDate", currentDate);
-                              deleteCmd.Parameters.AddWithValue("@MaxExpiredTime", maxExpiredTime.Value);
-
-                              int affectedRows = deleteCmd.ExecuteNonQuery();
-                              result = affectedRows >= 0; // 即使没有删除行也视为成功（可能没有更早的数据）
-                              log.Error($"清理过期策略完成，删除了 {affectedRows} 条记录，保留了最近时间点 {maxExpiredTime.Value} 的策略");
-                          }
-                      }
-                      else
-                      {
-                          // 没有过期数据
-                          result = true;
-                          log.Error("没有需要清理的过期策略");
-                      }
-                  }
-              }
-              catch (Exception ex)
-              {
-                  log.Error("清理过期策略失败：" + ex.Message);
-                  result = false;
-              }
-
-              return result;
-          }*/
-
         #region 无网下清理数据库策略
         public bool CleanTacticsFromMysqlWhen4gFail()
         {
@@ -1263,102 +1466,6 @@ namespace EMS
             return result;
         }
         #endregion
-        /*        public bool CleanTacticsFromMysqlWhen4gFail()
-                {
-                    bool result = false;
-                    string today = DateTime.Today.ToString("yyyy-MM-dd"); // 今天的日期（仅日期部分）
-                    MySqlConnection connection = null;
-
-                    try
-                    {
-                        using (connection = new MySqlConnection(DBConnection.connectionStr))
-                        {
-                            connection.Open();
-
-                            // 步骤1：检查是否存在今天的策略（rTime日期为今天）
-                            bool hasTodayTactics = false;
-                            string checkTodaySql = "SELECT COUNT(1) FROM tactics WHERE DATE(rTime) = @Today;";
-                            using (MySqlCommand checkCmd = new MySqlCommand(checkTodaySql, connection))
-                            {
-                                checkCmd.Parameters.AddWithValue("@Today", today);
-                                int todayCount = Convert.ToInt32(checkCmd.ExecuteScalar());
-                                hasTodayTactics = todayCount > 0;
-                            }
-
-                            if (hasTodayTactics)
-                            {
-                                // 步骤2：存在今天的策略，直接删除过期策略（rTime早于今天）
-                                string deleteExpiredSql = "DELETE FROM tactics WHERE rTime < @Today;";
-                                using (MySqlCommand deleteCmd = new MySqlCommand(deleteExpiredSql, connection))
-                                {
-                                    deleteCmd.Parameters.AddWithValue("@Today", today);
-                                    int rowsAffected = deleteCmd.ExecuteNonQuery();
-                                    result = true; // 无论是否有删除，只要执行成功就返回true
-                                    log.Error($"存在今日策略，已删除过期策略 {rowsAffected} 条");
-                                }
-                            }
-                            else
-                            {
-                                // 步骤3：不存在今天的策略，处理过期策略
-                                // 3.1 查找过期策略中最近的时间rTime1
-                                string findLatestExpiredSql = "SELECT MAX(rTime) FROM tactics WHERE DATE(rTime) < @Today;";
-                                DateTime? latestExpiredTime = null;
-                                using (MySqlCommand findCmd = new MySqlCommand(findLatestExpiredSql, connection))
-                                {
-                                    findCmd.Parameters.AddWithValue("@Today", today);
-                                    object rTime1Obj = findCmd.ExecuteScalar();
-                                    if (rTime1Obj != DBNull.Value)
-                                    {
-                                        latestExpiredTime = Convert.ToDateTime(rTime1Obj);
-                                    }
-                                }
-
-                                if (latestExpiredTime.HasValue)
-                                {
-                                    // 3.2 将所有rTime等于rTime1的策略时间改为今日
-                                    string updateSql = "UPDATE tactics SET rTime = @Today WHERE rTime = @RTime1;";
-                                    using (MySqlCommand updateCmd = new MySqlCommand(updateSql, connection))
-                                    {
-                                        updateCmd.Parameters.AddWithValue("@Today", today);
-                                        updateCmd.Parameters.AddWithValue("@RTime1", latestExpiredTime.Value);
-                                        int updatedRows = updateCmd.ExecuteNonQuery();
-                                        log.Error($"已将 {updatedRows} 条最近过期策略（时间：{latestExpiredTime.Value:yyyy-MM-dd}）更新为今日");
-                                    }
-
-                                    // 3.3 删除修改后仍过期的策略（rTime < 今天）
-                                    string deleteAfterUpdateSql = "DELETE FROM tactics WHERE rTime < @Today;";
-                                    using (MySqlCommand deleteCmd = new MySqlCommand(deleteAfterUpdateSql, connection))
-                                    {
-                                        deleteCmd.Parameters.AddWithValue("@Today", today);
-                                        int deletedRows = deleteCmd.ExecuteNonQuery();
-                                        log.Error($"更新后，删除过期策略 {deletedRows} 条");
-                                        result = true;
-                                    }
-                                }
-                                else
-                                {
-                                    // 没有任何过期策略，无需操作
-                                    log.Error("不存在今日策略，且无任何过期策略，无需处理");
-                                    result = true; // 无操作也算成功
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("清理策略失败：" + ex.Message);
-                        result = false;
-                    }
-                    finally
-                    {
-                        if (connection != null && connection.State == System.Data.ConnectionState.Open)
-                        {
-                            connection.Close();
-                        }
-                    }
-                    return result;
-                }
-        */
 
         #region 数据库中装载策略数据
         public bool LoadFromMySQL(int type)
@@ -1538,190 +1645,6 @@ namespace EMS
             return Result;
         }
         #endregion
-
-        /*       public bool LoadFromMySQL(int type)
-               {
-                   //cleanTacticsFromMysql();
-                   switch (type)
-                   {
-                       case 0:
-                           CleanTacticsFromMysql();
-                           break;
-                       case 1:
-                           CleanTacticsFromMysqlWhen4gFail();
-                           break;
-                       default:
-                           break;
-                   }
-
-                   bool Result = false;
-                   string strDate = DateTime.Now.ToString("yyyy-MM-dd");
-                   string astrSQL = "select startTime,endTime, tType, PCSType, waValue, rTime"
-                           + " from tactics where rTime = '" + strDate + "' order by startTime";
-
-                   try
-                   {
-                       using (MySqlConnection connection = new MySqlConnection(DBConnection.connectionStr))
-                       {
-                           connection.Open();
-
-                           // 首先检查是否有今日策略
-                           bool hasTodayTactics = false;
-                           using (MySqlCommand checkCmd = new MySqlCommand(astrSQL, connection))
-                           {
-                               using (MySqlDataReader rd = checkCmd.ExecuteReader())
-                               {
-                                   if (rd != null && rd.HasRows)
-                                   {
-                                       hasTodayTactics = true;
-                                       lock (TacticsList)
-                                       {
-                                           while (TacticsList.Count > 0)
-                                           {
-                                               TacticsList.RemoveAt(0);
-                                           }
-                                           while (rd.Read())
-                                           {
-                                               TacticsClass oneTactics = new TacticsClass();
-                                               oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(0));
-                                               oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + rd.GetString(1));
-                                               oneTactics.tType = rd.GetString(2);
-                                               oneTactics.PCSType = rd.GetString(3);
-                                               if (oneTactics.PCSType == "恒流")
-                                                   oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
-                                               if (oneTactics.PCSType == "恒压")
-                                               {
-                                                   oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
-                                                   if (oneTactics.waValue < 0)
-                                                       oneTactics.waValue = 0;
-                                               }
-
-                                               //9.5 源码注释
-                                               //oneTactics.PCSType = "恒功率";
-
-                                               //限额
-                                               oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                                               if (oneTactics.waValue > 110)
-                                                   oneTactics.waValue = 110;
-                                               //修正充放电的正负功率
-                                               if (oneTactics.tType == "放电")
-                                                   oneTactics.waValue = -rd.GetInt32(4);
-                                               else
-                                                   oneTactics.waValue = rd.GetInt32(4);
-
-                                               //策略日期
-                                               oneTactics.strategyDate = rd.GetDateTime(5);
-
-                                               TacticsList.Add(oneTactics);
-                                           }
-                                       }
-                                   }
-                               }
-                           }
-
-                           // 如果没有今日策略且type为0，查找最近的过期策略并更新为今日
-                           if (!hasTodayTactics && type == 0)
-                           {
-                               log.Error("不存在今日策略，查找最近的过期策略");
-
-                               // 查找过期策略中最近的时间rTime1
-                               string findLatestExpiredSql = "SELECT MAX(rTime) FROM tactics WHERE DATE(rTime) < @Today;";
-                               DateTime? latestExpiredTime = null;
-                               using (MySqlCommand findCmd = new MySqlCommand(findLatestExpiredSql, connection))
-                               {
-                                   findCmd.Parameters.AddWithValue("@Today", strDate);
-                                   object rTime1Obj = findCmd.ExecuteScalar();
-                                   if (rTime1Obj != DBNull.Value)
-                                   {
-                                       latestExpiredTime = Convert.ToDateTime(rTime1Obj);
-                                   }
-                               }
-
-                               if (latestExpiredTime.HasValue)
-                               {
-                                   // 将所有rTime等于rTime1的策略时间改为今日
-                                   string updateSql = "UPDATE tactics SET rTime = @Today WHERE rTime = @RTime1;";
-                                   using (MySqlCommand updateCmd = new MySqlCommand(updateSql, connection))
-                                   {
-                                       updateCmd.Parameters.AddWithValue("@Today", strDate);
-                                       updateCmd.Parameters.AddWithValue("@RTime1", latestExpiredTime.Value);
-                                       int updatedRows = updateCmd.ExecuteNonQuery();
-                                       log.Error($"已将 {updatedRows} 条最近过期策略（时间：{latestExpiredTime.Value:yyyy-MM-dd}）更新为今日");
-                                   }
-
-                                   // 删除修改后仍过期的策略（rTime < 今天）
-                                   string deleteAfterUpdateSql = "DELETE FROM tactics WHERE rTime < @Today;";
-                                   using (MySqlCommand deleteCmd = new MySqlCommand(deleteAfterUpdateSql, connection))
-                                   {
-                                       deleteCmd.Parameters.AddWithValue("@Today", strDate);
-                                       int deletedRows = deleteCmd.ExecuteNonQuery();
-                                       log.Error($"更新后，删除过期策略 {deletedRows} 条");
-                                   }
-
-                                   // 更新策略后，重新查询今日策略
-                                   using (MySqlCommand newCmd = new MySqlCommand(astrSQL, connection))
-                                   {
-                                       using (MySqlDataReader newRd = newCmd.ExecuteReader())
-                                       {
-                                           if (newRd != null && newRd.HasRows)
-                                           {
-                                               lock (TacticsList)
-                                               {
-                                                   while (TacticsList.Count > 0)
-                                                   {
-                                                       TacticsList.RemoveAt(0);
-                                                   }
-                                                   while (newRd.Read())
-                                                   {
-                                                       TacticsClass oneTactics = new TacticsClass();
-                                                       oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + newRd.GetString(0));
-                                                       oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + newRd.GetString(1));
-                                                       oneTactics.tType = newRd.GetString(2);
-                                                       oneTactics.PCSType = newRd.GetString(3);
-                                                       if (oneTactics.PCSType == "恒流")
-                                                           oneTactics.waValue = (int)(oneTactics.waValue * 0.8);
-                                                       if (oneTactics.PCSType == "恒压")
-                                                       {
-                                                           oneTactics.waValue = (int)((oneTactics.waValue - 648) * 0.7);
-                                                           if (oneTactics.waValue < 0)
-                                                               oneTactics.waValue = 0;
-                                                       }
-
-                                                       //限额
-                                                       oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                                                       if (oneTactics.waValue > 110)
-                                                           oneTactics.waValue = 110;
-                                                       //修正充放电的正负功率
-                                                       if (oneTactics.tType == "放电")
-                                                           oneTactics.waValue = -newRd.GetInt32(4);
-                                                       else
-                                                           oneTactics.waValue = newRd.GetInt32(4);
-
-                                                       //策略日期
-                                                       oneTactics.strategyDate = newRd.GetDateTime(5);
-
-                                                       TacticsList.Add(oneTactics);
-                                                   }
-                                               }
-                                           }
-                                       }
-                                   }
-                               }
-                               else
-                               {
-                                   log.Error("不存在今日策略，且无任何过期策略");
-                               }
-                           }
-                       }
-                       Result = true;
-                   }
-                   catch (Exception ex)
-                   {
-                       log.Error(ex.Message);
-                   }
-                   return Result;
-               }
-       */
 
         /// <summary>
         /// 检查昨天的数据是否存在

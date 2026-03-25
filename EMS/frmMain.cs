@@ -889,6 +889,12 @@ namespace EMS
 
         private bool InitializeDeviceData()
         {
+            // 初始化辅助电表数据
+            if (frmMain.Selffrm.AllEquipment.Elemeter3 != null)
+            {
+                frmMain.Selffrm.AllEquipment.Elemeter3.GetSetDataFromEqipment();
+            }
+
             //校验储能表是否是八费率
             if (frmMain.Selffrm.AllEquipment.Elemeter2 != null) {
                 frmMain.Selffrm.AllEquipment.Elemeter2.Check_Version();
@@ -1351,11 +1357,10 @@ namespace EMS
 
                     if (!frmMain.Selffrm.AllEquipment.LoadJFPGSuccess)
                     {
-                        if (frmMain.TacticsList.LoadJFPGFromSQL())
+                        if (frmMain.TacticsList.LoadJFPGFromSQL_WithCompare())
                         {
                             frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = true;
                         }
-
                     }
 
                     if (!frmMain.Selffrm.AllEquipment.SetHistoryDataSuccess)
@@ -1435,8 +1440,8 @@ namespace EMS
                     log.Error("Public_TimerCallback encountered an error: " + ex.Message);
                 }
 
-                // 等待 2分钟再进行下一次心跳
-                Thread.Sleep(120000);
+                // 等待 1分钟再进行下一次心跳
+                Thread.Sleep(60000);
                 //Thread.Sleep(1000);
             }
         }

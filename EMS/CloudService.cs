@@ -289,7 +289,8 @@ namespace EMS
                 try
                 {
                     string content = File.ReadAllText(file);
-                    string topic = Path.GetFileName(file).Substring(1, 3);
+                    //string topic = Path.GetFileName(file).Substring(1, 3);
+                    string topic = Path.GetFileName(file).Substring(1, 3) + "/" + frmMain.Selffrm.AllEquipment.full_iot_code;
 
                     lock (_lockMqtt)
                     {
@@ -391,302 +392,567 @@ namespace EMS
 
         public bool GetServerTactics(string astrData)
         {
-            bool result = false;
+            bool result = true;
+
             try
             {
-                //只有设置接受云策略 且 为主机 才接收云下发的策略
-                if (frmSet.config != null)
+                /* ----------------------------------------------------
+                 * 0. 权限与配置校验
+                 * ---------------------------------------------------- */
+                if (frmSet.config == null)
                 {
-                    if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
+                    log.Error("frmSet.config 未初始化成功，GetServerTactics 无法判断");
+                    return false;
+                }
+
+                if (frmSet.config.UseYunTactics == 0 || frmSet.config.IsMaster == 0)
+                    return false;
+
+                if (string.IsNullOrWhiteSpace(astrData))
+                    return false;
+
+                JObject jsonObject = JObject.Parse(astrData);
+
+                if (jsonObject["method"]?.ToString() != "ems/strategy")
+                    return false;
+
+                var paramsObj = jsonObject["params"];
+                if (paramsObj == null || paramsObj["strategy"] == null)
+                    return false;
+
+                string defaultDate = paramsObj["date"]?.ToString();
+                JArray strategyArray = (JArray)paramsObj["strategy"];
+                if (strategyArray.Count == 0)
+                    return true;
+
+                /* ----------------------------------------------------
+                 * 1. 先收集所有涉及到的 strategyDate
+                 * ---------------------------------------------------- */
+                HashSet<string> strategyDates = new HashSet<string>();
+
+                foreach (var item in strategyArray)
+                {
+                    string strategyDate = item["strategyDate"]?.ToString();
+                    if (string.IsNullOrEmpty(strategyDate))
+                        strategyDate = defaultDate;
+
+                    if (!string.IsNullOrEmpty(strategyDate))
+                        strategyDates.Add(strategyDate);
+                }
+
+                /* ----------------------------------------------------
+                 * 2. 统一删除数据库中对应日期的策略
+                 * ---------------------------------------------------- */
+                foreach (string strategyDate in strategyDates)
+                {
+                    string deleteSql = "DELETE FROM tactics WHERE rTime = @rTime";
+                    var deleteParams = new Dictionary<string, object>
                     {
-                        return false;
+                        { "@rTime", strategyDate }
+                    };
+
+                    DBConnection.ExecSQLWithParams(deleteSql, deleteParams);
+                    // 不依赖返回值，确保每个日期只删一次
+                }
+
+                /* ----------------------------------------------------
+                 * 3. 插入新的策略数据
+                 * ---------------------------------------------------- */
+                foreach (var item in strategyArray)
+                {
+                    string start = item["start"]?.ToString();
+                    string end = item["end"]?.ToString();
+
+                    string charge = "";
+                    if (item["charge"] != null)
+                        charge = bool.Parse(item["charge"].ToString()) ? "充电" : "放电";
+
+                    string mode = "";
+                    if (item["mode"] != null)
+                    {
+                        int modeValue = int.Parse(item["mode"].ToString());
+                        if (modeValue == 3)
+                            mode = "恒功率";
+                        else if (modeValue == 5)
+                            mode = "自适应需量";
                     }
+
+                    string value = item["value"]?.ToString();
+
+                    string strategyDate = item["strategyDate"]?.ToString();
+                    if (string.IsNullOrEmpty(strategyDate))
+                        strategyDate = defaultDate;
+
+                    // 严格校验，避免插入“空策略”
+                    if (string.IsNullOrEmpty(start)
+                        || string.IsNullOrEmpty(end)
+                        || string.IsNullOrEmpty(charge)
+                        || string.IsNullOrEmpty(mode)
+                        || string.IsNullOrEmpty(value)
+                        || string.IsNullOrEmpty(strategyDate))
+                    {
+                        log.Warn("策略字段不完整，已跳过一条 strategy");
+                        continue;
+                    }
+
+                    string insertSql =
+                        "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                        "VALUES (@start, @end, @charge, @mode, @value, @rTime)";
+
+                    var insertParams = new Dictionary<string, object>
+                    {
+                        { "@start", start },
+                        { "@end", end },
+                        { "@charge", charge },
+                        { "@mode", mode },
+                        { "@value", value },
+                        { "@rTime", strategyDate }
+                    };
+
+                    if (DBConnection.ExecSQLWithParams(insertSql, insertParams) <= 0)
+                    {
+                        result = false;
+                        log.Error($"插入策略失败：date={strategyDate}, {start}-{end}");
+                    }
+                }
+
+                /* ----------------------------------------------------
+                 * 4. 刷新内存策略
+                 * ---------------------------------------------------- */
+                if (!frmMain.TacticsList.LoadFromMySQL(0))
+                {
+                    result = false;
+                    log.Error("策略加载到内存失败");
                 }
                 else
                 {
-                    log.Error("frmSet.config 未初始化成功，GetServerTactics无法判断");
-                    return false;
-                }
-
-                //判断内容是否为空
-                if (astrData == "")
-                {
-                    return false;
-                }
-                JObject jsonObject = null;
-                jsonObject = JObject.Parse(astrData);
-
-                if (jsonObject["method"] != null)
-                {
-                    string strTopic = jsonObject["method"].ToString();
-                    if (strTopic != "ems/strategy")
-                        return false;
-
-                    if (jsonObject["params"]["date"] != null && jsonObject["params"]["strategy"] != null)
-                    {
-                        string strDate = jsonObject["params"]["date"].ToString();
-                        int iTacticCount = jsonObject["params"]["strategy"].Count();
-
-                        if (iTacticCount > 0)
-                        {
-                            // 用于跟踪已经删除过的日期，避免重复删除
-                            System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
-
-                            //增加新数据
-                            for (int i = 0; i < iTacticCount; i++)
-                            {
-                                string strInsert = "";
-                                string start = "";
-                                string end = "";
-                                string charge = "";
-                                string mode = "";
-                                string value = "";
-                                string strategyDate = "";
-
-                                if (jsonObject["params"]["strategy"][i]["start"] != null)
-                                {
-                                    start = jsonObject["params"]["strategy"][i]["start"].ToString();
-                                }
-
-                                if (jsonObject["params"]["strategy"][i]["end"] != null)
-                                {
-                                    end = jsonObject["params"]["strategy"][i]["end"].ToString();
-                                }
-
-                                if (jsonObject["params"]["strategy"][i]["charge"] != null)
-                                {
-                                    if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
-                                        charge = "充电";
-                                    else
-                                        charge = "放电";
-                                }
-
-                                if (jsonObject["params"]["strategy"][i]["mode"] != null)
-                                {
-                                    if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
-                                    {
-                                        mode = "恒功率";
-                                    }
-                                    else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
-                                    {
-                                        mode = "自适应需量";
-                                    }
-                                }
-
-                                if (jsonObject["params"]["strategy"][i]["value"] != null)
-                                {
-                                    value = jsonObject["params"]["strategy"][i]["value"].ToString();
-                                }
-
-                                // 获取策略日期，如果不存在则使用默认日期
-                                if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
-                                {
-                                    strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
-                                }
-                                else
-                                {
-                                    strategyDate = strDate;
-                                }
-
-                                // 如果该日期的策略还没有被删除，则执行删除操作
-                                if (!deletedDates.Contains(strategyDate))
-                                {
-                                    //删除同日期的策略
-                                    // string strDelete = "delete from tactics where rTime = '" + strategyDate + "';";
-                                    // DBConnection.ExecSQL(strDelete);
-                                    string strDelete = "delete from tactics where rTime = @strategyDate";
-                                    var parameters = new Dictionary<string, object> { { "@strategyDate", strategyDate } };
-                                    if (DBConnection.ExecSQLWithParams(strDelete, parameters) >= 0)
-                                    {
-                                        // 只有在删除成功后才添加到已删除列表
-                                        deletedDates.Add(strategyDate);
-                                    }
-                                    else
-                                    {
-                                        log.Error($"删除策略数据失败，日期：{strategyDate}，数据库操作返回-1");
-                                    }
-                                }
-
-                                if (start != null && end != null && charge != null && mode != null && value != null)
-                                {
-                                    // strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
-                                    //         "VALUES ('" + start + "', '" + end + "', '" + charge + "', '" + mode + "', '" + value + "', '" + strategyDate + "')";
-
-                                    // //插入
-                                    // if (DBConnection.ExecSQL(strInsert))
-                                    // {
-                                    //     result = true;
-                                    // }
-
-                                    strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
-                                            "VALUES (@start, @end, @charge, @mode, @value, @strategyDate)";
-
-                                    var parameters = new Dictionary<string, object>
-                                    {
-                                        { "@start", start },
-                                        { "@end", end },
-                                        { "@charge", charge },
-                                        { "@mode", mode },
-                                        { "@value", value },
-                                        { "@strategyDate", strategyDate }
-                                    };
-
-                                    //插入
-                                    if (DBConnection.ExecSQLWithParams(strInsert, parameters) >= 0)
-                                    {
-                                        result = true;
-                                    }
-                                }
-                            }
-
-                            if (frmMain.TacticsList.LoadFromMySQL(0))
-                            {
-                                frmMain.TacticsList.ActiveIndex = -1;
-                                result = true;
-                            }
-                            else
-                            {
-                                result = false;
-                            }
-                        }
-                    }
+                    frmMain.TacticsList.ActiveIndex = -1;
                 }
             }
             catch (Exception ex)
             {
-                log.Error("GetServerTactics: " + ex.Message);
+                result = false;
+                log.Error("GetServerTactics Exception: " + ex);
             }
+
             return result;
         }
-
-        public bool GetServerEPrices(string astrData, bool aIsFileData = false)
-        {
-            bool result = true;
-            try
-            {
-                if (astrData == "")
+        /*        public bool GetServerTactics(string astrData)
                 {
-                    return false;
-                }
-                JObject jsonObject = null;
-                jsonObject = JObject.Parse(astrData);
-                if (jsonObject["method"] != null)
-                {
-                    string strTopic = jsonObject["method"].ToString();
-                    if (strTopic != "meter/price")
-                        return false;
-
-                    if (jsonObject["params"]["date"] != null && jsonObject["params"]["price"] != null)
+                    bool result = false;
+                    try
                     {
-                        //获取策略日期
-                        string strDate = jsonObject["params"]["date"].ToString();
-                        //获取数量
-                        int iPriceCount = jsonObject["params"]["price"].Count();
-
-                        if (iPriceCount > 0)
+                        //只有设置接受云策略 且 为主机 才接收云下发的策略
+                        if (frmSet.config != null)
                         {
-                            // 用于跟踪已经删除过的日期，避免重复删除
-                            System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
-
-                            //增加新数据
-                            for (int i = 0; i < iPriceCount; i++)
+                            if ((frmSet.config.UseYunTactics == 0)|| (frmSet.config.IsMaster == 0))
                             {
-                                string strInsert = "";
-                                int isection = -1;
-                                string start = "";
-                                string pricDate = "";
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            log.Error("frmSet.config 未初始化成功，GetServerTactics无法判断");
+                            return false;
+                        }
 
-                                if (jsonObject["params"]["price"][i]["range"] != null)
+                        //判断内容是否为空
+                        if (astrData == "")
+                        {
+                            return false;
+                        }
+                        JObject jsonObject = null;
+                        jsonObject = JObject.Parse(astrData);
+
+                        if (jsonObject["method"] != null)
+                        {
+                            string strTopic = jsonObject["method"].ToString();
+                            if (strTopic != "ems/strategy")
+                                return false;
+
+                            if (jsonObject["params"]["date"] != null && jsonObject["params"]["strategy"] != null)
+                            {
+                                string strDate = jsonObject["params"]["date"].ToString();
+                                int iTacticCount = jsonObject["params"]["strategy"].Count();
+
+                                if (iTacticCount > 0)
                                 {
-                                    isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
+                                    // 用于跟踪已经删除过的日期，避免重复删除
+                                    System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
 
-                                    if (jsonObject["params"]["price"][i]["buyPrice"] != null)
+                                    //增加新数据
+                                    for (int i = 0; i < iTacticCount; i++)
                                     {
-                                        frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
+                                        string strInsert = "";
+                                        string start = "";
+                                        string end = "";
+                                        string charge = "";
+                                        string mode = "";
+                                        string value = "";
+                                        string strategyDate = "";
+
+                                        if (jsonObject["params"]["strategy"][i]["start"] != null)
+                                        {
+                                            start = jsonObject["params"]["strategy"][i]["start"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["end"] != null)
+                                        {
+                                            end = jsonObject["params"]["strategy"][i]["end"].ToString();
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["charge"] != null)
+                                        {
+                                            if (bool.Parse(jsonObject["params"]["strategy"][i]["charge"].ToString()))
+                                                charge = "充电";
+                                            else
+                                                charge = "放电";
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["mode"] != null)
+                                        {
+                                            if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 3)
+                                            {
+                                                mode = "恒功率";
+                                            }
+                                            else if (int.Parse(jsonObject["params"]["strategy"][i]["mode"].ToString()) == 5)
+                                            {
+                                                mode = "自适应需量";
+                                            }
+                                        }
+
+                                        if (jsonObject["params"]["strategy"][i]["value"] != null)
+                                        {
+                                            value = jsonObject["params"]["strategy"][i]["value"].ToString();
+                                        }
+
+                                        // 获取策略日期，如果不存在则使用默认日期
+                                        if (jsonObject["params"]["strategy"][i]["strategyDate"] != null)
+                                        {
+                                            strategyDate = jsonObject["params"]["strategy"][i]["strategyDate"].ToString();
+                                        }
+                                        else
+                                        {
+                                            strategyDate = strDate;
+                                        }
+
+                                        // 如果该日期的策略还没有被删除，则执行删除操作
+                                        if (!deletedDates.Contains(strategyDate))
+                                        {
+                                            //删除同日期的策略
+                                            // string strDelete = "delete from tactics where rTime = '" + strategyDate + "';";
+                                            // DBConnection.ExecSQL(strDelete);
+                                            string strDelete = "delete from tactics where rTime = @strategyDate";
+                                            var parameters = new Dictionary<string, object> { { "@strategyDate", strategyDate } };
+                                            if (DBConnection.ExecSQLWithParams(strDelete, parameters) >= 0)
+                                            {
+                                                // 只有在删除成功后才添加到已删除列表
+                                                deletedDates.Add(strategyDate);
+                                            }
+                                            else
+                                            {
+                                                log.Error($"删除策略数据失败，日期：{strategyDate}，数据库操作返回-1");
+                                            }
+                                        }
+
+                                        if (start != null && end != null && charge != null && mode != null && value != null)
+                                        {
+                                            // strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                                            //         "VALUES ('" + start + "', '" + end + "', '" + charge + "', '" + mode + "', '" + value + "', '" + strategyDate + "')";
+
+                                            // //插入
+                                            // if (DBConnection.ExecSQL(strInsert))
+                                            // {
+                                            //     result = true;
+                                            // }
+
+                                            strInsert = "INSERT INTO tactics (startTime, endTime, tType, PCSType, waValue, rTime) " +
+                                                    "VALUES (@start, @end, @charge, @mode, @value, @strategyDate)";
+
+                                            var parameters = new Dictionary<string, object>
+                                            {
+                                                { "@start", start },
+                                                { "@end", end },
+                                                { "@charge", charge },
+                                                { "@mode", mode },
+                                                { "@value", value },
+                                                { "@strategyDate", strategyDate }
+                                            };
+
+                                            //插入
+                                            if (DBConnection.ExecSQLWithParams(strInsert, parameters) >= 0)
+                                            {
+                                                result = true;
+                                            }
+                                        }
                                     }
 
-                                    if (jsonObject["params"]["price"][i]["sellPrice"] != null)
+                                    if (frmMain.TacticsList.LoadFromMySQL(0))
                                     {
-                                        frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
+                                        frmMain.TacticsList.ActiveIndex = -1;
+                                        result = true;
                                     }
-                                }
-
-                                if (jsonObject["params"]["price"][i]["start"] != null)
-                                {
-                                    start = jsonObject["params"]["price"][i]["start"].ToString();
-                                }
-
-                                // 获取电价日期，如果不存在则使用默认日期
-                                if (jsonObject["params"]["price"][i]["pricDate"] != null)
-                                {
-                                    pricDate = jsonObject["params"]["price"][i]["pricDate"].ToString();
-                                }
-                                else
-                                {
-                                    pricDate = strDate;
-                                }
-
-                                // 如果该日期的电价还没有被删除，则执行删除操作
-                                if (!deletedDates.Contains(pricDate))
-                                {
-                                    //删除同日期的电价
-                                    // string strDelete = "delete from electrovalence where rTime = '" + pricDate + "';";
-                                    // DBConnection.ExecSQL(strDelete);
-                                    string strDelete = "delete from electrovalence where rTime = @pricDate";
-                                    var parameters = new Dictionary<string, object> { { "@pricDate", pricDate } };
-                                    if (DBConnection.ExecSQLWithParams(strDelete, parameters) > 0)
-                                    {
-                                        deletedDates.Add(pricDate);
-                                    }
-                                    else {
-                                        log.Error($"删除费率数据失败，日期：{pricDate}，数据库操作返回-1");
-                                    }
-
-                                }
-
-                                if (start != null && isection != -1)
-                                {
-                                    // strInsert = "INSERT INTO electrovalence (startTime, eName,section, rTime) " +
-                                    //         "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricDate + "')";
-
-                                    // //插入
-                                    // if (!DBConnection.ExecSQL(strInsert))
-                                    // {
-                                    //     result = false;
-                                    // }
-
-                                    strInsert = "INSERT INTO electrovalence (startTime, eName, section, rTime) " +
-                                            "VALUES (@start, @eName, @section, @pricDate)";
-
-                                    var parameters = new Dictionary<string, object>
-                                    {
-                                        { "@start", start },
-                                        { "@eName", isection.ToString() },
-                                        { "@section", "0" },
-                                        { "@pricDate", pricDate }
-                                    };
-
-                                    //插入
-                                    if (DBConnection.ExecSQLWithParams(strInsert, parameters) < 0)
+                                    else
                                     {
                                         result = false;
                                     }
                                 }
                             }
-
-                            // 写入电表不影响返回结果
-                            frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        log.Error("GetServerTactics: " + ex.Message);
+                    }
+                    return result;
+                }*/
+
+        /*        public bool GetServerEPrices(string astrData, bool aIsFileData = false)
+                {
+                    bool result = true;
+                    try
+                    {
+                        if (astrData == "")
+                        {
+                            return false;
+                        }
+                        JObject jsonObject = null;
+                        jsonObject = JObject.Parse(astrData);
+                        if (jsonObject["method"] != null)
+                        {
+                            string strTopic = jsonObject["method"].ToString();
+                            if (strTopic != "meter/price")
+                                return false;
+
+                            if (jsonObject["params"]["date"] != null && jsonObject["params"]["price"] != null)
+                            {
+                                //获取策略日期
+                                string strDate = jsonObject["params"]["date"].ToString();
+                                //获取数量
+                                int iPriceCount = jsonObject["params"]["price"].Count();
+
+                                if (iPriceCount > 0)
+                                {
+                                    // 用于跟踪已经删除过的日期，避免重复删除
+                                    System.Collections.Generic.HashSet<string> deletedDates = new System.Collections.Generic.HashSet<string>();
+
+                                    //增加新数据
+                                    for (int i = 0; i < iPriceCount; i++)
+                                    {
+                                        string strInsert = "";
+                                        int isection = -1;
+                                        string start = "";
+                                        string pricDate = "";
+
+                                        if (jsonObject["params"]["price"][i]["range"] != null)
+                                        {
+                                            isection = int.Parse(jsonObject["params"]["price"][i]["range"].ToString());
+
+                                            if (jsonObject["params"]["price"][i]["buyPrice"] != null)
+                                            {
+                                                frmSet.Prices[0, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["buyPrice"].ToString()) * 100);
+                                            }
+
+                                            if (jsonObject["params"]["price"][i]["sellPrice"] != null)
+                                            {
+                                                frmSet.Prices[1, isection] = (int)Math.Round(double.Parse(jsonObject["params"]["price"][i]["sellPrice"].ToString()) * 100);
+                                            }
+                                        }
+
+                                        if (jsonObject["params"]["price"][i]["start"] != null)
+                                        {
+                                            start = jsonObject["params"]["price"][i]["start"].ToString();
+                                        }
+
+                                        // 获取电价日期，如果不存在则使用默认日期
+                                        if (jsonObject["params"]["price"][i]["pricDate"] != null)
+                                        {
+                                            pricDate = jsonObject["params"]["price"][i]["pricDate"].ToString();
+                                        }
+                                        else
+                                        {
+                                            pricDate = strDate;
+                                        }
+
+                                        // 如果该日期的电价还没有被删除，则执行删除操作
+                                        if (!deletedDates.Contains(pricDate))
+                                        {
+                                            //删除同日期的电价
+                                            // string strDelete = "delete from electrovalence where rTime = '" + pricDate + "';";
+                                            // DBConnection.ExecSQL(strDelete);
+                                            string strDelete = "delete from electrovalence where rTime = @pricDate";
+                                            var parameters = new Dictionary<string, object> { { "@pricDate", pricDate } };
+                                            if (DBConnection.ExecSQLWithParams(strDelete, parameters) > 0)
+                                            {
+                                                deletedDates.Add(pricDate);
+                                            }
+                                            else {
+                                                log.Error($"删除费率数据失败，日期：{pricDate}，数据库操作返回-1");
+                                            }
+
+                                        }
+
+                                        if (start != null && isection != -1)
+                                        {
+                                            // strInsert = "INSERT INTO electrovalence (startTime, eName,section, rTime) " +
+                                            //         "VALUES ('" + start + "', '" + isection.ToString() + "', '" + "0" + "', '" + pricDate + "')";
+
+                                            // //插入
+                                            // if (!DBConnection.ExecSQL(strInsert))
+                                            // {
+                                            //     result = false;
+                                            // }
+
+                                            strInsert = "INSERT INTO electrovalence (startTime, eName, section, rTime) " +
+                                                    "VALUES (@start, @eName, @section, @pricDate)";
+
+                                            var parameters = new Dictionary<string, object>
+                                            {
+                                                { "@start", start },
+                                                { "@eName", isection.ToString() },
+                                                { "@section", "0" },
+                                                { "@pricDate", pricDate }
+                                            };
+
+                                            //插入
+                                            if (DBConnection.ExecSQLWithParams(strInsert, parameters) < 0)
+                                            {
+                                                result = false;
+                                            }
+                                        }
+                                    }
+
+                                    // 写入电表不影响返回结果
+                                    frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error("GetServerEPrices: " + ex.Message);
+                    }
+                    //输出返回数据
+                    return result;
+                }*/
+
+        public bool GetServerEPrices(string astrData, bool aIsFileData = false)
+        {
+            bool result = true;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(astrData))
+                    return false;
+
+                JObject jsonObject = JObject.Parse(astrData);
+
+                // 1. 校验 method
+                if (jsonObject["method"]?.ToString() != "meter/price")
+                    return false;
+
+                var paramsObj = jsonObject["params"];
+                if (paramsObj == null || paramsObj["price"] == null)
+                    return false;
+
+                string defaultDate = paramsObj["date"]?.ToString();
+                JArray priceArray = (JArray)paramsObj["price"];
+                if (priceArray.Count == 0)
+                    return true;
+
+                /* ----------------------------------------------------
+                 * 2. 先收集所有涉及到的策略日期
+                 * ---------------------------------------------------- */
+                HashSet<string> priceDates = new HashSet<string>();
+
+                foreach (var item in priceArray)
+                {
+                    string priceDate = item["pricDate"]?.ToString();
+                    if (string.IsNullOrEmpty(priceDate))
+                        priceDate = defaultDate;
+
+                    if (!string.IsNullOrEmpty(priceDate))
+                        priceDates.Add(priceDate);
                 }
+
+                /* ----------------------------------------------------
+                 * 3. 先删除数据库中与这些日期重叠的数据
+                 * ---------------------------------------------------- */
+                foreach (string priceDate in priceDates)
+                {
+                    string deleteSql = "DELETE FROM electrovalence WHERE rTime = @rTime";
+                    var deleteParams = new Dictionary<string, object>
+                    {
+                        { "@rTime", priceDate }
+                    };
+
+                    DBConnection.ExecSQLWithParams(deleteSql, deleteParams);
+                    // 不依赖返回值，不管删没删到，都视为成功执行过
+                }
+
+                /* ----------------------------------------------------
+                 * 4. 再执行插入
+                 * ---------------------------------------------------- */
+                foreach (var item in priceArray)
+                {
+                    int section = -1;
+                    string start = item["start"]?.ToString();
+
+                    if (item["range"] != null)
+                    {
+                        section = int.Parse(item["range"].ToString());
+
+                        if (item["buyPrice"] != null)
+                        {
+                            frmSet.Prices[0, section] =
+                                (int)Math.Round(double.Parse(item["buyPrice"].ToString()) * 100);
+                        }
+
+                        if (item["sellPrice"] != null)
+                        {
+                            frmSet.Prices[1, section] =
+                                (int)Math.Round(double.Parse(item["sellPrice"].ToString()) * 100);
+                        }
+                    }
+
+                    string priceDate = item["pricDate"]?.ToString();
+                    if (string.IsNullOrEmpty(priceDate))
+                        priceDate = defaultDate;
+
+                    if (string.IsNullOrEmpty(start) || section == -1 || string.IsNullOrEmpty(priceDate))
+                        continue;
+
+                    string insertSql =
+                        "INSERT INTO electrovalence (startTime, eName, section, rTime) " +
+                        "VALUES (@startTime, @eName, @section, @rTime)";
+
+                    var insertParams = new Dictionary<string, object>
+                    {
+                        { "@startTime", start },
+                        { "@eName", section.ToString() },
+                        { "@section", "0" },
+                        { "@rTime", priceDate }
+                    };
+
+                    if (DBConnection.ExecSQLWithParams(insertSql, insertParams) <= 0)
+                    {
+                        result = false;
+                        log.Error($"插入费率失败：date={priceDate}, start={start}, section={section}");
+                    }
+                }
+
+                // 写入电表状态
+                frmMain.Selffrm.AllEquipment.LoadJFPGSuccess = false;
             }
             catch (Exception ex)
             {
-                log.Error("GetServerEPrices: " + ex.Message);
+                result = false;
+                log.Error("GetServerEPrices Exception: " + ex);
             }
-            //输出返回数据
+
             return result;
         }
+
 
         //云发来的策略数据
         public string GetAiotTable(string astrData)

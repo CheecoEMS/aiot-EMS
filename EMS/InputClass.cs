@@ -2049,7 +2049,7 @@ namespace EMS
 
         DateTime oldTemp;
         DateTime newTemp;
-        int count = 0;
+
         public double CoolTemp; //水温制冷点
         public double HotTemp;  //水温制热点
         public double CoolTempReturn;   //制冷回差
@@ -2229,13 +2229,16 @@ namespace EMS
             }
 
             Prepared = bPrepared;
+
             if (!Prepared)
             {
-                if (count < 10)
+                if (PreparedCount < 10)
                 {
-                    count++;
+                    PreparedCount++;
                 }
-                if (count > 8)
+
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
                 {
                     lock (Parent.EMSError)
                     {
@@ -2243,13 +2246,14 @@ namespace EMS
                         Parent.EMSError[0] |= 0x2000;
                     }
                 }
+
             }
             else
             {
                 Parent.EMSError[0] &= 0xDFFF;
-                count = 0;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
-
         }
 
         override public void GetDataFromEqipment()
@@ -3042,14 +3046,30 @@ namespace EMS
             }
 
             Prepared = bPrepared;
+
             if (!Prepared)
             {
-                Parent.EMSError[0] &= 0xFFFE;
-                Parent.EMSError[0] |= 0x1;
+                if (PreparedCount < 10)
+                {
+                    PreparedCount++;
+                }
+
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xFFFE;
+                        Parent.EMSError[0] |= 0x1;
+                    }
+                }
+
             }
             else
             {
                 Parent.EMSError[0] &= 0xFFFE;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
         }
 
@@ -3224,7 +3244,7 @@ namespace EMS
         }
 
         // 设置八费率的第一套费率表
-        public bool SetRates4Tier_1(byte[] aRates)
+        public bool SetRates8Tier_1(byte[] aRates)
         {
             bool res = false;
 
@@ -3242,7 +3262,7 @@ namespace EMS
         }
 
         // 设置八费率的第二套费率表
-        public bool SetRates4Tier_2(byte[] aRates)
+        public bool SetRates8Tier_2(byte[] aRates)
         {
             bool res = false;
 
@@ -3559,7 +3579,7 @@ namespace EMS
                 HZ = Math.Round(float.Parse(strTemp), 2);
             }
 
-            if (GetSysData(128, ref strTemp)) {
+            if (GetSysData(129, ref strTemp)) {
                 bPrepared = true;
                 sysTimeSettings = strTemp;
             }
@@ -3571,18 +3591,27 @@ namespace EMS
             Prepared = bPrepared;
             if (!Prepared)
             {
-                lock (Parent.EMSError)
+                if (PreparedCount < 10)
                 {
-                    Parent.EMSError[0] &= 0xFFFD;
-                    Parent.EMSError[0] |= 0x2;
+                    PreparedCount++;
                 }
-                /*
-                 Parent.EMSError[0] |= 0x2; //这条就够了
-                 */
+
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xFFFD;
+                        Parent.EMSError[0] |= 0x2;
+                    }
+                }
+
             }
             else
             {
                 Parent.EMSError[0] &= 0xFFFD;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
         }
 
@@ -4117,17 +4146,30 @@ namespace EMS
             Parent.AuxiliaryKWH[3] = Math.Round(Akwh[3], 2);
             Parent.AuxiliaryKWH[4] = Math.Round(Akwh[4], 2);
             Prepared = bPrepared;
+
             if (!Prepared)
             {
-                lock (Parent.EMSError)
+                if (PreparedCount < 10)
                 {
-                    Parent.EMSError[0] &= 0xFFF7;
-                    Parent.EMSError[0] |= 0x8;
+                    PreparedCount++;
                 }
+
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xFFF7;
+                        Parent.EMSError[0] |= 0x8;
+                    }
+                }
+
             }
             else
             {
                 Parent.EMSError[0] &= 0xFFF7;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
         }
 
@@ -4946,8 +4988,8 @@ namespace EMS
                     PreparedCount++;
                 }
 
-                //如果连续通讯故障次数超过8次，则认为通讯故障
-                if (PreparedCount > 8)
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
                 {
                     lock (Parent.EMSError)
                     {
@@ -5240,7 +5282,7 @@ namespace EMS
                     PreparedCount++;
                 }
 
-                //如果连续通讯故障次数超过8次，则认为空调通讯故障
+                //如果连续通讯故障次数超6次，则认为空调通讯故障
                 if (PreparedCount > 6)
                 {
                     lock (Parent.EMSError)
@@ -6465,17 +6507,30 @@ namespace EMS
 
             //判断BMS的通信状态
             Prepared = bPrepared;
+
             if (!Prepared)
             {
-                lock (Parent.EMSError)
+                if (PreparedCount < 10)
                 {
-                    Parent.EMSError[0] &= 0xFFDF;
-                    Parent.EMSError[0] |= 0x20;//只要这个
+                    PreparedCount++;
                 }
+
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
+                {
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xFFDF;
+                        Parent.EMSError[0] |= 0x20;//只要这个
+                    }
+                }
+
             }
             else
             {
                 Parent.EMSError[0] &= 0xFFDF;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
 
             Parent.BMSKVA = Math.Round(v * a / 1000, 2);
@@ -6684,7 +6739,7 @@ namespace EMS
 
         DateTime oldTemp;
         DateTime newTemp;
-        int count = 0;
+
         //public double SetTemp;
         //public double SetHumidity;
         //public double SetTempReturn;
@@ -6853,16 +6908,16 @@ namespace EMS
 
             //考虑到问询是稳定性，一个返回信息代表通讯成功
             Prepared = bPrepared;
+
             if (!Prepared)
             {
-                if (count < 10)
+                if (PreparedCount < 10)
                 {
-                    count++;
+                    PreparedCount++;
                 }
 
-                //TimeSpan ts = newTemp - oldTemp;
-                //如果故障时间超过5分钟，则认为空调通讯故障
-                if (count > 8)
+                //如果连续通讯故障次数超过6次，则认为通讯故障
+                if (PreparedCount > 6)
                 {
                     lock (Parent.EMSError)
                     {
@@ -6875,7 +6930,8 @@ namespace EMS
             else
             {
                 Parent.EMSError[0] &= 0xFFBF;
-                count = 0;
+                //通讯成功，清除通讯故障记录
+                PreparedCount = 0;
             }
 
 
@@ -7705,7 +7761,7 @@ namespace EMS
         //public double[] SE2OKWH { get; set; } = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //记录当天开始放电电量（opposite反向，逆向）
         public DateTime time { get; set; }
         public string iot_code { get; set; } = "ems208800001";
-        public string full_iot_code { get; set; } = "j00000208800001";
+        public string full_iot_code { get; set; } = "j00000000000BB";
         public int runState { get; set; } = 0;  //运行状态 0正常，1故障，2停机
         public bool[] ErrorState = { false, false, false };//1.2.3级别
 

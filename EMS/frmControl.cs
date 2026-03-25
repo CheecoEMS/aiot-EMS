@@ -343,8 +343,10 @@ namespace EMS
                     }
                     break;
                 case 1:
-                    frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
-                    frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+                    //frmMain.TacticsList.LoadJFPGFromSQL_WithCompare();
+                    //frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
+                    //frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
+
                     /*                    var manager = new MobileBroadbandManager();
 
                                         // 执行重启操作
