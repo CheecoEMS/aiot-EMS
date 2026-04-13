@@ -190,7 +190,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：EMS1.1.1");
+                log.Error("初始化EMS版本：EMS1.1.2-0413");
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -412,7 +412,9 @@ namespace EMS
                 case 0x6001://计划功率
                     return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)(Math.Abs(frmMain.Selffrm.AllEquipment.PCSScheduleKVA)));
                 case 0x6002://实际功率
-                    double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    //double value = Math.Abs(frmMain.Selffrm.AllEquipment.PCSKVA);
+                    double value = frmMain.Selffrm.AllEquipment.PCSKVA;
+                    log.Info("返回实际功率：" + value);
                     return ModbusBase.BuildMSG3Back((byte)frmSet.config.i485Addr, 3, (ushort)value);
                 case 0x6003://充放电
                     if (frmMain.Selffrm.AllEquipment.PCSKVA < -0.5)//充电
@@ -463,15 +465,24 @@ namespace EMS
                     }
                     break;
                 case 0x6002://实际功率
-                    //log.Error("从机接收Command执行参数:"+ frmMain.Selffrm.AllEquipment.wTypeActive + frmMain.Selffrm.AllEquipment.PCSTypeActive + data);
+                    log.Info("从机接收计划功率执行参数:"+ data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         frmMain.Selffrm.AllEquipment.HostStart = true;
                         frmMain.Selffrm.AllEquipment.PCSScheduleKVA = data;
                         frmMain.Selffrm.AllEquipment.NetControl = true;
+
+                        if (data > 0)
+                        {
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "充电";
+                        }
+                        else {
+                            frmMain.Selffrm.AllEquipment.wTypeActive = "放电";
+                        }
                     }
                     break;
                 case 0x6003://充放电
+                    log.Info("从机接收充放电执行参数:"+ data);
                     lock (frmMain.Selffrm.AllEquipment)
                     {
                         if (data == 0)

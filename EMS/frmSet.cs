@@ -2324,6 +2324,46 @@ namespace EMS
             componentSettings.DHSetHumidityStop = (int)tneDHSetHumidityStop.Value;
         }
 
+        private void SaveDehumidifierSettings()
+        {
+            componentSettings.DHSetRunStatus = tcbDHSetRunStatus.SelectItemIndex;
+            componentSettings.DHSetTempBoot = (int)tneDHSetTempBoot.Value;
+            componentSettings.DHSetTempStop = (int)tneDHSetTempStop.Value;
+            componentSettings.DHSetHumidityBoot = (int)tneDHSetHumidityBoot.Value;
+            componentSettings.DHSetHumidityStop = (int)tneDHSetHumidityStop.Value;
+        }
+
+        private void SaveTempControlSettings()
+        {
+            componentSettings.SetHotTemp = (int)tneSetHotTemp.Value;
+            componentSettings.SetCoolTemp = (int)tneSetCoolTemp.Value;
+            componentSettings.CoolTempReturn = (int)tneCoolTempReturn.Value;
+            componentSettings.HotTempReturn = (int)tneHotTempReturn.Value;
+            componentSettings.SetHumidity = (int)tneSetHumidity.Value;
+            componentSettings.HumiReturn = (int)tneHumiReturn.Value;
+            componentSettings.TCRunWithSys = GetTcbCheck(tcbTCRunWithSys.Checked);
+            componentSettings.TCMode = tcbTCMode.SelectItemIndex;
+            componentSettings.TCMaxTemp = (int)tneTCMaxTemp.Value;
+            componentSettings.TCMinTemp = (int)tneTCMinTemp.Value;
+            componentSettings.TCMaxHumi = (int)tneTCMaxHumidity.Value;
+            componentSettings.TCMinHumi = (int)tneTCMinHumidity.Value;
+            componentSettings.FenMaxTemp = (int)tneFenMaxTemp.Value;
+            componentSettings.FenMinTemp = (int)tneFenMinTemp.Value;
+            componentSettings.FenMode = tcbFenMode.SelectItemIndex;
+        }
+
+        private void SaveLiquidCoolingSettings()
+        {
+            componentSettings.LCModel = tcbLCModel.SelectItemIndex;
+            componentSettings.LCTemperSelect = tcbLCTemperSelect.SelectItemIndex;
+            componentSettings.LCWaterPump = tcbLCWaterPump.SelectItemIndex;
+            componentSettings.LCSetHotTemp = (int)tneLCSetHotTemp.Value;
+            componentSettings.LCSetCoolTemp = (int)tneLCSetCoolTemp.Value;
+            componentSettings.LCHotTempReturn = (int)tneLCHotTempReturn.Value;
+            componentSettings.LCCoolTempReturn = (int)tneLCCoolTempReturn.Value;
+        }
+
+
         static public void PCSMRun()
         {
             string strWorkType = "待机";
@@ -2534,13 +2574,13 @@ namespace EMS
 
         private void btnMain_Click(object sender, EventArgs e)
         {
-            //统一记录修改数据信息
+/*            //统一记录修改数据信息
             SaveUiInstall();
 
             //统一保存所有配置信息
             Set_Cloudlimits();
             Set_Config();
-            Set_ComponentSettings();
+            Set_ComponentSettings();*/
 
             CloseForm();
             frmMain.ShowMainForm();
@@ -3714,6 +3754,17 @@ namespace EMS
             // 读取 SysID 作为 ConfigId
             object sysIdObj = DBConnection.QuerySingleValue("SELECT SysID FROM Config LIMIT 1;");
             ConfigId = sysIdObj?.ToString() ?? "j0001";
+        }
+
+        private void btnSaveUiUpdate_Click(object sender, EventArgs e)
+        {
+            //统一记录修改数据信息
+            SaveUiInstall();
+
+            //统一保存所有配置信息
+            Set_Cloudlimits();
+            Set_Config();
+            Set_ComponentSettings();
         }
     }
 

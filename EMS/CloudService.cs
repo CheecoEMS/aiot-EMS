@@ -220,7 +220,7 @@ namespace EMS
 
             lock (_lockMqtt)
             {
-                _mqtt.Publish(baseTopic + "response/" + id, payload, PublishQos.AtLeastOnce);
+                _mqtt.Publish(baseTopic + "response/" + id, payload, true, PublishQos.AtLeastOnce);
             }
         }
 
@@ -294,7 +294,7 @@ namespace EMS
 
                     lock (_lockMqtt)
                     {
-                        _mqtt.Publish(topic, content, PublishQos.AtLeastOnce);
+                        _mqtt.Publish(topic, content, false, PublishQos.AtLeastOnce);
                     }
 
                     _fileQueue.MarkSuccess(file);

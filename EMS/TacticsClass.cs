@@ -352,8 +352,8 @@ namespace EMS
                     tomorrowRows.Add(r);
             }
 
-            log.Info(
-                $"LoadTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");
+/*            log.Info(
+                $"LoadTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");*/
 
             return true;
         }

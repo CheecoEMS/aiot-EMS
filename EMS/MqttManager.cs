@@ -79,7 +79,7 @@ namespace EMS
             }
         }
 
-        public bool Publish(string topic, string payload, PublishQos qos = PublishQos.AtLeastOnce)
+        public bool Publish(string topic, string payload, bool retain, PublishQos qos = PublishQos.AtLeastOnce)
         {
             lock (_syncRoot)
             {
@@ -97,7 +97,7 @@ namespace EMS
                         topic,
                         Encoding.UTF8.GetBytes(payload),
                         qosLevel,
-                        true);
+                        retain);
 
                     return true;
                 }

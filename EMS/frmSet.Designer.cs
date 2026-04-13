@@ -341,6 +341,8 @@ namespace EMS
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tbAll = new System.Windows.Forms.TabControl();
+            this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.btnSaveUiUpdate = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel9.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -375,6 +377,7 @@ namespace EMS
             ((System.ComponentModel.ISupportInitialize)(this.dbgEquipment)).BeginInit();
             this.plSetMain.SuspendLayout();
             this.tbAll.SuspendLayout();
+            this.groupBox8.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -2447,6 +2450,7 @@ namespace EMS
             // tpLog
             // 
             this.tpLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(41)))));
+            this.tpLog.Controls.Add(this.groupBox8);
             this.tpLog.Controls.Add(this.groupBox2);
             this.tpLog.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.tpLog.Location = new System.Drawing.Point(4, 4);
@@ -2469,7 +2473,7 @@ namespace EMS
             this.groupBox2.Size = new System.Drawing.Size(533, 138);
             this.groupBox2.TabIndex = 51;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "更新";
+            this.groupBox2.Text = "更新EMS版本";
             // 
             // label100
             // 
@@ -4702,6 +4706,35 @@ namespace EMS
             this.tbAll.TabIndex = 13;
             this.tbAll.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
+            // groupBox8
+            // 
+            this.groupBox8.Controls.Add(this.btnSaveUiUpdate);
+            this.groupBox8.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.groupBox8.Location = new System.Drawing.Point(15, 166);
+            this.groupBox8.Name = "groupBox8";
+            this.groupBox8.Size = new System.Drawing.Size(218, 104);
+            this.groupBox8.TabIndex = 52;
+            this.groupBox8.TabStop = false;
+            this.groupBox8.Text = "更新系统设置";
+            // 
+            // btnSaveUiUpdate
+            // 
+            this.btnSaveUiUpdate.BackColor = System.Drawing.Color.Transparent;
+            this.btnSaveUiUpdate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnSaveUiUpdate.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnSaveUiUpdate.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnSaveUiUpdate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSaveUiUpdate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnSaveUiUpdate.ForeColor = System.Drawing.Color.White;
+            this.btnSaveUiUpdate.Location = new System.Drawing.Point(128, 52);
+            this.btnSaveUiUpdate.Margin = new System.Windows.Forms.Padding(1);
+            this.btnSaveUiUpdate.Name = "btnSaveUiUpdate";
+            this.btnSaveUiUpdate.Size = new System.Drawing.Size(86, 45);
+            this.btnSaveUiUpdate.TabIndex = 47;
+            this.btnSaveUiUpdate.Text = "确定";
+            this.btnSaveUiUpdate.UseVisualStyleBackColor = false;
+            this.btnSaveUiUpdate.Click += new System.EventHandler(this.btnSaveUiUpdate_Click);
+            // 
             // frmSet
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -4764,6 +4797,7 @@ namespace EMS
             this.plSetMain.ResumeLayout(false);
             this.plSetMain.PerformLayout();
             this.tbAll.ResumeLayout(false);
+            this.groupBox8.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -5080,5 +5114,7 @@ namespace EMS
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TabControl tbAll;
+        private System.Windows.Forms.GroupBox groupBox8;
+        private System.Windows.Forms.Button btnSaveUiUpdate;
     }
 }

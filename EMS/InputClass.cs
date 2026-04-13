@@ -25,6 +25,7 @@ using System.Net;
 using static EMS.EC20Communicator;
 using MySqlX.XDevAPI.Common;
 using System.Web.Configuration;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace EMS
 {
@@ -7061,13 +7062,22 @@ namespace EMS
             {
                 waValueActive = Math.Round(double.Parse(strTemp), 3);
                 bPrepared = true;
+
+                if (waValueActive < 0)
+                {
+                    WorkType = 0;
+                }
+                else {
+                    WorkType = 1;
+                }
+                log.Info("获取从机: "+ CID + " 充放状态：" + WorkType + "| 功率：" + waValueActive);
             }
 
-            if (GetSysData2(2, CID, ref strTemp))
+/*            if (GetSysData2(2, CID, ref strTemp))
             {
                 WorkType = Math.Round(double.Parse(strTemp), 3);
                 bPrepared = true;
-            }
+            }*/
 
             /*            if (GetSysData2(5, CID, ref strTemp))
                         {
@@ -7092,28 +7102,36 @@ namespace EMS
 
         public void ExcPCSCommand(string aWorkType, string aPCSType, double aPCSValueRate, bool bAllParam)
         {
-            bool bPrepared = false;
-            string[] wTpyes = { "充电", "放电" };
-            int itemp = Array.IndexOf(wTpyes, aWorkType);
+            //bool bPrepared = false;
 
-            if (m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp))
-            {
-                bPrepared = true;
-            }
+            //string[] wTpyes = { "充电", "放电" };
+            //int itemp = Array.IndexOf(wTpyes, aWorkType);
+            //bool workTypeResult = m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp);
+            //log.Info($"下发工作类型，设备ID={ID}，寄存器=0x6003，值={aWorkType}，结果={(workTypeResult ? "成功" : "失败")}");
+            
+            // if (m485.Send6MSG((byte)ID, 6, 0x6003, (ushort)itemp))
+            // {
+            //     bPrepared = true;
+            // }
 
-            itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
-            if (m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp))
-            {
-                bPrepared = true;
-            }
+            int itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
+            bool pcsTypeResult = m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp);
+            log.Info($"下发PCS类型，设备ID={ID}，寄存器=0x6004，值= {aPCSType}，结果={(pcsTypeResult ? "成功" : "失败")}");
+            // if (m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp))
+            // {
+            //     bPrepared = true;
+            // }
 
             double dtemp = (Parent.PCSScheduleKVA * aPCSValueRate);
-            if (m485.Send6MSG((byte)ID, 6, 0x6002, (ushort)dtemp))
-            {
-                bPrepared = true;
-            }
+            bool pcsValueResult = m485.Send6MSG((byte)ID, 6, 0x6002, (ushort)dtemp);
+            log.Info($"下发PCS功率，设备ID={ID}，寄存器=0x6002，值={dtemp}，结果={(pcsValueResult ? "成功" : "失败")}");
+            // if (m485.Send6MSG((byte)ID, 6, 0x6002, (ushort)dtemp))
+            // {
+            //     bPrepared = true;
+            // }
 
-            Prepared = bPrepared;
+            //Prepared = workTypeResult || pcsTypeResult || pcsValueResult;
+            Prepared = pcsTypeResult || pcsValueResult;
         }
 
         public void SetPCSScheduleKVA(double aPCSScheduleKVA)
@@ -7877,7 +7895,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.1.1";
+        public string EMSVersion { get; set; } = "1.1.2";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -10201,7 +10219,7 @@ namespace EMS
             ExcPCSCommand(wTypeActive, PCSTypeActive, (int)(PCSScheduleKVA * dRate));
         }
 
-        //485
+        //485 读取从机信息
         public void ReadAllEmsRTU()
         {
             double TempWaValue = PCSKVA;

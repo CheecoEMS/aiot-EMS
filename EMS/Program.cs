@@ -42,8 +42,10 @@ namespace EMS
         public const int SC_MAXIMIZE = 0xF030;//窗体最大化消息
         public const int SC_NOMAL = 0xF120;//窗体还原消息
         private const int MAX_RETRY = 3;
+        private const string SingleInstanceMutexName = @"Global\EMS_SingleInstance_Mutex";
 
-        private static ILog log = LogManager.GetLogger("Program");
+        private static readonly ILog log = LogManager.GetLogger("Program");
+        private static Mutex singleInstanceMutex;
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
@@ -77,12 +79,21 @@ namespace EMS
                             log.Error("远程更新失败：" + ex.Message);
                         }*/
 
+            bool createdNew = false;
+
             try
             {
+                singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out createdNew);
+                if (!createdNew)
+                {
+                    //log.Error("检测到 EMS 已在运行，当前实例不再启动。");
+                    //ActivateExistingInstance();
+                    return;
+                }
+
                 //测试windows异常弹窗不会阻塞主进程：超时+看门狗+窗口消灭
                 //RunVerificationTest();
 
-                //if (!CheckAppExists())  注意这个函数使用会导致EMS生成快捷方式无法启动程序，可能与快捷方式会生成EMS.exe同名启动程序
                 {
                     // 定义要执行的命令
                     string[] commands = new string[2];
@@ -179,6 +190,15 @@ namespace EMS
             catch (Exception ex)
             {
                 log.Error($"应用程序的主入口点发生错误: {ex.Message}");
+            }
+            finally
+            {
+                if (createdNew && singleInstanceMutex != null)
+                {
+                    singleInstanceMutex.ReleaseMutex();
+                    singleInstanceMutex.Dispose();
+                    singleInstanceMutex = null;
+                }
             }
 
 
@@ -318,29 +338,60 @@ namespace EMS
                 Console.WriteLine("Moved crash dump file to: " + destinationFile);
             };
         }
-        //判断是否重复打开
-        public static bool CheckAppExists()
+        // 激活已经运行的 EMS 实例窗口
+/*        public static void ActivateExistingInstance()
         {
-            string name = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
-            System.Diagnostics.Process[] myProcesses = System.Diagnostics.Process.GetProcessesByName(name);//获取指定的进程名
-              
-            if (myProcesses.Length > 1) //如果可以获取到知道的进程名则说明已经启动
+            try
             {
-                //MessageBox.Show("程序已启动！");
-                Process[] process = Process.GetProcessesByName(name);//在所有已启动的进程中查找需要的进程；
-                if (process.Length > 0)//如果查找到
+                string currentProcessName = Path.GetFileNameWithoutExtension(Application.ExecutablePath);
+                string currentExePath = Path.GetFullPath(Application.ExecutablePath);
+                int currentProcessId = Process.GetCurrentProcess().Id;
+
+                Process[] processes = Process.GetProcessesByName(currentProcessName);
+                foreach (Process process in processes)
                 {
-                    //IntPtr handle = process[0].MainWindowHandle;
-                    IntPtr hWnd = process[1].MainWindowHandle; 
-                   // wWindowAsync(hWnd, 9);// 9就是SW_RESTORE标志，表示还原窗体
-                    SendMessage(hWnd, WM_SYSCOMMAND, SC_NOMAL, 0);
-                    SetForegroundWindow(hWnd);
+                    try
+                    {
+                        if (process.Id == currentProcessId)
+                        {
+                            continue;
+                        }
+
+                        string processPath = Path.GetFullPath(process.MainModule.FileName);
+                        if (!string.Equals(processPath, currentExePath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        IntPtr hWnd = process.MainWindowHandle;
+                        if (hWnd == IntPtr.Zero)
+                        {
+                            continue;
+                        }
+
+                        if (IsIconic(hWnd))
+                        {
+                            ShowWindowAsync(hWnd, 9);
+                        }
+                        else
+                        {
+                            SendMessage(hWnd, WM_SYSCOMMAND, SC_NOMAL, 0);
+                        }
+
+                        SetForegroundWindow(hWnd);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"激活已有进程窗口失败，进程ID: {process.Id}, 错误: {ex.Message}");
+                    }
                 }
-                Application.Exit();//关闭系统
-                return true;
             }
-            return false;
-        }
+            catch (Exception ex)
+            {
+                log.Error($"ActivateExistingInstance 执行失败: {ex.Message}");
+            }
+        }*/
 
         /*        static ulong SetCpuID(int lpIdx)
                 {
