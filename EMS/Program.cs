@@ -96,18 +96,18 @@ namespace EMS
 
                 {
                     // 定义要执行的命令
-/*                    string[] commands = new string[2];
+                    string[] commands = new string[2];
 
                     commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
                     commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
-                    
+
                     for (int i = 0; i < 2; ++i)
                     {
                         try
                         {
                             // 使用 SafeProcessRunner 执行命令
                             var result = SafeProcessRunner.Run("cmd", $"/c {commands[i]}", timeoutMs: 2000);
-                            
+
                             if (result.Success)
                             {
                                 log.Info($"命令执行完成: {commands[i]}, ExitCode: {result.ExitCode}");
@@ -134,7 +134,7 @@ namespace EMS
                             log.Error($"执行命令失败: {commands[i]}, 错误: {ex.Message}");
                         }
                     }
-*/
+
 
 
                     //启动EMS主程序
