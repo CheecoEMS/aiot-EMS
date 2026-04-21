@@ -96,29 +96,10 @@ namespace EMS
 
                 {
                     // 定义要执行的命令
-                    string[] commands = new string[2];
+/*                    string[] commands = new string[2];
 
                     commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
                     commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
-
-                    // for (int i = 0; i < 2; ++i)
-                    // {
-                    //     // 创建 ProcessStartInfo 对象，并配置其属性
-                    //     ProcessStartInfo processStartInfo = new ProcessStartInfo("cmd", "/c " + commands[i])
-                    //     {
-                    //         RedirectStandardOutput = true,
-                    //         RedirectStandardError = true,
-                    //         UseShellExecute = false,
-                    //         CreateNoWindow = true
-                    //     };
-                    //     // 创建并启动进程
-                    //     // 启动进程
-                    //     using (Process process = Process.Start(processStartInfo))
-                    //     {
-                    //         // 等待进程退出
-                    //         process.WaitForExit();
-                    //     }
-                    // }
                     
                     for (int i = 0; i < 2; ++i)
                     {
@@ -153,7 +134,7 @@ namespace EMS
                             log.Error($"执行命令失败: {commands[i]}, 错误: {ex.Message}");
                         }
                     }
-
+*/
 
 
                     //启动EMS主程序

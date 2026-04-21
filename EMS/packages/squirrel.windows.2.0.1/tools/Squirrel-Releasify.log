@@ -4385,3 +4385,21 @@ Usage: WriteZipToSetup [Setup.exe template] [Zip File]
 [13/04/26 11:59:16] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
 [13/04/26 11:59:17] info: Program: Building embedded zip file for Setup.exe
 [13/04/26 11:59:24] info: Program: Finished Squirrel Updater
+[15/04/26 11:15:48] info: Program: Starting Squirrel Updater: --releasify EMS.1.1.2.nupkg
+[15/04/26 11:15:48] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[15/04/26 11:15:48] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.1.2.nupkg
+[15/04/26 11:15:48] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.1.2.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.1.2-full.nupkg
+[15/04/26 11:15:49] info: ReleasePackage: Extracting dependent packages: []
+[15/04/26 11:15:49] info: ReleasePackage: Removing unnecessary data
+[15/04/26 11:15:49] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[15/04/26 11:15:50] info: Program: Building embedded zip file for Setup.exe
+[15/04/26 11:16:00] info: Program: Finished Squirrel Updater
+[16/04/26 09:59:54] info: Program: Starting Squirrel Updater: --releasify EMS.1.1.2.nupkg
+[16/04/26 09:59:54] info: Program: Bootstrapper EXE found at:D:\Github\aiot-EMS\EMS\packages\squirrel.windows.2.0.1\tools\Setup.exe
+[16/04/26 09:59:54] info: Program: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.1.2.nupkg
+[16/04/26 09:59:54] info: ReleasePackage: Creating release package: D:\Github\aiot-EMS\EMS\Releases\EMS.1.1.2.nupkg => D:\Github\aiot-EMS\EMS\Releases\EMS-1.1.2-full.nupkg
+[16/04/26 09:59:54] info: ReleasePackage: Extracting dependent packages: []
+[16/04/26 09:59:54] info: ReleasePackage: Removing unnecessary data
+[16/04/26 09:59:54] info: ReleasePackage: No release notes found in C:\Users\lenovo\AppData\Local\SquirrelTemp\tempa\EMS.nuspec
+[16/04/26 09:59:55] info: Program: Building embedded zip file for Setup.exe
+[16/04/26 10:00:01] info: Program: Finished Squirrel Updater

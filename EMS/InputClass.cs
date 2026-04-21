@@ -7057,36 +7057,64 @@ namespace EMS
             string strTemp = "";
             string strData = "";
 
-
             if (GetSysData2(1, CID, ref strTemp))
             {
-                waValueActive = Math.Round(double.Parse(strTemp), 3);
-                bPrepared = true;
-
-                if (waValueActive < 0)
+                if (ushort.TryParse(strTemp, out ushort rawValue))
                 {
-                    WorkType = 0;
+                    short signedValue = unchecked((short)rawValue);
+                    waValueActive = Math.Round((double)signedValue, 3);
+                    bPrepared = true;
+
+                    WorkType = waValueActive < 0 ? 0 : 1;
+
+                    log.Info("获取从机: " + CID + " 充放状态：" + WorkType + "| 功率：" + waValueActive);
                 }
-                else {
-                    WorkType = 1;
+                else
+                {
+                    log.Error("获取从机: " + CID + " 功率解析失败，原始值：" + strTemp);
                 }
-                log.Info("获取从机: "+ CID + " 充放状态：" + WorkType + "| 功率：" + waValueActive);
             }
-
-/*            if (GetSysData2(2, CID, ref strTemp))
-            {
-                WorkType = Math.Round(double.Parse(strTemp), 3);
-                bPrepared = true;
-            }*/
-
-            /*            if (GetSysData2(5, CID, ref strTemp))
-                        {
-                            BMSErrorSate = Convert.ToUInt16(strTemp);
-                            bPrepared = true;
-                        }*/
-
             Prepared = bPrepared;
         }
+
+
+        /*       override public void GetDataFromEqipment2(int CID)
+               {
+                   bool bPrepared = false;
+                   string strTemp = "";
+                   string strData = "";
+
+
+                   if (GetSysData2(1, CID, ref strTemp))
+                   {
+                       waValueActive = Math.Round(double.Parse(strTemp), 3);
+                       bPrepared = true;
+
+                       if (waValueActive < 0)
+                       {
+                           WorkType = 0;
+                       }
+                       else {
+                           WorkType = 1;
+                       }
+                       log.Info("获取从机: "+ CID + " 充放状态：" + WorkType + "| 功率：" + waValueActive);
+                   }
+
+       *//*            if (GetSysData2(2, CID, ref strTemp))
+                   {
+                       WorkType = Math.Round(double.Parse(strTemp), 3);
+                       bPrepared = true;
+                   }*/
+
+        /*            if (GetSysData2(5, CID, ref strTemp))
+                    {
+                        BMSErrorSate = Convert.ToUInt16(strTemp);
+                        bPrepared = true;
+                    }*//*
+
+        Prepared = bPrepared;
+    }*/
+
 
 
         public void ExcPCSOn(bool aOn)//0off,1off
@@ -10226,14 +10254,16 @@ namespace EMS
             foreach (EMSEquipment oneEMSE in EMSList)
             {
                 oneEMSE.GetDataFromEqipment2(oneEMSE.ID);
-                if (oneEMSE.WorkType == 0)
-                {
-                    TempWaValue -= oneEMSE.waValueActive;
-                }
-                else if (oneEMSE.WorkType == 1)
-                {
-                    TempWaValue += oneEMSE.waValueActive;
-                }
+                /*                if (oneEMSE.WorkType == 0)
+                                {
+                                    TempWaValue -= oneEMSE.waValueActive;
+                                }
+                                else if (oneEMSE.WorkType == 1)
+                                {
+                                    TempWaValue += oneEMSE.waValueActive;
+                                }*/
+
+                TempWaValue += oneEMSE.waValueActive;
             }
             AllwaValue = TempWaValue;
         }
@@ -12182,10 +12212,13 @@ namespace EMS
                     }
                 }*/
 
-        public bool WriteDataInoneDaySQL(string arDate)
+        public bool WriteDataInoneDaySQL()
         {
             try
             {
+
+                frmSet.peElestic.rDate = DateTime.Now;
+                
                 if (Elemeter2 != null)
                 {
                     for (int i = 0; i < 9; i++)//总\尖\峰\平\谷
@@ -12203,7 +12236,7 @@ namespace EMS
                     }
                 }
 
-                if (!frmSet.Set_PeElesticData(arDate)) return false;
+                if (!frmSet.Set_PeElesticData(DateTime.Now.ToString("yyyy-MM-dd"))) return false;
             }
             catch (Exception e)
             {

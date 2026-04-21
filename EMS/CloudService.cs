@@ -70,7 +70,7 @@ namespace EMS
 
         public string DataPath;
         public string Filters = "*.json";
-        public int ReadyBatchSize = 20;
+        public int ReadyBatchSize = 100;
         public int FailBatchSize = 10;
         private FileQueue _fileQueue;
 
@@ -1781,18 +1781,20 @@ namespace EMS
         // utils
         // =========================================================
 
-        // 从文件名中提取时间戳（忽略前缀/后缀）
+        // 从文件名中提取时间戳
         private static string ExtractTimestamp(string fileName)
         {
-            var digits = new string(fileName.Where(char.IsDigit).ToArray());
+            var name = Path.GetFileNameWithoutExtension(fileName);
 
-            // FAU：yyyyMMddHHmmssfff（17 位）
-            if (digits.Length >= 17)
-                return digits.Substring(0, 17);
+            // 先匹配 17 位：yyyyMMddHHmmssfff
+            var match17 = Regex.Match(name, @"\d{17}");
+            if (match17.Success)
+                return match17.Value;
 
-            // 其他：yyyyMMddHHmmss（14 位）
-            if (digits.Length >= 14)
-                return digits.Substring(0, 14);
+            // 再匹配 14 位：yyyyMMddHHmmss
+            var match14 = Regex.Match(name, @"\d{14}");
+            if (match14.Success)
+                return match14.Value;
 
             throw new FormatException($"Invalid timestamp in filename: {fileName}");
         }

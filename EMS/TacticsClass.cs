@@ -148,7 +148,7 @@ namespace EMS
 
                 if (!latestExpiredDate.HasValue)
                 {
-                    log.Error("没有需要清理的过期电价策略");
+                    log.Warn("没有需要清理的过期电价策略");
                     return true;
                 }
 
@@ -167,7 +167,7 @@ namespace EMS
 
                 if (affectedRows >= 0)
                 {
-                    log.Error($"清理过期电价策略完成，删除了 {affectedRows} 条记录，保留了最近一天过期电价 {latestExpiredDate.Value:yyyy-MM-dd} 的所有电价设置");
+                    log.Warn($"清理过期电价策略完成，删除了 {affectedRows} 条记录，保留了最近一天过期电价 {latestExpiredDate.Value:yyyy-MM-dd} 的所有电价设置");
                 }
                 else
                 {
@@ -293,10 +293,10 @@ namespace EMS
                     todayRows != null && todayRows.Count > 0)
                 {
                     tomorrowRows = new List<DataRow>(todayRows);
-                    log.Error($"LoadEffectiveTodayTomorrowRows: 明日无时段设置，沿用今日有效时段设置，tomorrow={tomorrow:yyyy-MM-dd}");
+                    log.Warn($"LoadEffectiveTodayTomorrowRows: 明日无时段设置，沿用今日有效时段设置，tomorrow={tomorrow:yyyy-MM-dd}");
                 }
 
-                log.Error($"LoadEffectiveTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");
+                log.Warn($"LoadEffectiveTodayTomorrowRows: today={todayRows.Count}, tomorrow={tomorrowRows.Count}");
                 return true;
             }
             catch (Exception ex)
@@ -709,7 +709,7 @@ namespace EMS
             {
                 // 不做任何下发：（1）不存在任何历史时段设置导致今日没有时段配置，即使有明日的时段配置也不做下发
                 //               （2）如果今日有时段配置（今日配置或历史配置）且明日没有时段设置，强校验明日时段设置默认为今日相同时段设置
-                log.Error("LoadJFPGFromSQL_NewWithCompare: 今日/明日无电价策略");
+                log.Warn("LoadJFPGFromSQL_NewWithCompare: 今日/明日无电价策略");    
                 return true;
             }
 
@@ -816,11 +816,11 @@ namespace EMS
                             return;
                         }
                         //meter.zone8Rates = zoneHex;
-                        log.Error($"Elemeter2[8]: Zone8 changed ={zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                        log.Warn($"Elemeter2[8]: Zone8 changed ={zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
                     }
                     else
                     {
-                        log.Error($"Elemeter2[8]: Zone8 unchanged = {zoneHex}, skip write.");
+                        log.Warn($"Elemeter2[8]: Zone8 unchanged = {zoneHex}, skip write.");
                     }
 
                     // 2. 今日费率表比较后下发
@@ -835,12 +835,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates8Tier_1 = todayHex;
-                                log.Error($"Elemeter2[8]: today rate -> Tier_1 changed = {todayHex}, write success.");
+                                log.Warn($"Elemeter2[8]: today rate -> Tier_1 changed = {todayHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[8]: today rate -> Tier_1 unchanged = {todayHex}, skip write.");
+                            log.Warn($"Elemeter2[8]: today rate -> Tier_1 unchanged = {todayHex}, skip write.");
                         }
                     }
                     else
@@ -854,12 +854,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates8Tier_2 = todayHex;
-                                log.Error($"Elemeter2[8]: today rate -> Tier_2 changed = {todayHex}, write success.");
+                                log.Warn($"Elemeter2[8]: today rate -> Tier_2 changed = {todayHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[8]: today rate -> Tier_2 unchanged = {todayHex}, skip write.");
+                            log.Warn($"Elemeter2[8]: today rate -> Tier_2 unchanged = {todayHex}, skip write.");
                         }
                     }
 
@@ -875,12 +875,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates8Tier_1 = tomorrowHex;
-                                log.Error($"Elemeter2[8]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
+                                log.Warn($"Elemeter2[8]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[8]: tomorrow rate -> Tier_1 unchanged = {tomorrowHex}, skip write.");
+                            log.Warn($"Elemeter2[8]: tomorrow rate -> Tier_1 unchanged = {tomorrowHex}, skip write.");
                         }
                     }
                     else
@@ -894,12 +894,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates8Tier_2 = tomorrowHex;
-                                log.Error($"Elemeter2[8]: tomorrow rate -> Tier_2 changed = {tomorrowHex}, write success.");
+                                log.Warn($"Elemeter2[8]: tomorrow rate -> Tier_2 changed = {tomorrowHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[8]: tomorrow rate -> Tier_2 unchanged = {tomorrowHex}, skip write.");
+                            log.Warn($"Elemeter2[8]: tomorrow rate -> Tier_2 unchanged = {tomorrowHex}, skip write.");
                         }
                     }
                 }
@@ -926,11 +926,11 @@ namespace EMS
                             return;
                         }
                         //meter.zone4Rates = zoneHex;
-                        log.Error($"Elemeter2[4]: Zone4 changed = {zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                        log.Warn($"Elemeter2[4]: Zone4 changed = {zoneHex}, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
                     }
                     else
                     {
-                        log.Error($"Elemeter2[4]: Zone4 unchanged = {zoneHex}, skip write.");
+                        log.Warn($"Elemeter2[4]: Zone4 unchanged = {zoneHex}, skip write.");
                     }
 
                     // 2. 今日费率表比较后下发
@@ -945,12 +945,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates4Tier_3 = todayHex;
-                                log.Error($"Elemeter2[4]: today rate -> Tier_1 changed = {todayHex}, write success.");
+                                log.Warn($"Elemeter2[4]: today rate -> Tier_1 changed = {todayHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[4]: today rate -> Tier_1 unchanged  = {todayHex}, skip write.");
+                            log.Warn($"Elemeter2[4]: today rate -> Tier_1 unchanged  = {todayHex}, skip write.");
                         }
                     }
                     else
@@ -964,12 +964,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates4Tier_4 = todayHex;
-                                log.Error($"Elemeter2[4]: today rate -> Tier_2 changed  = {todayHex}, write success.");
+                                log.Warn($"Elemeter2[4]: today rate -> Tier_2 changed  = {todayHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[4]: today rate -> Tier_2 unchanged  = {todayHex}, skip write.");
+                            log.Warn($"Elemeter2[4]: today rate -> Tier_2 unchanged  = {todayHex}, skip write.");
                         }
                     }
 
@@ -985,12 +985,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates4Tier_3 = tomorrowHex;
-                                log.Error($"Elemeter2[4]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
+                                log.Warn($"Elemeter2[4]: tomorrow rate -> Tier_1 changed = {tomorrowHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[4]: tomorrow rate -> Tier_1 unchanged  = {tomorrowHex}, skip write.");
+                            log.Warn($"Elemeter2[4]: tomorrow rate -> Tier_1 unchanged  = {tomorrowHex}, skip write.");
                         }
                     }
                     else
@@ -1004,12 +1004,12 @@ namespace EMS
                             else
                             {
                                 //meter.rates4Tier_4 = tomorrowHex;
-                                log.Error($"Elemeter2[4]: tomorrow rate -> Tier_2 changed  = {tomorrowHex}, write success.");
+                                log.Warn($"Elemeter2[4]: tomorrow rate -> Tier_2 changed  = {tomorrowHex}, write success.");
                             }
                         }
                         else
                         {
-                            log.Error($"Elemeter2[4]: tomorrow rate -> Tier_2 unchanged  = {tomorrowHex}, skip write.");
+                            log.Warn($"Elemeter2[4]: tomorrow rate -> Tier_2 unchanged  = {tomorrowHex}, skip write.");
                         }
                     }
                 }
@@ -1053,11 +1053,11 @@ namespace EMS
                         return;
                     }
                     meter.zone4Rates = zoneHex;
-                    log.Error($"Elemeter3: Zone4 changed, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
+                    log.Warn($"Elemeter3: Zone4 changed, write success. slot(today={todaySlot}, tomorrow={tomorrowSlot})");
                 }
                 else
                 {
-                    log.Error("Elemeter3: Zone4 unchanged, skip write.");
+                    log.Warn("Elemeter3: Zone4 unchanged, skip write.");
                 }
 
                 // 2. 今日费率表比较后下发
@@ -1072,12 +1072,12 @@ namespace EMS
                         else
                         {
                             meter.rates4Tier_1 = todayHex;
-                            log.Error("Elemeter3: today rate -> Tier_1 changed, write success.");
+                            log.Warn("Elemeter3: today rate -> Tier_1 changed, write success.");
                         }
                     }
                     else
                     {
-                        log.Error("Elemeter3: today rate -> Tier_1 unchanged, skip write.");
+                        log.Warn("Elemeter3: today rate -> Tier_1 unchanged, skip write.");
                     }
                 }
                 else
@@ -1091,12 +1091,12 @@ namespace EMS
                         else
                         {
                             meter.rates4Tier_2 = todayHex;
-                            log.Error("Elemeter3: today rate -> Tier_2 changed, write success.");
+                            log.Warn("Elemeter3: today rate -> Tier_2 changed, write success.");
                         }
                     }
                     else
                     {
-                        log.Error("Elemeter3: today rate -> Tier_2 unchanged, skip write.");
+                        log.Warn("Elemeter3: today rate -> Tier_2 unchanged, skip write.");
                     }
                 }
 
@@ -1112,12 +1112,12 @@ namespace EMS
                         else
                         {
                             meter.rates4Tier_1 = tomorrowHex;
-                            log.Error("Elemeter3: tomorrow rate -> Tier_1 changed, write success.");
+                            log.Warn("Elemeter3: tomorrow rate -> Tier_1 changed, write success.");
                         }
                     }
                     else
                     {
-                        log.Error("Elemeter3: tomorrow rate -> Tier_1 unchanged, skip write.");
+                        log.Warn("Elemeter3: tomorrow rate -> Tier_1 unchanged, skip write.");
                     }
                 }
                 else
@@ -1131,12 +1131,12 @@ namespace EMS
                         else
                         {
                             meter.rates4Tier_2 = tomorrowHex;
-                            log.Error("Elemeter3: tomorrow rate -> Tier_2 changed, write success.");
+                            log.Warn("Elemeter3: tomorrow rate -> Tier_2 changed, write success.");
                         }
                     }
                     else
                     {
-                        log.Error("Elemeter3: tomorrow rate -> Tier_2 unchanged, skip write.");
+                        log.Warn("Elemeter3: tomorrow rate -> Tier_2 unchanged, skip write.");
                     }
                 }
             }
@@ -1174,7 +1174,7 @@ namespace EMS
                             e2.timing(73);
                         }
 
-                        log.Error("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
+                        log.Warn("e2Time: " + e2Time + "diffMinutes: " + diffMinutes);
                     }
 
                 }
@@ -1195,7 +1195,7 @@ namespace EMS
                             e3.timing(47);
                         }
 
-                        log.Error("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
+                        log.Warn("e3Time: " + e3Time + "diffMinutes: " + diffMinutes);
                     }
                 }
 

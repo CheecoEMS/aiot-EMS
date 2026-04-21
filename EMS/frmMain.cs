@@ -1392,9 +1392,8 @@ namespace EMS
 
                     if (!frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess)
                     {
-                        if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL(frmSet.peElestic.rDate.ToString("yyyy-MM-dd")))
+                        if (frmMain.Selffrm.AllEquipment.WriteDataInoneDaySQL())
                         {
-                            frmSet.peElestic.rDate = DateTime.Now;
                             frmMain.Selffrm.AllEquipment.WriteDataInoneDaySuccess = true;
                         }
                     }
