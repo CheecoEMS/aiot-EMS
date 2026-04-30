@@ -7145,6 +7145,7 @@ namespace EMS
             int itemp = Array.IndexOf(PCSClass.PCSTypes, aPCSType);
             bool pcsTypeResult = m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp);
             log.Info($"下发PCS类型，设备ID={ID}，寄存器=0x6004，值= {aPCSType}，结果={(pcsTypeResult ? "成功" : "失败")}");
+            
             // if (m485.Send6MSG((byte)ID, 6, 0x6004, (ushort)itemp))
             // {
             //     bPrepared = true;
@@ -8268,7 +8269,7 @@ namespace EMS
 
                 try
                 {
-                    PingReply reply = pingSender.Send("101.132.24.17", timeout, buffer, options);
+                    PingReply reply = pingSender.Send("cheeco.eaiot.cloud", timeout, buffer, options);
                     isSlbPingSuccess = reply.Status == IPStatus.Success;
 
                     if (!isSlbPingSuccess)

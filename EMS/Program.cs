@@ -94,14 +94,15 @@ namespace EMS
                 //测试windows异常弹窗不会阻塞主进程：超时+看门狗+窗口消灭
                 //RunVerificationTest();
 
-                {
-                    // 定义要执行的命令
-                    string[] commands = new string[2];
+                    {
+                        // 定义要执行的命令
+                        string[] commands = new string[3];
 
-                    commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
-                    commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
+                        commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
+                        commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
+                        commands[2] = "netsh interface ipv6 set interface name=\"移动宽带连接\" admin=disabled";
 
-                    for (int i = 0; i < 2; ++i)
+                        for (int i = 0; i < 3; ++i)
                     {
                         try
                         {
