@@ -131,6 +131,47 @@ namespace EMS
 
         // ================= 状态机核心 =================
 
+        /*        private async Task ConnectLoop(CancellationToken token)
+                {
+                    int retry = 0;
+
+                    while (!token.IsCancellationRequested)
+                    {
+                        lock (_syncRoot)
+                        {
+                            if (_state != MqttState.Connecting)
+                                return;
+                        }
+
+                        retry++;
+                        int delay = Math.Min(30000, retry * 2000);
+                        log.Warn($"MQTT connect attempt #{retry}");
+
+                        try
+                        {
+                            await Task.Delay(delay, token);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return;
+                        }
+
+                        if (TryConnect())
+                        {
+                            lock (_syncRoot)
+                            {
+                                if (_state == MqttState.Connecting)
+                                {
+                                    _state = MqttState.Connected;
+                                    StateChanged?.Invoke(_state);
+                                    log.Info("MQTT Connected");
+                                }
+                            }
+                            return;
+                        }
+                    }
+                }*/
+
         private async Task ConnectLoop(CancellationToken token)
         {
             int retry = 0;
@@ -144,8 +185,21 @@ namespace EMS
                 }
 
                 retry++;
-                int delay = Math.Min(30000, retry * 2000);
-                log.Warn($"MQTT connect attempt #{retry}");
+
+                // 退避策略: 30s 1min 5min 10min 10min...
+                int delay;
+                if (retry == 1)
+                    delay = 30 * 1000;           // 30秒
+                else if (retry == 2)
+                    delay = 1 * 60 * 1000;       // 1分钟
+                else if (retry == 3)
+                    delay = 5 * 60 * 1000;       // 5分钟
+                else if (retry == 4)
+                    delay = 10 * 60 * 1000;      // 10分钟
+                else
+                    delay = 10 * 60 * 1000;      // 10分钟（之后一直保持10分钟）
+
+                log.Warn($"MQTT connect attempt #{retry}, next retry in {delay / 1000}s");
 
                 try
                 {

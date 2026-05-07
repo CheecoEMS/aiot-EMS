@@ -100,9 +100,9 @@ namespace EMS
 
                         commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
                         commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
-                        commands[2] = "netsh interface ipv6 set interface name=\"移动宽带连接\" admin=disabled";
+                        //commands[2] = "netsh interface ipv6 set interface name=\"移动宽带连接\" admin=disabled";
 
-                        for (int i = 0; i < 3; ++i)
+                        for (int i = 0; i < 2; ++i)
                     {
                         try
                         {

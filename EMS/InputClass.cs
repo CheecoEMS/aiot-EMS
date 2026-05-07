@@ -8419,7 +8419,6 @@ namespace EMS
             {
                 // 执行移动宽带重启
                 var manager = new MobileBroadbandManager();
-                //bool isSuccess = manager.Restart();
 
                 bool Disable = manager.DisableNet();
 
