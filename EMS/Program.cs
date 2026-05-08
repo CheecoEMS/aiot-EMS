@@ -94,20 +94,20 @@ namespace EMS
                 //测试windows异常弹窗不会阻塞主进程：超时+看门狗+窗口消灭
                 //RunVerificationTest();
 
-                    {
-                        // 定义要执行的命令
-                        string[] commands = new string[3];
+                {
+                    // 定义要执行的命令
+                    string[] commands = new string[3];
 
-                        commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
-                        commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
-                        //commands[2] = "netsh interface ipv6 set interface name=\"移动宽带连接\" admin=disabled";
+                    commands[0] = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
+                    commands[1] = "netsh interface ip add dns name=\"移动宽带连接\" addr=223.6.6.6 index=2";
+                    //commands[2] = "netsh interface ipv6 set interface name=\"移动宽带连接\" admin=disabled";
 
-                        for (int i = 0; i < 2; ++i)
+                    for (int i = 0; i < 2; ++i)
                     {
                         try
                         {
                             // 使用 SafeProcessRunner 执行命令
-                            var result = SafeProcessRunner.Run("cmd", $"/c {commands[i]}", timeoutMs: 2000);
+                            var result = SafeProcessRunner.RunCmd(commands[i], timeoutMs: 2000);
 
                             if (result.Success)
                             {
@@ -385,99 +385,6 @@ namespace EMS
                     cpuLogicalProcessorId |= 1UL << lpIdx;
                     return cpuLogicalProcessorId;
                 }*/
-
-        public static void RunVerificationTest()
-        {
-            string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Crash");
-            string crashTesterPath = Path.Combine(basePath, "cmd.exe");
-
-            if (!File.Exists(crashTesterPath))
-            {
-                Console.WriteLine($"[错误] 找不到测试程序：{crashTesterPath}");
-                Console.WriteLine("请先编译 CrashTest 项目并复制到 Crash 文件夹。");
-                return;
-            }
-
-            Console.WriteLine("==========================================");
-            Console.WriteLine("阶段 1: 验证旧代码 (原生 Process) 会被阻塞");
-            Console.WriteLine("==========================================");
-            Console.WriteLine("【警告】接下来启动的进程如果弹出窗口，主程序将卡死！");
-            Console.WriteLine("【操作】请不要点击弹窗，观察主程序日志是否停止滚动。");
-            Console.WriteLine("【操作】若要继续测试阶段 2，请手动关闭弹窗 或 在任务管理器杀死本主进程后重新运行（跳过阶段 1）。");
-            Console.WriteLine("3 秒后开始...");
-            Thread.Sleep(3000);
-
-            // ==========================================
-            // 第一部分：旧代码 (原生 Process) - 预期会卡死
-            // ==========================================
-            try
-            {
-                Console.WriteLine("\n>>> [旧代码] 启动 CrashTest.exe (无超时保护)...");
-
-                ProcessStartInfo psi = new ProcessStartInfo(crashTesterPath)
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
-
-                using (Process process = Process.Start(psi))
-                {
-                    Console.WriteLine(">>> [旧代码] 进程已启动，正在等待退出 (WaitForExit)...");
-                    Console.WriteLine(">>> [状态] 如果此时出现弹窗，下一行日志将永远不会打印！");
-
-                    // 【关键点】这里没有超时时间，它会永远等待，直到弹窗被手动关闭
-                    process.WaitForExit();
-
-                    Console.WriteLine(">>> [旧代码] 进程已退出。 (如果你看到了这行，说明你手动关闭了弹窗)");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($">>> [旧代码] 发生异常: {ex.Message}");
-            }
-
-            Console.WriteLine("\n------------------------------------------");
-            Console.WriteLine("阶段 1 结束。如果主程序没死，继续测试阶段 2。");
-            Console.WriteLine("现在测试 SafeProcessRunner (带看门狗 + 超时)...");
-            Console.WriteLine("------------------------------------------\n");
-
-            // ==========================================
-            // 第二部分：新代码 (SafeProcessRunner) - 预期自动恢复
-            // ==========================================
-            try
-            {
-                Console.WriteLine(">>> [新代码] 启动 CrashTest.exe (开启看门狗 + 5秒超时)...");
-
-                var result = SafeProcessRunner.Run(
-                    fileName: crashTesterPath,
-                    arguments: "",
-                    timeoutMs: 5000,      // 5秒超时
-                    enableWatchdog: true  // 开启看门狗
-                );
-
-                Console.WriteLine(">>> [新代码] 成功捕获结果！程序未卡死。");
-                Console.WriteLine($">>> [新代码] 退出码: {result.ExitCode}");
-                if (result.ExitCode == 0)
-                    Console.WriteLine(">>> [结论] 看门狗成功关闭了弹窗，进程正常退出。");
-                else
-                    Console.WriteLine(">>> [结论] 进程被超时强制杀死或异常退出。");
-            }
-            catch (TimeoutException)
-            {
-                Console.WriteLine(">>> [新代码] 捕获到超时异常。");
-                Console.WriteLine(">>> [结论] 看门狗未能关闭弹窗（可能是标题不匹配），但超时机制杀死了进程，主程序未卡死。");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($">>> [新代码] 发生其他异常: {ex.Message}");
-            }
-
-            Console.WriteLine("\n==========================================");
-            Console.WriteLine("测试全部完成。主程序依然存活。");
-            Console.WriteLine("==========================================");
-        }
     }
 
 } 

@@ -5,18 +5,23 @@ using System.Threading.Tasks;
 using M2Mqtt;
 using M2Mqtt.Messages;
 using log4net;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace EMS
 {
     public class MqttManager
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(MqttManager));
+        private static readonly ILog log = LogManager.GetLogger("MqttManager");
         private readonly object _syncRoot = new object();
 
         private MqttClient _client;
         private CancellationTokenSource _cts;
+        private Task _connectLoopTask;
+        private bool _connectLoopRunning;
+        private SignalRecoveryCoordinator _recoveryCoordinator;
+
+
+        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 10; // 测试用4
+
 
         private volatile MqttState _state = MqttState.Disconnected;
         private volatile bool _intentionalDisconnect;
@@ -44,24 +49,40 @@ namespace EMS
 
         // ================= 公共 API =================
 
+        public void SetRecoveryCoordinator(SignalRecoveryCoordinator recoveryCoordinator)
+        {
+            lock (_syncRoot)
+            {
+                _recoveryCoordinator = recoveryCoordinator;
+            }
+        }
+
         public void Start()
         {
+            Action<MqttState> stateChangedHandler = null;
+
             lock (_syncRoot)
             {
                 if (_state != MqttState.Disconnected)
                     return;
 
                 log.Info("MQTT Start()");
-                _state = MqttState.Connecting;
                 _intentionalDisconnect = false;
-                _cts = new CancellationTokenSource();
 
-                Task.Run(() => ConnectLoop(_cts.Token));
+                _cts?.Cancel();
+                _cts = new CancellationTokenSource();
+                _state = MqttState.Connecting;
+                stateChangedHandler = StateChanged;
             }
+
+            stateChangedHandler?.Invoke(MqttState.Connecting);
+            EnsureConnectLoopRunning();
         }
 
         public void Stop()
         {
+            Action<MqttState> stateChangedHandler = null;
+
             lock (_syncRoot)
             {
                 if (_state == MqttState.Stopping || _state == MqttState.Disconnected)
@@ -71,12 +92,15 @@ namespace EMS
                 _state = MqttState.Stopping;
                 _intentionalDisconnect = true;
 
+
                 _cts?.Cancel();
                 CleanupClient();
 
                 _state = MqttState.Disconnected;
-                StateChanged?.Invoke(_state);
+                stateChangedHandler = StateChanged;
             }
+
+            stateChangedHandler?.Invoke(MqttState.Disconnected);
         }
 
         public bool Publish(string topic, string payload, bool retain, PublishQos qos = PublishQos.AtLeastOnce)
@@ -88,7 +112,6 @@ namespace EMS
 
                 try
                 {
-
                     byte qosLevel = qos == PublishQos.AtMostOnce
                         ? MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE
                         : MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE;
@@ -131,114 +154,186 @@ namespace EMS
 
         // ================= 状态机核心 =================
 
-        /*        private async Task ConnectLoop(CancellationToken token)
+        private void EnsureConnectLoopRunning()
+        {
+            lock (_syncRoot)
+            {
+                if (_state != MqttState.Connecting)
+                    return;
+
+                if (_cts == null)
+                    _cts = new CancellationTokenSource();
+
+                if (_connectLoopRunning && _connectLoopTask != null && !_connectLoopTask.IsCompleted)
+                    return;
+
+                _connectLoopRunning = true;
+                _connectLoopTask = Task.Run(() => ConnectLoop(_cts.Token));
+            }
+        }
+
+        public void ResumeAfterRecovery()
+        {
+            Action<MqttState> stateChangedHandler = null;
+            bool shouldRestartLoop = false;
+
+            lock (_syncRoot)
+            {
+                _intentionalDisconnect = false;
+
+                log.Warn($"MQTT ResumeAfterRecovery(), current state: {_state}");
+                _cts?.Cancel();
+                _cts = new CancellationTokenSource();
+
+                if (_state != MqttState.Stopping)
                 {
-                    int retry = 0;
+                    _state = MqttState.Connecting;
+                    stateChangedHandler = StateChanged;
+                    shouldRestartLoop = true;
+                }
+            }
 
-                    while (!token.IsCancellationRequested)
-                    {
-                        lock (_syncRoot)
-                        {
-                            if (_state != MqttState.Connecting)
-                                return;
-                        }
+            stateChangedHandler?.Invoke(MqttState.Connecting);
 
-                        retry++;
-                        int delay = Math.Min(30000, retry * 2000);
-                        log.Warn($"MQTT connect attempt #{retry}");
+            if (shouldRestartLoop)
+                EnsureConnectLoopRunning();
+        }
 
-                        try
-                        {
-                            await Task.Delay(delay, token);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            return;
-                        }
 
-                        if (TryConnect())
-                        {
-                            lock (_syncRoot)
-                            {
-                                if (_state == MqttState.Connecting)
-                                {
-                                    _state = MqttState.Connected;
-                                    StateChanged?.Invoke(_state);
-                                    log.Info("MQTT Connected");
-                                }
-                            }
-                            return;
-                        }
-                    }
-                }*/
 
         private async Task ConnectLoop(CancellationToken token)
         {
             int retry = 0;
 
-            while (!token.IsCancellationRequested)
+            try
             {
-                lock (_syncRoot)
-                {
-                    if (_state != MqttState.Connecting)
-                        return;
-                }
-
-                retry++;
-
-                // 退避策略: 30s 1min 5min 10min 10min...
-                int delay;
-                if (retry == 1)
-                    delay = 30 * 1000;           // 30秒
-                else if (retry == 2)
-                    delay = 1 * 60 * 1000;       // 1分钟
-                else if (retry == 3)
-                    delay = 5 * 60 * 1000;       // 5分钟
-                else if (retry == 4)
-                    delay = 10 * 60 * 1000;      // 10分钟
-                else
-                    delay = 10 * 60 * 1000;      // 10分钟（之后一直保持10分钟）
-
-                log.Warn($"MQTT connect attempt #{retry}, next retry in {delay / 1000}s");
-
-                try
-                {
-                    await Task.Delay(delay, token);
-                }
-                catch (TaskCanceledException)
-                {
-                    return;
-                }
-
-                if (TryConnect())
+                while (!token.IsCancellationRequested)
                 {
                     lock (_syncRoot)
                     {
-                        if (_state == MqttState.Connecting)
-                        {
-                            _state = MqttState.Connected;
-                            StateChanged?.Invoke(_state);
-                            log.Info("MQTT Connected");
-                        }
+                        if (_state != MqttState.Connecting)
+                            return;
                     }
-                    return;
+
+                    retry++;
+
+                    int delay;
+                    if (retry == 1)
+                        delay = 5 * 1000;
+                    else if (retry == 2)
+                        delay = 10 * 1000;
+                    else if (retry == 3)
+                        delay = 15 * 1000;
+                    else if (retry == 4)
+                        delay = 30 * 1000;
+                    else if (retry == 5)
+                        delay = 9 * 60 * 1000;
+                    else
+                        delay = 10 * 60 * 1000;
+
+                    log.Warn($"MQTT connect attempt #{retry}, delay {delay / 1000}s before connect");
+
+                    try
+                    {
+                        await Task.Delay(delay, token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return;
+                    }
+
+                    lock (_syncRoot)
+                    {
+                        if (_state != MqttState.Connecting)
+                            return;
+                    }
+
+                    if (TryConnect())
+                    {
+                        Action<MqttState> stateChangedHandler = null;
+
+                        lock (_syncRoot)
+                        {
+                            if (_state != MqttState.Connecting)
+                                return;
+
+                            _state = MqttState.Connected;
+                            stateChangedHandler = StateChanged;
+                        }
+
+                        stateChangedHandler?.Invoke(MqttState.Connected);
+                        log.Warn("MQTT Connected");
+                        return;
+                    }
+
+                    if (retry >= MaxConsecutiveConnectFailuresBeforeRecovery)
+                    {
+                        log.Warn($"MQTT连续重试{retry}次仍失败，开始发起网络服务和物联网模块恢复请求");
+
+                        bool recoveryRequested = TriggerRecovery($"MQTT连续重试{retry}次失败");
+
+                        if (recoveryRequested)
+                            log.Warn("MQTT恢复请求已提交，ConnectLoop退出，等待恢复完成后由 ResumeAfterRecovery() 重新拉起");
+                        else
+                            log.Warn("MQTT恢复请求提交失败，ConnectLoop仍退出，等待外部再次触发连接");
+
+                        return;
+                    }
                 }
+            }
+            finally
+            {
+                lock (_syncRoot)
+                {
+                    _connectLoopRunning = false;
+                }
+            }
+        }
+
+
+        private bool TriggerRecovery(string reason)
+        {
+            SignalRecoveryCoordinator recoveryCoordinator;
+
+            lock (_syncRoot)
+            {
+                recoveryCoordinator = _recoveryCoordinator;
+            }
+
+            if (recoveryCoordinator == null)
+            {
+                log.Warn($"未配置SignalRecoveryCoordinator，无法执行恢复流程，原因: {reason}");
+                return false;
+            }
+
+            try
+            {
+                return recoveryCoordinator.ExecuteRecovery(reason);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"发起恢复流程异常，原因: {reason}", ex);
+                return false;
             }
         }
 
         private bool TryConnect()
         {
+            MqttClient clientToConnect;
+
             lock (_syncRoot)
             {
+                if (_state != MqttState.Connecting)
+                    return false;
+
                 try
                 {
-                    // ✅ 每次连接前都彻底清理
                     CleanupClient();
                     _intentionalDisconnect = false;
 
                     log.Warn($"Creating MQTT client {BrokerIp}:{BrokerPort}");
 
-                    _client = new MqttClient(
+                    clientToConnect = new MqttClient(
                         BrokerIp,
                         BrokerPort,
                         true,
@@ -246,40 +341,88 @@ namespace EMS
                         null,
                         MqttSslProtocols.TLSv1_2);
 
-                    _client.MqttMsgPublishReceived += OnMessage;
-                    _client.ConnectionClosed += OnConnectionClosed;
-
-                    _client.Connect(
-                        ClientId,
-                        Username,
-                        Password,
-                        true,   // ✅ cleanSession = true（更稳定） 原为true，暂时改为false，防止重连后重新订阅到历史消息
-                        60);    // ✅ keepAlive 较小 原为30，暂时改为60
-
-                    return _client.IsConnected;
+                    clientToConnect.MqttMsgPublishReceived += OnMessage;
+                    clientToConnect.ConnectionClosed += OnConnectionClosed;
+                    _client = clientToConnect;
                 }
                 catch (Exception ex)
                 {
-                    log.Error("Connect failed", ex);
+                    log.Error("Create MQTT client failed", ex);
                     return false;
                 }
+            }
+
+            try
+            {
+                clientToConnect.Connect(
+                    ClientId,
+                    Username,
+                    Password,
+                    true,
+                    60);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Connect failed", ex);
+
+                lock (_syncRoot)
+                {
+                    CleanupClientIfCurrent(clientToConnect);
+                }
+
+                return false;
+            }
+
+            lock (_syncRoot)
+            {
+                if (_state != MqttState.Connecting || _client != clientToConnect)
+                {
+                    CleanupClientIfCurrent(clientToConnect);
+                    return false;
+                }
+
+                if (!clientToConnect.IsConnected)
+                {
+                    CleanupClientIfCurrent(clientToConnect);
+                    return false;
+                }
+
+                return true;
             }
         }
 
         private void CleanupClient()
         {
-            if (_client == null)
+            CleanupClientInternal(_client, true);
+            _client = null;
+        }
+
+        private void CleanupClientIfCurrent(MqttClient client)
+        {
+            if (_client != client)
+            {
+                CleanupClientInternal(client, false);
+                return;
+            }
+
+            CleanupClientInternal(client, true);
+            _client = null;
+        }
+
+        private void CleanupClientInternal(MqttClient client, bool markCurrentAsNull)
+        {
+            if (client == null)
                 return;
 
             try
             {
-                _client.MqttMsgPublishReceived -= OnMessage;
-                _client.ConnectionClosed -= OnConnectionClosed;
+                client.MqttMsgPublishReceived -= OnMessage;
+                client.ConnectionClosed -= OnConnectionClosed;
 
-                if (_client.IsConnected)
+                if (client.IsConnected)
                 {
                     _intentionalDisconnect = true;
-                    _client.Disconnect();
+                    client.Disconnect();
                 }
             }
             catch (Exception ex)
@@ -288,7 +431,8 @@ namespace EMS
             }
             finally
             {
-                _client = null;
+                if (markCurrentAsNull && ReferenceEquals(_client, client))
+                    _client = null;
             }
         }
 
@@ -296,21 +440,41 @@ namespace EMS
 
         private void OnConnectionClosed(object sender, EventArgs e)
         {
+            Action<MqttState> stateChangedHandler = null;
+            bool shouldRestartLoop = false;
+
             lock (_syncRoot)
             {
                 log.Warn($"ConnectionClosed in state {_state}");
 
                 if (_intentionalDisconnect || _state == MqttState.Stopping)
+
                     return;
 
                 if (_state == MqttState.Connected)
                 {
                     _state = MqttState.Connecting;
-                    StateChanged?.Invoke(_state);
-                    Task.Run(() => ConnectLoop(_cts.Token));
+                    stateChangedHandler = StateChanged;
+                    shouldRestartLoop = true;
                 }
             }
+
+            if (stateChangedHandler != null)
+                stateChangedHandler(MqttState.Connecting);
+
+            if (shouldRestartLoop)
+                EnsureConnectLoopRunning();
         }
+
+        public MqttState GetState()
+        {
+            lock (_syncRoot)
+            {
+                return _state;
+            }
+        }
+
+
 
         private void OnMessage(object sender, MqttMsgPublishEventArgs e)
         {
@@ -334,188 +498,3 @@ namespace EMS
     }
 }
 
-// 无注释版本
-/*using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using M2Mqtt;
-using M2Mqtt.Messages;
-
-namespace EMS
-{
-    public class MqttManager
-    {
-        private MqttClient _client;
-        private readonly object _lock = new object();
-
-        private Task _reconnectTask;
-        private bool _needReconnect;
-        private bool _stopping;
-
-        public event EventHandler<MqttMsgPublishEventArgs> MessageReceived;
-        public event Action<bool> ConnectionStateChanged;
-
-        public string BrokerIp;
-        public int BrokerPort;
-        public string Username;
-        public string Password;
-        public string ClientId;
-
-        public void Start()
-        {
-            _stopping = false;
-            StartReconnectLoop();
-        }
-
-        public void Stop()
-        {
-            _stopping = true;
-            _needReconnect = false;
-
-            lock (_lock)
-            {
-                try
-                {
-                    if (_client != null)
-                    {
-                        _client.MqttMsgPublishReceived -= OnMessage;
-                        _client.ConnectionClosed -= OnClosed;
-
-                        if (_client.IsConnected)
-                            _client.Disconnect();
-
-                        _client = null;
-                    }
-                }
-                catch { }
-            }
-
-            ConnectionStateChanged?.Invoke(false);
-        }
-
-        public bool Publish(string topic, string payload)
-        {
-            lock (_lock)
-            {
-                if (_client == null || !_client.IsConnected)
-                    return false;
-
-                _client.Publish(
-                    topic,
-                    Encoding.UTF8.GetBytes(payload),
-                    MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE,
-                    true);
-
-                return true;
-            }
-        }
-
-        public void Subscribe(string topic)
-        {
-            lock (_lock)
-            {
-                _client?.Subscribe(
-                    new[] { topic },
-                    new[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
-            }
-        }
-
-        // ================= 内部 =================
-
-        private void StartReconnectLoop()
-        {
-            if (_reconnectTask != null && !_reconnectTask.IsCompleted)
-                return;
-
-            _needReconnect = true;
-            _reconnectTask = Task.Run(ReconnectLoop);
-        }
-
-        private async Task ReconnectLoop()
-        {
-            int retry = 0;
-
-            while (_needReconnect && !_stopping)
-            {
-                retry++;
-                await Task.Delay(Math.Min(30000, retry * 2000));
-
-                try
-                {
-                    if (Connect())
-                    {
-                        _needReconnect = false;
-                        ConnectionStateChanged?.Invoke(true);
-                        return;
-                    }
-                }
-                catch { }
-            }
-        }
-
-        private bool Connect()
-        {
-            lock (_lock)
-            {
-                Cleanup();
-
-                _client = new MqttClient(
-                    BrokerIp,
-                    BrokerPort,
-                    true,
-                    null,
-                    null,
-                    MqttSslProtocols.TLSv1_2);
-
-                _client.MqttMsgPublishReceived += OnMessage;
-                _client.ConnectionClosed += OnClosed;
-
-                _client.Connect(
-                    ClientId,
-                    Username,
-                    Password,
-                    true,
-                    60);
-
-                return _client.IsConnected;
-            }
-        }
-
-        private void Cleanup()
-        {
-            try
-            {
-                if (_client != null)
-                {
-                    _client.MqttMsgPublishReceived -= OnMessage;
-                    _client.ConnectionClosed -= OnClosed;
-
-                    if (_client.IsConnected)
-                        _client.Disconnect();
-                }
-            }
-            catch { }
-
-            _client = null;
-        }
-
-        private void OnClosed(object sender, EventArgs e)
-        {
-            if (_stopping)
-                return;
-
-            _needReconnect = true;
-            ConnectionStateChanged?.Invoke(false);
-            StartReconnectLoop();
-        }
-
-        private void OnMessage(object sender, MqttMsgPublishEventArgs e)
-        {
-            MessageReceived?.Invoke(this, e);
-        }
-    }
-}
-*/

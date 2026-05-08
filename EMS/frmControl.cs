@@ -343,41 +343,45 @@ namespace EMS
                     }
                     break;
                 case 1:
-                    //frmMain.TacticsList.LoadJFPGFromSQL_WithCompare();
-                    //frmMain.Selffrm.AllEquipment.Elemeter2.GetDataFromEqipment();
-                    //frmMain.Selffrm.AllEquipment.Elemeter3.GetDataFromEqipment();
-
-                    /*                    var manager = new MobileBroadbandManager();
-
-                                        // 执行重启操作
-                                        bool isSuccess = manager.DisableNet();
-
-                                        // 根据结果进行处理
-                                        if (isSuccess)
-                                        {
-                                           log.Error("移动宽带关闭成功！");
-                                        }
-                                        else
-                                        {
-                                            log.Error("移动宽带重启失败，请检查连接名称是否正确或权限是否足够。");
-                                        }*/
-                    break;
-                case 2:
-
-                    var manager1 = new MobileBroadbandManager();
-
-                    // 执行重启操作
-                    bool isSuccess1 = manager1.EnableNet();
-
-                    // 根据结果进行处理
-                    if (isSuccess1)
+                    string commands = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
+                    var result = SafeProcessRunner.RunCmd(commands, timeoutMs: 2000);
+                    if (result.Success)
                     {
-                        log.Error("移动宽带开启成功！");
+                        log.Warn($"命令执行完成: {commands}, ExitCode: {result.ExitCode}");
+                        if (!string.IsNullOrEmpty(result.StandardOutput))
+                        {
+                            log.Warn($"命令输出: {result.StandardOutput}");
+                        }
                     }
                     else
                     {
-                        log.Error("移动宽带开启失败，请检查连接名称是否正确或权限是否足够。");
+                        log.Warn($"命令执行失败: {commands}, ExitCode: {result.ExitCode}");
+                        if (!string.IsNullOrEmpty(result.StandardError))
+                        {
+                            log.Warn($"错误输出: {result.StandardError}");
+                        }
                     }
+
+                    var result1 = SafeProcessRunner.Run("cmd", $"/c {commands}", timeoutMs: 2000);
+                    if (result1.Success)
+                    {
+                        log.Warn($"命令执行完成: {commands}, ExitCode: {result.ExitCode}");
+                        if (!string.IsNullOrEmpty(result.StandardOutput))
+                        {
+                            log.Warn($"命令输出: {result.StandardOutput}");
+                        }
+                    }
+                    else
+                    {
+                        log.Warn($"命令执行失败: {commands}, ExitCode: {result.ExitCode}");
+                        if (!string.IsNullOrEmpty(result.StandardError))
+                        {
+                            log.Warn($"错误输出: {result.StandardError}");
+                        }
+                    }
+                    break;
+                case 2:
+
                     break;
                 default: 
                     break;

@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-
+using log4net;
 
 namespace EMS
 {
     public static class SafeProcessRunner
     {
+        private static ILog log = LogManager.GetLogger("SafeProcessRunner");
         #region ===== Win32 ErrorMode =====
 
         [DllImport("kernel32.dll")]
@@ -57,6 +58,39 @@ namespace EMS
         #endregion
 
         #region ===== Public API =====
+
+        public static string GetPreferredCmdPath()
+        {
+            string cmdPath = Environment.ExpandEnvironmentVariables(@"%windir%\Sysnative\cmd.exe");
+            if (!System.IO.File.Exists(cmdPath))
+            {
+                cmdPath = Environment.ExpandEnvironmentVariables(@"%windir%\System32\cmd.exe");
+            }
+
+            return cmdPath;
+        }
+
+        public static ProcessResult RunCmd(
+            string command,
+            int timeoutMs = 30_000,
+            bool enableWatchdog = true)
+        {
+            try
+            {
+                string cmdPath = GetPreferredCmdPath();
+                return Run(cmdPath, $"/c {command}", timeoutMs, enableWatchdog);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"RunCmd 执行失败, command: {command}, timeoutMs: {timeoutMs}, enableWatchdog: {enableWatchdog}, error: {ex.Message}", ex);
+                return new ProcessResult
+                {
+                    ExitCode = -1,
+                    StandardOutput = string.Empty,
+                    StandardError = ex.ToString()
+                };
+            }
+        }
 
         /// <summary>
         /// 安全运行外部进程（防弹窗 + 超时）

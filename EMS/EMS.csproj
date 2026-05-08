@@ -360,6 +360,8 @@
     <Compile Include="BalaTacticsListClass.cs" />
     <Compile Include="CloudService.cs" />
     <Compile Include="DataParser.cs" />
+    <Compile Include="EC20Communicator.cs" />
+    <Compile Include="MobileBroadbandManager.cs" />
     <Compile Include="modbus.cs" />
     <Compile Include="modbusSlave.cs" />
     <Compile Include="EmsServiceAdapter.cs" />
@@ -496,8 +498,10 @@
     <Compile Include="RunTimeInf.cs" />
     <Compile Include="SafeProcessRunner.cs" />
     <Compile Include="SGCIM.cs" />
+    <Compile Include="SignalRecoveryCoordinator.cs" />
     <Compile Include="SysIO.cs" />
     <Compile Include="TacticsClass.cs" />
+    <Compile Include="TaskNetListener.cs" />
     <Compile Include="TCheckBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
