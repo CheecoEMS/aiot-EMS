@@ -7240,7 +7240,11 @@ namespace EMS
         //云
         //public CloudClass Report2Cloud = null;
         public CloudService cloudService = null;
+
         public TaskNetListener taskNetListener = null;
+        public MqttManager mqttManager = null;
+        public SignalRecoveryCoordinator signalRecoveryCoordinator = null;
+
         public ProfitClass Profit2Cloud = new ProfitClass();
         public FaultClass Fault2Cloud = new FaultClass();
 
@@ -7420,19 +7424,14 @@ namespace EMS
         public string Dehumidifier_Version { get; set; } = "";
 
         //
-        public long SignalDelay { get; set; } //延迟
-        public long SignalDelayJitter { get; set; } //信号延迟抖动
+        public long SignalDelay { get; set; } // 延迟(不再采集)
+        public long SignalDelayJitter { get; set; } // 信号延迟抖动(不再采集)
 
-        private int delayExceedCount = 0;
-        private int delayBelowCount = 0;
-        public bool SignalAlarmActive = false;  // Track if the alarm is currently active
-        private int consecutivePingErrorCount = 0;
-        private bool isProcessingAlarm = false; // 新增：用于防止重复处理的标志
-        private object lockObject = new object(); // 新增：用于锁定处理标志的对象
+        //public bool SignalAlarmActive = false;  // Track if the alarm is currently active
+        //private int consecutivePingErrorCount = 0;
+        //private bool isProcessingAlarm = false; // 新增：用于防止重复处理的标志
 
         public int RebootCount { get; set; }    //今日剩余重启次数
-
-        NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 
         //线程
         private Thread Thread_ReadDataCom1;
@@ -7586,14 +7585,6 @@ namespace EMS
                     }
 
                 }
-            }
-        }
-
-        public void HandleNetworkError() {
-            if (!SignalAlarmActive) {
-                //AT
-
-                //Net Shell
             }
         }
 
@@ -8751,8 +8742,8 @@ namespace EMS
                     //frmMain.Selffrm.AllEquipment.TestSignalStrength();
                     taskNetListener.TestSignalStrength();
                     Thread.Sleep(300000);
+                    //Thread.Sleep(1000);
 
-                    //Thread.Sleep(60000);
                 }
                 catch (Exception ex)
                 {

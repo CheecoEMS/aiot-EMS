@@ -20,10 +20,12 @@ namespace EMS
         private SignalRecoveryCoordinator _recoveryCoordinator;
 
 
-        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 10; // 测试用4
+        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 12; // 测试用4，生产用12
 
 
         private volatile MqttState _state = MqttState.Disconnected;
+        public MqttState CurrentState => _state;
+
         private volatile bool _intentionalDisconnect;
 
         // ================= 事件 =================
@@ -221,13 +223,15 @@ namespace EMS
                     if (retry == 1)
                         delay = 5 * 1000;
                     else if (retry == 2)
-                        delay = 10 * 1000;
+                        delay = 25 * 1000;
                     else if (retry == 3)
-                        delay = 15 * 1000;
-                    else if (retry == 4)
                         delay = 30 * 1000;
+                    else if (retry == 4)
+                        delay = 1 * 60 * 1000;
                     else if (retry == 5)
-                        delay = 9 * 60 * 1000;
+                        delay = 2 * 60 * 1000;
+                    else if (retry == 6)
+                        delay = 6 * 60 * 1000;
                     else
                         delay = 10 * 60 * 1000;
 

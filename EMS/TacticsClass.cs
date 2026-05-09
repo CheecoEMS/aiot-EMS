@@ -1300,14 +1300,14 @@ namespace EMS
             {
                 try
                 {
-                    if (frmMain.Selffrm.AllEquipment.SignalAlarmActive)
+                    if (frmMain.Selffrm.AllEquipment.mqttManager != null && frmMain.Selffrm.AllEquipment.mqttManager.CurrentState != MqttState.Connected)
                     {
-                        log.Error("监测到4G通信异常，使用情况1来装载策略");
+                        log.Error("监测到与云Broker连接中断，使用情况1来装载策略");
                         res = frmMain.TacticsList.LoadFromMySQL(1);//重新装载策略
                     }
                     else
                     {
-                        log.Error("监测到4G通信正常，使用情况0来装载策略");
+                        log.Error("监测到与云Broker连接正常，使用情况0来装载策略");
                         res = frmMain.TacticsList.LoadFromMySQL(0);//重新装载策略
                     }
 
@@ -1364,13 +1364,13 @@ namespace EMS
 
                     int affectedRows = DBConnection.ExecSQLWithParams(deleteSql, deleteParameters);
                     result = affectedRows >= 0; // 即使没有删除行也视为成功（可能没有更早的数据）
-                    log.Error($"清理过期策略完成，删除了 {affectedRows} 条记录，保留了最近时间点 {maxExpiredTime.Value} 的策略");
+                    //log.Error($"清理过期策略完成，删除了 {affectedRows} 条记录，保留了最近时间点 {maxExpiredTime.Value} 的策略");
                 }
                 else
                 {
                     // 没有过期数据
                     result = true;
-                    log.Error("没有需要清理的过期策略");
+                    //log.Error("没有需要清理的过期策略");
                 }
             }
             catch (Exception ex)
@@ -1527,102 +1527,20 @@ namespace EMS
                     }
                 }
 
-                // 如果没有今日策略且type为0，查找最近的过期策略并更新为今日
-                if ((dataTable == null || dataTable.Rows.Count == 0) && type == 0)
+                if (dataTable == null)
                 {
-                    log.Error("不存在今日策略，查找最近的过期策略");
+                    log.Error("查询今日策略失败，保留当前内存策略不变");
+                    return false;
+                }
 
-                    // 查找过期策略中最近的时间rTime1
-                    string findLatestExpiredSql = "SELECT MAX(rTime) FROM tactics WHERE DATE(rTime) < @Today";
-                    var findParams = new Dictionary<string, object> { { "@Today", DateTime.Today } };
-                    var latestExpiredTimeObj = DBConnection.QuerySingleValue(
-                        findLatestExpiredSql,
-                        commandTimeout: 15,
-                        connectionTimeout: 5);
-
-                    DateTime? latestExpiredTime = null;
-                    if (latestExpiredTimeObj != null && latestExpiredTimeObj != DBNull.Value)
+                if (dataTable.Rows.Count == 0)
+                {
+                    log.Error("不存在今日策略");
+                    lock (TacticsList)
                     {
-                        latestExpiredTime = Convert.ToDateTime(latestExpiredTimeObj);
+                        TacticsList.Clear();
                     }
-
-                    if (latestExpiredTime.HasValue)
-                    {
-                        // 将所有rTime等于rTime1的策略时间改为今日
-                        string updateSql = "UPDATE tactics SET rTime = @Today WHERE rTime = @RTime1";
-                        var updateParams = new Dictionary<string, object>
-                        {
-                            {"@Today", DateTime.Today},
-                            {"@RTime1", latestExpiredTime.Value}
-                        };
-
-                        int updatedRows = DBConnection.ExecSQLWithParams(updateSql, updateParams, 30, 10);
-                        if (updatedRows > 0)
-                        {
-                            log.Error($"已将 {updatedRows} 条最近过期策略（时间：{latestExpiredTime.Value:yyyy-MM-dd}）更新为今日");
-                        }
-
-                        // 删除修改后仍过期的策略（rTime < 今天）
-                        string deleteAfterUpdateSql = "DELETE FROM tactics WHERE rTime < @Today";
-                        var deleteParams = new Dictionary<string, object> { { "@Today", DateTime.Today } };
-
-                        int deletedRows = DBConnection.ExecSQLWithParams(deleteAfterUpdateSql, deleteParams, 30, 10);
-                        if (deletedRows > 0)
-                        {
-                            log.Error($"更新后，删除过期策略 {deletedRows} 条");
-                        }
-
-                        // 更新策略后，重新查询今日策略
-                        var newDataTable = DBConnection.QueryDataTableWithParams(astrSQL, parameters, commandTimeout: 30, connectionTimeout: 10);
-
-                        if (newDataTable != null && newDataTable.Rows.Count > 0)
-                        {
-                            lock (TacticsList)
-                            {
-                                // 清空现有策略
-                                TacticsList.Clear();
-
-                                // 处理新的查询结果
-                                foreach (DataRow row in newDataTable.Rows)
-                                {
-                                    var oneTactics = new TacticsClass();
-                                    oneTactics.startTime = Convert.ToDateTime("2022-01-01 " + row["startTime"].ToString());
-                                    oneTactics.endTime = Convert.ToDateTime("2022-01-01 " + row["endTime"].ToString());
-                                    oneTactics.tType = row["tType"].ToString();
-                                    oneTactics.PCSType = row["PCSType"].ToString();
-
-                                    if (oneTactics.PCSType == "恒流")
-                                        oneTactics.waValue = (int)(Convert.ToInt32(row["waValue"]) * 0.8);
-                                    if (oneTactics.PCSType == "恒压")
-                                    {
-                                        oneTactics.waValue = (int)((Convert.ToInt32(row["waValue"]) - 648) * 0.7);
-                                        if (oneTactics.waValue < 0)
-                                            oneTactics.waValue = 0;
-                                    }
-
-                                    // 限额处理
-                                    oneTactics.waValue = Math.Abs(oneTactics.waValue);
-                                    if (oneTactics.waValue > 110)
-                                        oneTactics.waValue = 110;
-
-                                    // 修正充放电的正负功率
-                                    if (oneTactics.tType == "放电")
-                                        oneTactics.waValue = -Convert.ToInt32(row["waValue"]);
-                                    else
-                                        oneTactics.waValue = Convert.ToInt32(row["waValue"]);
-
-                                    // 策略日期
-                                    oneTactics.strategyDate = Convert.ToDateTime(row["rTime"]);
-
-                                    TacticsList.Add(oneTactics);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        log.Error("不存在今日策略，且无任何过期策略");
-                    }
+                    return true;
                 }
 
                 Result = true;
@@ -1747,12 +1665,12 @@ namespace EMS
                         // 只有在策略模式才会运行策略
                         if (frmSet.config.SysMode == 1)
                             TacticsOn = true;
-                        continue;
                     }
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
                     {
-                        LoadFromMySQL(0);
+                        //LoadFromMySQL(0);
+                        LoadMasterDailyTactics();
                     }
 
                     DateTime now = DateTime.Now;

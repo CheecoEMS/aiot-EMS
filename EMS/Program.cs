@@ -111,10 +111,10 @@ namespace EMS
 
                             if (result.Success)
                             {
-                                log.Info($"命令执行完成: {commands[i]}, ExitCode: {result.ExitCode}");
+                                log.Error($"命令执行完成: {commands[i]}, ExitCode: {result.ExitCode}");
                                 if (!string.IsNullOrEmpty(result.StandardOutput))
                                 {
-                                    log.Info($"命令输出: {result.StandardOutput}");
+                                    log.Error($"命令输出: {result.StandardOutput}");
                                 }
                             }
                             else

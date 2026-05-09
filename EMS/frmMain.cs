@@ -1188,9 +1188,9 @@ namespace EMS
                 // 初始化策略
                 TacticsList.Parent = AllEquipment;
 
-                var signalRecoveryCoordinator = new SignalRecoveryCoordinator();
+                AllEquipment.signalRecoveryCoordinator = new SignalRecoveryCoordinator();
                 //新增mqttManager
-                var mqtt = new MqttManager()
+                AllEquipment.mqttManager = new MqttManager()
                 {
                     BrokerIp = frmSet.config.MqttBrokerIp,
                     BrokerPort = frmSet.config.MqttBrokerPort,
@@ -1198,9 +1198,9 @@ namespace EMS
                     Password = frmSet.config.MqttBrokerPassword,
                     ClientId = frmSet.config.SysID
                 };
-                mqtt.SetRecoveryCoordinator(signalRecoveryCoordinator);
+                AllEquipment.mqttManager.SetRecoveryCoordinator(AllEquipment.signalRecoveryCoordinator);
 
-                AllEquipment.cloudService = new CloudService(mqtt)
+                AllEquipment.cloudService = new CloudService(AllEquipment.mqttManager)
                 {
                     Parent = AllEquipment
                 };
@@ -1212,9 +1212,9 @@ namespace EMS
                     Parent = AllEquipment
                 };
 
-                AllEquipment.taskNetListener.SetRecoveryCoordinator(signalRecoveryCoordinator);
-                signalRecoveryCoordinator.SetTaskNetListener(AllEquipment.taskNetListener);
-                signalRecoveryCoordinator.SetMqttManager(mqtt);
+                AllEquipment.taskNetListener.SetRecoveryCoordinator(AllEquipment.signalRecoveryCoordinator);
+                AllEquipment.signalRecoveryCoordinator.SetTaskNetListener(AllEquipment.taskNetListener);
+                AllEquipment.signalRecoveryCoordinator.SetMqttManager(AllEquipment.mqttManager);
 
                 return true;
             }

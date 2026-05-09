@@ -19,7 +19,8 @@ namespace EMS
 
         private const int RecoveryThreshold = 6;
         private int consecutivePingErrorCount;
-        public bool SignalAlarmActive = false;
+
+        private bool isProcessingAlarm = false;
 
         public TaskNetListener()
         {
@@ -69,8 +70,10 @@ namespace EMS
                 if (consecutivePingErrorCount < RecoveryThreshold)
                     return;
 
-                log.Warn($"[Recovery] 连续{RecoveryThreshold}次异常，触发信号告警展示，但不直接发起恢复流程");
-                SetAlarmState();
+                if (!isProcessingAlarm) {
+                    log.Warn($"[Recovery] 连续{RecoveryThreshold}次异常，触发信号告警展示，但不直接发起恢复流程");
+                    SetAlarmState();
+                }
             }
             catch (Exception ex)
             {
@@ -80,8 +83,11 @@ namespace EMS
                 if (consecutivePingErrorCount < RecoveryThreshold)
                     return;
 
-                log.Warn($"[Recovery] 信号检测整体异常达到阈值{RecoveryThreshold}，触发信号告警展示，但不直接发起恢复流程");
-                SetAlarmState();
+                if (!isProcessingAlarm)
+                {
+                    log.Warn($"[Recovery] 连续{RecoveryThreshold}次异常，触发信号告警展示，但不直接发起恢复流程");
+                    SetAlarmState();
+                }
             }
             finally
             {
@@ -151,10 +157,8 @@ namespace EMS
         {
             consecutivePingErrorCount = 0;
 
-            if (!SignalAlarmActive)
-                return;
+            isProcessingAlarm = false;
 
-            SignalAlarmActive = false;
             if (Parent != null)
             {
                 lock (Parent.EMSError)
@@ -168,7 +172,7 @@ namespace EMS
 
         private void SetAlarmState()
         {
-            SignalAlarmActive = true;
+            isProcessingAlarm = true;
 
             if (Parent == null)
             {

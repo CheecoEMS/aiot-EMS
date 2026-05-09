@@ -21,14 +21,15 @@ namespace EMS
         private TaskNetListener _taskNetListener;
         private MqttManager _mqttManager;
 
-        private const int SignalDetectionDrainTimeoutMs = 30000;
-        private const int QuiesceWindowMs = 10000;
-        private const int StagePollIntervalMs = 1000;
+        private const int SignalDetectionDrainTimeoutMs = 30000;    // 等待TaskNetListener服务结束的超时等待时间
+
+        private const int QuiesceWindowMs = 10000;      // 连续稳定满足多久，才算成功。要求“业务静默”状态要连续保持 10 秒。
+        private const int StagePollIntervalMs = 1000;   // 每隔多久检查一次条件
         private const int NetworkDisableTimeoutMs = 60000;
         private const int ModuleRecoverMinWaitMs = 60000;
         private const int ModuleRecoverPollIntervalMs = 5000;
         private const int ModuleRecoverTimeoutMs = 180000;
-        private const int NetworkEnableTimeoutMs = 120000;
+        private const int NetworkEnableTimeoutMs = 120000;  //网络服务启动超时等待时间
 
         public SignalRecoveryCoordinator()
         {

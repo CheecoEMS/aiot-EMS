@@ -70,7 +70,12 @@ namespace EMS
         public bool IsNetDisabled()
         {
             var state = GetInterfaceDisabledState();
-            return state.Exists && state.Disabled;
+
+            // 接口不存在，通常表示已被禁用或当前不可见，也视为下线
+            if (!state.Exists)
+                return true;
+
+            return state.Disabled;
         }
 
         private (bool Exists, bool Disabled) GetInterfaceDisabledState()
