@@ -154,35 +154,39 @@ namespace EMS
         }
 
         private void HandleSignalNormal()
-        {
-            consecutivePingErrorCount = 0;
+        {        
+            if (isProcessingAlarm) {
+                consecutivePingErrorCount = 0;
+                isProcessingAlarm = false;
 
-            isProcessingAlarm = false;
-
-            if (Parent != null)
-            {
-                lock (Parent.EMSError)
+                if (Parent != null)
                 {
-                    Parent.EMSError[0] &= 0xBFFF;
+                    lock (Parent.EMSError)
+                    {
+                        Parent.EMSError[0] &= 0xBFFF;
+                    }
                 }
-            }
 
-            log.Error("[Recovery] 信号恢复正常，解除告警");
+                log.Error("[Recovery] 信号恢复正常，解除告警");
+            }
         }
 
         private void SetAlarmState()
         {
-            isProcessingAlarm = true;
+            if (!isProcessingAlarm) {
+                isProcessingAlarm = true;
 
-            if (Parent == null)
-            {
-                log.Warn("[Recovery] Parent为空，无法写入EMSError告警位");
-                return;
-            }
+                if (Parent == null)
+                {
+                    log.Warn("[Recovery] Parent为空，无法写入EMSError告警位");
+                    return;
+                }
 
-            lock (Parent.EMSError)
-            {
-                Parent.EMSError[0] |= 0x4000;
+                lock (Parent.EMSError)
+                {
+                    Parent.EMSError[0] |= 0x4000;
+                }
+
             }
         }
 

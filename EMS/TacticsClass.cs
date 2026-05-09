@@ -1665,6 +1665,7 @@ namespace EMS
                         // 只有在策略模式才会运行策略
                         if (frmSet.config.SysMode == 1)
                             TacticsOn = true;
+                        continue;//从机不会进行后续策略运行
                     }
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
