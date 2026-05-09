@@ -1670,8 +1670,7 @@ namespace EMS
                     //开启策略，若EMS无策略则重新读取数据库
                     if (TacticsList.Count == 0)
                     {
-                        //LoadFromMySQL(0);
-                        LoadMasterDailyTactics();
+                        LoadFromMySQL(0);
                     }
 
                     DateTime now = DateTime.Now;
