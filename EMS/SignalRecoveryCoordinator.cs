@@ -25,11 +25,10 @@ namespace EMS
 
         private const int QuiesceWindowMs = 10000;      // 连续稳定满足多久，才算成功。要求“业务静默”状态要连续保持 10 秒。
         private const int StagePollIntervalMs = 1000;   // 每隔多久检查一次条件
-        private const int NetworkDisableTimeoutMs = 60000;
-        private const int ModuleRecoverMinWaitMs = 60000;
+        private const int ModuleRecoverMinWaitMs = 10000;
         private const int ModuleRecoverPollIntervalMs = 5000;
-        private const int ModuleRecoverTimeoutMs = 180000;
-        private const int NetworkEnableTimeoutMs = 120000;  //网络服务启动超时等待时间
+        private const int ModuleRecoverTimeoutMs = 120000;
+        private const int NetworkEnableTimeoutMs = 120000;  //移动宽带连接恢复超时等待时间
 
         public SignalRecoveryCoordinator()
         {
@@ -168,54 +167,55 @@ namespace EMS
 
                 var manager = new MobileBroadbandManager();
 
-                log.Warn("[Recovery] Phase 3 - Network disable begin");
-                bool disable = manager.DisableNet();
-                if (disable)
-                    log.Warn("[Recovery] 移动宽带关闭命令已发送");
+                log.Warn("[Recovery] Phase 3 - Check mobile broadband state begin");
+                if (manager.IsNetEnabled())
+                {
+                    log.Warn("[Recovery] 移动宽带连接当前已连接，跳过CFUN恢复与MBN连接");
+                }
                 else
-                    log.Warn("[Recovery] 移动宽带关闭失败，请检查连接名称或权限");
+                {
+                    log.Warn("[Recovery] 移动宽带连接当前未连接，开始执行 action.txt 恢复流程");
 
-                log.Warn("[Recovery] Phase 4 - Network down verification begin");
-                bool networkDown = WaitForCondition(
-                    () => TryCheckNetworkDown(manager),
-                    NetworkDisableTimeoutMs,
-                    StagePollIntervalMs,
-                    "网络下线检查");
+                    log.Warn("[Recovery] Phase 4 - Send AT+CFUN=0 begin");
+                    bool cfun0Success = SendCfun0ToEc20Module();
+                    if (cfun0Success)
+                        log.Warn("[Recovery] AT+CFUN=0 completed");
+                    else
+                        log.Warn("[Recovery] AT+CFUN=0 failed, continue recovery flow");
 
-                if (networkDown)
-                    log.Warn("[Recovery] Network down confirmed");
-                else
-                    log.Warn("[Recovery] 等待网络下线超时，继续执行EC20重启");
+                    log.Warn("[Recovery] Phase 5 - Send AT+CFUN=1 begin");
+                    bool cfun1Success = SendCfun1ToEc20Module();
+                    if (cfun1Success)
+                        log.Warn("[Recovery] AT+CFUN=1 completed");
+                    else
+                        log.Warn("[Recovery] AT+CFUN=1 failed, continue recovery flow");
 
-                log.Warn("[Recovery] Phase 5 - EC20 restart begin");
-                RestartEc20Module();
-                log.Warn("[Recovery] EC20 restart command phase completed");
+                    log.Warn("[Recovery] Phase 6 - Module recover wait begin");
+                    if (WaitForModuleReady())
+                        log.Warn("[Recovery] EC20 ready confirmed");
+                    else
+                        log.Warn("[Recovery] 等待EC20恢复超时，继续尝试MBN连接");
 
-                log.Warn("[Recovery] Phase 6 - Module recover wait begin");
-                if (WaitForModuleReady())
-                    log.Warn("[Recovery] EC20 ready confirmed");
-                else
-                    log.Warn("[Recovery] 等待EC20恢复超时，继续尝试恢复网络");
+                    log.Warn("[Recovery] Phase 7 - netsh mbn connect begin");
+                    bool connectTriggered = manager.ConnectNet();
+                    if (connectTriggered)
+                        log.Warn("[Recovery] netsh mbn connect command completed");
+                    else
+                        log.Warn("[Recovery] netsh mbn connect command failed");
 
-                log.Warn("[Recovery] Phase 7 - Network enable begin");
-                bool enable = manager.EnableNet();
-                if (enable)
-                    log.Warn("[Recovery] 移动宽带开启命令已发送");
-                else
-                    log.Warn("[Recovery] 移动宽带开启失败，请检查连接名称或权限");
+                    log.Warn("[Recovery] Phase 8 - Network verification begin");
+                    bool networkUp = WaitForCondition(
+                        () => TryCheckNetworkReady(manager),
+                        NetworkEnableTimeoutMs,
+                        StagePollIntervalMs,
+                        "网络上线检查");
 
-                log.Warn("[Recovery] Phase 8 - Network verification begin");
-                bool networkUp = WaitForCondition(
-                    () => TryCheckNetworkReady(manager),
-                    NetworkEnableTimeoutMs,
-                    StagePollIntervalMs,
-                    "网络上线检查");
+                    if (networkUp)
+                        log.Warn("[Recovery] Network up confirmed");
+                    else
+                        log.Warn("[Recovery] 等待网络上线超时，仍尝试恢复MQTT");
 
-                if (networkUp)
-                    log.Warn("[Recovery] Network up confirmed");
-                else
-                    log.Warn("[Recovery] 等待网络上线超时，仍尝试恢复MQTT");
-
+                }
                 log.Warn("[Recovery] Phase 9 - MQTT resume begin");
                 _mqttManager?.ResumeAfterRecovery();
 
@@ -238,7 +238,7 @@ namespace EMS
             }
         }
 
-        private void RestartEc20Module()
+        private bool SendCfun0ToEc20Module()
         {
             try
             {
@@ -248,25 +248,59 @@ namespace EMS
                     {
                         if (!ec20.Connect())
                         {
-                            log.Warn("[Recovery] EC20通信器连接失败，无法发送重启指令");
-                            return;
+                            log.Warn("[Recovery] EC20通信器连接失败，无法发送AT+CFUN=0");
+                            return false;
                         }
 
                         string atResponse = ec20.SendAtCommand("AT", 2000);
-                        if (!string.IsNullOrEmpty(atResponse) &&
-                            atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (string.IsNullOrEmpty(atResponse) ||
+                            atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) < 0)
                         {
-                            log.Warn("[Recovery] 模块状态正常，发送重启指令");
-                            ec20.SendRestartCommand();
-                            return;
+                            log.Warn($"[Recovery] 模块未响应AT指令，无法发送AT+CFUN=0，响应内容: {atResponse ?? "空"}");
+                            return false;
                         }
 
-                        log.Warn($"[Recovery] 模块未响应AT指令，响应内容: {atResponse ?? "空"}");
+                        return ec20.SendCfun0Command();
                     }
                 }
             }
-            catch (Exception ex) {
-                log.Error("RestartEc20Module: " + ex.ToString());
+            catch (Exception ex)
+            {
+                log.Error("SendCfun0ToEc20Module: " + ex.ToString());
+                return false;
+            }
+        }
+
+        private bool SendCfun1ToEc20Module()
+        {
+            try
+            {
+                lock (SerialPortCom11Lock.GlobalLock)
+                {
+                    using (var ec20 = new EC20Communicator())
+                    {
+                        if (!ec20.Connect())
+                        {
+                            log.Warn("[Recovery] EC20通信器连接失败，无法发送AT+CFUN=1");
+                            return false;
+                        }
+
+                        string atResponse = ec20.SendAtCommand("AT", 2000);
+                        if (string.IsNullOrEmpty(atResponse) ||
+                            atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            log.Warn($"[Recovery] 模块未响应AT指令，无法发送AT+CFUN=1，响应内容: {atResponse ?? "空"}");
+                            return false;
+                        }
+
+                        return ec20.SendCfun1Command();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("SendCfun1ToEc20Module: " + ex.ToString());
+                return false;
             }
         }
 
@@ -423,53 +457,21 @@ namespace EMS
                             log.Warn($"[Recovery] 模块就绪检查失败：SIM未就绪，响应内容: {cpinResponse ?? "空"}");
                             return false;
                         }
-                        /*
-                                            string qcsqResponse = ec20.SendAtCommand("AT+QCSQ", 2000);
-                                            if (string.IsNullOrEmpty(qcsqResponse))
-                                            {
-                                                log.Warn("[Recovery] 模块就绪检查失败：AT+QCSQ无响应");
-                                                return false;
-                                            }
 
-                                            if (qcsqResponse.IndexOf("NOSERVICE", StringComparison.OrdinalIgnoreCase) >= 0)
-                                            {
-                                                log.Warn($"[Recovery] 模块就绪检查失败：模块无服务，响应内容: {qcsqResponse}");
-                                                return false;
-                                            }*/
+                        string qceregResponse;
+                        if (!ec20.IsQceregRegistered(out qceregResponse))
+                        {
+                            log.Warn($"[Recovery] 模块就绪检查失败：网络尚未注册成功，AT+QCEREG?响应内容: {qceregResponse ?? "空"}");
+                            return false;
+                        }
 
-                        log.Warn("[Recovery] 模块就绪检查通过：AT正常，SIM已就绪，模块已有服务");
+                        log.Warn($"[Recovery] 模块就绪检查通过：AT正常，SIM已就绪，网络已注册，AT+QCEREG?响应内容: {qceregResponse}");
                         return true;
                     }
                 }
             }
             catch (Exception ex) {
                 log.Error("TryCheckModuleReady: " + ex.ToString());
-                return false;
-            }
-        }
-
-        private bool TryCheckNetworkDown(MobileBroadbandManager manager)
-        {
-            try
-            {
-                if (manager == null)
-                {
-                    log.Warn("[Recovery] 网络下线检查失败：MobileBroadbandManager为空");
-                    return false;
-                }
-
-                bool isDisabled = manager.IsNetDisabled();
-                if (!isDisabled)
-                {
-                    log.Warn("[Recovery] 网络下线检查失败：移动宽带接口尚未关闭");
-                    return false;
-                }
-
-                log.Warn("[Recovery] 网络下线检查通过：移动宽带接口已关闭");
-                return true;
-            }
-            catch (Exception ex) {
-                log.Error("TryCheckNetworkDown: " + ex.ToString());
                 return false;
             }
         }
@@ -487,11 +489,11 @@ namespace EMS
                 bool isEnabled = manager.IsNetEnabled();
                 if (!isEnabled)
                 {
-                    log.Warn("[Recovery] 网络就绪检查失败：移动宽带接口未启用");
+                    log.Warn("[Recovery] 网络就绪检查失败：移动宽带连接未处于已连接状态");
                     return false;
                 }
 
-                log.Warn("[Recovery] 网络就绪检查通过：移动宽带接口已启用");
+                log.Warn("[Recovery] 网络就绪检查通过：移动宽带连接已处于已连接状态");
                 return true;
             }
             catch (Exception ex) {

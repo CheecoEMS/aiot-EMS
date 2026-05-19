@@ -4,90 +4,63 @@ using log4net;
 namespace EMS
 {
     /// <summary>
-    /// 移动宽带连接管理类，提供重启移动宽带连接的功能
+    /// 移动宽带连接管理类，提供连接状态查询和 MBN 连接能力。
     /// </summary>
     public class MobileBroadbandManager
     {
         private readonly string _connectionName;
-        private readonly int _waitMilliseconds;
+        private readonly string _profileName;
 
         private static ILog log = LogManager.GetLogger("MobileBroadbandManager");
+
 
         /// <summary>
         /// 初始化移动宽带管理类
         /// </summary>
         /// <param name="connectionName">移动宽带连接名称，默认为"移动宽带连接"</param>
-        /// <param name="waitMilliseconds">禁用和启用之间的等待时间(毫秒)，默认为10000</param>
-        public MobileBroadbandManager(string connectionName = "移动宽带连接", int waitMilliseconds = 10000)
+        /// <param name="profileName">移动宽带配置名称，默认为"中国电信 4"</param>
+        public MobileBroadbandManager(string connectionName = "移动宽带连接", string profileName = "中国电信 4")
         {
             if (string.IsNullOrWhiteSpace(connectionName))
                 throw new ArgumentException("连接名称不能为空", nameof(connectionName));
 
-            if (waitMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(waitMilliseconds), "等待时间不能为负数");
+            if (string.IsNullOrWhiteSpace(profileName))
+                throw new ArgumentException("配置名称不能为空", nameof(profileName));
 
             _connectionName = connectionName;
-            _waitMilliseconds = waitMilliseconds;
+            _profileName = profileName;
         }
 
-        public bool DisableNet() {
+        public bool ConnectNet()
+        {
             try
             {
-                // 禁用连接
-                var disableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=disable");
-                return disableSuccess;
+                var connectSuccess = ExecuteCommand($"netsh mbn connect interface=\"{_connectionName}\" connmode=name name=\"{_profileName}\"");
+                return connectSuccess;
             }
             catch (Exception ex)
             {
-                // 可以在这里添加日志记录
-                log.Error($"重启移动宽带时发生错误: {ex.Message}");
-                return false;
-            }
-
-        }
-
-        public bool EnableNet() {
-            try
-            {
-                // 启用连接
-                var enableSuccess = ExecuteCommand($"netsh interface set interface name=\"{_connectionName}\" admin=enable");
-                return enableSuccess;
-            }
-            catch (Exception ex)
-            {
-                // 可以在这里添加日志记录
-                log.Error($"重启移动宽带时发生错误: {ex.Message}");
+                log.Error($"连接移动宽带时发生错误: {ex.Message}");
                 return false;
             }
         }
 
         public bool IsNetEnabled()
         {
-            var state = GetInterfaceDisabledState();
-            return state.Exists && !state.Disabled;
+            var state = GetConnectionState();
+            return state.Exists && state.Connected;
         }
 
-        public bool IsNetDisabled()
-        {
-            var state = GetInterfaceDisabledState();
-
-            // 接口不存在，通常表示已被禁用或当前不可见，也视为下线
-            if (!state.Exists)
-                return true;
-
-            return state.Disabled;
-        }
-
-        private (bool Exists, bool Disabled) GetInterfaceDisabledState()
+        private (bool Exists, bool Connected) GetConnectionState()
         {
             try
             {
                 string command = "netsh mbn show interfaces";
                 string cmdPath = SafeProcessRunner.GetPreferredCmdPath();
 
-                log.Warn($"GetInterfaceDisabledState: Is64BitProcess={Environment.Is64BitProcess}, Is64BitOperatingSystem={Environment.Is64BitOperatingSystem}");
-                log.Warn($"GetInterfaceDisabledState: cmdPath={cmdPath}");
-                log.Warn($"GetInterfaceDisabledState: command={command}");
+                log.Warn($"GetConnectionState: Is64BitProcess={Environment.Is64BitProcess}, Is64BitOperatingSystem={Environment.Is64BitOperatingSystem}");
+                log.Warn($"GetConnectionState: cmdPath={cmdPath}");
+                log.Warn($"GetConnectionState: command={command}");
 
                 var result = SafeProcessRunner.RunCmd(
                     command,
@@ -96,18 +69,18 @@ namespace EMS
 
                 if (result == null)
                 {
-                    log.Warn("GetInterfaceDisabledState: SafeProcessRunner.Run 返回 result=null");
+                    log.Warn("GetConnectionState: SafeProcessRunner.Run 返回 result=null");
                     return (false, false);
                 }
 
                 var output = result.StandardOutput ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(output))
                 {
-                    log.Warn($"移动宽带接口状态查询输出: {output}");
+                    log.Warn($"移动宽带连接状态查询输出: {output}");
                 }
                 else
                 {
-                    log.Warn("移动宽带接口状态查询输出为空");
+                    log.Warn("移动宽带连接状态查询输出为空");
                     return (false, false);
                 }
 
@@ -154,31 +127,31 @@ namespace EMS
 
                 if (!foundTargetName)
                 {
-                    log.Warn($"未找到移动宽带接口: {_connectionName}");
+                    log.Warn($"未找到移动宽带连接: {_connectionName}");
                     return (false, false);
                 }
 
                 if (string.IsNullOrWhiteSpace(currentState))
                 {
-                    log.Warn($"找到移动宽带接口但未读取到状态: {_connectionName}");
+                    log.Warn($"找到移动宽带连接但未读取到状态: {_connectionName}");
                     return (true, false);
                 }
 
-                log.Warn($"移动宽带接口状态: Name={_connectionName}, State={currentState}");
+                log.Warn($"移动宽带连接状态: Name={_connectionName}, State={currentState}");
 
-                bool disabled = !string.Equals(currentState, "已连接", StringComparison.OrdinalIgnoreCase) &&
-                                !string.Equals(currentState, "Connected", StringComparison.OrdinalIgnoreCase);
+                bool connected = string.Equals(currentState, "已连接", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(currentState, "Connected", StringComparison.OrdinalIgnoreCase);
 
-                return (true, disabled);
+                return (true, connected);
             }
             catch (TimeoutException ex)
             {
-                log.Error($"查询移动宽带接口状态超时: {_connectionName}, 错误: {ex.Message}");
+                log.Error($"查询移动宽带连接状态超时: {_connectionName}, 错误: {ex.Message}");
                 return (false, false);
             }
             catch (Exception ex)
             {
-                log.Error($"查询移动宽带接口状态失败: {_connectionName}, 错误: {ex.Message}", ex);
+                log.Error($"查询移动宽带连接状态失败: {_connectionName}, 错误: {ex.Message}", ex);
                 return (false, false);
             }
         }

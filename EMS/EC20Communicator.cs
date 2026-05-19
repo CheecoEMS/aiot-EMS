@@ -186,20 +186,54 @@ namespace EMS
             }
         }
 
-        // 发送AT+CFUN=1,1指令的专用方法
-        public void SendRestartCommand()
+        public bool SendFunctionLevelCommand(int funLevel, int timeout = 3000)
         {
-            log.Warn("发送模块重启指令: AT+CFUN=1,1");
-            string response = SendAtCommand("AT+CFUN=1,1");
-
-            // 重启需要更长时间，这里额外等待
-            if (response != null)
+            try
             {
-                log.Warn("指令已发送，模块将重启...");
-                return ; // 发送AT测试指令
-            }
+                string command = $"AT+CFUN={funLevel}";
+                log.Warn($"发送模块功能级别切换指令: {command}");
 
-            return ;
+                string response = SendAtCommand(command, timeout);
+                if (!string.IsNullOrEmpty(response) &&
+                    response.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    log.Warn($"模块功能级别切换成功: {command}, response={response}");
+                    return true;
+                }
+
+                log.Warn($"模块功能级别切换失败: {command}, response={response ?? "空"}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"SendFunctionLevelCommand失败, funLevel={funLevel}: {ex}");
+                return false;
+            }
+        }
+
+        public bool SendCfun0Command(int timeout = 3000)
+        {
+            return SendFunctionLevelCommand(0, timeout);
+        }
+
+        public bool SendCfun1Command(int timeout = 3000)
+        {
+            return SendFunctionLevelCommand(1, timeout);
+        }
+
+        public string QueryQcereg(int timeout = 2000)
+        {
+            return SendAtCommand("AT+CEREG?", timeout);
+        }
+
+        public bool IsQceregRegistered(out string response)
+        {
+            response = QueryQcereg(2000);
+            if (string.IsNullOrWhiteSpace(response))
+                return false;
+
+            return response.IndexOf(",1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   response.IndexOf(",5", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         /// <summary>

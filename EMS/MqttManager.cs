@@ -20,7 +20,7 @@ namespace EMS
         private SignalRecoveryCoordinator _recoveryCoordinator;
 
 
-        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 12; // 测试用4，生产用12
+        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 4; // 测试用4，生产用12
 
 
         private volatile MqttState _state = MqttState.Disconnected;

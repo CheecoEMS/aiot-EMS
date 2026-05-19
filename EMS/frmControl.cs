@@ -319,28 +319,7 @@ namespace EMS
             switch (item)
             { 
                 case 0:
-                    //string portName = "COM11"; 
-                    //frmMain.Selffrm.AllEquipment.GetIccid();
 
-                    // 创建EC20通信器实例
-                    using (var ec20 = new EC20Communicator())
-                    {
-                        if (ec20.Connect())
-                        {
-                            string atResponse = ec20.SendAtCommand("AT", 2000); // 延长超时到2000ms，确保响应完整
-                            if (!string.IsNullOrEmpty(atResponse) && atResponse.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                log.Error("模块状态正常，发送重启指令");
-                                ec20.SendRestartCommand();
-                            }
-                            else
-                            {
-                                log.Error($"模块未响应AT指令，响应内容: {atResponse ?? "空"}");
-                                // 仅在确实无响应时执行重连，避免误操作
-                                Thread.Sleep(1000);
-                            }
-                        }
-                    }
                     break;
                 case 1:
                     string commands = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";

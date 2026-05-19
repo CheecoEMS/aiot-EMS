@@ -1,0 +1,6 @@
+1.先查询状态
+netsh mbn show interfaces
+如果发现 "移动宽带连接"的状态不是"已连接"，则继续往下
+2. AT+CFUN=0
+3. AT+CFUN=1
+2.netsh mbn connect interface="移动宽带连接" connmode=name name="中国电信 4"
