@@ -20,7 +20,7 @@ namespace EMS
         private SignalRecoveryCoordinator _recoveryCoordinator;
 
 
-        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 4; // 测试用4，生产用12
+        private const int MaxConsecutiveConnectFailuresBeforeRecovery = 12; // 测试用4，生产用12
 
 
         private volatile MqttState _state = MqttState.Disconnected;
@@ -270,7 +270,7 @@ namespace EMS
                         return;
                     }
 
-                    if (retry >= MaxConsecutiveConnectFailuresBeforeRecovery)
+/*                    if (retry >= MaxConsecutiveConnectFailuresBeforeRecovery)
                     {
                         log.Warn($"MQTT连续重试{retry}次仍失败，开始发起网络服务和物联网模块恢复请求");
 
@@ -282,6 +282,12 @@ namespace EMS
                             log.Warn("MQTT恢复请求提交失败，ConnectLoop仍退出，等待外部再次触发连接");
 
                         return;
+                    }*/
+
+                    if (retry >= MaxConsecutiveConnectFailuresBeforeRecovery)
+                    {
+                        log.Warn($"MQTT连续重试{retry}次仍失败，开始发起网络服务和物联网模块恢复请求");
+                        retry = 0;
                     }
                 }
             }

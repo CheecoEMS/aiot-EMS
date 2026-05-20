@@ -190,7 +190,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：EMS1.1.2-0519");
+                log.Error("初始化EMS版本：EMS1.1.3-0519");
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
