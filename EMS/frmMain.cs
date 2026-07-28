@@ -190,7 +190,7 @@ namespace EMS
             {
                 //初始化用户等级
                 SetFormPower(UserPower);
-                log.Error("初始化EMS版本：EMS1.1.3-0519");
+                log.Error("初始化EMS版本：EMS1.1.4-0728");
 
                 // TCP服务器事件
                 if (!InitializationManager.InitializeComponent(InitializationManager.InitStep.TCPServerEvent, () =>
@@ -1950,6 +1950,9 @@ namespace EMS
 
             // 停止 Modbus 从站
             _modbusSlave?.Stop();
+
+            // 所有GPIO后台访问停止后，统一关闭共享句柄并停止驱动
+            frmSet.ShutdownGPIODriver();
         }
 
         /// <summary>

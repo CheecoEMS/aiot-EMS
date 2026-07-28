@@ -55,6 +55,9 @@ namespace EMS
         public bool bSheduleChanged = false;
         private const string strDriveDllName = "SpesTechDriverControl.dll";
         private const string strExeDllName = "SpesTechMmioRW.dll";
+        private static readonly object gpioDriverLock = new object();
+        private static IntPtr gpioDriverHandle = IntPtr.Zero;
+        private static bool gpioDriverStopping = false;
 
         private static int PeElesticId = 1;
         private static String ConfigId = "";
@@ -188,6 +191,8 @@ namespace EMS
                         }
                     }
 
+                    ShutdownGPIODriver();
+
                     string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
                     try
                     {
@@ -231,6 +236,8 @@ namespace EMS
                             frmMain.Selffrm.AllEquipment.PCSList[j].ExcSetPCSPower(false);
                         }
                     }
+
+                    ShutdownGPIODriver();
 
                     string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
                     try
@@ -1785,10 +1792,86 @@ namespace EMS
         public static extern bool ShutdownWinIo(IntPtr hDriver);
 
         //GPIO初始化
+        /// <summary>
+        /// EMS启动时初始化一次GPIO驱动。驱动文件仍由SpesTechDriverControl.dll
+        /// 按当前应用目录下的相对路径查找和注册，不在业务代码中拼接版本目录。
+        /// </summary>
+        public static bool InitializeGPIODriver()
+        {
+            lock (gpioDriverLock)
+            {
+                if (gpioDriverHandle != IntPtr.Zero)
+                {
+                    return true;
+                }
+
+                gpioDriverStopping = false;
+
+                try
+                {
+                    gpioDriverHandle = InitializeWinIo();
+                    if (gpioDriverHandle == IntPtr.Zero)
+                    {
+                        log.Error("InitializeGPIODriver失败：InitializeWinIo返回空句柄");
+                        return false;
+                    }
+
+                    log.Info("GPIO驱动已初始化，运行期间将复用同一驱动句柄");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    gpioDriverHandle = IntPtr.Zero;
+                    log.Error("InitializeGPIODriver异常: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// EMS退出时统一关闭驱动句柄并停止驱动。可重复调用。
+        /// </summary>
+        public static void ShutdownGPIODriver()
+        {
+            lock (gpioDriverLock)
+            {
+                gpioDriverStopping = true;
+
+                if (gpioDriverHandle == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                IntPtr driverHandle = gpioDriverHandle;
+                gpioDriverHandle = IntPtr.Zero;
+
+                try
+                {
+                    if (!ShutdownWinIo(driverHandle))
+                    {
+                        log.Error("ShutdownGPIODriver失败：ShutdownWinIo返回false");
+                    }
+                    else
+                    {
+                        log.Info("GPIO驱动句柄已关闭，驱动已停止");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("ShutdownGPIODriver异常: " + ex.Message);
+                }
+            }
+        }
+
         public static bool InitGPIO()
         {
             try
             {
+                if (!InitializeGPIODriver())
+                {
+                    return false;
+                }
+
                 switch (config.GPIOSelect)
                 {
                     case 0://FA,FB 无RTC: 初始化：输入、输出 电平置高
@@ -1920,25 +2003,35 @@ namespace EMS
         public static UInt32 GetGPIOState(int aIndex)
         {
             UInt32 uiBack = 0;
-            IntPtr Driver = InitializeWinIo();//打开 //初始化dll和driver
 
-            if (Driver == IntPtr.Zero)
+            if (aIndex < 0 || aIndex >= GPOIAddr.Length)
             {
-                return 4;//错误码
+                log.Error("GetGPIOState失败：GPIO索引越界 " + aIndex);
+                return 4;
             }
-            try
-            {
-                //if ((aIndex > 15)||(aIndex<0))
-                //    return uiBack;
-                //  IntPtr hDriver = InitializeWinIo();//打开 //初始化dll和driver
-                // if (hDriver == IntPtr.Zero)
-                //     bResult= false;
 
-                GetPhysLong(Driver, GPOIAddr[aIndex], out uiBack);//读取 //读取一个byte的值
+            lock (gpioDriverLock)
+            {
+                if (gpioDriverStopping || gpioDriverHandle == IntPtr.Zero)
+                {
+                    return 4;
+                }
+
+                try
+                {
+                    if (!GetPhysLong(gpioDriverHandle, GPOIAddr[aIndex], out uiBack))
+                    {
+                        log.Error("GetGPIOState失败：GetPhysLong返回false，GPIO索引 " + aIndex);
+                        return 4;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("GetGPIOState异常，GPIO索引 " + aIndex + ": " + ex.Message);
+                    return 4;
+                }
             }
-            catch
-            { }
-            ShutdownWinIo(Driver);//关闭
+
             return uiBack;
         }
 
@@ -1950,18 +2043,29 @@ namespace EMS
         /// <returns></returns>
         public static bool SetGPIOState(int aIndex, ushort aOn)
         {
-            bool bResult = true;
-            // if ((aIndex > 15) || (aIndex < 0))
-            //    return false;
-            IntPtr Driver = InitializeWinIo();//打开 //初始化dll和driver
-
-            if (Driver == IntPtr.Zero)
+            if (aIndex < 0 || aIndex >= GPOIAddr.Length)
             {
+                log.Error("SetGPIOState失败：GPIO索引越界 " + aIndex);
                 return false;
             }
-            SetPhysLong(Driver, GPOIAddr[aIndex], aOn);//设置一个byte的值
-            ShutdownWinIo(Driver);//关闭
-            return bResult;
+
+            lock (gpioDriverLock)
+            {
+                if (gpioDriverStopping || gpioDriverHandle == IntPtr.Zero)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    return SetPhysLong(gpioDriverHandle, GPOIAddr[aIndex], aOn);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("SetGPIOState异常，GPIO索引 " + aIndex + ": " + ex.Message);
+                    return false;
+                }
+            }
         }
 
         //监测触发BMS发生二级告警， 控制告警指示灯：（0：关闭 1：开启）

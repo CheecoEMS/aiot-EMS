@@ -83,6 +83,8 @@ namespace EMS
 
             try
             {
+                AppDomain.CurrentDomain.ProcessExit += (sender, e) => frmSet.ShutdownGPIODriver();
+
                 singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out createdNew);
                 if (!createdNew)
                 {
@@ -175,6 +177,8 @@ namespace EMS
             }
             finally
             {
+                frmSet.ShutdownGPIODriver();
+
                 if (createdNew && singleInstanceMutex != null)
                 {
                     singleInstanceMutex.ReleaseMutex();
@@ -242,6 +246,7 @@ namespace EMS
             try
             {
                 frmSet.PowerGPIO(0);
+                frmSet.ShutdownGPIODriver();
                 string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
                 try
                 {
@@ -273,6 +278,7 @@ namespace EMS
 
                     frmSet.PowerGPIO(0);
                     frmSet.Set_HistoryData();
+                    frmSet.ShutdownGPIODriver();
 
                     string exePath = AppDomain.CurrentDomain.BaseDirectory + "\\EMS.exe";
                     try
