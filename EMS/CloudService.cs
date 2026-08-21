@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
@@ -57,13 +58,15 @@ namespace EMS
         public string BalaTableTopic;
         public string BalaTacticTopic;
         public string OtaTopic;
+        public string CloudConsoleTopic;
 
         public string PriceTopic_new;
         public string TacticTopic_new;
         public string EMSLimitTopic_new;
         public string AIOTTableTopic_new;
         public string BalaTableTopic_new;
-
+        public string BalaTacticTopic_new;
+        public string CloudConsoleTopic_new;
         #endregion
 
         #region ===== 文件上传 =====
@@ -201,10 +204,15 @@ namespace EMS
                     strID = GetBalaTable(message);
                     PublishResult(BalaTableTopic, strID, true);
                 }
-/*                else if (topic == OtaTopic + "request")
+                else if (topic == CloudConsoleTopic + "request" || topic == CloudConsoleTopic_new + "request")
                 {
-                    ImplOta(message);
-                }*/
+                    result = GetCloudConsole(message);
+                    PublishResult(CloudConsoleTopic, strID, true);
+                }
+                /*                else if (topic == OtaTopic + "request")
+                                {
+                                    ImplOta(message);
+                                }*/
             }
             catch (Exception ex)
             {
@@ -318,6 +326,7 @@ namespace EMS
             _mqtt.Subscribe(EMSLimitTopic + "request");
             _mqtt.Subscribe(AIOTTableTopic + "request");
             _mqtt.Subscribe(BalaTableTopic + "request");
+            _mqtt.Subscribe(BalaTacticTopic + "request");
             _mqtt.Subscribe(OtaTopic + "request");
 
             _mqtt.Subscribe(PriceTopic_new + "request");
@@ -325,6 +334,8 @@ namespace EMS
             _mqtt.Subscribe(EMSLimitTopic_new + "request");
             _mqtt.Subscribe(AIOTTableTopic_new + "request");
             _mqtt.Subscribe(BalaTableTopic_new + "request");
+            _mqtt.Subscribe(BalaTacticTopic_new + "request");
+            _mqtt.Subscribe(CloudConsoleTopic_new + "request");
         }
 
         #endregion
@@ -348,6 +359,7 @@ namespace EMS
                 BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
                 BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
                 //OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
+                CloudConsoleTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/CloudConsole/";
 
                 //新版topic
                 PriceTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/meter/price/";
@@ -355,6 +367,8 @@ namespace EMS
                 EMSLimitTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/limit/";
                 AIOTTableTopic_new = "/rpc/ctl" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
                 BalaTableTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
+                BalaTacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/BalaStrategy/";
+                CloudConsoleTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/CloudConsole/";
             }
             catch (Exception ex)
             {
@@ -365,6 +379,44 @@ namespace EMS
         #endregion
 
         #region ===== 订阅到消息后的回调函数实现方法 =====
+
+        public bool GetCloudConsole(string astrData)
+        {
+            bool result = true;
+
+            try
+            {
+                if (astrData == "")
+                    return false;
+
+                JObject jsonObject = JObject.Parse(astrData);
+                string strTopic = jsonObject["method"].ToString();
+                if (strTopic != "aiot/CloudConsole")
+                {
+                    return false;
+                }
+                else
+                {
+                    if (jsonObject["params"] != null)
+                    {
+                        var parameters = jsonObject["params"];
+                        if (parameters["CloseSystemLock"] != null && int.Parse(parameters["CloseSystemLock"].ToString()) == 1)
+                        {
+                            frmSet.CloseSystemLock();
+                        }
+                    }
+                    else
+                    {
+                        result = false;
+                    }
+                }
+            }
+            catch (Exception ex) {
+                log.Error("GetCloudConsoleTopic: " + ex.Message);
+            }
+
+            return result;
+        }
 
         public string GetBalaTable(string astrData)
         {
@@ -1110,6 +1162,15 @@ namespace EMS
                         {
                             frmSet.cloudLimits.CellV_Gap = int.Parse(parameters["CellV_Gap"].ToString());
                             frmSet.cloudLimits.ModifiedFields.Add("CellV_Gap");
+                        }
+                        if (parameters["OpenWarning"] != null)
+                        {
+                            frmSet.cloudLimits.OpenWarning = int.Parse(parameters["OpenWarning"].ToString());
+                            frmSet.cloudLimits.ModifiedFields.Add("OpenWarning");
+                            if (frmSet.cloudLimits.OpenWarning == 0) {
+                                // 设置关闭故障指示灯蜂鸣器功能，先确保关闭当前正在执行的故障指示灯蜂鸣器
+                                frmSet.ErrorGPIO(0);
+                            }
                         }
 
                         if (frmSet.Set_Cloudlimits_OnlyChange())

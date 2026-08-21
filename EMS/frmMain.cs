@@ -830,7 +830,7 @@ namespace EMS
             DBConnection.SetDBGrid(frmMain.Selffrm.dbvError);
 
             //配置均衡定时器
-            if (frmMain.Selffrm.AllEquipment.BMS != null && frmSet.cloudLimits != null)
+/*            if (frmMain.Selffrm.AllEquipment.BMS != null && frmSet.cloudLimits != null)
             {
                 if (frmSet.cloudLimits.OpenBala == 1)
                 {
@@ -840,7 +840,7 @@ namespace EMS
                 {
                     frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Stop();
                 }
-            }
+            }*/
 
             return true;
         }

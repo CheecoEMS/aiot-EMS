@@ -92,7 +92,7 @@ namespace EMS
                 {
                     oneForm.SetFormPower(frmMain.UserPower);
                     oneForm.labSN.Text = "设备SN：" + frmSet.config.SysID.Trim();
-                    oneForm.labSoftVerb.Text = "软件版本：EmsMaster1.1.4";
+                    oneForm.labSoftVerb.Text = "软件版本：EmsMaster1.1.5";
                     oneForm.ShowDialog();
                 }
             }

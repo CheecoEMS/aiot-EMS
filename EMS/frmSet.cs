@@ -903,7 +903,7 @@ namespace EMS
                        PcsKva, Pre_Client_PUMdemand_Max, EnableActiveReduce, PumScale,
                        AllUkvaWindowSize, PumTime, BmsDerateRatio, FrigOpenLower, FrigOffLower,
                        FrigOffUpper, BoxHTemperAlarm, BoxLTemperAlarm, SignalDelayAlarm,
-                       SignalDelayCount, CellV_Gap, OpenBala
+                       SignalDelayCount, CellV_Gap, OpenBala, OpenWarning
                 FROM CloudLimits
                 WHERE id = @id";
 
@@ -936,6 +936,7 @@ namespace EMS
                         cloudLimits.SignalDelayCount = GetIntValueFromReader(reader, "SignalDelayCount", 10);
                         cloudLimits.CellV_Gap = GetIntValueFromReader(reader, "CellV_Gap", 30);
                         cloudLimits.OpenBala = GetIntValueFromReader(reader, "OpenBala", 0);
+                        cloudLimits.OpenWarning = GetIntValueFromReader(reader, "OpenWarning", 1);
 
                         return true;
                     }
@@ -1096,6 +1097,10 @@ namespace EMS
                         updateClauses.Add("CellV_Gap = @CellV_Gap");
                         parameters.Add("@CellV_Gap", frmSet.cloudLimits.CellV_Gap);
                         break;
+                    case "OpenWarning":
+                        updateClauses.Add("OpenWarning = @OpenWarning");
+                        parameters.Add("@OpenWarning", frmSet.cloudLimits.OpenWarning);
+                        break;
                 }
             }
 
@@ -1125,7 +1130,7 @@ namespace EMS
                 + "BmsDerateRatio = @BmsDerateRatio, FrigOpenLower = @FrigOpenLower, FrigOffLower = @FrigOffLower, "
                 + "FrigOffUpper = @FrigOffUpper, BoxHTemperAlarm = @BoxHTemperAlarm, BoxLTemperAlarm = @BoxLTemperAlarm, "
                 + "SignalDelayAlarm = @SignalDelayAlarm, SignalDelayCount = @SignalDelayCount, "
-                + "CellV_Gap = @CellV_Gap, OpenBala = @OpenBala WHERE id = @id";
+                + "CellV_Gap = @CellV_Gap, OpenBala = @OpenBala, OpenWarning = @OpenWarning WHERE id = @id";
 
             var parameters = new Dictionary<string, object>
             {
@@ -1151,6 +1156,7 @@ namespace EMS
                 { "@SignalDelayCount", frmSet.cloudLimits.SignalDelayCount },
                 { "@CellV_Gap", frmSet.cloudLimits.CellV_Gap },
                 { "@OpenBala", frmSet.cloudLimits.OpenBala },
+                { "@OpenWarning", frmSet.cloudLimits.OpenWarning },
                 { "@id", CloudLimitsId }
             };
 
@@ -2102,7 +2108,7 @@ namespace EMS
         //控制故障指示灯 ：（0：关闭 ， 1：开启）
         public static void ErrorGPIO(int option)
         {
-            if (option == 0)
+            if (option == 0) {
                 switch (config.GPIOSelect)
                 {
                     case 0:
@@ -2115,7 +2121,8 @@ namespace EMS
                         frmSet.SetGPIOState(11, 0);
                         break;
                 }
-            else
+            }
+            else if (option == 1 && frmSet.cloudLimits.OpenWarning == 1) {
                 switch (config.GPIOSelect)
                 {
                     case 0:
@@ -2128,6 +2135,7 @@ namespace EMS
                         frmSet.SetGPIOState(11, 1);
                         break;
                 }
+            }
         }
 
         //控制运行指示灯： （0：关闭 ， 1：开启）
@@ -3440,6 +3448,7 @@ namespace EMS
             public int CellV_Gap { get; set; }
             public int OpenBala { get; set; }
 
+            public int OpenWarning { get; set; }
             public HashSet<string> ModifiedFields { get; set; } = new HashSet<string>();
         }
 
@@ -3869,6 +3878,17 @@ namespace EMS
             Set_Cloudlimits();
             Set_Config();
             Set_ComponentSettings();
+        }
+
+        // 关闭系统闭锁
+        public static void CloseSystemLock() {
+            frmMain.Selffrm.AllEquipment.ErrorState[2] = false;
+
+            frmSet.historyDatas.ErrorState2 = 1;
+            frmSet.Set_HistoryData();
+
+            //关闭故障指示灯以及蜂鸣器
+            frmSet.ErrorGPIO(0);
         }
     }
 

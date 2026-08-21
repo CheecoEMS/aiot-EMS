@@ -29,7 +29,7 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 namespace EMS
 {
-    public class CountdownTimer
+/*    public class CountdownTimer
     {
         private System.Timers.Timer _timer;
         private const double Interval = 24 * 60 * 60 * 1000; // 24 小时，单位为毫秒
@@ -98,7 +98,7 @@ namespace EMS
         {
             _timer.Dispose();
         }
-    }
+    }*/
 
     //收益类，只用于向云汇报一天的收益
     public class ProfitClass
@@ -5471,7 +5471,7 @@ namespace EMS
         public double cellErrUOV3; //单体欠压三级报警门限
 
         //9.6
-        public ushort[] BalaSwitch = new ushort[25];
+        public ushort[] BalaSwitch { get; set; } = new ushort[25];
 
         public float ChargeAmount = 0;    //可充电量
         public float DisChargeAmount = 0; //可放电量
@@ -5527,7 +5527,7 @@ namespace EMS
 
         private static ILog log = LogManager.GetLogger("BMSClass");
 
-        public CountdownTimer countdownTimer = new CountdownTimer();
+        //public CountdownTimer countdownTimer = new CountdownTimer();
 
         //单电池的信息列表
         //public List<CellClass> CellList = new List<CellClass>();
@@ -6068,7 +6068,6 @@ namespace EMS
                     aData = aData.Substring(4, aData.Length - 4);
                     aCellTemps[aStart + i * 20 + j] = Math.Round(dTemp, 1);
                 }
-
             }
         }
 
@@ -7365,9 +7364,9 @@ namespace EMS
         double CellV_Gap = 0.03;//定义最低单体电压和理想最高单体电压的差值30mv
         public List<double> balaCellV = new List<double>(); //单体电压数据
         public List<double> balaCellID = new List<double>(); //单体电压数据
-        public double O_sigma { get; set; } = 0;            //上次的电压方差
+        //public double O_sigma { get; set; } = 0;            //上次的电压方差
         public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
-        public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
+        //public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
 
 
         public int[] ReSendClock = { 0, 0, 0, 0, 0 };
@@ -7404,7 +7403,7 @@ namespace EMS
         public double emscpu { get; set; }
 
         //上传版本号
-        public string EMSVersion { get; set; } = "1.1.4";
+        public string EMSVersion { get; set; } = "1.1.5";
         public string Elemeter1_Version { get; set; } = "";
         public string Elemeter1Z_Version { get; set; } = "";
         public string Elemeter2_Version { get; set; } = "";
@@ -10902,7 +10901,7 @@ namespace EMS
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
                         frmSet.variCharge.UBmsPcsState = 0;
-                        frmMain.Selffrm.AllEquipment.RecodChargeinform(2); // 记录禁充状态
+                        //frmMain.Selffrm.AllEquipment.RecodChargeinform(2); // 记录禁充状态
                         frmSet.Set_VariCharge();
                         HandleBatteryBalancingAndLogging();
                     }
@@ -10957,7 +10956,7 @@ namespace EMS
                     {
                         frmMain.Selffrm.AllEquipment.ExcPCSPowerOff();
                         frmSet.variCharge.OBmsPcsState = 0;
-                        frmMain.Selffrm.AllEquipment.RecodChargeinform(5); // 记录禁放状态
+                        //frmMain.Selffrm.AllEquipment.RecodChargeinform(5); // 记录禁放状态
                         frmSet.Set_VariCharge();
                     }
                 }
@@ -10980,13 +10979,13 @@ namespace EMS
         /// <summary>
         /// 处理电池均衡和数据记录
         /// </summary>
-        private void HandleBatteryBalancingAndLogging()
+        public void HandleBatteryBalancingAndLogging()
         {
             try
             {
 
                 //记录单体电压 温度 电流
-                frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
+                //frmMain.Selffrm.AllEquipment.RecodChargeinform(2);
 
                 //7.25 BMS均衡策略提供排序
                 double[,] CellVs_ID = new double[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length, 2];
@@ -10998,7 +10997,7 @@ namespace EMS
                 }
 
                 //对单体数据进行冒泡排序
-                for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
+/*                for (int i = 0; i < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1; i++)
                 {
                     for (int j = 0; j < frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -i -1; j++)
                     {
@@ -11010,7 +11009,7 @@ namespace EMS
                         }
 
                     }
-                }
+                }*/
 
                 // 充电末期数据上云
 
@@ -11062,14 +11061,14 @@ namespace EMS
                 frmMain.Selffrm.AllEquipment.cloudService.SaveCel2Cloud(jsonString);
 
                 //抓取二级告警时最高最低单体电压差
-                frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
+                //frmMain.Selffrm.AllEquipment.Cell_Diff = CellVs_ID[frmMain.Selffrm.AllEquipment.BMS.CellVs.Length -1, 0] - CellVs_ID[0, 0];
 
                 //清空文件
-                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                    frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+/*                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                    frmMain.Selffrm.AllEquipment.balaCellID.Clear();*/
 
                 // 计算
-                double GAP = frmSet.cloudLimits.CellV_Gap / 1000.0;
+/*                double GAP = frmSet.cloudLimits.CellV_Gap / 1000.0;
 
                 //配置均衡电池文件地址
                 for (int k = 1; k < CellVs_ID.Length/2; k++)
@@ -11086,10 +11085,10 @@ namespace EMS
                     {
                         writer.WriteLine(frmMain.Selffrm.AllEquipment.balaCellID[m]);
                     }
-                }
+                }*/
 
                 // 重置均衡定时器
-                if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
+/*                if (frmMain.Selffrm.AllEquipment.BMS.countdownTimer != null)
                 {
                     frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Reset();
                 }
@@ -11097,17 +11096,17 @@ namespace EMS
                 {
                     frmMain.Selffrm.AllEquipment.BMS.countdownTimer = new CountdownTimer();
                     frmMain.Selffrm.AllEquipment.BMS.countdownTimer.Start();
-                }
+                }*/
 
                 //判断均衡的效果
 
-                for (int y = 0; y < CellVs_ID.Length/2; y++)
+/*                for (int y = 0; y < CellVs_ID.Length/2; y++)
                 {
                     frmMain.Selffrm.AllEquipment.balaCellV.Add(CellVs_ID[y, 0]);
                 }
                 var u = frmMain.Selffrm.AllEquipment.balaCellV.Average();
                 var sum = frmMain.Selffrm.AllEquipment.balaCellV.Sum(p => Math.Pow(p - u, 2));
-                frmMain.Selffrm.AllEquipment.O_sigma = Math.Round(Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000, 2);//标准差 * 1000倍展示
+                frmMain.Selffrm.AllEquipment.O_sigma = Math.Round(Math.Sqrt(sum / (frmMain.Selffrm.AllEquipment.balaCellV.Count-1)) * 1000, 2);//标准差 * 1000倍展示*/
             }
             catch (Exception ex) {
                 log.Error("HandleBatteryBalancingAndLogging: " + ex.ToString());

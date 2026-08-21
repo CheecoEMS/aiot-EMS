@@ -272,13 +272,7 @@ namespace EMS
 
         private void btnCleanError_Click(object sender, EventArgs e)
         {
-            frmMain.Selffrm.AllEquipment.ErrorState[2] = false;
-            
-            frmSet.historyDatas.ErrorState2 = 1;
-            frmSet.Set_HistoryData();
-            
-            //触发指示灯
-            frmSet.ErrorGPIO(0);
+            frmSet.CloseSystemLock();
         }
 
 
@@ -319,7 +313,8 @@ namespace EMS
             switch (item)
             { 
                 case 0:
-
+                    //frmMain.Selffrm.AllEquipment.HandleBatteryBalancingAndLogging();
+                    //frmSet.ErrorGPIO(1);
                     break;
                 case 1:
                     string commands = "netsh interface ip set dns name=\"移动宽带连接\" source=static addr=223.5.5.5 register=primary";
