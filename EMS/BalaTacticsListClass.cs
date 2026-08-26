@@ -143,7 +143,7 @@ namespace EMS
                 try
                 {
                     Thread.Sleep(sleepCount);
-                    if (frmSet.cloudLimits.OpenBala == 0)
+                    if (frmSet.cloudLimits.OpenBala == 0 && frmMain.Selffrm.AllEquipment.BalaRun == 1)
                     {
                         frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
                         continue;
@@ -162,7 +162,8 @@ namespace EMS
                             {
                                 frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
                             }
-                            else {
+                            else if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                            {
                                 frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
                             }
                         }

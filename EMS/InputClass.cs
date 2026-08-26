@@ -5657,10 +5657,11 @@ namespace EMS
         {
             if (FunctionLevel > 0)
             {
+                ushort[] NewBalaSwitch = new ushort[25];
                 for (int i = 0; i < 25; i++)
                 {
-                    BalaSwitch[i] = 0;
-                    SetSysData(i + 60, BalaSwitch[i]);
+                    NewBalaSwitch[i] = 0;
+                    SetSysData(i + 60, NewBalaSwitch[i]);
                 }
                 //更新均衡运行标志位
                 GetBalaInfo();
@@ -5707,26 +5708,13 @@ namespace EMS
 
                     //均衡开关地址置位
                     bala = (ushort)(1<<(int)bit);
-                    if (NewBalaSwitch[(int)num] == 0)
-                    {
-                        bala |= BalaSwitch[(int)num];
-                        NewBalaSwitch[(int)num] = bala;
-                    }
-                    else
-                    {
-                        NewBalaSwitch[(int)num] |= bala;
-                    }
-
-
+                    NewBalaSwitch[(int)num] |= bala;
                 }
 
                 //开启或关闭均衡开关
                 for (int i = 0; i < 25; i++)
                 {
-                    if (NewBalaSwitch[i] != 0)
-                    {
-                        SetSysData(i + 60, NewBalaSwitch[i], false);
-                    }
+                    SetSysData(i + 60, NewBalaSwitch[i], false);
                 }
 
                 //更新均衡运行标志位
