@@ -1305,7 +1305,8 @@ namespace EMS
 
                 if (BalaTacticsList != null)
                 {
-                    if (!BalaTacticsList.AutoCheckBalaTactics()) return false;
+                    //if (!BalaTacticsList.AutoCheckBalaTactics()) return false;
+                    if (!BalaTacticsList.AutoCheckBalaControl()) return false;
                 }
 
                 if (TacticsList != null)
@@ -1360,13 +1361,13 @@ namespace EMS
                     }
 
                     /************************* 日切换执行 *************************************/
-                    if (!frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess)
+/*                    if (!frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess)
                     {
                         if (frmMain.BalaTacticsList.LoadFromMySQL())
                         {
                             frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess = true;
                         }
-                    }
+                    }*/
 
                     if (!frmMain.Selffrm.AllEquipment.LoadTacticsSuccess)
                     {
@@ -1452,7 +1453,7 @@ namespace EMS
                         frmMain.Selffrm.AllEquipment.LoadTacticsSuccess = false;
 
                         // 加载均衡策略
-                        frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess = false;
+                        //frmMain.Selffrm.AllEquipment.LoadBalaTacticsSuccess = false;
                     }
            
                 }

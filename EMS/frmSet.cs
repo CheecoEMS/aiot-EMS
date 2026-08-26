@@ -3327,7 +3327,7 @@ namespace EMS
         private void btnFlash3_Click(object sender, EventArgs e)
         {
             RenewTactics();
-            RenewBalaTactics();
+            //RenewBalaTactics();
             string strDate = DateTime.Now.ToString("yyyy-MM-dd");
             DBConnection.ShowData2DBGrid(oneForm.dbgTactics, "select * from tactics where rTime = '"+ strDate +"'order by starttime");
         }
@@ -3609,14 +3609,14 @@ namespace EMS
             }
         }
 
-        private void RenewBalaTactics()
+/*        private void RenewBalaTactics()
         {
             if (frmMain.BalaTacticsList.LoadFromMySQL())
             {
                 frmMain.BalaTacticsList.ActiveIndex = -1;
             }
 
-        }
+        }*/
 
         private void RebootEms_Click(object sender, EventArgs e)
         {

@@ -7363,7 +7363,7 @@ namespace EMS
         //7.25 BMS 均衡
         double CellV_Gap = 0.03;//定义最低单体电压和理想最高单体电压的差值30mv
         public List<double> balaCellV = new List<double>(); //单体电压数据
-        public List<double> balaCellID = new List<double>(); //单体电压数据
+        public List<double> balaCellID = new List<double>(); 
         //public double O_sigma { get; set; } = 0;            //上次的电压方差
         public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
         //public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
@@ -7478,7 +7478,7 @@ namespace EMS
         public bool SetHistoryDataSuccess = true;
         public bool DeleOldDataSuccess = true;
         public bool WriteDataInoneDaySuccess = true;
-        public bool LoadBalaTacticsSuccess = false;
+        //public bool LoadBalaTacticsSuccess = false;
 
 
 
@@ -10903,7 +10903,7 @@ namespace EMS
                         frmSet.variCharge.UBmsPcsState = 0;
                         //frmMain.Selffrm.AllEquipment.RecodChargeinform(2); // 记录禁充状态
                         frmSet.Set_VariCharge();
-                        HandleBatteryBalancingAndLogging();
+                        HandleBatteryBalancingAndLogging(1);
                     }
                 }
             }
@@ -10958,6 +10958,8 @@ namespace EMS
                         frmSet.variCharge.OBmsPcsState = 0;
                         //frmMain.Selffrm.AllEquipment.RecodChargeinform(5); // 记录禁放状态
                         frmSet.Set_VariCharge();
+
+                        HandleBatteryBalancingAndLogging(0);
                     }
                 }
             }
@@ -10979,7 +10981,7 @@ namespace EMS
         /// <summary>
         /// 处理电池均衡和数据记录
         /// </summary>
-        public void HandleBatteryBalancingAndLogging()
+        public void HandleBatteryBalancingAndLogging(int state)
         {
             try
             {
@@ -11046,6 +11048,7 @@ namespace EMS
                 finalJson["averageTemp"] = frmMain.Selffrm.AllEquipment.BMS.averageTemp;
                 finalJson["v"] = frmMain.Selffrm.AllEquipment.BMS.v;
                 finalJson["a"] = frmMain.Selffrm.AllEquipment.BMS.a;
+                finalJson["state"] = state;
                 finalJson["timestamp"] = strTime;
                 finalJson["iotcode"] = frmMain.Selffrm.AllEquipment.BMS.iot_code;
 

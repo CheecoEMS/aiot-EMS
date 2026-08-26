@@ -40,6 +40,7 @@ namespace EMS
         public int ActiveIndex = -2;
         public AllEquipmentClass Parent = null;
         private Thread Thread_CheckBalaTactics;
+        private Thread Thread_CheckBalaControl;
         private static ILog log = LogManager.GetLogger("BalaTacticsClass");
 
 
@@ -48,7 +49,7 @@ namespace EMS
             Parent = aParent;
         }
 
-        //数据库中重新装载策略数据
+        #region 数据库中重新装载策略数据
         public bool LoadFromMySQL()
         {
             string astrSQL = "select startTime,endTime from balatactics  order by startTime";
@@ -97,6 +98,7 @@ namespace EMS
             }
             return res;
         }
+        #endregion
 
         static ulong SetCpuID(int lpIdx)
         {
@@ -109,6 +111,73 @@ namespace EMS
             return cpuLogicalProcessorId;
         }
 
+        /// <summary>
+        /// 策略监视线程
+        /// </summary>
+        public bool AutoCheckBalaControl()
+        {
+            try
+            {
+                //实例化等待连接的线程
+                Thread_CheckBalaControl = new Thread(CheckBalaControl);
+                Thread_CheckBalaControl.IsBackground = true;
+                Thread_CheckBalaControl.Priority = ThreadPriority.Normal;
+                Thread_CheckBalaControl.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error("AutoCheckBalaTactics: " + ex.Message);
+                return false;
+            }
+        }
+
+        //每分钟检查一次
+        private void CheckBalaControl()
+        {
+            int sleepCount = 120000;
+
+            log.Error("启动监听均衡状态");
+            while (true)
+            {
+                try
+                {
+                    Thread.Sleep(sleepCount);
+                    if (frmSet.cloudLimits.OpenBala == 0)
+                    {
+                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                        continue;
+                    }
+                    else {
+                        frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+                        using (StreamReader reader = new StreamReader(frmSet.BalaPath))
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                            }
+
+                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                            {
+                                frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                            }
+                            else {
+                                frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                            }
+                        }
+
+                    }                    
+                }
+                catch (Exception ex)
+                {
+                    log.Error("CheckBalaTactics: " + ex.Message);
+                }
+            }
+
+        }
+
+        #region 均衡时段策略监视线程
         /// <summary>
         /// 策略监视线程
         /// </summary>
@@ -256,6 +325,7 @@ namespace EMS
 
         }
 
+
         //判断是否在时间段内
         private bool CheckTimeInShedule(BalaTacticsClass aTactics, DateTime aTime)
         {
@@ -287,6 +357,7 @@ namespace EMS
             else 
                 return false;
         }
+        #endregion
     }
 
 }

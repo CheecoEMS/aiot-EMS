@@ -17,6 +17,13 @@ using MySqlX.XDevAPI.Common;
 
 namespace EMS
 {
+    public class BalaTableResult
+    {
+        public bool Result { get; set; }
+        public string BalaStartMsg { get; set; }
+        public List<double> BalaList { get; set; } = new List<double>();
+    }
+
     public class CloudService
     {
         private readonly MqttManager _mqtt;
@@ -55,8 +62,8 @@ namespace EMS
         public string TacticTopic;
         public string EMSLimitTopic;
         public string AIOTTableTopic;
-        public string BalaTableTopic;
-        public string BalaTacticTopic;
+        public string BalaControlTopic;
+        //public string BalaTacticTopic;
         public string OtaTopic;
         public string CloudConsoleTopic;
 
@@ -64,8 +71,8 @@ namespace EMS
         public string TacticTopic_new;
         public string EMSLimitTopic_new;
         public string AIOTTableTopic_new;
-        public string BalaTableTopic_new;
-        public string BalaTacticTopic_new;
+        public string BalaControlTopic_new;
+        //public string BalaTacticTopic_new;
         public string CloudConsoleTopic_new;
         #endregion
 
@@ -178,36 +185,43 @@ namespace EMS
                 string strID = jsonObject["id"]?.ToString() ?? "";
 
                 bool result;
+                string responseTopic;
 
                 if (topic == TacticTopic + "request" || topic == TacticTopic_new + "request")
                 {
                     result = GetServerTactics(message);
-                    PublishResult(TacticTopic, strID, result);
+                    responseTopic = topic == TacticTopic_new + "request" ? TacticTopic_new : TacticTopic;
+                    PublishResult(responseTopic, strID, result);
                 }
                 else if (topic == PriceTopic + "request" || topic == PriceTopic_new + "request")
                 {
                     result = GetServerEPrices(message);
-                    PublishResult(PriceTopic, strID, result);
+                    responseTopic = topic == PriceTopic_new + "request" ? PriceTopic_new : PriceTopic;
+                    PublishResult(responseTopic, strID, result);
                 }
                 else if (topic == EMSLimitTopic + "request" || topic == EMSLimitTopic_new + "request")
                 {
                     result = GetServerEMSLimit(message);
-                    PublishResult(EMSLimitTopic, strID, result);
+                    responseTopic = topic == EMSLimitTopic_new + "request" ? EMSLimitTopic_new : EMSLimitTopic;
+                    PublishResult(responseTopic, strID, result);
                 }
                 else if (topic == AIOTTableTopic + "request" || topic == AIOTTableTopic_new + "request")
                 {
                     strID = GetAiotTable(message);
-                    PublishResult(AIOTTableTopic, strID, true);
+                    responseTopic = topic == AIOTTableTopic_new + "request" ? AIOTTableTopic_new : AIOTTableTopic;
+                    PublishResult(responseTopic, strID, true);
                 }
-                else if (topic == BalaTableTopic + "request" || topic == BalaTableTopic_new + "request")
+                else if (topic == BalaControlTopic + "request" || topic == BalaControlTopic_new + "request")
                 {
-                    strID = GetBalaTable(message);
-                    PublishResult(BalaTableTopic, strID, true);
+                    BalaTableResult balaTableResult = GetBalaControl(message);
+                    responseTopic = topic == BalaControlTopic_new + "request" ? BalaControlTopic_new : BalaControlTopic;
+                    PublishBalaTableResult(responseTopic, strID, balaTableResult);
                 }
                 else if (topic == CloudConsoleTopic + "request" || topic == CloudConsoleTopic_new + "request")
                 {
                     result = GetCloudConsole(message);
-                    PublishResult(CloudConsoleTopic, strID, true);
+                    responseTopic = topic == CloudConsoleTopic_new + "request" ? CloudConsoleTopic_new : CloudConsoleTopic;
+                    PublishResult(responseTopic, strID, true);
                 }
                 /*                else if (topic == OtaTopic + "request")
                                 {
@@ -229,6 +243,26 @@ namespace EMS
             lock (_lockMqtt)
             {
                 _mqtt.Publish(baseTopic + "response/" + id, payload, true, PublishQos.AtLeastOnce);
+            }
+        }
+
+        private void PublishBalaTableResult(string baseTopic, string id, BalaTableResult balaTableResult)
+        {
+            JObject payload = new JObject
+            {
+                ["jsonrpc"] = "2.0",
+                ["result"] = balaTableResult.Result,
+                ["id"] = id,
+                ["msg"] = new JObject
+                {
+                    ["BalaStart"] = balaTableResult.BalaStartMsg,
+                    ["BalaList"] = JArray.FromObject(balaTableResult.BalaList)
+                }
+            };
+
+            lock (_lockMqtt)
+            {
+                _mqtt.Publish(baseTopic + "response/" + id, payload.ToString(Newtonsoft.Json.Formatting.None), true, PublishQos.AtLeastOnce);
             }
         }
 
@@ -325,16 +359,16 @@ namespace EMS
             _mqtt.Subscribe(TacticTopic + "request");
             _mqtt.Subscribe(EMSLimitTopic + "request");
             _mqtt.Subscribe(AIOTTableTopic + "request");
-            _mqtt.Subscribe(BalaTableTopic + "request");
-            _mqtt.Subscribe(BalaTacticTopic + "request");
+            _mqtt.Subscribe(BalaControlTopic + "request");
+            //_mqtt.Subscribe(BalaTacticTopic + "request");
             _mqtt.Subscribe(OtaTopic + "request");
 
             _mqtt.Subscribe(PriceTopic_new + "request");
             _mqtt.Subscribe(TacticTopic_new + "request");
             _mqtt.Subscribe(EMSLimitTopic_new + "request");
             _mqtt.Subscribe(AIOTTableTopic_new + "request");
-            _mqtt.Subscribe(BalaTableTopic_new + "request");
-            _mqtt.Subscribe(BalaTacticTopic_new + "request");
+            _mqtt.Subscribe(BalaControlTopic_new + "request");
+            //_mqtt.Subscribe(BalaTacticTopic_new + "request");
             _mqtt.Subscribe(CloudConsoleTopic_new + "request");
         }
 
@@ -356,8 +390,8 @@ namespace EMS
                     strID = strID.Substring(strID.Length - 7, 7);
                 AIOTTableTopic = "/rpc/ctl" + strID + "/aiot/table/";
 
-                BalaTableTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/table/";
-                BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
+                BalaControlTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/bms/BalaControl/";
+                //BalaTacticTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/BalaStrategy/";
                 //OtaTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/aiot/ota/";
                 CloudConsoleTopic = "/rpc/" + frmMain.Selffrm.AllEquipment.iot_code + "/ems/CloudConsole/";
 
@@ -366,8 +400,8 @@ namespace EMS
                 TacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/strategy/";
                 EMSLimitTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/limit/";
                 AIOTTableTopic_new = "/rpc/ctl" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
-                BalaTableTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
-                BalaTacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/BalaStrategy/";
+                BalaControlTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/bms/BalaControl/";
+                //BalaTacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/BalaStrategy/";
                 CloudConsoleTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/CloudConsole/";
             }
             catch (Exception ex)
@@ -418,28 +452,108 @@ namespace EMS
             return result;
         }
 
-        public string GetBalaTable(string astrData)
+        public BalaTableResult GetBalaControl(string astrData)
         {
-            string strID = "";
+            BalaTableResult result = new BalaTableResult { Result = true };
             try
             {
                 if (astrData == "")
-                    return "";
+                    return result;
                 JObject jsonObject = JObject.Parse(astrData);
-                strID = jsonObject["id"].ToString(); //int.Parse   bool.Parse
                 string strTopic = jsonObject["method"].ToString();
-                if (strTopic != "aiot/table")
-                    return "";
+                if (strTopic != "bms/BalaControl") {
+                    result.Result = false;
+                    result.BalaStartMsg = "method属性内容错误";
+                    return result;
+                }
+
                 //9.11
-                int iBalaStart = int.Parse(jsonObject["params"]["table"]["BalaStart"].ToString());
-                frmSet.cloudLimits.OpenBala = iBalaStart;
-                frmSet.Set_Cloudlimits();
+                /*                int iBalaStart = int.Parse(jsonObject["params"]["table"]["BalaStart"].ToString());
+                                frmSet.cloudLimits.OpenBala = iBalaStart;
+                                frmSet.Set_Cloudlimits();*/
+                //frmMain.Selffrm.AllEquipment.BMS.FunctionLevel = 1;
+
+                if (jsonObject["params"] != null)
+                {
+                    var parameters = jsonObject["params"];
+                    var table = parameters["table"];
+                    if (table == null)
+                        return result;
+
+                    if (table["BalaStart"] != null)
+                    {
+                        int iBalaStart = int.Parse(table["BalaStart"].ToString());
+
+                        if (iBalaStart == 1 && frmMain.Selffrm.AllEquipment.BMS.FunctionLevel == 0)
+                        {
+                            result.Result = false;
+                            result.BalaStartMsg = "BMS版本不支持均衡";
+                        }
+                        else
+                        {
+                            frmSet.cloudLimits.OpenBala = iBalaStart;
+                            frmSet.Set_Cloudlimits();
+                            result.BalaStartMsg = iBalaStart == 1 ? "BMS开启均衡" : "BMS关闭均衡";
+                        }
+                    }
+
+                    if (table["BalaList"] != null)
+                    {
+                        JToken listToken = table["BalaList"];
+                        if (listToken.Type != JTokenType.Array)
+                        {
+                            throw new FormatException("params.table.BalaList 必须是 JSON 数组。");
+                        }
+
+                        List<double> parsedCellIds = new List<double>();
+                        foreach (JToken cellId in listToken.Children())
+                        {
+                            double parsedCellId;
+                            if (!double.TryParse(cellId.ToString(), NumberStyles.Float,
+                                CultureInfo.InvariantCulture, out parsedCellId))
+                            {
+                                throw new FormatException("单体 ID 无效: " + cellId);
+                            }
+                            parsedCellIds.Add(parsedCellId);
+                        }
+
+                        // BalaCell.txt 与本地均衡策略读取的文件保持一致，每行一个单体 ID。
+                        File.WriteAllText(frmSet.BalaPath, string.Empty);
+                        using (StreamWriter writer = new StreamWriter(frmSet.BalaPath))
+                        {
+                            foreach (double cellId in parsedCellIds)
+                            {
+                                writer.WriteLine(cellId.ToString(CultureInfo.InvariantCulture));
+                            }
+                        }
+
+                        string[] savedCellIdLines = File.ReadAllLines(frmSet.BalaPath);
+                        List<double> savedCellIds = new List<double>();
+                        foreach (string savedCellIdLine in savedCellIdLines)
+                        {
+                            double savedCellId;
+                            if (!double.TryParse(savedCellIdLine, NumberStyles.Float,
+                                CultureInfo.InvariantCulture, out savedCellId))
+                            {
+                                throw new FormatException("BalaCell.txt 中的单体 ID 无效: " + savedCellIdLine);
+                            }
+                            savedCellIds.Add(savedCellId);
+                        }
+
+                        result.BalaList = savedCellIds;
+                        if (!parsedCellIds.SequenceEqual(savedCellIds))
+                        {
+                            result.Result = false;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
+                result.Result = false;
                 log.Error("GetBalaTable: " + ex.Message);
             }
-            return strID;
+            return result;
         }
 
         public bool GetServerTactics(string astrData)

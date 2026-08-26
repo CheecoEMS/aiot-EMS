@@ -313,7 +313,7 @@ namespace EMS
             switch (item)
             { 
                 case 0:
-                    //frmMain.Selffrm.AllEquipment.HandleBatteryBalancingAndLogging();
+                    frmMain.Selffrm.AllEquipment.HandleBatteryBalancingAndLogging(0);
                     //frmSet.ErrorGPIO(1);
                     break;
                 case 1:
