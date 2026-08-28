@@ -361,7 +361,8 @@ namespace EMS
             _mqtt.Subscribe(AIOTTableTopic + "request");
             _mqtt.Subscribe(BalaControlTopic + "request");
             //_mqtt.Subscribe(BalaTacticTopic + "request");
-            _mqtt.Subscribe(OtaTopic + "request");
+            //_mqtt.Subscribe(OtaTopic + "request");
+            _mqtt.Subscribe(CloudConsoleTopic + "request");
 
             _mqtt.Subscribe(PriceTopic_new + "request");
             _mqtt.Subscribe(TacticTopic_new + "request");
@@ -402,7 +403,7 @@ namespace EMS
                 AIOTTableTopic_new = "/rpc/ctl" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/table/";
                 BalaControlTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/bms/BalaControl/";
                 //BalaTacticTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/BalaStrategy/";
-                CloudConsoleTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/aiot/CloudConsole/";
+                CloudConsoleTopic_new = "/rpc/" + frmMain.Selffrm.AllEquipment.full_iot_code + "/ems/CloudConsole/";
             }
             catch (Exception ex)
             {
@@ -425,7 +426,7 @@ namespace EMS
 
                 JObject jsonObject = JObject.Parse(astrData);
                 string strTopic = jsonObject["method"].ToString();
-                if (strTopic != "aiot/CloudConsole")
+                if (strTopic != "ems/CloudConsole")
                 {
                     return false;
                 }
