@@ -14,6 +14,7 @@ using System.Text;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using MySqlX.XDevAPI.Common;
+using Google.Protobuf.WellKnownTypes;
 
 namespace EMS
 {
@@ -1187,8 +1188,8 @@ namespace EMS
                 }
                 else
                 {
-                    // 清空之前的修改标记
-                    frmSet.cloudLimits.ModifiedFields.Clear();
+                    // 记录本次云端请求中实际提供的字段。
+                    var modifiedFields = new HashSet<string>();
 
                     if (jsonObject["params"] != null)
                     {
@@ -1196,99 +1197,99 @@ namespace EMS
                         if (parameters["requireLimit"] != null)
                         {
                             frmSet.cloudLimits.MaxGridKW = int.Parse(parameters["requireLimit"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("MaxGridKW");
+                            modifiedFields.Add("MaxGridKW");
                         }
                         if (parameters["invertPower"] != null)
                         {
                             frmSet.cloudLimits.MinGridKW = int.Parse(parameters["invertPower"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("MinGridKW");
+                            modifiedFields.Add("MinGridKW");
                         }
                         if (parameters["socUp"] != null)
                         {
                             frmSet.cloudLimits.MaxSOC = int.Parse(parameters["socUp"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("MaxSOC");
+                            modifiedFields.Add("MaxSOC");
                         }
                         if (parameters["socDown"] != null)
                         {
                             frmSet.cloudLimits.MinSOC = int.Parse(parameters["socDown"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("MinSOC");
+                            modifiedFields.Add("MinSOC");
                         }
                         if (parameters["WarnMaxGridKW"] != null)
                         {
                             frmSet.cloudLimits.WarnMaxGridKW = int.Parse(parameters["WarnMaxGridKW"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("WarnMaxGridKW");
+                            modifiedFields.Add("WarnMaxGridKW");
                         }
                         if (parameters["WarnMinGridKW"] != null)
                         {
                             frmSet.cloudLimits.WarnMinGridKW = int.Parse(parameters["WarnMinGridKW"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("WarnMinGridKW");
+                            modifiedFields.Add("WarnMinGridKW");
                         }
                         if (parameters["PcsKva"] != null)
                         {
                             frmSet.cloudLimits.PcsKva = int.Parse(parameters["PcsKva"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("PcsKva");
+                            modifiedFields.Add("PcsKva");
                         }
                         if (parameters["Pre_Client_PUMdemand_Max"] != null)
                         {
                             frmSet.cloudLimits.Pre_Client_PUMdemand_Max = int.Parse(parameters["Pre_Client_PUMdemand_Max"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("Pre_Client_PUMdemand_Max");
+                            modifiedFields.Add("Pre_Client_PUMdemand_Max");
                         }
                         if (parameters["EnableActiveReduce"] != null)
                         {
                             frmSet.cloudLimits.EnableActiveReduce = int.Parse(parameters["EnableActiveReduce"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("EnableActiveReduce");
+                            modifiedFields.Add("EnableActiveReduce");
                         }
                         if (parameters["PumScale"] != null)
                         {
                             frmSet.cloudLimits.PumScale = int.Parse(parameters["PumScale"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("PumScale");
+                            modifiedFields.Add("PumScale");
                         }
                         if (parameters["AllUkvaWindowSize"] != null)
                         {
                             frmSet.cloudLimits.AllUkvaWindowSize = int.Parse(parameters["AllUkvaWindowSize"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("AllUkvaWindowSize");
+                            modifiedFields.Add("AllUkvaWindowSize");
                         }
                         if (parameters["PumTime"] != null)
                         {
                             frmSet.cloudLimits.PumTime = int.Parse(parameters["PumTime"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("PumTime");
+                            modifiedFields.Add("PumTime");
                         }
                         if (parameters["BmsDerateRatio"] != null)
                         {
                             frmSet.cloudLimits.BmsDerateRatio = int.Parse(parameters["BmsDerateRatio"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("BmsDerateRatio");
+                            modifiedFields.Add("BmsDerateRatio");
                         }
                         if (parameters["FrigOpenLower"] != null)
                         {
                             frmSet.cloudLimits.FrigOpenLower = int.Parse(parameters["FrigOpenLower"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("FrigOpenLower");
+                            modifiedFields.Add("FrigOpenLower");
                         }
                         if (parameters["FrigOffLower"] != null)
                         {
                             frmSet.cloudLimits.FrigOffLower = int.Parse(parameters["FrigOffLower"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("FrigOffLower");
+                            modifiedFields.Add("FrigOffLower");
                         }
                         if (parameters["FrigOffUpper"] != null)
                         {
                             frmSet.cloudLimits.FrigOffUpper = int.Parse(parameters["FrigOffUpper"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("FrigOffUpper");
+                            modifiedFields.Add("FrigOffUpper");
                         }
                         if (parameters["CellV_Gap"] != null)
                         {
                             frmSet.cloudLimits.CellV_Gap = int.Parse(parameters["CellV_Gap"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("CellV_Gap");
+                            modifiedFields.Add("CellV_Gap");
                         }
                         if (parameters["OpenWarning"] != null)
                         {
                             frmSet.cloudLimits.OpenWarning = int.Parse(parameters["OpenWarning"].ToString());
-                            frmSet.cloudLimits.ModifiedFields.Add("OpenWarning");
+                            modifiedFields.Add("OpenWarning");
                             if (frmSet.cloudLimits.OpenWarning == 0) {
                                 // 设置关闭故障指示灯蜂鸣器功能，先确保关闭当前正在执行的故障指示灯蜂鸣器
                                 frmSet.ErrorGPIO(0);
                             }
                         }
 
-                        if (frmSet.Set_Cloudlimits_OnlyChange())
+                        if (frmSet.Set_Cloudlimits_OnlyChange(modifiedFields))
                         {
                             bResult = true;
                         }
@@ -1487,6 +1488,11 @@ namespace EMS
                 ConvertToJsonQueue(Parent.Fire, $"0fir{strTime}.json");
             }
 
+            // 云下发参数
+            if (frmSet.cloudLimits != null) {
+                ConvertToJsonQueueWithMetadata(frmSet.cloudLimits, $"0clm{strTime}.json", tempTime, "clm", Parent.full_iot_code);
+            }
+
             //EMS
             Parent.time = tempTime;
             ConvertToJsonQueue(Parent, $"0ems{strTime}.json");
@@ -1501,81 +1507,88 @@ namespace EMS
         public static string GetProperties(object aObj)//GetProperties<T>(T t)
         {
             string tStr = string.Empty;
-            if (aObj == null)
-            {
-                return tStr;
-            }
-            PropertyInfo[] properties = aObj.GetType().GetProperties();// (BindingFlags.Instance | BindingFlags.Public);
+            try
+            {              
+                if (aObj == null)
+                {
+                    return tStr;
+                }
+                PropertyInfo[] properties = aObj.GetType().GetProperties();// (BindingFlags.Instance | BindingFlags.Public);
 
-            if (properties.Length <= 0)
-            {
+                if (properties.Length <= 0)
+                {
+                    return tStr;
+                }
+                tStr += "{\n";
+                foreach (PropertyInfo item in properties)
+                {
+                    string name = item.Name;
+                    object value = item.GetValue(aObj, null);
+                    if (item.PropertyType == typeof(double[]))
+                    {
+                        //浮点数组
+                        double[] fTemp = (double[])value;
+                        if (fTemp.Length <= 0)
+                            continue;
+                        tStr += string.Format("	\"{0}\":[", name);
+                        for (int i = 0; i < fTemp.Length; i++)
+                        {
+                            if (fTemp[i]!=Math.Round(fTemp[i]))
+                                tStr += "\"" + fTemp[i].ToString() + "\",";
+                            else
+                                tStr += "\"" + fTemp[i].ToString("0.000") + "\",";
+                        }
+                        tStr = tStr.Substring(0, tStr.Length - 1);
+                        tStr += "],\n";
+                    }
+                    else if (item.PropertyType == typeof(ushort[]))
+                    {
+                        //Int16数组
+                        ushort[] fTemp = (ushort[])value;
+                        if (fTemp.Length <= 0)
+                            continue;
+                        tStr += string.Format("	\"{0}\":[", name);
+                        for (int i = 0; i < fTemp.Length; i++)
+                            tStr += fTemp[i].ToString() + ",";
+                        tStr = tStr.Substring(0, tStr.Length - 1);
+                        tStr += "],\n";
+                    }
+                    else if (item.PropertyType.IsValueType || item.PropertyType.Name.StartsWith("String"))
+                    {
+                        if (item.PropertyType == typeof(bool))
+                            tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((bool)value).ToString().ToLower());
+                        else if (item.PropertyType == typeof(string))
+                            tStr += string.Format("	\"{0}\": \"{1}\",\n", name, value);
+                        else if (item.PropertyType == typeof(long))
+                            tStr += string.Format("	\"{0}\": {1},\n", name, value);
+                        else if (item.PropertyType == typeof(int))
+                            tStr += string.Format("	\"{0}\": {1},\n", name, value);
+                        else if (item.PropertyType == typeof(DateTime))
+                            tStr += string.Format("	\"{0}\": {1},\n", name, ConvertDataTime2Long((DateTime)value));
+                        else if (item.PropertyType == typeof(double))
+                        {
+                            tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((double)value).ToString("0.000"));
+                        }
+                        else if (item.PropertyType == typeof(float))
+                        {
+                            tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((float)value).ToString("0.000"));
+                        }
+                        else
+                            tStr += string.Format("	\"{0}\": {1},\n", name, value);
+                    }
+                    else //object
+                    {
+                        tStr += GetProperties(value) + ",";
+                    }
+                }
+                tStr = tStr.Substring(0, tStr.Length - 2);
+                tStr += "\n}";
                 return tStr;
             }
-            tStr += "{\n";
-            foreach (PropertyInfo item in properties)
-            {
-                string name = item.Name;
-                object value = item.GetValue(aObj, null);
-                if (item.PropertyType == typeof(double[]))
-                {
-                    //浮点数组
-                    double[] fTemp = (double[])value;
-                    if (fTemp.Length <= 0)
-                        continue;
-                    tStr += string.Format("	\"{0}\":[", name);
-                    for (int i = 0; i < fTemp.Length; i++)
-                    {
-                        if (fTemp[i]!=Math.Round(fTemp[i]))
-                            tStr += "\"" + fTemp[i].ToString() + "\",";
-                        else
-                            tStr += "\"" + fTemp[i].ToString("0.000") + "\",";
-                    }
-                    tStr = tStr.Substring(0, tStr.Length - 1);
-                    tStr += "],\n";
-                }
-                else if (item.PropertyType == typeof(ushort[]))
-                {
-                    //Int16数组
-                    ushort[] fTemp = (ushort[])value;
-                    if (fTemp.Length <= 0)
-                        continue;
-                    tStr += string.Format("	\"{0}\":[", name);
-                    for (int i = 0; i < fTemp.Length; i++)
-                        tStr += fTemp[i].ToString() + ",";
-                    tStr = tStr.Substring(0, tStr.Length - 1);
-                    tStr += "],\n";
-                }
-                else if (item.PropertyType.IsValueType || item.PropertyType.Name.StartsWith("String"))
-                {
-                    if (item.PropertyType == typeof(bool))
-                        tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((bool)value).ToString().ToLower());
-                    else if (item.PropertyType == typeof(string))
-                        tStr += string.Format("	\"{0}\": \"{1}\",\n", name, value);
-                    else if (item.PropertyType == typeof(long))
-                        tStr += string.Format("	\"{0}\": {1},\n", name, value);
-                    else if (item.PropertyType == typeof(int))
-                        tStr += string.Format("	\"{0}\": {1},\n", name, value);
-                    else if (item.PropertyType == typeof(DateTime))
-                        tStr += string.Format("	\"{0}\": {1},\n", name, ConvertDataTime2Long((DateTime)value));
-                    else if (item.PropertyType == typeof(double))
-                    {
-                        tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((double)value).ToString("0.000"));
-                    }
-                    else if (item.PropertyType == typeof(float))
-                    {
-                        tStr += string.Format("	\"{0}\": \"{1}\",\n", name, ((float)value).ToString("0.000"));
-                    }
-                    else
-                        tStr += string.Format("	\"{0}\": {1},\n", name, value);
-                }
-                else //object
-                {
-                    tStr += GetProperties(value) + ",";
-                }
+            catch (Exception ex) {
+                log.Error("GetProperties: " + ex.Message);
+                return tStr;
             }
-            tStr = tStr.Substring(0, tStr.Length - 2);
-            tStr += "\n}";
-            return tStr;
         }
 
         /// <summary>
@@ -1605,14 +1618,43 @@ namespace EMS
         {
             _fileQueue.Enqueue(fileName, json);
         }
+
+        private void ConvertToJsonQueueWithMetadata(
+            object obj,
+            string fileName,
+            DateTime time,
+            string iotCodePrefix,
+            string fullIotCode)
+        {
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(fullIotCode) || fullIotCode.Length < 7)
+                {
+                    throw new ArgumentException(
+                        "fullIotCode 必须至少包含 7 个字符。",
+                        nameof(fullIotCode));
+                }
+
+                var jsonObject = JObject.Parse(GetProperties(obj));
+                jsonObject["time"] = ConvertDataTime2Long((DateTime)time);
+                jsonObject["iot_code"] =
+                    iotCodePrefix + fullIotCode.Substring(fullIotCode.Length - 7);
+
+                ConvertToJsonQueue(jsonObject.ToString(), fileName);
+            }
+            catch (Exception ex) {
+                log.Error("fileName" + fileName + " ConvertToJsonQueueWithMetadata err: "+ ex.Message);
+            }
+        }
         #endregion
 
         #region ===== 将故障数据整理存入文件 =====
-/*        public void SaveFault2Cloud()
-        {
-            string strTime = DateTime.Now.ToString("yyyyMMddHHmmss"); ;
-            ConvertToJsonQueue(Parent.Fault2Cloud, $"0fau{strTime}.json");
-        }*/
+        /*        public void SaveFault2Cloud()
+                {
+                    string strTime = DateTime.Now.ToString("yyyyMMddHHmmss"); ;
+                    ConvertToJsonQueue(Parent.Fault2Cloud, $"0fau{strTime}.json");
+                }*/
 
         public void SaveFault2Cloud()
         {

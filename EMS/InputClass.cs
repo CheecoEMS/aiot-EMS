@@ -7354,8 +7354,8 @@ namespace EMS
         public List<double> balaCellID = new List<double>(); 
         //public double O_sigma { get; set; } = 0;            //上次的电压方差
         public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
-        //public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
-
+                                                      //public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
+        public int OpenWarningStatus { get; set; } = 1; //是否开启储能柜故障告警提示
 
         public int[] ReSendClock = { 0, 0, 0, 0, 0 };
         // public int[] BMSErrorState = { 0, 0 };

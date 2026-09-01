@@ -1016,11 +1016,10 @@ namespace EMS
                 }*/
 
 
-        public static bool Set_Cloudlimits_OnlyChange()
+        public static bool Set_Cloudlimits_OnlyChange(ISet<string> modifiedFields)
         {
             // 只更新被修改过的字段
-            var modifiedFields = frmSet.cloudLimits.ModifiedFields;
-            if (modifiedFields.Count == 0)
+            if (modifiedFields == null || modifiedFields.Count == 0)
             {
                 return true;
             }
@@ -1076,6 +1075,10 @@ namespace EMS
                     case "AllUkvaWindowSize":
                         updateClauses.Add("AllUkvaWindowSize = @AllUkvaWindowSize");
                         parameters.Add("@AllUkvaWindowSize", frmSet.cloudLimits.AllUkvaWindowSize);
+                        break;
+                    case "PumTime":
+                        updateClauses.Add("PumTime = @PumTime");
+                        parameters.Add("@PumTime", frmSet.cloudLimits.PumTime);
                         break;
                     case "BmsDerateRatio":
                         updateClauses.Add("BmsDerateRatio = @BmsDerateRatio");
@@ -3447,9 +3450,7 @@ namespace EMS
             public int SignalDelayCount { get; set; }
             public int CellV_Gap { get; set; }
             public int OpenBala { get; set; }
-
             public int OpenWarning { get; set; }
-            public HashSet<string> ModifiedFields { get; set; } = new HashSet<string>();
         }
 
 

@@ -155,10 +155,12 @@ namespace EMS
                     if (frmMain.Selffrm.AllEquipment.ErrorState[2])
                     {
                         plEMSState3.BackColor = Color.Red;
+                        frmMain.Selffrm.AllEquipment.Error = 1;
                     }
                     else
                     {
                         plEMSState3.BackColor = Color.GreenYellow;
+                        frmMain.Selffrm.AllEquipment.Error = 0;
                     }
 
 
