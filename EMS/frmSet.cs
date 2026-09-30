@@ -2305,7 +2305,7 @@ namespace EMS
                 tnePrice9.SetIntValue(Prices[1, 4]);
                 tneSysCount.SetIntValue(config.SysCount);
                 tcbUseYunTactics.SetValue(PutTchCheck(config.UseYunTactics));
-                tcbUseBalaTactics.SetValue(PutTchCheck(config.UseBalaTactics));
+                //tcbUseBalaTactics.SetValue(PutTchCheck(config.UseBalaTactics));
                 tcbiPCSfactory.SetSelectItemIndex(config.iPCSfactory);
                 tcbPCSGridModel_OnValueChange(null);
                 tcbGPIO.SetSelectItemIndex((config.GPIOSelect==1) ? 1 : 0);// 0、2：风冷 1：液冷   注：只展示不做UI修改
@@ -2408,7 +2408,7 @@ namespace EMS
             Prices[1, 4] = (int)tnePrice9.Value;
             config.SysCount = (int)tneSysCount.Value;
             config.UseYunTactics = GetTcbCheck(tcbUseYunTactics.Checked);
-            config.UseBalaTactics = GetTcbCheck(tcbUseBalaTactics.Checked);
+            //config.UseBalaTactics = GetTcbCheck(tcbUseBalaTactics.Checked);
             config.iPCSfactory = tcbiPCSfactory.SelectItemIndex;
             config.BMSVerb = tcbBMSVer.SelectItemIndex;
             config.PCSForceRun = GetTcbCheck(tcbPCSForceRun.Checked);
@@ -3485,7 +3485,7 @@ namespace EMS
             public int DebugRate { get; set; } // int
             public int SysCount { get; set; } // int
             public int UseYunTactics { get; set; } // bool
-            public int UseBalaTactics { get; set; } // bool
+            public int UseBalaTactics { get; set; } // bool 废弃
             public int iPCSfactory { get; set; } // int
             public int BMSVerb { get; set; } // int   1：协能
             public int PCSForceRun { get; set; } // bool

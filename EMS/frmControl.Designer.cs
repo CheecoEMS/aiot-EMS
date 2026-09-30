@@ -51,8 +51,6 @@ namespace EMS
             this.btnEMSRun = new System.Windows.Forms.Button();
             this.tcbEMSstatus = new EMS.TouchCombox(this.components);
             this.btnTest = new System.Windows.Forms.Button();
-            this.btnBalaClear = new System.Windows.Forms.Button();
-            this.btnBalaStart = new System.Windows.Forms.Button();
             this.btnCleanError = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btnPCSErrorClean = new System.Windows.Forms.Button();
@@ -286,8 +284,6 @@ namespace EMS
             this.groupBox3.Controls.Add(this.btnEMSRun);
             this.groupBox3.Controls.Add(this.tcbEMSstatus);
             this.groupBox3.Controls.Add(this.btnTest);
-            this.groupBox3.Controls.Add(this.btnBalaClear);
-            this.groupBox3.Controls.Add(this.btnBalaStart);
             this.groupBox3.Controls.Add(this.btnCleanError);
             this.groupBox3.ForeColor = System.Drawing.Color.White;
             this.groupBox3.Location = new System.Drawing.Point(3, 557);
@@ -408,36 +404,6 @@ namespace EMS
             this.btnTest.Text = "TEST";
             this.btnTest.UseVisualStyleBackColor = true;
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
-            // 
-            // btnBalaClear
-            // 
-            this.btnBalaClear.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaClear.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaClear.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBalaClear.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBalaClear.ForeColor = System.Drawing.Color.White;
-            this.btnBalaClear.Location = new System.Drawing.Point(324, 23);
-            this.btnBalaClear.Name = "btnBalaClear";
-            this.btnBalaClear.Size = new System.Drawing.Size(88, 44);
-            this.btnBalaClear.TabIndex = 63;
-            this.btnBalaClear.Text = "关闭均衡";
-            this.btnBalaClear.UseVisualStyleBackColor = true;
-            this.btnBalaClear.Click += new System.EventHandler(this.btnBalaClear_Click);
-            // 
-            // btnBalaStart
-            // 
-            this.btnBalaStart.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaStart.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnBalaStart.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnBalaStart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBalaStart.ForeColor = System.Drawing.Color.White;
-            this.btnBalaStart.Location = new System.Drawing.Point(232, 23);
-            this.btnBalaStart.Name = "btnBalaStart";
-            this.btnBalaStart.Size = new System.Drawing.Size(88, 44);
-            this.btnBalaStart.TabIndex = 61;
-            this.btnBalaStart.Text = "开启均衡";
-            this.btnBalaStart.UseVisualStyleBackColor = true;
-            this.btnBalaStart.Click += new System.EventHandler(this.btnBalaStart_Click);
             // 
             // btnCleanError
             // 
@@ -714,8 +680,6 @@ namespace EMS
         private System.Windows.Forms.Label labPCSwaValue;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button btnCleanError;
-        private System.Windows.Forms.Button btnBalaStart;
-        private System.Windows.Forms.Button btnBalaClear;
         private System.Windows.Forms.Button btnTest;
         private System.Windows.Forms.Button btnEMSRun;
         private TouchCombox tcbEMSstatus;

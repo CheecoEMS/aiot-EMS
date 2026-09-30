@@ -496,6 +496,9 @@ namespace EMS
                             frmSet.cloudLimits.OpenBala = iBalaStart;
                             frmSet.Set_Cloudlimits();
                             result.BalaStartMsg = iBalaStart == 1 ? "BMS开启均衡" : "BMS关闭均衡";
+                            
+                            // 开启均衡
+                            //frmMain.Selffrm.AllEquipment.OpenBalaOper = 1;
                         }
                     }
 

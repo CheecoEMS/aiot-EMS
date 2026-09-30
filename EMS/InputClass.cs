@@ -5470,6 +5470,9 @@ namespace EMS
         public double cellErrOV3; //单体欠压三级报警门限
         public double cellErrUOV3; //单体欠压三级报警门限
 
+
+        public ushort[] BalaError { get; set; } = new ushort[24];
+        public double[] BalaTemp { get; set; } = new double[24];
         //9.6
         public ushort[] BalaSwitch { get; set; } = new ushort[25];
 
@@ -5715,8 +5718,25 @@ namespace EMS
                 for (int i = 0; i < 25; i++)
                 {
                     SetSysData(i + 60, NewBalaSwitch[i], false);
+                    //bool res = SetSysData(i + 60, NewBalaSwitch[i], false);
+                    //log.Error("均衡开关 " + i + " 下发" + res + " 下发内容: " + NewBalaSwitch[i]);
                 }
 
+/*                bool allBalaSwitchesSent = true;
+                for (int i = 0; i < 25; i++)
+                {
+                    bool res = SetSysData(i + 60, NewBalaSwitch[i], false);
+                    log.Error("均衡开关 " + i + " 下发" + res);
+                    if (!res)
+                    {
+                        allBalaSwitchesSent = false;
+                    }
+                }
+
+                if (allBalaSwitchesSent)
+                {
+                    frmMain.Selffrm.AllEquipment.OpenBalaOper = 0;
+                }*/
                 //更新均衡运行标志位
                 GetBalaInfo();
             }
@@ -5776,7 +5796,74 @@ namespace EMS
                 string strData = "";
                 bool bPrepared = false;
 
-                //读取被动均衡开关状态
+                //读取被动均衡故障
+                if (GetSysData(224, ref strTemp))
+                {
+                    bPrepared = true;
+                    if (Get3strData(176, ref strTemp, ref strData))
+                        BalaError[0] = Convert.ToUInt16(strData);
+                    if (Get3strData(177, ref strTemp, ref strData))
+                        BalaError[1] = Convert.ToUInt16(strData);
+                    if (Get3strData(178, ref strTemp, ref strData))
+                        BalaError[2] = Convert.ToUInt16(strData);
+                    if (Get3strData(179, ref strTemp, ref strData))
+                        BalaError[3] = Convert.ToUInt16(strData);
+                    if (Get3strData(180, ref strTemp, ref strData))
+                        BalaError[4] = Convert.ToUInt16(strData);
+                    if (Get3strData(181, ref strTemp, ref strData))
+                        BalaError[5] = Convert.ToUInt16(strData);
+                    if (Get3strData(182, ref strTemp, ref strData))
+                        BalaError[6] = Convert.ToUInt16(strData);
+                    if (Get3strData(183, ref strTemp, ref strData))
+                        BalaError[7] = Convert.ToUInt16(strData);
+                    if (Get3strData(184, ref strTemp, ref strData))
+                        BalaError[8] = Convert.ToUInt16(strData);
+                    if (Get3strData(185, ref strTemp, ref strData))
+                        BalaError[9] = Convert.ToUInt16(strData);
+                    if (Get3strData(186, ref strTemp, ref strData))
+                        BalaError[10] = Convert.ToUInt16(strData);
+                    if (Get3strData(187, ref strTemp, ref strData))
+                        BalaError[11] = Convert.ToUInt16(strData);
+                    if (Get3strData(188, ref strTemp, ref strData))
+                        BalaError[12] = Convert.ToUInt16(strData);
+                    if (Get3strData(189, ref strTemp, ref strData))
+                        BalaError[13] = Convert.ToUInt16(strData);
+                    if (Get3strData(190, ref strTemp, ref strData))
+                        BalaError[14] = Convert.ToUInt16(strData);
+                    if (Get3strData(191, ref strTemp, ref strData))
+                        BalaError[15] = Convert.ToUInt16(strData);
+                    if (Get3strData(192, ref strTemp, ref strData))
+                        BalaError[16] = Convert.ToUInt16(strData);
+                    if (Get3strData(193, ref strTemp, ref strData))
+                        BalaError[17] = Convert.ToUInt16(strData);
+                    if (Get3strData(194, ref strTemp, ref strData))
+                        BalaError[18] = Convert.ToUInt16(strData);
+                    if (Get3strData(195, ref strTemp, ref strData))
+                        BalaError[19] = Convert.ToUInt16(strData);
+                    if (Get3strData(196, ref strTemp, ref strData))
+                        BalaError[20] = Convert.ToUInt16(strData);
+                    if (Get3strData(197, ref strTemp, ref strData))
+                        BalaError[21] = Convert.ToUInt16(strData);
+                    if (Get3strData(198, ref strTemp, ref strData))
+                        BalaError[22] = Convert.ToUInt16(strData);
+                    if (Get3strData(199, ref strTemp, ref strData))
+                        BalaError[23] = Convert.ToUInt16(strData);
+                }
+
+
+                //读取被动均衡温度
+                if (GetSysData(225, ref strTemp))
+                {
+                    double dTemp;
+                    for (int i = 0; i < 24; i++)
+                    {
+                        dTemp = (double)(Convert.ToInt32("0X" + strTemp.Substring(0, 4), 16) * 0.1);
+                        strTemp = strTemp.Substring(4, strTemp.Length - 4);
+                        BalaTemp[i] = Math.Round(dTemp, 1);
+                    }
+                }
+
+                    //读取被动均衡开关状态
                 if (GetSysData(110, ref strTemp))
                 {
                     bPrepared = true;
@@ -7355,6 +7442,8 @@ namespace EMS
         //public double O_sigma { get; set; } = 0;            //上次的电压方差
         public int BalaRun { get; set; } = 0;         //是否运行均衡标识位
                                                       //public double Cell_Diff { get; set; } = 0;                           //最大单体电压差
+
+        //public int OpenBalaOper = 1;         //开启均衡
         public int OpenWarningStatus { get; set; } = 1; //是否开启储能柜故障告警提示
 
         public int[] ReSendClock = { 0, 0, 0, 0, 0 };

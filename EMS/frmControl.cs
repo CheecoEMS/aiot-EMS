@@ -276,36 +276,6 @@ namespace EMS
         }
 
 
-        private void btnBalaStart_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                    frmMain.Selffrm.AllEquipment.balaCellID.Clear();
-
-                using (StreamReader reader = new StreamReader(frmSet.BalaPath))
-                {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
-                    }
-                }
-                if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
-                {
-                    frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
-                }
-
-            }
-            catch { }
-        }
-
-
-        private void btnBalaClear_Click(object sender, EventArgs e)
-        {
-            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
-        }
-
         //test 专用
         private void btnTest_Click(object sender, EventArgs e)
         {

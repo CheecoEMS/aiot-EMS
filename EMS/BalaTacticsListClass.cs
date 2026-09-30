@@ -132,7 +132,6 @@ namespace EMS
             }
         }
 
-        //每分钟检查一次
         private void CheckBalaControl()
         {
             int sleepCount = 120000;
@@ -143,12 +142,17 @@ namespace EMS
                 try
                 {
                     Thread.Sleep(sleepCount);
-                    if (frmSet.cloudLimits.OpenBala == 0 && frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                    if (frmSet.cloudLimits.OpenBala == 0)
                     {
-                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                        if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                        {
+                            frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                            //log.Error("关闭均衡开关，关闭均衡");
+                        }
                         continue;
                     }
-                    else {
+                    else
+                    {
                         frmMain.Selffrm.AllEquipment.balaCellID.Clear();
                         using (StreamReader reader = new StreamReader(frmSet.BalaPath))
                         {
@@ -158,17 +162,21 @@ namespace EMS
                                 frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
                             }
 
-                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count == 0)
                             {
-                                frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                                frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                                //log.Error("无需要均衡单体，关闭均衡");
                             }
                             else if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
                             {
-                                frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                                //log.Error("正在均衡");
+                            }
+                            else {
+                                frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                                //log.Error("线程开启均衡");
                             }
                         }
-
-                    }                    
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -177,6 +185,68 @@ namespace EMS
             }
 
         }
+
+
+        //每分钟检查一次
+        /*        private void CheckBalaControl()
+                {
+                    int sleepCount = 120000;
+
+                    log.Error("启动监听均衡状态");
+                    while (true)
+                    {
+                        try
+                        {
+                            Thread.Sleep(sleepCount);
+                            if (frmSet.cloudLimits.OpenBala == 0)
+                            {
+                                if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                                {
+                                    frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                                    log.Error("关闭均衡开关，关闭均衡");
+                                }
+                                continue;
+                            }
+                            else {
+                                frmMain.Selffrm.AllEquipment.balaCellID.Clear();
+                                using (StreamReader reader = new StreamReader(frmSet.BalaPath))
+                                {
+                                    string line;
+                                    while ((line = reader.ReadLine()) != null)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.balaCellID.Add(double.Parse(line));
+                                    }
+
+        *//*                            if (frmMain.Selffrm.AllEquipment.balaCellID.Count != 0)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                                    }
+                                    else if (frmMain.Selffrm.AllEquipment.BalaRun == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                                    }*//*
+
+                                    if (frmMain.Selffrm.AllEquipment.OpenBalaOper == 1)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.BMS.StartBmsBala();
+                                        log.Error("开启均衡");
+                                    }
+                                    else if (frmMain.Selffrm.AllEquipment.balaCellID.Count == 0)
+                                    {
+                                        frmMain.Selffrm.AllEquipment.BMS.ClearBmsBala();
+                                        log.Error("无需要均衡单体，关闭均衡");
+                                    }
+                                }
+
+                            }                    
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("CheckBalaTactics: " + ex.Message);
+                        }
+                    }
+
+                }*/
 
         #region 均衡时段策略监视线程
         /// <summary>

@@ -174,6 +174,8 @@ namespace EMS
             this.btnTempRun = new System.Windows.Forms.Button();
             this.label29 = new System.Windows.Forms.Label();
             this.tpLog = new System.Windows.Forms.TabPage();
+            this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.btnSaveUiUpdate = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label100 = new System.Windows.Forms.Label();
             this.tbVersion = new System.Windows.Forms.TextBox();
@@ -239,7 +241,6 @@ namespace EMS
             this.tbShedule = new System.Windows.Forms.TabPage();
             this.panel12 = new System.Windows.Forms.Panel();
             this.btnFlash3 = new System.Windows.Forms.Button();
-            this.tcbUseBalaTactics = new EMS.TCheckBox(this.components);
             this.tcbUseYunTactics = new EMS.TCheckBox(this.components);
             this.btnUpT = new System.Windows.Forms.Button();
             this.btnDownT = new System.Windows.Forms.Button();
@@ -341,8 +342,6 @@ namespace EMS
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tbAll = new System.Windows.Forms.TabControl();
-            this.groupBox8 = new System.Windows.Forms.GroupBox();
-            this.btnSaveUiUpdate = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel9.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -353,6 +352,7 @@ namespace EMS
             this.groupBox6.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tpLog.SuspendLayout();
+            this.groupBox8.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tpCom.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -377,7 +377,6 @@ namespace EMS
             ((System.ComponentModel.ISupportInitialize)(this.dbgEquipment)).BeginInit();
             this.plSetMain.SuspendLayout();
             this.tbAll.SuspendLayout();
-            this.groupBox8.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -2460,6 +2459,35 @@ namespace EMS
             this.tpLog.TabIndex = 6;
             this.tpLog.Text = "云设置";
             // 
+            // groupBox8
+            // 
+            this.groupBox8.Controls.Add(this.btnSaveUiUpdate);
+            this.groupBox8.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.groupBox8.Location = new System.Drawing.Point(15, 166);
+            this.groupBox8.Name = "groupBox8";
+            this.groupBox8.Size = new System.Drawing.Size(218, 104);
+            this.groupBox8.TabIndex = 52;
+            this.groupBox8.TabStop = false;
+            this.groupBox8.Text = "更新系统设置";
+            // 
+            // btnSaveUiUpdate
+            // 
+            this.btnSaveUiUpdate.BackColor = System.Drawing.Color.Transparent;
+            this.btnSaveUiUpdate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnSaveUiUpdate.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
+            this.btnSaveUiUpdate.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
+            this.btnSaveUiUpdate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSaveUiUpdate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnSaveUiUpdate.ForeColor = System.Drawing.Color.White;
+            this.btnSaveUiUpdate.Location = new System.Drawing.Point(128, 52);
+            this.btnSaveUiUpdate.Margin = new System.Windows.Forms.Padding(1);
+            this.btnSaveUiUpdate.Name = "btnSaveUiUpdate";
+            this.btnSaveUiUpdate.Size = new System.Drawing.Size(86, 45);
+            this.btnSaveUiUpdate.TabIndex = 47;
+            this.btnSaveUiUpdate.Text = "确定";
+            this.btnSaveUiUpdate.UseVisualStyleBackColor = false;
+            this.btnSaveUiUpdate.Click += new System.EventHandler(this.btnSaveUiUpdate_Click);
+            // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label100);
@@ -3311,7 +3339,6 @@ namespace EMS
             this.panel12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(86)))), ((int)(((byte)(93)))));
             this.panel12.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel12.Controls.Add(this.btnFlash3);
-            this.panel12.Controls.Add(this.tcbUseBalaTactics);
             this.panel12.Controls.Add(this.tcbUseYunTactics);
             this.panel12.Controls.Add(this.btnUpT);
             this.panel12.Controls.Add(this.btnDownT);
@@ -3341,18 +3368,6 @@ namespace EMS
             this.btnFlash3.Text = "更新";
             this.btnFlash3.UseVisualStyleBackColor = false;
             this.btnFlash3.Click += new System.EventHandler(this.btnFlash3_Click);
-            // 
-            // tcbUseBalaTactics
-            // 
-            this.tcbUseBalaTactics.BackColor = System.Drawing.Color.Transparent;
-            this.tcbUseBalaTactics.Caption = "使用均衡策略";
-            this.tcbUseBalaTactics.Checked = false;
-            this.tcbUseBalaTactics.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tcbUseBalaTactics.ForeColor = System.Drawing.Color.White;
-            this.tcbUseBalaTactics.Location = new System.Drawing.Point(534, 3);
-            this.tcbUseBalaTactics.Name = "tcbUseBalaTactics";
-            this.tcbUseBalaTactics.Size = new System.Drawing.Size(153, 32);
-            this.tcbUseBalaTactics.TabIndex = 20;
             // 
             // tcbUseYunTactics
             // 
@@ -4706,35 +4721,6 @@ namespace EMS
             this.tbAll.TabIndex = 13;
             this.tbAll.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
-            // groupBox8
-            // 
-            this.groupBox8.Controls.Add(this.btnSaveUiUpdate);
-            this.groupBox8.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.groupBox8.Location = new System.Drawing.Point(15, 166);
-            this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(218, 104);
-            this.groupBox8.TabIndex = 52;
-            this.groupBox8.TabStop = false;
-            this.groupBox8.Text = "更新系统设置";
-            // 
-            // btnSaveUiUpdate
-            // 
-            this.btnSaveUiUpdate.BackColor = System.Drawing.Color.Transparent;
-            this.btnSaveUiUpdate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnSaveUiUpdate.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(169)))), ((int)(((byte)(255)))));
-            this.btnSaveUiUpdate.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SkyBlue;
-            this.btnSaveUiUpdate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveUiUpdate.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnSaveUiUpdate.ForeColor = System.Drawing.Color.White;
-            this.btnSaveUiUpdate.Location = new System.Drawing.Point(128, 52);
-            this.btnSaveUiUpdate.Margin = new System.Windows.Forms.Padding(1);
-            this.btnSaveUiUpdate.Name = "btnSaveUiUpdate";
-            this.btnSaveUiUpdate.Size = new System.Drawing.Size(86, 45);
-            this.btnSaveUiUpdate.TabIndex = 47;
-            this.btnSaveUiUpdate.Text = "确定";
-            this.btnSaveUiUpdate.UseVisualStyleBackColor = false;
-            this.btnSaveUiUpdate.Click += new System.EventHandler(this.btnSaveUiUpdate_Click);
-            // 
             // frmSet
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -4764,6 +4750,7 @@ namespace EMS
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tpLog.ResumeLayout(false);
+            this.groupBox8.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.tpCom.ResumeLayout(false);
@@ -4797,7 +4784,6 @@ namespace EMS
             this.plSetMain.ResumeLayout(false);
             this.plSetMain.PerformLayout();
             this.tbAll.ResumeLayout(false);
-            this.groupBox8.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -5012,7 +4998,6 @@ namespace EMS
         private System.Windows.Forms.TabPage tbShedule;
         private System.Windows.Forms.Panel panel12;
         private System.Windows.Forms.Button btnFlash3;
-        private TCheckBox tcbUseBalaTactics;
         private TCheckBox tcbUseYunTactics;
         private System.Windows.Forms.Button btnUpT;
         private System.Windows.Forms.Button btnDownT;
